@@ -166,3 +166,4 @@ curl -H "Authorization: Bearer &lt;token&gt;" http://localhost:3000/protected
 
 <hr>
 
+to reset the migration - npx prisma migrate reset
