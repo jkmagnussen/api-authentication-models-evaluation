@@ -167,3 +167,28 @@ curl -H "Authorization: Bearer &lt;token&gt;" http://localhost:3000/protected
 <hr>
 
 to reset the migration - npx prisma migrate reset
+
+to register a new user: 
+
+http://localhost:3000/auth/register
+
+raw JSON 
+
+{
+  "email": "penny@example.com",
+  "password": "test123"
+}
+
+
+to run project: 
+
+npm install
+npx prisma migrate dev
+npx ts-node prisma/seed.ts
+npm run dev 
+
+to wipe and run from scratch: 
+
+npx prisma migrate reset
+npx ts-node prisma/seed.ts
+npm run dev
