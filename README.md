@@ -1,4 +1,261 @@
-<h1>API Authentication Models — Evaluation Project</h1>
+# API Authentication Models — Evaluation Project
+
+This project is a practical exploration of different API authentication models. The goal is simple: understand how each approach works, what problems it solves, where it falls short, and how it behaves in a real backend environment. Everything here is built to be hands-on, easy to test, and useful for comparing authentication strategies in a structured way.
+
+---
+
+## Table of Contents
+
+- [Supported Authentication Models](#supported-authentication-models)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Quick Start](#quick-start)
+- [Running the Project](#running-the-project)
+- [Testing](#testing)
+- [Authentication Models Overview](#authentication-models-overview)
+- [Quick Reference](#quick-reference)
+
+---
+
+## Supported Authentication Models
+
+I've implemented and evaluated three core authentication models:
+
+- **Session-Based Authentication** — Stateful. Great for web apps, not for stateless APIs.
+- **JWT (JSON Web Tokens)** — Stateless and scalable. Token invalidation is the main headache.
+- **OAuth 2.0** — Standard for delegated access. Secure but more complex to implement.
+
+Each model includes a working example plus notes on security, developer experience, performance considerations, and realistic use cases.
+
+---
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| Runtime | Node.js |
+| Framework | Express.js |
+| Language | TypeScript |
+| Database | PostgreSQL |
+| Auth Models | JWT, OAuth2, Sessions |
+| Tooling | Nodemon, ts-node, dotenv |
+
+---
+
+## Project Structure
+
+```
+api-authentication-models-evaluation/
+│
+├── src/
+│   ├── controllers/     # Example protected routes
+│   ├── middleware/      # Auth middleware & utilities
+│   ├── routes/          # Route definitions
+│   ├── services/        # Business logic
+│   ├── app.ts           # Express app setup
+│   ├── config.ts        # Configuration
+│   ├── db.ts            # Database connection
+│   └── server.ts        # Server entrypoint
+│
+├── prisma/
+│   ├── schema.prisma    # Database schema
+│   ├── seed.ts          # Seed script
+│   └── migrations/      # Database migrations
+│
+├── .env                 # Environment variables (local)
+├── .env.example         # Environment template
+├── .gitignore
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js (v16+)
+- PostgreSQL (v12+)
+- npm or yarn
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/jkmagnussen/api-authentication-models-evaluation.git
+cd api-authentication-models-evaluation
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Set Up Environment Variables
+
+Create a `.env` file with your local settings:
+
+```env
+PORT=3000
+
+# Database
+DATABASE_URL="postgresql://postgres:password@localhost:5432/authdb"
+
+# JWT
+JWT_SECRET="your-secret-key"
+JWT_EXPIRES_IN="1h"
+
+# API Keys
+API_KEY="your-api-key"
+
+# OAuth (optional)
+OAUTH_CLIENT_ID=""
+OAUTH_CLIENT_SECRET=""
+```
+
+### 4. Set Up PostgreSQL
+
+Local PostgreSQL defaults:
+- Username: `postgres`
+- Password: `password`
+- Port: `5432`
+
+Create the database:
+
+```bash
+createdb authdb
+```
+
+### 5. Run Migrations & Seed Data
+
+```bash
+npx prisma migrate dev
+npx ts-node prisma/seed.ts
+```
+
+---
+
+## Running the Project
+
+### Development Mode
+
+```bash
+npm run dev
+```
+
+The server will start at `http://localhost:3000` and auto-reload on file changes.
+
+### Production Build
+
+```bash
+npm run build
+npm start
+```
+
+---
+
+## Testing
+
+You can use **Postman**, **Insomnia**, **Thunder Client**, or **cURL** to test the API.
+
+### Example Requests
+
+**Protected endpoint with Bearer token:**
+```bash
+curl -H "Authorization: Bearer <token>" http://localhost:3000/protected
+```
+
+**Register a new user:**
+```bash
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "email": "penny@example.com",
+  "password": "test123"
+}
+```
+
+---
+
+## Authentication Models Overview
+
+### Session-Based Authentication
+- **When to use:** Traditional web applications, server-side rendering
+- **Pros:** Server controls expiration, easy to revoke
+- **Cons:** Requires session storage, doesn't scale across servers
+- **Security:** Vulnerable to CSRF without proper mitigation
+
+### JWT (JSON Web Tokens)
+- **When to use:** Microservices, SPAs, stateless APIs
+- **Pros:** Stateless, self-contained, scalable
+- **Cons:** Token size, hard to revoke, requires careful key management
+- **Security:** Use HTTPS, validate signature, set expiration
+
+### OAuth 2.0
+- **When to use:** Third-party integrations, delegated access
+- **Pros:** Industry standard, strong security model
+- **Cons:** Complex implementation, multiple flows
+- **Security:** Secure, auditable, widely adopted
+
+---
+
+## Quick Reference
+
+### Common Commands
+
+**Reset database (wipe all data):**
+```bash
+npx prisma migrate reset
+```
+
+**Run migrations:**
+```bash
+npx prisma migrate dev
+```
+
+**Seed database:**
+```bash
+npx ts-node prisma/seed.ts
+```
+
+**Fresh start (full reset):**
+```bash
+npx prisma migrate reset
+npx ts-node prisma/seed.ts
+npm run dev
+```
+
+**Check TypeScript:**
+```bash
+npx tsc --noEmit
+```
+
+**Lint the code:**
+```bash
+npm run lint
+```
+
+### Database Inspection
+
+View the Prisma Studio:
+```bash
+npx prisma studio
+```
+
+---
+
+## Contributing
+
+Feel free to explore, test, and modify the authentication models. Each implementation includes comments explaining the approach and trade-offs.
+
+---
+
+## License
+
+MIT
 
 <p>
   This project is my practical exploration of different API authentication models. 
