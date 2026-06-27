@@ -172,7 +172,7 @@ curl -H "Authorization: Bearer <token>" http://localhost:3000/protected
 POST http://localhost:3000/auth/register
 Content-Type: application/json
 
-Format:
+Format::::
 
 {
   "email": "penny@example.com",
