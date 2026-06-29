@@ -50,3 +50,9 @@ export async function loginUser(email: string, password: string) {
     createdAt: user.createdAt,
   };
 }
+
+export async function findUserByEmail(email: string) {
+  return prisma.user.findUnique({
+    where: { email },
+  });
+}
