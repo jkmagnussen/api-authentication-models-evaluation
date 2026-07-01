@@ -439,7 +439,7 @@ raw JSON
 }
 
 
-to run project: 
+to run the project: 
 
 npm install
 npx prisma migrate dev
