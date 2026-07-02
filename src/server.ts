@@ -5,6 +5,8 @@ import { PORT } from "./config";
 import sessionRoutes from './sessions/sessions.routes';
 import { sessionMiddleware } from './sessions/sessionConfig';
 import 'express-session';
+import oauthRoutes from "./oauth/oauth.routes";
+import authRoutes from "./routes/authRoutes";
 
 const port = PORT;
 
@@ -12,4 +14,6 @@ app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
 
+app.use("/auth", authRoutes);
 app.use('/sessions', sessionMiddleware, sessionRoutes);
+app.use("/oauth", oauthRoutes);
