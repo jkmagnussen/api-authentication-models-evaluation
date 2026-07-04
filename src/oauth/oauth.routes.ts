@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { authorize, token } from "./oauth.controller";
+import { validateAuthorize, validateToken } from "../middleware/validateOAuth";
 import { validateAccessToken } from "./oauth.service";
 
 const router = Router();
 
-router.post("/authorize", authorize);
-router.post("/token", token);
+router.post("/authorize", validateAuthorize, authorize);
+router.post("/token", validateToken, token);
 
 router.get("/protected", async (req, res) => {
   const authHeader = req.headers.authorization;
