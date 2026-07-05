@@ -12,7 +12,7 @@ router.get("/protected", async (req, res) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Not authenticated" });
+    return res.status(401).json({ error: "Missing Authorization header" });
   }
 
   const token = authHeader.split(" ")[1];
@@ -20,13 +20,12 @@ router.get("/protected", async (req, res) => {
   const stored = await validateAccessToken(token);
 
   if (!stored) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    return res.status(401).json({ error: "Invalid or expired token" });
   }
 
-  return res.json({
-    message: "OAuth protected route accessed",
-    userId: stored.userId
-  });
+return res.json({
+  message: "Protected content"
+});
 });
 
 export default router;

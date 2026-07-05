@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { findUserByEmail, generateJwt } from "./jwt.service";
 
 export async function jwtLogin(req: Request, res: Response) {

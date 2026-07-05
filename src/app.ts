@@ -2,6 +2,7 @@ import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes";
+import oauthRoutes from "./oauth/oauth.routes"; 
 import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
@@ -19,6 +20,9 @@ app.get("/", (req, res) => {
 
 // Auth routes
 app.use("/auth", authRoutes);
+
+// OAuth routes
+app.use("/oauth", oauthRoutes);
 
 app.use(errorHandler);
 
