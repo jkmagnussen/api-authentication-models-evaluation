@@ -5,11 +5,14 @@ import 'dotenv/config';
 import app from "./app";
 import { PORT } from "./config";
 import sessionRoutes from './sessions/sessions.routes';
-import { sessionMiddleware } from './sessions/sessionConfig';
+
 import 'express-session';
 import oauthRoutes from "./oauth/oauth.routes";
 import authRoutes from "./routes/authRoutes";
 import jwtRoutes from "./jwt/jwt.routes";
+import cookieParser from "cookie-parser";
+
+app.use(cookieParser());
 
 const port = PORT;
 
@@ -18,6 +21,6 @@ app.listen(port, () => {
 });
 
 app.use("/auth", authRoutes);
-app.use('/sessions', sessionMiddleware, sessionRoutes);
+app.use('/sessions', sessionRoutes);
 app.use("/oauth", oauthRoutes);
 app.use("/jwt", jwtRoutes);
