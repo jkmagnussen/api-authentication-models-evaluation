@@ -1,4 +1,6 @@
 // This loads first to ensure that the environment variables are available before any other imports.
+import "./types/session-augment";
+import "./types/express-augment";
 import 'dotenv/config';
 import app from "./app";
 import { PORT } from "./config";

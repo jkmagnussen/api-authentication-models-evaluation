@@ -10,7 +10,6 @@
     "skipLibCheck": true,
     "isolatedModules": true
   },
-  "files": ["src/types/session.d.ts"],
   "include": ["src"],
   "exclude": ["node_modules", "dist", "prisma"]
 }
