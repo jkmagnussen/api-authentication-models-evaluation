@@ -450,4 +450,4 @@ to wipe and run from scratch:
 
 npx prisma migrate reset
 npx ts-node prisma/seed.ts
-npm run devvv
+npm run dev
