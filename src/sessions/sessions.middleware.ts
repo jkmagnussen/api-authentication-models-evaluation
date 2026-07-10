@@ -14,8 +14,15 @@ export async function requireSession(req: Request, res: Response, next: NextFunc
     return res.status(401).json({ message: "Invalid session" });
   }
 
+   // expiry check
+  if (session.expiresAt && session.expiresAt < new Date()) {
+    return res.status(401).json({ message: "Session expired" });
+  }
+
   // Attach userId to request
   req.userId = session.userId;
 
   next();
 }
+
+

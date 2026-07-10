@@ -4,8 +4,12 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
-export async function generateJwt(userId: string) {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "1h" });
+export function generateJwt(userId: string) {
+  return jwt.sign(
+    { userId },
+    process.env.JWT_SECRET!,
+    { expiresIn: "1h" }
+  );
 }
 
 export async function verifyJwt(token: string) {

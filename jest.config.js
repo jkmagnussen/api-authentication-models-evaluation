@@ -6,4 +6,9 @@ module.exports = {
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.json',   // ⭐ THIS FIXES "describe" NOT FOUND
+    },
+  },
 };
