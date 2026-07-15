@@ -15,12 +15,15 @@ model User {
 }
 
 model OAuthAuthorizationCode {
-  id        String   @id @default(cuid())
-  code      String   @unique
-  userId    String
-  expiresAt DateTime
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  code        String   @unique
+  userId      String
+  clientId    String
+  redirectUri String
+  state       String?
+  expiresAt   DateTime
+  used        Boolean   @default(false)
+  createdAt   DateTime @default(now())
 }
 
 model Session {

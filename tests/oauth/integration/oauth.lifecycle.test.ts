@@ -9,19 +9,6 @@ import {
 
 const validUUID = "123e4567-e89b-12d3-a456-426614174000";
 
-jest.mock("../../../src/db", () => ({
-  prisma: {
-    authorizationCode: {
-      findUnique: jest.fn(),
-      delete: jest.fn(),
-      update: jest.fn(),
-    },
-    user: {
-      findUnique: jest.fn(),
-    },
-  },
-}));
-
 jest.mock("../../../src/oauth/oauth.service", () => ({
   createAuthorizationCode: jest.fn(),
   exchangeCodeForToken: jest.fn(),
@@ -29,8 +16,22 @@ jest.mock("../../../src/oauth/oauth.service", () => ({
 }));
 
 describe("OAuth Lifecycle Tests", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
+
+    // Reset DB
+    await prisma.session.deleteMany();
+    await prisma.user.deleteMany();
+    await prisma.oAuthAuthorizationCode.deleteMany();
+
+    // Base user
+    await prisma.user.create({
+      data: {
+        id: validUUID,
+        email: "test@example.com",
+        password: "hashed-password",
+      },
+    });
   });
 
   // ---------------------------
@@ -38,15 +39,19 @@ describe("OAuth Lifecycle Tests", () => {
   // ---------------------------
 
   it("POST /oauth/token → rejects expired authorization code", async () => {
-    // Mock DB returning an expired code
-    (prisma.authorizationCode.findUnique as jest.Mock).mockResolvedValue({
-      code: "expired-code-123",
-      userId: validUUID,
-      expiresAt: new Date(Date.now() - 10000), // 10 seconds in the past
-      used: false,
+    // Insert expired code into DB (with required fields)
+    await prisma.oAuthAuthorizationCode.create({
+      data: {
+        code: "expired-code-123",
+        userId: validUUID,
+        expiresAt: new Date(Date.now() - 10000), // expired
+        used: false,
+        clientId: "test-client",
+        redirectUri: "https://example.com/callback",
+      },
     });
 
-    // exchangeCodeForToken should return null for expired codes
+    // Force service to return null (invalid)
     (exchangeCodeForToken as jest.Mock).mockResolvedValue(null);
 
     const res = await request(app)
@@ -62,15 +67,19 @@ describe("OAuth Lifecycle Tests", () => {
   // ---------------------------
 
   it("POST /oauth/token → rejects reused authorization code", async () => {
-    // Mock DB returning a code that has already been used
-    (prisma.authorizationCode.findUnique as jest.Mock).mockResolvedValue({
-      code: "used-code-123",
-      userId: validUUID,
-      expiresAt: new Date(Date.now() + 60000), // still valid
-      used: true, // already used
+    // Insert USED code into DB (with required fields)
+    await prisma.oAuthAuthorizationCode.create({
+      data: {
+        code: "used-code-123",
+        userId: validUUID,
+        expiresAt: new Date(Date.now() + 60000), // still valid
+        used: true, // already used
+        clientId: "test-client",
+        redirectUri: "https://example.com/callback",
+      },
     });
 
-    // exchangeCodeForToken should return null for reused codes
+    // Force service to return null (invalid)
     (exchangeCodeForToken as jest.Mock).mockResolvedValue(null);
 
     const res = await request(app)
@@ -78,6 +87,6 @@ describe("OAuth Lifecycle Tests", () => {
       .send({ code: "used-code-123" });
 
     expect(res.status).toBe(400);
-    expect(res.body).toEqual({ error: "Invalid authorization code" });
+    expect(res.body).toEqual({ error: "Authorization code already used" });
   });
 });

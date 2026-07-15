@@ -9,18 +9,6 @@ import {
 
 const validUUID = "123e4567-e89b-12d3-a456-426614174000";
 
-jest.mock("../../../src/db", () => ({
-  prisma: {
-    user: {
-      findUnique: jest.fn(),
-    },
-    authorizationCode: {
-      findUnique: jest.fn(),
-      delete: jest.fn(),
-    },
-  },
-}));
-
 jest.mock("../../../src/oauth/oauth.service", () => ({
   createAuthorizationCode: jest.fn(),
   exchangeCodeForToken: jest.fn(),
@@ -28,8 +16,25 @@ jest.mock("../../../src/oauth/oauth.service", () => ({
 }));
 
 describe("OAuth Negative Path Tests", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
+
+    // Reset DB for integration tests
+    if (prisma.session?.deleteMany) {
+  await prisma.session.deleteMany();
+}
+    await prisma.user.deleteMany();
+    if (prisma.oAuthAuthorizationCode?.deleteMany) {
+  await prisma.oAuthAuthorizationCode.deleteMany();
+}
+
+    await prisma.user.create({
+      data: {
+        id: validUUID,
+        email: "test@example.com",
+        password: "hashed-password",
+      },
+    });
   });
 
   // ---------------------------
@@ -64,7 +69,8 @@ describe("OAuth Negative Path Tests", () => {
   });
 
   it("POST /oauth/authorize → rejects userId not found in DB", async () => {
-    (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+    // Remove the user so DB lookup fails
+    await prisma.user.deleteMany();
 
     const res = await request(app)
       .post("/oauth/authorize")

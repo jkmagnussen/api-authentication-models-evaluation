@@ -1,74 +1,72 @@
 import request from "supertest";
-import app from "../../../src/app"; // your Express app
+import app from "../../../src/app";
 import { prisma } from "../../../src/db";
-import { 
-  createAuthorizationCode, 
-  exchangeCodeForToken, 
-  validateAccessToken            // ← YOU MUST IMPORT THIS
-} from "../../../src/oauth/oauth.service";
 
-// ✔ Use a valid UUID because your middleware requires it
 const validUUID = "123e4567-e89b-12d3-a456-426614174000";
 
-jest.mock("../../../src/db", () => ({
-  prisma: {
-    user: {
-      findUnique: jest.fn(),
-    },
-    authorizationCode: {
-      findUnique: jest.fn(),
-      delete: jest.fn(),
-    },
-  },
-}));
-
-// ✔ Add validateAccessToken to your mock, otherwise router crashes
-jest.mock("../../../src/oauth/oauth.service", () => ({
-  createAuthorizationCode: jest.fn(),
-  exchangeCodeForToken: jest.fn(),
-  validateAccessToken: jest.fn(),     // ← REQUIRED
-}));
-
 describe("OAuth Integration Flow", () => {
-  beforeEach(() => {
+
+  beforeEach(async () => {
     jest.clearAllMocks();
+
+    // Reset DB
+    await prisma.session.deleteMany();
+    await prisma.user.deleteMany();
+    await prisma.oAuthAuthorizationCode.deleteMany();
+
+    // Base user
+    await prisma.user.create({
+      data: {
+        id: validUUID,
+        email: "test@example.com",
+        password: "hashed-password",
+      },
+    });
   });
 
   it("POST /oauth/authorize → returns authorization code for valid user", async () => {
-    // ✔ Mock DB to return a user with the valid UUID
-    (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: validUUID });
-
-    (createAuthorizationCode as jest.Mock).mockResolvedValue("auth-code-xyz");
-
     const res = await request(app)
       .post("/oauth/authorize")
-      .send({ userId: validUUID });   // ← MUST use validUUID
+      .send({
+        userId: validUUID,
+        client_id: "client-123",
+        redirect_uri: "https://example.com/callback",
+      });
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ code: "auth-code-xyz" });
+
+    // Read actual generated code from DB
+    const stored = await prisma.oAuthAuthorizationCode.findFirst();
+
+    expect(res.body).toEqual({
+      code: stored?.code,
+    });
   });
 
   it("POST /oauth/token → returns JWT for valid authorization code", async () => {
-    (exchangeCodeForToken as jest.Mock).mockResolvedValue({
-      token: "jwt-token-abc",
-    });
+    // Step 1: Generate authorization code
+    await request(app)
+      .post("/oauth/authorize")
+      .send({
+        userId: validUUID,
+        client_id: "client-123",
+        redirect_uri: "https://example.com/callback",
+      });
 
+    const stored = await prisma.oAuthAuthorizationCode.findFirst();
+
+    // Step 2: Exchange code for token
     const res = await request(app)
       .post("/oauth/token")
-      .send({ code: "auth-code-xyz" });
+      .send({ code: stored?.code });
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({
-      access_token: "jwt-token-abc",
-      token_type: "Bearer",
-      expires_in: 3600,
-    });
+    expect(res.body).toHaveProperty("access_token");
+    expect(res.body).toHaveProperty("token_type", "Bearer");
+    expect(res.body).toHaveProperty("expires_in", 3600);
   });
 
   it("GET /oauth/protected → rejects missing Authorization header", async () => {
-    // ✔ validateAccessToken should NOT be called here
-    (validateAccessToken as jest.Mock).mockResolvedValue(null);
-
     const res = await request(app).get("/oauth/protected");
 
     expect(res.status).toBe(401);
@@ -76,9 +74,6 @@ describe("OAuth Integration Flow", () => {
   });
 
   it("GET /oauth/protected → rejects invalid JWT", async () => {
-    // ✔ invalid token → validateAccessToken returns null
-    (validateAccessToken as jest.Mock).mockResolvedValue(null);
-
     const res = await request(app)
       .get("/oauth/protected")
       .set("Authorization", "Bearer invalid.jwt.token");
@@ -88,8 +83,9 @@ describe("OAuth Integration Flow", () => {
   });
 
   it("GET /oauth/protected → accepts valid JWT", async () => {
-    // ✔ valid token → validateAccessToken returns a user
-    (validateAccessToken as jest.Mock).mockResolvedValue({ userId: validUUID });
+    jest
+      .spyOn(require("../../../src/oauth/oauth.service"), "validateAccessToken")
+      .mockResolvedValue({ userId: validUUID });
 
     const res = await request(app)
       .get("/oauth/protected")
@@ -98,4 +94,5 @@ describe("OAuth Integration Flow", () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ message: "Protected content" });
   });
+
 });

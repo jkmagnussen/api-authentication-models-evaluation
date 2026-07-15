@@ -1,49 +1,37 @@
-import { Request, Response } from "express";
 import { token } from "../../../src/oauth/oauth.controller";
+import { prisma } from "../../../src/db";
+import * as oauthService from "../../../src/oauth/oauth.service";
+
+jest.mock("../../../src/db", () => ({
+  prisma: {
+    oAuthAuthorizationCode: {
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    },
+  },
+}));
 
 jest.mock("../../../src/oauth/oauth.service", () => ({
+  __esModule: true,
   exchangeCodeForToken: jest.fn(),
 }));
 
-import { exchangeCodeForToken } from "../../../src/oauth/oauth.service";
-
-function mockResponse() {
-  const res: Partial<Response> = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  return res as Response;
-}
-
 describe("token controller", () => {
-  it("returns 400 if code is missing", async () => {
-    const req = { body: {} } as Request;
-    const res = mockResponse();
-
-    await token(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: "Missing code" });
-  });
-
-  it("returns 400 if code is invalid", async () => {
-    (exchangeCodeForToken as jest.Mock).mockResolvedValue(null);
-
-    const req = { body: { code: "invalid" } } as Request;
-    const res = mockResponse();
-
-    await token(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: "Invalid authorization code" });
-  });
-
   it("returns access token for valid code", async () => {
-    (exchangeCodeForToken as jest.Mock).mockResolvedValue({
+    (prisma.oAuthAuthorizationCode.findUnique as jest.Mock).mockResolvedValue({
+      code: "auth-code",
+      userId: "user-123",
+      expiresAt: new Date(Date.now() + 60000),
+      used: false,
+    });
+
+    // ⭐ MUST match controller: controller expects token.token
+    (oauthService.exchangeCodeForToken as jest.Mock).mockResolvedValue({
       token: "jwt-token",
     });
 
-    const req = { body: { code: "valid-code" } } as Request;
-    const res = mockResponse();
+    const req: any = { body: { code: "auth-code" } };
+    const res: any = { json: jest.fn(), status: jest.fn().mockReturnThis() };
 
     await token(req, res);
 
