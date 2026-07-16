@@ -25,6 +25,11 @@ app.use(express.json());
 // ⭐ Required for cookie-based CSRF
 app.use(cookieParser());
 
+app.get("/callback", (req, res) => {
+  res.json(req.query);
+});
+
+
 // Health check / root route
 app.get("/", (req, res) => {
   res.send("API running");
