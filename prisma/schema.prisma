@@ -13,37 +13,32 @@ model User {
   password  String
   createdAt DateTime @default(now())
 
-  // ⭐ Add these two relation backrefs
-  OAuthAuthorizationCodes OAuthAuthorizationCode[]
-  oAuthAccessTokens       oAuthAccessToken[]
+  authorizationCodes OAuthAuthorizationCode[]
+  accessTokens       OAuthAccessToken[]
+  sessions           Session[]
 }
 
-model OAuthAuthorizationCode {
-  id          String   @id @default(cuid())
-  code        String   @unique
-  userId      String
-  clientId    String
-  redirectUri String
-  state       String?
-  scope       String?
-  expiresAt   DateTime
-  used        Boolean  @default(false)
-  createdAt   DateTime @default(now())
 
+model OAuthAuthorizationCode {
+  id                 String   @id @default(cuid())
+  code               String   @unique
+  userId             String
+  clientId           String
+  state              String?
+  scope              String?
+  expiresAt          DateTime
+  used               Boolean  @default(false)
+  createdAt          DateTime @default(now())
+
+  // PKCE
   codeChallenge       String?
   codeChallengeMethod String?
 
-  user User @relation(fields: [userId], references: [id])
+  user   User        @relation(fields: [userId], references: [id])
+  client OAuthClient @relation(fields: [clientId], references: [id])
 }
 
-model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-model oAuthAccessToken {
+model OAuthAccessToken {
   id           String   @id @default(uuid())
   accessToken  String   @unique
   refreshToken String   @unique
@@ -53,24 +48,25 @@ model oAuthAccessToken {
   expiresAt    DateTime
   createdAt    DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user   User        @relation(fields: [userId], references: [id])
+  client OAuthClient @relation(fields: [clientId], references: [id])
 }
 
 model OAuthClient {
-  id          String  @id            // client_id
-  secret      String                 // client_secret (for confidential clients)
-  name        String
-  redirectUri String
+  id     String @id        // client_id
+  secret String            // client_secret
+  name   String
+
+  authorizationCodes OAuthAuthorizationCode[]
+  accessTokens       OAuthAccessToken[]
 }
 
-model AuditLog {
-  id          String   @id @default(cuid())
-  timestamp   DateTime @default(now())
-  event       String              // e.g. "oauth.authorize", "oauth.token"
-  userId      String?             // nullable: some events may not have a user
-  clientId    String?             // nullable: some events may not have a client
-  ip          String?             // optional: req.ip
-  success     Boolean
-  errorCode   String?             // e.g. "invalid_client", "invalid_grant"
-  details     String?             // free-form JSON/string for extra context
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }

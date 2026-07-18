@@ -1,16 +1,17 @@
 import { Router } from "express";
-import { authorize, token, introspect } from "./oauth.controller";
 import { validateAuthorize, validateToken } from "../middleware/validateOAuth";
 import { requireScope } from "../middleware/requireScope";
 import { oauthLimiter } from "./rateLimit";
+import { authorize, token, introspect, refresh, revoke } from "./oauth.controller";
 
 const router = Router();
 
 // Apply rate limiting to ALL OAuth2 endpoints
 router.post("/authorize", oauthLimiter, validateAuthorize, authorize);
 router.post("/token", oauthLimiter, validateToken, token);
-router.post("/refresh", oauthLimiter, token); // if you add refresh later, apply limiter here too
-router.post("/revoke", oauthLimiter, token);  // same idea
+
+router.post("/refresh", oauthLimiter, refresh);
+router.post("/revoke", oauthLimiter, revoke);
 
 // READ‑protected route
 router.get("/protected/read", requireScope("read"), (req, res) => {
