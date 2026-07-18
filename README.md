@@ -6,10 +6,10 @@
 <style>
   body {
     font-family: Arial, sans-serif;
-    line-height: 1.6;
     max-width: 900px;
     margin: auto;
     padding: 20px;
+    line-height: 1.6;
     color: #222;
   }
   h1, h2, h3 {
@@ -47,40 +47,33 @@
 <h1>API Authentication Models — Evaluation Project</h1>
 
 <p>
-This project is a practical exploration of different API authentication models. 
-The goal is simple: understand how each approach works, what problems it solves, 
-where it falls short, and how it behaves in a real backend environment. 
-Everything here is built to be hands-on, easy to test, and useful for comparing 
-authentication strategies in a structured way.
+This project is a practical exploration of multiple API authentication models implemented in a real backend environment. 
+It demonstrates Sessions, JWT, and OAuth 2.0 using Express.js, TypeScript, PostgreSQL, and Prisma.
 </p>
 
 <hr>
 
 <h2>Table of Contents</h2>
 <ul>
-  <li><a href="#supported-authentication-models">Supported Authentication Models</a></li>
+  <li><a href="#supported-models">Supported Authentication Models</a></li>
   <li><a href="#tech-stack">Tech Stack</a></li>
-  <li><a href="#project-structure">Project Structure</a></li>
+  <li><a href="#structure">Project Structure</a></li>
   <li><a href="#quick-start">Quick Start</a></li>
   <li><a href="#database-setup">Database Setup & Seeding</a></li>
-  <li><a href="#running-the-project">Running the Project</a></li>
+  <li><a href="#routes">Available Routes & JSON Examples</a></li>
   <li><a href="#testing">Testing</a></li>
-  <li><a href="#authentication-models-overview">Authentication Models Overview</a></li>
-  <li><a href="#quick-reference">Quick Reference</a></li>
-  <li><a href="#contributing">Contributing</a></li>
+  <li><a href="#reference">Quick Reference</a></li>
   <li><a href="#license">License</a></li>
 </ul>
 
 <hr>
 
-<h2 id="supported-authentication-models">Supported Authentication Models</h2>
-
-<p>I've implemented and evaluated three core authentication models:</p>
+<h2 id="supported-models">Supported Authentication Models</h2>
 
 <ul>
-  <li><strong>Session-Based Authentication</strong> — Stateful. Great for web apps, not for stateless APIs.</li>
-  <li><strong>JWT (JSON Web Tokens)</strong> — Stateless and scalable. Token invalidation is the main headache.</li>
-  <li><strong>OAuth 2.0</strong> — Standard for delegated access. Secure but more complex to implement.</li>
+  <li><strong>Session-Based Authentication</strong> — Stateful, cookie-based.</li>
+  <li><strong>JWT Authentication</strong> — Stateless, signed tokens.</li>
+  <li><strong>OAuth 2.0 Authorization Code + PKCE</strong> — Delegated access.</li>
 </ul>
 
 <hr>
@@ -93,36 +86,40 @@ authentication strategies in a structured way.
   <tr><td>Framework</td><td>Express.js</td></tr>
   <tr><td>Language</td><td>TypeScript</td></tr>
   <tr><td>Database</td><td>PostgreSQL</td></tr>
-  <tr><td>Auth Models</td><td>JWT, OAuth2, Sessions</td></tr>
-  <tr><td>Tooling</td><td>Nodemon, ts-node, dotenv</td></tr>
+  <tr><td>ORM</td><td>Prisma</td></tr>
+  <tr><td>Auth Models</td><td>Sessions, JWT, OAuth2</td></tr>
 </table>
 
 <hr>
 
-<h2 id="project-structure">Project Structure</h2>
+<h2 id="structure">Project Structure</h2>
 
 <pre><code>
 api-authentication-models-evaluation/
 │
+├── prisma/
+│   ├── schema.prisma
+│   ├── migrations/
+│
 ├── src/
 │   ├── controllers/
+│   ├── jwt/
 │   ├── middleware/
+│   ├── oauth/
 │   ├── routes/
 │   ├── services/
+│   ├── sessions/
+│   ├── types/
+│   ├── seed/
+│   │   └── seedClients.ts
 │   ├── app.ts
 │   ├── config.ts
 │   ├── db.ts
 │   └── server.ts
 │
-├── prisma/
-│   ├── schema.prisma
-│   ├── seedClients.ts
-│   └── migrations/
-│
-├── .env
-├── .env.example
 ├── package.json
 ├── tsconfig.json
+├── .env
 └── README.md
 </code></pre>
 
@@ -130,43 +127,37 @@ api-authentication-models-evaluation/
 
 <h2 id="quick-start">Quick Start</h2>
 
-<h3>Prerequisites</h3>
-<ul>
-  <li>Node.js (v16+)</li>
-  <li>PostgreSQL (v12+)</li>
-  <li>npm or yarn</li>
-</ul>
-
 <h3>1. Clone the Repository</h3>
-<pre><code>git clone https://github.com/jkmagnussen/api-authentication-models-evaluation.git
+<pre><code>
+git clone https://github.com/jkmagnussen/api-authentication-models-evaluation.git
 cd api-authentication-models-evaluation
 </code></pre>
 
 <h3>2. Install Dependencies</h3>
 <pre><code>npm install</code></pre>
 
-<h3>3. Environment Variables</h3>
+<h3>3. Create Environment File</h3>
 <pre><code>
 PORT=3000
 DATABASE_URL="postgresql://postgres:password@localhost:5432/authdb"
 JWT_SECRET="your-secret-key"
 JWT_EXPIRES_IN="1h"
-API_KEY="your-api-key"
 </code></pre>
 
 <hr>
 
 <h2 id="database-setup">Database Setup & Seeding</h2>
 
-<p>This project uses PostgreSQL + Prisma. Before running any authentication model, you must prepare the database schema and seed the initial data.</p>
-
-<h3>1. Ensure PostgreSQL Is Running</h3>
+<h3>1. Create PostgreSQL Database</h3>
 <pre><code>createdb authdb</code></pre>
 
-<h3>2. Apply Prisma Migrations</h3>
+<h3>2. Run Prisma Migrations</h3>
 <pre><code>npx prisma migrate dev</code></pre>
 
-<h3>3. Seed Initial Data</h3>
+<h3>3. Generate Prisma Client</h3>
+<pre><code>npx prisma generate</code></pre>
+
+<h3>4. Seed Initial Data</h3>
 
 <p>The seed script inserts:</p>
 
@@ -175,64 +166,116 @@ API_KEY="your-api-key"
   <li><strong>OAuth Client</strong>: ID <code>client-123</code>, secret <code>super-secret</code></li>
 </ul>
 
-<pre><code>npx ts-node src/seed/seedClients.ts</code></pre>
+<h4>Seed Script</h4>
 
-<h3>4. Start the API</h3>
-<pre><code>npm run dev</code></pre>
+<pre><code>
+import { prisma } from "../src/db";
+import bcrypt from "bcrypt";
+
+async function main() {
+  const passwordHash = await bcrypt.hash("password123", 10);
+
+  await prisma.user.upsert({
+    where: { id: "d9c7dba3-3f97-4418-9f7b-f89d8fa5d925" },
+    update: {},
+    create: {
+      id: "d9c7dba3-3f97-4418-9f7b-f89d8fa5d925",
+      email: "main@example.com",
+      password: passwordHash,
+    },
+  });
+
+  await prisma.oAuthClient.upsert({
+    where: { id: "client-123" },
+    update: {},
+    create: {
+      id: "client-123",
+      secret: "super-secret",
+      name: "Test Client",
+    },
+  });
+
+  console.log("Seed complete.");
+}
+
+main().finally(() => process.exit(0));
+</code></pre>
+
+<h4>Run the Seed</h4>
+<pre><code>npx ts-node src/seed/seedClients.ts</code></pre>
 
 <hr>
 
-<h2 id="running-the-project">Running the Project</h2>
+<h2 id="routes">Available Routes & JSON Examples</h2>
 
-<h3>Development Mode</h3>
-<pre><code>npm run dev</code></pre>
+<h3>Session Authentication</h3>
 
-<h3>Production Build</h3>
+<h4>POST /auth/login</h4>
 <pre><code>
-npm run build
-npm start
+{
+  "email": "main@example.com",
+  "password": "password123"
+}
+</code></pre>
+
+<h4>GET /auth/me</h4>
+<p>Requires session cookie.</p>
+
+<hr>
+
+<h3>JWT Authentication</h3>
+
+<h4>POST /jwt/login</h4>
+<pre><code>
+{
+  "email": "main@example.com",
+  "password": "password123"
+}
+</code></pre>
+
+<h4>GET /jwt/protected</h4>
+<p>Requires <code>Authorization: Bearer &lt;token&gt;</code></p>
+
+<hr>
+
+<h3>OAuth 2.0 — Authorization Code + PKCE</h3>
+
+<h4>POST /oauth/authorize</h4>
+<pre><code>
+{
+  "userId": "d9c7dba3-3f97-4418-9f7b-f89d8fa5d925",
+  "client_id": "client-123",
+  "redirect_uri": "http://localhost:3000/callback",
+  "state": "xyz",
+  "scope": "read",
+  "code_challenge": "Q7m2xK9t1pL4vS8bZ3rT0uE5wY9nC2fJ6kH1dQ4hA7U",
+  "code_challenge_method": "S256"
+}
+</code></pre>
+
+<h4>POST /oauth/token</h4>
+<p>Requires Basic Auth header:</p>
+<pre><code>client-123:super-secret</code></pre>
+
+<pre><code>
+{
+  "code": "&lt;authorization_code&gt;",
+  "code_verifier": "&lt;original_verifier&gt;"
+}
 </code></pre>
 
 <hr>
 
 <h2 id="testing">Testing</h2>
 
-<p>You can use Postman, Insomnia, Thunder Client, or cURL.</p>
-
-<h3>Register a User</h3>
-<pre><code>
-POST http://localhost:3000/auth/register
-{
-  "email": "penny@example.com",
-  "password": "test123"
-}
-</code></pre>
+<p>Use Postman, Insomnia, Thunder Client, or cURL.</p>
 
 <hr>
 
-<h2 id="authentication-models-overview">Authentication Models Overview</h2>
-
-<h3>Session-Based Authentication</h3>
-<p>Stateful, easy to revoke, but requires server-side storage.</p>
-
-<h3>JWT</h3>
-<p>Stateless and scalable, but token invalidation is difficult.</p>
-
-<h3>OAuth 2.0</h3>
-<p>Industry standard for delegated access, but more complex.</p>
-
-<hr>
-
-<h2 id="quick-reference">Quick Reference</h2>
+<h2 id="reference">Quick Reference</h2>
 
 <h3>Reset Database</h3>
 <pre><code>npx prisma migrate reset</code></pre>
-
-<h3>Run Migrations</h3>
-<pre><code>npx prisma migrate dev</code></pre>
-
-<h3>Seed Database</h3>
-<pre><code>npx ts-node src/seed/seedClients.ts</code></pre>
 
 <h3>Fresh Start</h3>
 <pre><code>
@@ -241,13 +284,8 @@ npx ts-node src/seed/seedClients.ts
 npm run dev
 </code></pre>
 
-<h3>Prisma Studio</h3>
-<pre><code>npx prisma studio</code></pre>
-
-<hr>
-
-<h2 id="contributing">Contributing</h2>
-<p>Feel free to explore, test, and modify the authentication models.</p>
+<h3>Run Server</h3>
+<pre><code>npm run dev</code></pre>
 
 <hr>
 
