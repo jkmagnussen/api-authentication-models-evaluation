@@ -17,7 +17,7 @@ function expiresIn(minutes: number) {
 
 /**
  * Exchange an authorization code for an access token.
- * Returns null if the code is invalid or expired.
+ * PKCE validation is handled in the controller.
  */
 export async function exchangeCodeForToken(code: string) {
   const authCode = await prisma.oAuthAuthorizationCode.findUnique({

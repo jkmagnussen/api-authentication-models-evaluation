@@ -1,10 +1,15 @@
 import { Request, Response, NextFunction } from "express";
-import { validateAccessToken } from "./oauth.service";
+import { validateAccessToken } from "../oauth/oauth.service";
 
-export async function oauthAuth(req: Request, res: Response, next: NextFunction) {
+export async function verifyAccessToken(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   const header = req.headers.authorization;
-  if (!header) {
-    return res.status(401).json({ error: "Missing Authorization header" });
+
+  if (!header || !header.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Missing or invalid Authorization header" });
   }
 
   const token = header.replace("Bearer ", "");
@@ -14,6 +19,10 @@ export async function oauthAuth(req: Request, res: Response, next: NextFunction)
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 
+  // Attach token data to request
   (req as any).userId = valid.userId;
+  (req as any).clientId = valid.clientId;
+  (req as any).scope = valid.scope;
+
   next();
 }

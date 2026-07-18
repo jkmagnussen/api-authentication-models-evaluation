@@ -3,6 +3,7 @@ import { validateAuthorize, validateToken } from "../middleware/validateOAuth";
 import { requireScope } from "../middleware/requireScope";
 import { oauthLimiter } from "./rateLimit";
 import { authorize, token, introspect, refresh, revoke } from "./oauth.controller";
+import { verifyAccessToken } from "./oauth.middleware";
 
 const router = Router();
 
@@ -13,19 +14,11 @@ router.post("/token", oauthLimiter, validateToken, token);
 router.post("/refresh", oauthLimiter, refresh);
 router.post("/revoke", oauthLimiter, revoke);
 
-// READ‑protected route
-router.get("/protected/read", requireScope("read"), (req, res) => {
+router.get("/protected", verifyAccessToken, (req, res) => {
   return res.json({
-    message: "You have READ access",
+    message: "Protected resource accessed",
     userId: (req as any).userId,
-  });
-});
-
-// WRITE‑protected route
-router.post("/protected/write", requireScope("write"), (req, res) => {
-  return res.json({
-    message: "You have WRITE access",
-    userId: (req as any).userId,
+    scope: (req as any).scope
   });
 });
 

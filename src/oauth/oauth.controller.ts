@@ -16,7 +16,6 @@ export async function authorize(req: Request, res: Response) {
     code_challenge_method,
   } = req.body;
 
-  // Validate userId
   if (!userId) {
     return res.status(400).json({ error: "Missing userId" });
   }
@@ -29,7 +28,6 @@ export async function authorize(req: Request, res: Response) {
     return res.status(400).json({ error: "User not found" });
   }
 
-  // Validate client
   const client = await prisma.oAuthClient.findUnique({
     where: { id: client_id },
   });
@@ -38,10 +36,8 @@ export async function authorize(req: Request, res: Response) {
     return res.status(400).json({ error: "Invalid client_id" });
   }
 
-  // Generate authorization code
   const code = crypto.randomUUID();
 
-  // Store authorization code + PKCE challenge (no redirect URI)
   await prisma.oAuthAuthorizationCode.create({
     data: {
       code,
@@ -52,10 +48,10 @@ export async function authorize(req: Request, res: Response) {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
       codeChallenge: code_challenge ?? null,
       codeChallengeMethod: code_challenge_method ?? null,
+      used: false,
     },
   });
 
-  // JSON response instead of redirect
   return res.json({
     code,
     state: state ?? null,
@@ -68,7 +64,6 @@ export async function authorize(req: Request, res: Response) {
 export async function token(req: Request, res: Response) {
   const { code, state, code_verifier } = req.body;
 
-  // Basic client authentication
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith("Basic ")) {
     return res.status(401).json({
@@ -113,7 +108,7 @@ export async function token(req: Request, res: Response) {
     return res.status(400).json({ error: "Invalid state" });
   }
 
-  // PKCE verification
+  // PKCE verification (only if a challenge was stored)
   if (stored.codeChallenge) {
     if (!code_verifier) {
       return res.status(400).json({
@@ -135,25 +130,23 @@ export async function token(req: Request, res: Response) {
     }
   }
 
-  // Mark code as used
   await prisma.oAuthAuthorizationCode.update({
     where: { code },
     data: { used: true },
   });
 
-  // Exchange code for tokens (your existing logic)
-  const token = await exchangeCodeForToken(code);
+  const tokenResult = await exchangeCodeForToken(code);
 
-  if (!token) {
-    return res.status(400).json({ error: "Invalid authorization code" });
+  if (!tokenResult) {
+    return res.status(400).json({ error: "invalid_grant" });
   }
 
   return res.json({
-    access_token: token.accessToken,
-    refresh_token: token.refreshToken,
+    access_token: tokenResult.accessToken,
+    refresh_token: tokenResult.refreshToken,
     token_type: "Bearer",
     expires_in: 3600,
-    scope: token.scope,
+    scope: tokenResult.scope,
   });
 }
 
