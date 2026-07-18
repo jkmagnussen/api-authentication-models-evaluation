@@ -1,3 +1,8 @@
+import { validateAuthorize } from "../../../src/oauth/oauth.middleware";
+import { prisma } from "../../../src/db";
+import { Request, Response } from "express";
+
+// Mock ONLY the Prisma calls used by the middleware
 jest.mock("../../../src/db", () => ({
   prisma: {
     user: {
@@ -6,11 +11,7 @@ jest.mock("../../../src/db", () => ({
   },
 }));
 
-import { validateAuthorize } from "../../../src/middleware/validateOAuth";
-import { prisma } from "../../../src/db";
-import { Request, Response } from "express";
-
-function mockResponse() {
+function mockResponse(): Response {
   const res: Partial<Response> = {};
   res.status = jest.fn().mockReturnValue(res);
   res.json = jest.fn().mockReturnValue(res);
@@ -65,7 +66,9 @@ describe("validateAuthorize", () => {
   });
 
   it("accepts valid user", async () => {
-    (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: "b255a7cd-37a8-4784-98e1-dae9ffdc15ec" });
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+      id: "b255a7cd-37a8-4784-98e1-dae9ffdc15ec",
+    });
 
     const req = { body: { userId: "b255a7cd-37a8-4784-98e1-dae9ffdc15ec" } } as Request;
     const res = mockResponse();

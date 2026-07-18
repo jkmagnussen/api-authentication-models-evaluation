@@ -1,12 +1,21 @@
 import request from "supertest";
 import app from "../../../src/app";
 import { resetDatabase } from "../../setup";
+import { prisma } from "../../../src/db";
 
 describe("Sessions – Replay Attack Test", () => {
   let cookie: string;
 
   beforeAll(async () => {
     await resetDatabase();
+
+    await prisma.user.create({
+    data: {
+      id: "user-123",
+      email: "test@example.com",
+      password: "password"
+    }
+  });
 
     // Login → get a valid session cookie
     const res = await request(app)

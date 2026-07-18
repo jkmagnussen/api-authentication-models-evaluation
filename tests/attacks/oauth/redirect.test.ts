@@ -13,6 +13,9 @@ jest.mock("../../../src/db", () => ({
       create: jest.fn(),
       deleteMany: jest.fn(),
     },
+    oAuthClient: {
+      findUnique: jest.fn(),
+    },
     oAuthAuthorizationCode: {
       findUnique: jest.fn(),
       create: jest.fn(),
@@ -33,12 +36,17 @@ describe("OAuth – Redirect URI Manipulation Attack", () => {
       id: "11111111-1111-1111-1111-111111111111",
     });
 
+    (prisma.oAuthClient.findUnique as jest.Mock).mockResolvedValue({
+      id: "client-123",
+      name: "Test Client",
+      secret: "test-secret",
+    });
+
     // Mock authorization code creation
     (prisma.oAuthAuthorizationCode.create as jest.Mock).mockResolvedValue({
       code: "redirect-test-code",
       userId: "11111111-1111-1111-1111-111111111111",
       clientId: "client-123",
-      redirectUri: "https://evil.com/callback",
       expiresAt: new Date(Date.now() + 60000),
       used: false,
     });
@@ -49,9 +57,8 @@ describe("OAuth – Redirect URI Manipulation Attack", () => {
       .post("/oauth/authorize")
       .send({
         userId: "11111111-1111-1111-1111-111111111111",
-        client_id: "client-123",
-        redirect_uri: "https://evil.com/callback",
-        response_type: "code",
+        clientId: "client-123",
+        redirectUri: "https://evil.example/callback"
       });
 
     expect(res.status).toBe(400);

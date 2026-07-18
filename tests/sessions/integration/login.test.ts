@@ -8,8 +8,16 @@ describe("Session Authentication – Login", () => {
   let sessionId: string;
 
   beforeEach(async () => {
-    await resetDatabase();
+  await resetDatabase();
+
+  await prisma.user.create({
+    data: {
+      id: "user-123",
+      email: "test@example.com",
+      password: "password"
+    }
   });
+});
 
   test("Login creates a session row and sets a cookie", async () => {
     const res = await request(app)

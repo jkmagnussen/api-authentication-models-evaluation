@@ -1,5 +1,6 @@
 import request from "supertest";
 import app from "../../../src/app";
+import { prisma } from "../../../src/db";
 import { resetDatabase } from "../../setup";
 
 describe("JWT Authentication – Protected Route", () => {
@@ -9,6 +10,16 @@ describe("JWT Authentication – Protected Route", () => {
   beforeEach(async () => {
     await resetDatabase();
 
+    // ⭐ Create user AFTER resetDatabase
+    await prisma.user.create({
+      data: {
+        id: "user-123",
+        email: "test@example.com",
+        password: "password"
+      }
+    });
+
+    // ⭐ Login to get a valid JWT
     const login = await request(app)
       .post("/jwt/login")
       .send({ email: "test@example.com", password: "password" });

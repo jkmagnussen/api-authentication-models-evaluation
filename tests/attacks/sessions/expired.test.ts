@@ -7,8 +7,15 @@ describe("Session Authentication – Expired Session Attack", () => {
 
   beforeEach(async () => {
     await resetDatabase();
-  });
 
+    await prisma.user.create({
+      data: {
+        id: "user-123",
+        email: "test@example.com",
+        password: "password"
+      }
+    });
+  });
   test("Expired session should be rejected", async () => {
     await prisma.session.create({
       data: {

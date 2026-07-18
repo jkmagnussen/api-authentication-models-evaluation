@@ -1,12 +1,12 @@
 import { prisma } from "../../../src/db";
 import { requireSession } from "../../../src/sessions/sessions.middleware";
 import bcrypt from "bcryptjs";
+import { resetDatabase } from "../../setup";
 
 describe("Session Middleware – Unit Tests", () => {
 
   beforeEach(async () => {
-    await prisma.session.deleteMany();
-    await prisma.user.deleteMany();
+    await resetDatabase();
 
     await prisma.user.create({
       data: {

@@ -11,7 +11,7 @@ export async function verifyAccessToken(
   const header = req.headers.authorization;
 
   if (!header || !header.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Missing or invalid Authorization header" });
+    return res.status(401).json({ error: "Missing Authorization header" });
   }
 
   const token = header.replace("Bearer ", "");

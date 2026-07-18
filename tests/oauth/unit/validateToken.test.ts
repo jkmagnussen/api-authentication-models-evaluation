@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { validateToken } from "../../../src/middleware/validateOAuth";
+import { validateToken } from "../../../src/oauth/oauth.middleware";
 
-function mockResponse() {
+function mockResponse(): Response {
   const res: Partial<Response> = {};
   res.status = jest.fn().mockReturnValue(res);
   res.json = jest.fn().mockReturnValue(res);

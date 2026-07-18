@@ -6,8 +6,16 @@ import { resetDatabase } from "../../setup";
 describe("Session Authentication – Logout", () => {
 
   beforeEach(async () => {
-    await resetDatabase();
+  await resetDatabase();
+
+  await prisma.user.create({
+    data: {
+      id: "user-123",
+      email: "test@example.com",
+      password: "password"
+    }
   });
+});
 
   test("Logout deletes session and protected route returns 401", async () => {
     await prisma.session.create({

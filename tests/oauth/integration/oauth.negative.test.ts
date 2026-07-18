@@ -1,8 +1,7 @@
 import request from "supertest";
 import app from "../../../src/app";
-import { prisma } from "../../../src/db";
+import { resetDatabase } from "../../setup";   // ⭐ Use your global reset
 import {
-  createAuthorizationCode,
   exchangeCodeForToken,
   validateAccessToken
 } from "../../../src/oauth/oauth.service";
@@ -19,22 +18,8 @@ describe("OAuth Negative Path Tests", () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    // Reset DB for integration tests
-    if (prisma.session?.deleteMany) {
-  await prisma.session.deleteMany();
-}
-    await prisma.user.deleteMany();
-    if (prisma.oAuthAuthorizationCode?.deleteMany) {
-  await prisma.oAuthAuthorizationCode.deleteMany();
-}
-
-    await prisma.user.create({
-      data: {
-        id: validUUID,
-        email: "test@example.com",
-        password: "hashed-password",
-      },
-    });
+    // ⭐ Use the global DB reset (correct FK order)
+    await resetDatabase();
   });
 
   // ---------------------------
@@ -69,8 +54,8 @@ describe("OAuth Negative Path Tests", () => {
   });
 
   it("POST /oauth/authorize → rejects userId not found in DB", async () => {
-    // Remove the user so DB lookup fails
-    await prisma.user.deleteMany();
+    // ⭐ Delete user safely using resetDatabase
+    await resetDatabase();
 
     const res = await request(app)
       .post("/oauth/authorize")

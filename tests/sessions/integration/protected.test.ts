@@ -6,8 +6,16 @@ import { resetDatabase } from "../../setup";
 describe("Session Authentication – Protected Route", () => {
 
   beforeEach(async () => {
-    await resetDatabase();
+  await resetDatabase();
+
+  await prisma.user.create({
+    data: {
+      id: "user-123",
+      email: "test@example.com",
+      password: "password"
+    }
   });
+});
 
   test("Protected route returns 200 for valid session and 401 for invalid", async () => {
     await prisma.session.create({

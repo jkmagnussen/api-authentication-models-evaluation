@@ -1,16 +1,15 @@
 import request from "supertest";
 import app from "../../../src/app";
+import { resetDatabase } from "../../setup";   // ⭐ Use global reset
 import { prisma } from "../../../src/db";
 import {
   exchangeCodeForToken,
-  validateAccessToken,
-  createAuthorizationCode
+  validateAccessToken
 } from "../../../src/oauth/oauth.service";
 
 const validUUID = "123e4567-e89b-12d3-a456-426614174000";
 
 jest.mock("../../../src/oauth/oauth.service", () => ({
-  createAuthorizationCode: jest.fn(),
   exchangeCodeForToken: jest.fn(),
   validateAccessToken: jest.fn(),
 }));
@@ -19,12 +18,9 @@ describe("OAuth Lifecycle Tests", () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    // Reset DB
-    await prisma.session.deleteMany();
-    await prisma.user.deleteMany();
-    await prisma.oAuthAuthorizationCode.deleteMany();
+    // ⭐ Use global DB reset (correct FK order + OAuth client recreated)
+    await resetDatabase();
 
-    // Base user
     await prisma.user.create({
       data: {
         id: validUUID,
@@ -39,15 +35,14 @@ describe("OAuth Lifecycle Tests", () => {
   // ---------------------------
 
   it("POST /oauth/token → rejects expired authorization code", async () => {
-    // Insert expired code into DB (with required fields)
+    // ⭐ Insert expired code (only valid fields)
     await prisma.oAuthAuthorizationCode.create({
       data: {
         code: "expired-code-123",
         userId: validUUID,
         expiresAt: new Date(Date.now() - 10000), // expired
         used: false,
-        clientId: "test-client",
-        redirectUri: "https://example.com/callback",
+        clientId: "client-123"
       },
     });
 
@@ -67,15 +62,14 @@ describe("OAuth Lifecycle Tests", () => {
   // ---------------------------
 
   it("POST /oauth/token → rejects reused authorization code", async () => {
-    // Insert USED code into DB (with required fields)
+    // ⭐ Insert USED code (only valid fields)
     await prisma.oAuthAuthorizationCode.create({
       data: {
         code: "used-code-123",
         userId: validUUID,
         expiresAt: new Date(Date.now() + 60000), // still valid
         used: true, // already used
-        clientId: "test-client",
-        redirectUri: "https://example.com/callback",
+        clientId: "client-123"
       },
     });
 

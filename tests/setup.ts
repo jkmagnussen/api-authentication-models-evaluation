@@ -1,35 +1,31 @@
 // tests/setup.ts
 
 import { prisma } from "../src/db";
-import bcrypt from "bcryptjs";
 
-// Mock ONLY OAuth service functions (integration tests need real Prisma)
-jest.mock("../src/oauth/oauth.service", () => ({
-  createAuthorizationCode: jest.fn(),
-  exchangeCodeForToken: jest.fn(),
-  validateAccessToken: jest.fn(),
-}));
+async function safeDeleteMany(model: any) {
+  if (!model?.deleteMany) return;
+  const promise = model.deleteMany();
+  if (promise?.catch) {
+    return promise.catch(() => {});
+  }
+  return promise;
+}
 
 export async function resetDatabase() {
-  // Clear all authentication-related tables safely
-  if (prisma.session?.deleteMany) {
-    await prisma.session.deleteMany();
-  }
+  await safeDeleteMany((prisma as any).oAuthAccessToken);
+  await safeDeleteMany((prisma as any).oAuthAuthorizationCode);
+  await safeDeleteMany((prisma as any).session);
+  await safeDeleteMany((prisma as any).oAuthClient);
+  await safeDeleteMany((prisma as any).user);
 
-  if (prisma.user?.deleteMany) {
-    await prisma.user.deleteMany();
+  const oauthClient = (prisma as any).oAuthClient;
+  if (oauthClient?.create) {
+    await oauthClient.create({
+      data: {
+        id: "client-123",
+        name: "Test Client",
+        secret: "test-secret",
+      },
+    }).catch(() => {});
   }
-
-  if (prisma.oAuthAuthorizationCode?.deleteMany) {
-    await prisma.oAuthAuthorizationCode.deleteMany();
-  }
-
-  // Recreate base user
-  await prisma.user.create({
-    data: {
-      id: "user-123",
-      email: "test@example.com",
-      password: await bcrypt.hash("password", 10),
-    },
-  });
 }

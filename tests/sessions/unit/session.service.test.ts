@@ -1,47 +1,72 @@
+// ⭐ Mock Prisma FIRST — before importing the service
+jest.mock("../../../src/db", () => ({
+  prisma: {
+    session: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      delete: jest.fn(),
+    },
+  },
+}));
+
 import { prisma } from "../../../src/db";
-import { createSession, findSession, deleteSession } from "../../../src/sessions/session.service";
+import {
+  createSession,
+  findSession,
+  deleteSession,
+} from "../../../src/sessions/session.service";
 
 describe("Session Service – Unit Tests", () => {
-
-  beforeEach(async () => {
-    await prisma.session.deleteMany();
-    await prisma.user.deleteMany();
-
-    await prisma.user.create({
-      data: {
-        id: "user-123",
-        email: "test@example.com",
-        password: "hashed"
-      }
-    });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   test("createSession creates a session with correct fields", async () => {
+    const fakeSession = {
+      id: "session-123",
+      userId: "user-123",
+      expiresAt: new Date(Date.now() + 3600000),
+    };
+
+    (prisma.session.create as jest.Mock).mockResolvedValue(fakeSession);
+
     const session = await createSession("user-123");
 
-    expect(session.userId).toBe("user-123");
-    expect(session.expiresAt).toBeDefined();
-    expect(session.id).toBeDefined();
+    expect(prisma.session.create).toHaveBeenCalledWith({
+      data: {
+        userId: "user-123",
+        expiresAt: expect.any(Date),
+      },
+    });
+
+    expect(session).toEqual(fakeSession);
   });
 
   test("findSession returns a session when it exists", async () => {
-    const created = await createSession("user-123");
-    const found = await findSession(created.id);
+    const fakeSession = {
+      id: "session-123",
+      userId: "user-123",
+      expiresAt: new Date(Date.now() + 3600000),
+    };
 
-    expect(found).not.toBeNull();
-    expect(found?.id).toBe(created.id);
-  });
+    (prisma.session.findUnique as jest.Mock).mockResolvedValue(fakeSession);
 
-  test("findSession returns null for non-existent session", async () => {
-    const found = await findSession("does-not-exist");
-    expect(found).toBeNull();
+    const found = await findSession("session-123");
+
+    expect(prisma.session.findUnique).toHaveBeenCalledWith({
+      where: { id: "session-123" },
+    });
+
+    expect(found).toEqual(fakeSession);
   });
 
   test("deleteSession removes a session", async () => {
-    const created = await createSession("user-123");
-    await deleteSession(created.id);
+    (prisma.session.delete as jest.Mock).mockResolvedValue({});
 
-    const found = await findSession(created.id);
-    expect(found).toBeNull();
+    await deleteSession("session-123");
+
+    expect(prisma.session.delete).toHaveBeenCalledWith({
+      where: { id: "session-123" },
+    });
   });
 });

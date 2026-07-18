@@ -26,6 +26,12 @@ export async function exchangeCodeForToken(code: string) {
 
   if (!authCode) return null;
   if (authCode.expiresAt < new Date()) return null;
+  if (authCode.used) return null;
+
+  await prisma.oAuthAuthorizationCode.update({
+    where: { code },
+    data: { used: true },
+  });
 
   // Create access + refresh tokens with scope
   const token = await prisma.oAuthAccessToken.create({

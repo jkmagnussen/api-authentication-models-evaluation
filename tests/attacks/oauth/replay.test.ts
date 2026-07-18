@@ -1,14 +1,13 @@
 import request from "supertest";
 import app from "../../../src/app";
 import { prisma } from "../../../src/db";
+import { resetDatabase } from "../../setup";
 
 const validUUID = "123e4567-e89b-12d3-a456-426614174000";
 
 describe("OAuth – Replay Attack", () => {
   beforeEach(async () => {
-    await prisma.session.deleteMany();
-    await prisma.user.deleteMany();
-    await prisma.oAuthAuthorizationCode.deleteMany();
+    await resetDatabase();
 
     await prisma.user.create({
       data: {
@@ -25,8 +24,7 @@ describe("OAuth – Replay Attack", () => {
       .post("/oauth/authorize")
       .send({
         userId: validUUID,
-        client_id: "client-123",
-        redirect_uri: "https://example.com/callback",
+        clientId: "client-123"
       });
 
     const stored = await prisma.oAuthAuthorizationCode.findFirst();

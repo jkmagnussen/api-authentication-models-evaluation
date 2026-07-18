@@ -1,5 +1,6 @@
 import request from "supertest";
 import app from "../../../src/app";
+import { prisma } from "../../../src/db";
 import { resetDatabase } from "../../setup";
 
 describe("JWT – Replay Attack Test", () => {
@@ -7,6 +8,14 @@ describe("JWT – Replay Attack Test", () => {
 
   beforeAll(async () => {
     await resetDatabase();
+
+    await prisma.user.create({
+      data: {
+        id: "user-123",
+        email: "test@example.com",
+        password: "password",
+      },
+    });
 
     // Login → get valid JWT
     const res = await request(app)

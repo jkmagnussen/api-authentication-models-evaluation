@@ -24,8 +24,7 @@ describe("OAuth – State Parameter Attack", () => {
       .post("/oauth/authorize")
       .send({
         userId: validUUID,
-        client_id: "client-123",
-        redirect_uri: "https://example.com/callback",
+        clientId: "client-123",
         state: "malicious"
       });
 
