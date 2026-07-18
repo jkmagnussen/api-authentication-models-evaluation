@@ -1,0 +1,208 @@
+{
+  "info": {
+    "_postman_id": "a2b658ce-f521-4b9f-82d7-fec720209cdd",
+    "name": "Routes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "38619224"
+  },
+  "item": [
+    {
+      "name": "Login Routes",
+      "item": [
+        {
+          "name": "Sessions",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"test@example.com\",\r\n  \"password\": \"password123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/sessions/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "sessions",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "JWT",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"test@example.com\",\r\n  \"password\": \"password123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/jwt/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "jwt",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OAuth (authorize)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"userId\": \"d9c7dba3-3f97-4418-9f7b-f89d8fa5d925\",\r\n  \"client_id\": \"client-123\",\r\n  \"redirect_uri\": \"http://localhost:3000/callback\",\r\n  \"state\": \"xyz\",\r\n  \"scope\": \"read\",\r\n  \"code_challenge\": \"Q7m2xK9t1pL4vS8bZ3rT0uE5wY9nC2fJ6kH1dQ4hA7U\",\r\n  \"code_challenge_method\": \"S256\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/oauth/authorize",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "oauth",
+                "authorize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OAuth (token)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/oauth/authorize",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "oauth",
+                "authorize"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Logout Routes",
+      "item": [
+        {
+          "name": "Session Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"test@example.com\",\r\n  \"password\": \"password123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/sessions/logout",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "sessions",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Protected Routes",
+      "item": [
+        {
+          "name": "Sessions Protected",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "JWT Protected",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "OAuth Protected",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "basic_auth_17u8",
+      "secret": true
+    },
+    {
+      "key": "auth_password_011s",
+      "secret": true
+    }
+  ]
+}

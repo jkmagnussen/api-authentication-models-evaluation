@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../db";
 
-const prisma = new PrismaClient();
+
 
 export async function createSession(userId: string) {
   return prisma.session.create({
@@ -20,5 +20,12 @@ export async function deleteSession(sessionId: string) {
 export async function findSession(sessionId: string) {
   return prisma.session.findUnique({
     where: { id: sessionId },
+  });
+}
+
+// ⭐ Add this back — sessions login needs it
+export async function findUserByEmail(email: string) {
+  return prisma.user.findUnique({
+    where: { email },
   });
 }

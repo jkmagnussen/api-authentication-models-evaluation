@@ -1,9 +1,7 @@
 import { Router } from "express";
-import { validateAuthorize, validateToken } from "../middleware/validateOAuth";
-import { requireScope } from "../middleware/requireScope";
 import { oauthLimiter } from "./rateLimit";
 import { authorize, token, introspect, refresh, revoke } from "./oauth.controller";
-import { verifyAccessToken } from "./oauth.middleware";
+import { verifyAccessToken, validateAuthorize, validateToken  } from "./oauth.middleware";
 
 const router = Router();
 

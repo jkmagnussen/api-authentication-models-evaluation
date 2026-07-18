@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
-import { findUserByEmail } from "../services/authServices";
+import { findUserByEmail } from "./session.service";
 import { createSession } from "./session.service";
 import { deleteSession } from "./session.service";
 

@@ -1,12 +1,13 @@
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
-import authRoutes from "./routes/authRoutes";
-import oauthRoutes from "./oauth/oauth.routes"; 
-import sessionRoutes from "./sessions/sessions.routes"; 
-import jwtRouter from "./jwt/jwt.routes";
 import cookieParser from "cookie-parser";
 import session from "express-session";
+
+import oauthRoutes from "./oauth/oauth.routes";
+import sessionRoutes from "./sessions/sessions.routes";
+import jwtRoutes from "./jwt/jwt.routes";
+
 import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
@@ -20,38 +21,28 @@ app.use(cors({
 }));
 
 app.use(express.json());
-
-// ⭐ Required for cookie-based CSRF
 app.use(cookieParser());
 
-// ⭐ ADD SESSION HERE — AFTER cookieParser, BEFORE routes
+// Session middleware
 app.use(session({
   secret: "super-secret",
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,     // HTTPS only if true
+    secure: false,
     httpOnly: true,
-    sameSite: "none"   // ⭐ REQUIRED for PKCE redirects
+    sameSite: "none"
   }
 }));
 
-// Health check / root route
 app.get("/", (req, res) => {
   res.send("API running");
 });
 
-// Auth routes
-app.use("/auth", authRoutes);
-
-// OAuth routes
+// Routes
 app.use("/oauth", oauthRoutes);
-
-// Session routes (login, logout, protected, CSRF)
 app.use("/sessions", sessionRoutes);
-
-// JWT routes
-app.use("/jwt", jwtRouter);
+app.use("/jwt", jwtRoutes);
 
 app.use(errorHandler);
 
