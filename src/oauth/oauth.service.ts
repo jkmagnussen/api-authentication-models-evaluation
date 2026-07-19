@@ -20,18 +20,28 @@ function expiresIn(minutes: number) {
  * PKCE validation is handled in the controller.
  */
 export async function exchangeCodeForToken(code: string) {
+  const now = new Date();
+
+  const claimedCode = await prisma.oAuthAuthorizationCode.updateMany({
+    where: {
+      code,
+      used: false,
+      expiresAt: { gt: now },
+    },
+    data: {
+      used: true,
+    },
+  });
+
+  if (claimedCode.count !== 1) {
+    return null;
+  }
+
   const authCode = await prisma.oAuthAuthorizationCode.findUnique({
     where: { code },
   });
 
   if (!authCode) return null;
-  if (authCode.expiresAt < new Date()) return null;
-  if (authCode.used) return null;
-
-  await prisma.oAuthAuthorizationCode.update({
-    where: { code },
-    data: { used: true },
-  });
 
   // Create access + refresh tokens with scope
   const token = await prisma.oAuthAccessToken.create({

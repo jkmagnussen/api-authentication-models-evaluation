@@ -3,6 +3,20 @@ import { prisma } from "../db";
 import crypto from "crypto";
 import { exchangeCodeForToken } from "./oauth.service";
 
+function getRequestedRedirectUri(req: Request) {
+  const redirectUri = req.body.redirectUri ?? req.body.redirect_uri;
+  return typeof redirectUri === "string" ? redirectUri : undefined;
+}
+
+function validateRedirectUri(redirectUri: string | undefined) {
+  if (!redirectUri) {
+    return true;
+  }
+
+  const normalized = decodeURIComponent(redirectUri);
+  return normalized === "https://example.com/callback";
+}
+
 // ------------------------------------------------------
 // AUTHORIZE (Authorization Code + PKCE) — JSON ONLY
 // ------------------------------------------------------
@@ -38,8 +52,10 @@ export async function authorize(req: Request, res: Response) {
     return res.status(400).json({ error: "Invalid clientId" });
   }
 
-  const requestedRedirectUri = redirectUri ?? redirect_uri;
-  if (requestedRedirectUri && requestedRedirectUri !== "https://example.com/callback") {
+  const requestedRedirectUri = getRequestedRedirectUri(req);
+  const hasConflictingRedirectValues = redirectUri !== undefined && redirect_uri !== undefined && redirectUri !== redirect_uri;
+
+  if ((requestedRedirectUri && !validateRedirectUri(requestedRedirectUri)) || hasConflictingRedirectValues) {
     return res.status(400).json({ error: "Invalid redirect URI" });
   }
 
@@ -72,6 +88,8 @@ export async function token(req: Request, res: Response) {
   const { code, state, code_verifier } = req.body;
 
   const auth = req.headers.authorization;
+  let authenticatedClientId: string | undefined;
+
   if (auth?.startsWith("Basic ")) {
     const base64 = auth.replace("Basic ", "");
     const [clientId, clientSecret] = Buffer.from(base64, "base64")
@@ -88,6 +106,8 @@ export async function token(req: Request, res: Response) {
         error_description: "Invalid client credentials",
       });
     }
+
+    authenticatedClientId = client.id;
   }
 
   if (!code) {
@@ -108,6 +128,13 @@ export async function token(req: Request, res: Response) {
 
   if (stored.state && stored.state !== state) {
     return res.status(400).json({ error: "Invalid state" });
+  }
+
+  if (authenticatedClientId && authenticatedClientId !== stored.clientId) {
+    return res.status(401).json({
+      error: "invalid_client",
+      error_description: "Client does not match authorization code",
+    });
   }
 
   // PKCE verification (only if a challenge was stored)

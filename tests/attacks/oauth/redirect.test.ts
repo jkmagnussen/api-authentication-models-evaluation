@@ -64,4 +64,31 @@ describe("OAuth – Redirect URI Manipulation Attack", () => {
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("Invalid redirect URI");
   });
+
+  test("Encoded redirect URI variants should also be rejected", async () => {
+    const res = await request(app)
+      .post("/oauth/authorize")
+      .send({
+        userId: "11111111-1111-1111-1111-111111111111",
+        clientId: "client-123",
+        redirectUri: "https://example.com/callback%2Fextra"
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("Invalid redirect URI");
+  });
+
+  test("Redirect URI parameter pollution should be rejected", async () => {
+    const res = await request(app)
+      .post("/oauth/authorize")
+      .send({
+        userId: "11111111-1111-1111-1111-111111111111",
+        clientId: "client-123",
+        redirectUri: "https://example.com/callback",
+        redirect_uri: "https://evil.example/callback"
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("Invalid redirect URI");
+  });
 });

@@ -10,12 +10,12 @@ describe("Sessions – Replay Attack Test", () => {
     await resetDatabase();
 
     await prisma.user.create({
-    data: {
-      id: "user-123",
-      email: "test@example.com",
-      password: "password"
-    }
-  });
+      data: {
+        id: "user-123",
+        email: "test@example.com",
+        password: "password"
+      }
+    });
 
     // Login → get a valid session cookie
     const res = await request(app)
@@ -26,14 +26,12 @@ describe("Sessions – Replay Attack Test", () => {
   });
 
   test("Reusing the same session cookie should still succeed until session expiry", async () => {
-    // First use — should succeed
     const firstRes = await request(app)
       .get("/sessions/protected")
       .set("Cookie", cookie);
 
     expect(firstRes.status).toBe(200);
 
-    // Replay the exact same cookie — should also succeed
     const replayRes = await request(app)
       .get("/sessions/protected")
       .set("Cookie", cookie);
@@ -42,16 +40,40 @@ describe("Sessions – Replay Attack Test", () => {
   });
 
   test("Replayed cookie after logout should fail", async () => {
-    // Logout → server deletes the session record
     await request(app)
       .post("/sessions/logout")
       .set("Cookie", cookie);
 
-    // Replay the same cookie → should now fail
     const res = await request(app)
       .get("/sessions/protected")
       .set("Cookie", cookie);
 
     expect(res.status).toBe(401);
+  });
+
+  test("A fresh login should replace a previously issued session cookie", async () => {
+    const firstLogin = await request(app)
+      .post("/sessions/login")
+      .send({ email: "test@example.com", password: "password" });
+
+    const firstCookie = firstLogin.headers["set-cookie"][0];
+
+    const secondLogin = await request(app)
+      .post("/sessions/login")
+      .set("Cookie", firstCookie)
+      .send({ email: "test@example.com", password: "password" });
+
+    const secondCookie = secondLogin.headers["set-cookie"][0];
+
+    const oldSessionRes = await request(app)
+      .get("/sessions/protected")
+      .set("Cookie", firstCookie);
+
+    const newSessionRes = await request(app)
+      .get("/sessions/protected")
+      .set("Cookie", secondCookie);
+
+    expect(oldSessionRes.status).toBe(401);
+    expect(newSessionRes.status).toBe(200);
   });
 });
