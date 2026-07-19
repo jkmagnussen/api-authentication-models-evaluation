@@ -1,13 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import bcrypt from "bcryptjs";
-import { findUserByEmail } from "./session.service";
+import { findUserByEmail } from "../auth/user";
+import { isValidPassword } from "../auth/password";
 import { createSession } from "./session.service";
-import { deleteSession } from "./session.service";
-
-async function isValidPassword(candidate: string, stored: string) {
-  if (candidate === stored) return true;
-  return bcrypt.compare(candidate, stored);
-}
+import { deleteSession, findSession } from "./session.service";
 
 export async function loginWithSession(req: Request, res: Response, next: NextFunction) {
   try {
@@ -18,6 +13,11 @@ export async function loginWithSession(req: Request, res: Response, next: NextFu
 
     const match = await isValidPassword(password, user.password);
     if (!match) return res.status(401).json({ message: "Invalid credentials" });
+
+    const existingSessionId = req.cookies?.sessionId;
+    if (existingSessionId) {
+      await deleteSession(existingSessionId).catch(() => undefined);
+    }
 
     const session = await createSession(user.id);
 

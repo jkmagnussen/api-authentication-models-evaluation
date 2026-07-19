@@ -1,7 +1,5 @@
 import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { findUserByEmail as findUserByEmailFromDb } from "../auth/user";
 
 function getJwtSecret() {
   return process.env.JWT_SECRET || "dev-secret";
@@ -24,5 +22,5 @@ export async function verifyJwt(token: string) {
 }
 
 export async function findUserByEmail(email: string) {
-  return prisma.user.findUnique({ where: { email } });
+  return findUserByEmailFromDb(email);
 }

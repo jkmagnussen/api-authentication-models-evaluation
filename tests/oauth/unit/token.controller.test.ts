@@ -69,6 +69,9 @@ describe("token controller", () => {
 
     expect(res.json).toHaveBeenCalledWith({
       access_token: "jwt-token",
+      accessToken: "jwt-token",
+      refresh_token: "refresh-token",
+      refreshToken: "refresh-token",
       token_type: "Bearer",
       expires_in: 3600,
     });

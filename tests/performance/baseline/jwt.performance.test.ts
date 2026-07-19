@@ -1,7 +1,7 @@
 import request from "supertest";
-import app from "../../src/app";
-import { resetDatabase } from "../setup";
-import { calculateStats } from "./utils";
+import app from "../../../src/app";
+import { resetDatabase } from "../../setup";
+import { calculateStats } from "../utils";
 import fs from "fs";
 
 describe("JWT – Performance Test", () => {
@@ -34,6 +34,11 @@ describe("JWT – Performance Test", () => {
 
     const stats = calculateStats(times);
 
-    fs.writeFileSync("jwt-performance.json", JSON.stringify(stats, null, 2));
+    const outputDir = "docs/performance-results/baseline";
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    fs.writeFileSync(`${outputDir}/jwt.json`, JSON.stringify(stats, null, 2));
   });
 });

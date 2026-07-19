@@ -1,6 +1,7 @@
 // tests/setup.ts
 
 import { prisma } from "../src/db";
+import { authLimiter } from "../src/middleware/rateLimiter";
 
 async function safeDeleteMany(model: any) {
   if (!model?.deleteMany) return;
@@ -12,6 +13,9 @@ async function safeDeleteMany(model: any) {
 }
 
 export async function resetDatabase() {
+  authLimiter.resetKey("127.0.0.1");
+  authLimiter.resetKey("::ffff:127.0.0.1");
+
   await safeDeleteMany((prisma as any).oAuthAccessToken);
   await safeDeleteMany((prisma as any).oAuthAuthorizationCode);
   await safeDeleteMany((prisma as any).session);
@@ -29,3 +33,8 @@ export async function resetDatabase() {
     }).catch(() => {});
   }
 }
+
+export async function resetAuthState() {
+  await resetDatabase();
+}
+

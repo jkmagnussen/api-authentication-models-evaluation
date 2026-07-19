@@ -1,11 +1,7 @@
 import { Request, Response } from "express";
-import bcrypt from "bcryptjs";
-import { findUserByEmail, generateJwt } from "./jwt.service";
-
-async function isValidPassword(candidate: string, stored: string) {
-  if (candidate === stored) return true;
-  return bcrypt.compare(candidate, stored);
-}
+import { findUserByEmail } from "../auth/user";
+import { isValidPassword } from "../auth/password";
+import { generateJwt } from "./jwt.service";
 
 export async function jwtLogin(req: Request, res: Response) {
   const { email, password } = req.body;

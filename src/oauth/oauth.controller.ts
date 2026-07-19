@@ -140,6 +140,9 @@ export async function token(req: Request, res: Response) {
 
   return res.status(200).json({
     access_token: tokenResult.accessToken,
+    accessToken: tokenResult.accessToken,
+    refresh_token: tokenResult.refreshToken,
+    refreshToken: tokenResult.refreshToken,
     token_type: "Bearer",
     expires_in: 3600,
   });
@@ -183,7 +186,9 @@ export async function refresh(req: Request, res: Response) {
 
   return res.json({
     access_token: newAccessToken,
+    accessToken: newAccessToken,
     refresh_token: newRefreshToken,
+    refreshToken: newRefreshToken,
     token_type: "Bearer",
     expires_in: 3600,
   });

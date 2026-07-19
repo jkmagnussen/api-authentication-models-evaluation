@@ -1,6 +1,7 @@
 import { Router } from "express";
 import csrf from "csurf";
 import { validateLogin } from "../middleware/validateLogin";
+import { authLimiter } from "../middleware/rateLimiter";
 import { loginWithSession, getSessionProtected, logoutSession } from "./sessions.controller";
 import { requireSession } from "./sessions.middleware";
 
@@ -10,7 +11,7 @@ const router = Router();
 const csrfProtection = csrf({ cookie: true });
 
 // Login (no CSRF needed)
-router.post("/login", validateLogin, loginWithSession);
+router.post("/login", authLimiter, validateLogin, loginWithSession);
 
 // Protected route (DB-backed session)
 router.get("/protected", requireSession, getSessionProtected);
