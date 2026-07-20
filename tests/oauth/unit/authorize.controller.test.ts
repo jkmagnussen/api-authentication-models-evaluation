@@ -18,25 +18,25 @@ import { prisma } from "../../../src/db";
 
 describe("authorize controller", () => {
   it("returns code for valid user", async () => {
-    // ⭐ Mock user lookup — hashed password is irrelevant here
+    // ⭐ Mock user lookup
     (prisma.user.findUnique as jest.Mock).mockResolvedValue({
-      id: "user-123",
+      id: "client-123",
       email: "test@example.com",
-      password: "$2b$10$hashedpasswordexample1234567890abcdefghi", // Option B
+      password: "$2b$10$hashedpasswordexample1234567890abcdefghi",
     });
 
-    // ⭐ Mock OAuth client lookup
+    // ⭐ Mock OAuth client lookup — MUST be one of your real clients
     (prisma.oAuthClient.findUnique as jest.Mock).mockResolvedValue({
       id: "client-123",
       name: "Test Client",
-      secret: "test-secret",
+      secret: "basic-secret",
     });
 
     // ⭐ Mock authorization code creation
     (prisma.oAuthAuthorizationCode.create as jest.Mock).mockResolvedValue({
       code: "auth-code",
       userId: "user-123",
-      clientId: "client-123",
+      clientId: "client-basic",
       state: null,
       expiresAt: new Date(Date.now() + 60000),
       used: false,
@@ -45,7 +45,8 @@ describe("authorize controller", () => {
     const req: any = {
       body: {
         userId: "user-123",
-        clientId: "client-123", // ⭐ must match your controller
+        clientId: "client-basic",   // ✔ must match mock + real system
+        scope: "read",              // ✔ allowed for client-basic
       },
     };
 

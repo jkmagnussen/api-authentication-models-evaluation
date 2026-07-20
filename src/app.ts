@@ -7,10 +7,13 @@ import session from "express-session";
 import oauthRoutes from "./oauth/oauth.routes";
 import sessionRoutes from "./sessions/sessions.routes";
 import jwtRoutes from "./jwt/jwt.routes";
+import { getVariantOverrides } from "./variant-overrides";
 
 import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
+const variantOverrides = getVariantOverrides();
+const sessionCookieOverride = variantOverrides.sessions?.cookie;
 
 app.use(helmet());
 
@@ -29,9 +32,9 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,
-    httpOnly: true,
-    sameSite: "none"
+    secure: sessionCookieOverride?.secure ?? false,
+    httpOnly: sessionCookieOverride?.httpOnly ?? true,
+    sameSite: sessionCookieOverride?.sameSite ?? "none"
   }
 }));
 

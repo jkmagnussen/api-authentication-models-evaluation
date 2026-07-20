@@ -1,8 +1,7 @@
 import request from "supertest";
 import app from "../../../src/app";
 import { resetDatabase } from "../../setup";
-import { calculateStats } from "../utils";
-import fs from "fs";
+import { calculateStats, writePerformanceResult } from "../utils";
 
 describe("Sessions – Attack Performance Test", () => {
   const ITERATIONS = 1000;
@@ -38,15 +37,6 @@ describe("Sessions – Attack Performance Test", () => {
       errorRate: errors / ITERATIONS,
     };
 
-    // Ensure directory exists
-    const outputDir = "docs/performance-results/attacks";
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-
-    fs.writeFileSync(
-      `${outputDir}/sessions.json`,
-      JSON.stringify(attackStats, null, 2)
-    );
+    writePerformanceResult("attacks", "sessions", attackStats);
   });
 });

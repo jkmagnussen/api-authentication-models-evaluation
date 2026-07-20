@@ -47,4 +47,55 @@ describe("Sessions – CSRF Attack Test", () => {
 
     expect(res.status).toBe(200);
   });
+
+  test("Missing CSRF token should be rejected", async () => {
+    const csrfRes = await request(app)
+      .get("/sessions/csrf-token")
+      .set("Cookie", sessionCookie);
+
+    const csrfCookieHeader = csrfRes.headers["set-cookie"];
+    const csrfCookie = Array.isArray(csrfCookieHeader) ? csrfCookieHeader[0] : "";
+    const combinedCookies = `${sessionCookie}; ${csrfCookie}`;
+
+    const res = await request(app)
+      .post("/sessions/protected-action")
+      .set("Cookie", combinedCookies)
+      .send({ action: "transfer-money" });
+
+    expect(res.status).toBe(403);
+  });
+
+  test("Invalid CSRF token should be rejected", async () => {
+    const csrfRes = await request(app)
+      .get("/sessions/csrf-token")
+      .set("Cookie", sessionCookie);
+
+    const csrfCookieHeader = csrfRes.headers["set-cookie"];
+    const csrfCookie = Array.isArray(csrfCookieHeader) ? csrfCookieHeader[0] : "";
+    const combinedCookies = `${sessionCookie}; ${csrfCookie}`;
+
+    const res = await request(app)
+      .post("/sessions/protected-action")
+      .set("Cookie", combinedCookies)
+      .set("csrf-token", "invalid-csrf-token")
+      .send({ action: "transfer-money" });
+
+    expect(res.status).toBe(403);
+  });
+
+  test("Missing CSRF cookie should be rejected even with token", async () => {
+    const csrfRes = await request(app)
+      .get("/sessions/csrf-token")
+      .set("Cookie", sessionCookie);
+
+    const validToken = csrfRes.body.csrfToken;
+
+    const res = await request(app)
+      .post("/sessions/protected-action")
+      .set("Cookie", sessionCookie)
+      .set("csrf-token", validToken)
+      .send({ action: "transfer-money" });
+
+    expect(res.status).toBe(403);
+  });
 });

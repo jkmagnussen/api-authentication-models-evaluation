@@ -26,7 +26,7 @@ describe("token controller", () => {
     (prisma.oAuthAuthorizationCode.findUnique as jest.Mock).mockResolvedValue({
       code: "auth-code",
       userId: "user-123",
-      clientId: "client-123",
+      clientId: "client-basic",
       expiresAt: new Date(Date.now() + 60000),
       used: false,
     });
@@ -39,7 +39,7 @@ describe("token controller", () => {
 
     // Mock OAuth client lookup
     (prisma.oAuthClient.findUnique as jest.Mock).mockResolvedValue({
-      id: "client-123",
+      id: "client-basic",
       name: "Test Client",
       secret: "test-secret",
     });
@@ -51,7 +51,7 @@ describe("token controller", () => {
       scope: "read",
     });
 
-    const basicAuth = Buffer.from("client-123:test-secret").toString("base64");
+    const basicAuth = Buffer.from("client-basic:test-secret").toString("base64");
 
     const req: any = {
       body: { code: "auth-code" },
@@ -69,9 +69,7 @@ describe("token controller", () => {
 
     expect(res.json).toHaveBeenCalledWith({
       access_token: "jwt-token",
-      accessToken: "jwt-token",
       refresh_token: "refresh-token",
-      refreshToken: "refresh-token",
       token_type: "Bearer",
       expires_in: 3600,
     });

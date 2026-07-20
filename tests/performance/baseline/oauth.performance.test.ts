@@ -1,8 +1,7 @@
 import request from "supertest";
 import app from "../../../src/app";
 import { resetDatabase } from "../../setup";
-import { calculateStats } from "../utils";
-import fs from "fs";
+import { calculateStats, writePerformanceResult } from "../utils";
 
 describe("OAuth – Performance Test", () => {
   const ITERATIONS = 1000;
@@ -43,17 +42,6 @@ describe("OAuth – Performance Test", () => {
     }
 
     const stats = calculateStats(times);
-
-    // Ensure directory exists
-    const outputDir = "docs/performance-results/baseline";
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-
-    // Write baseline OAuth performance results
-    fs.writeFileSync(
-      `${outputDir}/oauth.json`,
-      JSON.stringify(stats, null, 2)
-    );
+    writePerformanceResult("baseline", "oauth", stats);
   });
 });

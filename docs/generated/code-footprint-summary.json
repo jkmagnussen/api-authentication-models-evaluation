@@ -1,0 +1,1288 @@
+{
+  "baselineMetrics": [
+    {
+      "label": "OAUTH Baseline",
+      "scope": "baseline",
+      "fileCount": 6,
+      "characters": 15273,
+      "lines": 542,
+      "functions": 16,
+      "classes": 0,
+      "constants": 58,
+      "cyclomaticComplexity": 195,
+      "maintainabilityIndexAverage": 109.9962725724954,
+      "files": [
+        {
+          "filePath": "src/oauth/oauth.controller.ts",
+          "characters": 9770,
+          "lines": 336,
+          "functions": 8,
+          "classes": 0,
+          "constants": 43,
+          "cyclomaticComplexity": 106,
+          "maintainabilityIndex": 97.08254305028615
+        },
+        {
+          "filePath": "src/oauth/oauth.service.ts",
+          "characters": 1855,
+          "lines": 81,
+          "functions": 4,
+          "classes": 0,
+          "constants": 5,
+          "cyclomaticComplexity": 41,
+          "maintainabilityIndex": 108.4880630347055
+        },
+        {
+          "filePath": "src/oauth/oauth.middleware.ts",
+          "characters": 2128,
+          "lines": 81,
+          "functions": 3,
+          "classes": 0,
+          "constants": 7,
+          "cyclomaticComplexity": 45,
+          "maintainabilityIndex": 107.6940831248112
+        },
+        {
+          "filePath": "src/oauth/oauth.routes.ts",
+          "characters": 900,
+          "lines": 26,
+          "functions": 1,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 129.00701642797625
+        },
+        {
+          "filePath": "src/oauth/rateLimit.ts",
+          "characters": 344,
+          "lines": 12,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 104.28240401508074
+        },
+        {
+          "filePath": "src/oauth/clientScopes.ts",
+          "characters": 276,
+          "lines": 6,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 113.42352578211256
+        }
+      ]
+    },
+    {
+      "label": "JWT Baseline",
+      "scope": "baseline",
+      "fileCount": 4,
+      "characters": 4847,
+      "lines": 155,
+      "functions": 14,
+      "classes": 0,
+      "constants": 19,
+      "cyclomaticComplexity": 106,
+      "maintainabilityIndexAverage": 110.14709346073019,
+      "files": [
+        {
+          "filePath": "src/jwt/jwt.controller.ts",
+          "characters": 834,
+          "lines": 24,
+          "functions": 2,
+          "classes": 0,
+          "constants": 4,
+          "cyclomaticComplexity": 35,
+          "maintainabilityIndex": 110.9954626039503
+        },
+        {
+          "filePath": "src/jwt/jwt.middleware.ts",
+          "characters": 1868,
+          "lines": 57,
+          "functions": 4,
+          "classes": 0,
+          "constants": 8,
+          "cyclomaticComplexity": 20,
+          "maintainabilityIndex": 108.50769936512918
+        },
+        {
+          "filePath": "src/jwt/jwt.routes.ts",
+          "characters": 426,
+          "lines": 12,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 105.08980068870773
+        },
+        {
+          "filePath": "src/jwt/jwt.service.ts",
+          "characters": 1719,
+          "lines": 62,
+          "functions": 8,
+          "classes": 0,
+          "constants": 6,
+          "cyclomaticComplexity": 50,
+          "maintainabilityIndex": 115.99541118513353
+        }
+      ]
+    },
+    {
+      "label": "SESSIONS Baseline",
+      "scope": "baseline",
+      "fileCount": 4,
+      "characters": 5491,
+      "lines": 175,
+      "functions": 12,
+      "classes": 0,
+      "constants": 15,
+      "cyclomaticComplexity": 136,
+      "maintainabilityIndexAverage": 118.54440845097437,
+      "files": [
+        {
+          "filePath": "src/sessions/sessions.controller.ts",
+          "characters": 2434,
+          "lines": 65,
+          "functions": 4,
+          "classes": 0,
+          "constants": 11,
+          "cyclomaticComplexity": 68,
+          "maintainabilityIndex": 103.48475255417176
+        },
+        {
+          "filePath": "src/sessions/sessions.middleware.ts",
+          "characters": 733,
+          "lines": 29,
+          "functions": 1,
+          "classes": 0,
+          "constants": 2,
+          "cyclomaticComplexity": 35,
+          "maintainabilityIndex": 108.9229578870816
+        },
+        {
+          "filePath": "src/sessions/sessions.routes.ts",
+          "characters": 1320,
+          "lines": 38,
+          "functions": 2,
+          "classes": 0,
+          "constants": 2,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 143.58410236889637
+        },
+        {
+          "filePath": "src/sessions/session.service.ts",
+          "characters": 1004,
+          "lines": 43,
+          "functions": 5,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 32,
+          "maintainabilityIndex": 118.18582099374774
+        }
+      ]
+    }
+  ],
+  "variantMetrics": [
+    {
+      "label": "oauth-redirect-misconfiguration",
+      "scope": "misconfiguration",
+      "fileCount": 10,
+      "characters": 17364,
+      "lines": 621,
+      "functions": 20,
+      "classes": 0,
+      "constants": 60,
+      "cyclomaticComplexity": 207,
+      "maintainabilityIndexAverage": 117.2479613386907,
+      "files": [
+        {
+          "filePath": "src/oauth/oauth.controller.ts",
+          "characters": 9770,
+          "lines": 336,
+          "functions": 8,
+          "classes": 0,
+          "constants": 43,
+          "cyclomaticComplexity": 106,
+          "maintainabilityIndex": 97.08254305028615
+        },
+        {
+          "filePath": "src/oauth/oauth.service.ts",
+          "characters": 1855,
+          "lines": 81,
+          "functions": 4,
+          "classes": 0,
+          "constants": 5,
+          "cyclomaticComplexity": 41,
+          "maintainabilityIndex": 108.4880630347055
+        },
+        {
+          "filePath": "src/oauth/oauth.middleware.ts",
+          "characters": 2128,
+          "lines": 81,
+          "functions": 3,
+          "classes": 0,
+          "constants": 7,
+          "cyclomaticComplexity": 45,
+          "maintainabilityIndex": 107.6940831248112
+        },
+        {
+          "filePath": "src/oauth/oauth.routes.ts",
+          "characters": 900,
+          "lines": 26,
+          "functions": 1,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 129.00701642797625
+        },
+        {
+          "filePath": "src/oauth/rateLimit.ts",
+          "characters": 344,
+          "lines": 12,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 104.28240401508074
+        },
+        {
+          "filePath": "src/oauth/clientScopes.ts",
+          "characters": 276,
+          "lines": 6,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 113.42352578211256
+        },
+        {
+          "filePath": "misconfigurations/apply-override.ts",
+          "characters": 197,
+          "lines": 5,
+          "functions": 1,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 160.33382472007025
+        },
+        {
+          "filePath": "src/variant-overrides.ts",
+          "characters": 1523,
+          "lines": 61,
+          "functions": 3,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 9,
+          "maintainabilityIndex": 120.33604156285352
+        },
+        {
+          "filePath": "misconfigurations/oauth/redirect-misconfiguration/redirect.config.ts",
+          "characters": 126,
+          "lines": 4,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 119.93814804784293
+        },
+        {
+          "filePath": "misconfigurations/oauth/redirect-misconfiguration/app.variant.ts",
+          "characters": 245,
+          "lines": 9,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 111.89396362116777
+        }
+      ]
+    },
+    {
+      "label": "oauth-state-misconfiguration",
+      "scope": "misconfiguration",
+      "fileCount": 10,
+      "characters": 17303,
+      "lines": 621,
+      "functions": 20,
+      "classes": 0,
+      "constants": 60,
+      "cyclomaticComplexity": 207,
+      "maintainabilityIndexAverage": 117.36186618084938,
+      "files": [
+        {
+          "filePath": "src/oauth/oauth.controller.ts",
+          "characters": 9770,
+          "lines": 336,
+          "functions": 8,
+          "classes": 0,
+          "constants": 43,
+          "cyclomaticComplexity": 106,
+          "maintainabilityIndex": 97.08254305028615
+        },
+        {
+          "filePath": "src/oauth/oauth.service.ts",
+          "characters": 1855,
+          "lines": 81,
+          "functions": 4,
+          "classes": 0,
+          "constants": 5,
+          "cyclomaticComplexity": 41,
+          "maintainabilityIndex": 108.4880630347055
+        },
+        {
+          "filePath": "src/oauth/oauth.middleware.ts",
+          "characters": 2128,
+          "lines": 81,
+          "functions": 3,
+          "classes": 0,
+          "constants": 7,
+          "cyclomaticComplexity": 45,
+          "maintainabilityIndex": 107.6940831248112
+        },
+        {
+          "filePath": "src/oauth/oauth.routes.ts",
+          "characters": 900,
+          "lines": 26,
+          "functions": 1,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 129.00701642797625
+        },
+        {
+          "filePath": "src/oauth/rateLimit.ts",
+          "characters": 344,
+          "lines": 12,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 104.28240401508074
+        },
+        {
+          "filePath": "src/oauth/clientScopes.ts",
+          "characters": 276,
+          "lines": 6,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 113.42352578211256
+        },
+        {
+          "filePath": "misconfigurations/apply-override.ts",
+          "characters": 197,
+          "lines": 5,
+          "functions": 1,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 160.33382472007025
+        },
+        {
+          "filePath": "src/variant-overrides.ts",
+          "characters": 1523,
+          "lines": 61,
+          "functions": 3,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 9,
+          "maintainabilityIndex": 120.33604156285352
+        },
+        {
+          "filePath": "misconfigurations/oauth/state-misconfiguration/state.config.ts",
+          "characters": 74,
+          "lines": 4,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 121.07719646942965
+        },
+        {
+          "filePath": "misconfigurations/oauth/state-misconfiguration/app.variant.ts",
+          "characters": 236,
+          "lines": 9,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 111.89396362116777
+        }
+      ]
+    },
+    {
+      "label": "oauth-scope-misconfiguration",
+      "scope": "misconfiguration",
+      "fileCount": 10,
+      "characters": 17324,
+      "lines": 621,
+      "functions": 20,
+      "classes": 0,
+      "constants": 60,
+      "cyclomaticComplexity": 207,
+      "maintainabilityIndexAverage": 117.23807602515788,
+      "files": [
+        {
+          "filePath": "src/oauth/oauth.controller.ts",
+          "characters": 9770,
+          "lines": 336,
+          "functions": 8,
+          "classes": 0,
+          "constants": 43,
+          "cyclomaticComplexity": 106,
+          "maintainabilityIndex": 97.08254305028615
+        },
+        {
+          "filePath": "src/oauth/oauth.service.ts",
+          "characters": 1855,
+          "lines": 81,
+          "functions": 4,
+          "classes": 0,
+          "constants": 5,
+          "cyclomaticComplexity": 41,
+          "maintainabilityIndex": 108.4880630347055
+        },
+        {
+          "filePath": "src/oauth/oauth.middleware.ts",
+          "characters": 2128,
+          "lines": 81,
+          "functions": 3,
+          "classes": 0,
+          "constants": 7,
+          "cyclomaticComplexity": 45,
+          "maintainabilityIndex": 107.6940831248112
+        },
+        {
+          "filePath": "src/oauth/oauth.routes.ts",
+          "characters": 900,
+          "lines": 26,
+          "functions": 1,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 129.00701642797625
+        },
+        {
+          "filePath": "src/oauth/rateLimit.ts",
+          "characters": 344,
+          "lines": 12,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 104.28240401508074
+        },
+        {
+          "filePath": "src/oauth/clientScopes.ts",
+          "characters": 276,
+          "lines": 6,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 113.42352578211256
+        },
+        {
+          "filePath": "misconfigurations/apply-override.ts",
+          "characters": 197,
+          "lines": 5,
+          "functions": 1,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 160.33382472007025
+        },
+        {
+          "filePath": "src/variant-overrides.ts",
+          "characters": 1523,
+          "lines": 61,
+          "functions": 3,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 9,
+          "maintainabilityIndex": 120.33604156285352
+        },
+        {
+          "filePath": "misconfigurations/oauth/scope-misconfiguration/scope.config.ts",
+          "characters": 95,
+          "lines": 4,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 119.83929491251467
+        },
+        {
+          "filePath": "misconfigurations/oauth/scope-misconfiguration/app.variant.ts",
+          "characters": 236,
+          "lines": 9,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 111.89396362116777
+        }
+      ]
+    },
+    {
+      "label": "jwt-audience-misconfiguration",
+      "scope": "misconfiguration",
+      "fileCount": 8,
+      "characters": 6901,
+      "lines": 235,
+      "functions": 18,
+      "classes": 0,
+      "constants": 21,
+      "cyclomaticComplexity": 118,
+      "maintainabilityIndexAverage": 118.92171942142859,
+      "files": [
+        {
+          "filePath": "src/jwt/jwt.controller.ts",
+          "characters": 834,
+          "lines": 24,
+          "functions": 2,
+          "classes": 0,
+          "constants": 4,
+          "cyclomaticComplexity": 35,
+          "maintainabilityIndex": 110.9954626039503
+        },
+        {
+          "filePath": "src/jwt/jwt.middleware.ts",
+          "characters": 1868,
+          "lines": 57,
+          "functions": 4,
+          "classes": 0,
+          "constants": 8,
+          "cyclomaticComplexity": 20,
+          "maintainabilityIndex": 108.50769936512918
+        },
+        {
+          "filePath": "src/jwt/jwt.routes.ts",
+          "characters": 426,
+          "lines": 12,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 105.08980068870773
+        },
+        {
+          "filePath": "src/jwt/jwt.service.ts",
+          "characters": 1719,
+          "lines": 62,
+          "functions": 8,
+          "classes": 0,
+          "constants": 6,
+          "cyclomaticComplexity": 50,
+          "maintainabilityIndex": 115.99541118513353
+        },
+        {
+          "filePath": "misconfigurations/apply-override.ts",
+          "characters": 197,
+          "lines": 5,
+          "functions": 1,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 160.33382472007025
+        },
+        {
+          "filePath": "src/variant-overrides.ts",
+          "characters": 1523,
+          "lines": 61,
+          "functions": 3,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 9,
+          "maintainabilityIndex": 120.33604156285352
+        },
+        {
+          "filePath": "misconfigurations/jwt/audience-misconfiguration/audience.config.ts",
+          "characters": 95,
+          "lines": 5,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 118.22155162441632
+        },
+        {
+          "filePath": "misconfigurations/jwt/audience-misconfiguration/app.variant.ts",
+          "characters": 239,
+          "lines": 9,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 111.89396362116777
+        }
+      ]
+    },
+    {
+      "label": "jwt-algorithm-misconfiguration",
+      "scope": "misconfiguration",
+      "fileCount": 8,
+      "characters": 6891,
+      "lines": 234,
+      "functions": 18,
+      "classes": 0,
+      "constants": 21,
+      "cyclomaticComplexity": 118,
+      "maintainabilityIndexAverage": 119.27867502705526,
+      "files": [
+        {
+          "filePath": "src/jwt/jwt.controller.ts",
+          "characters": 834,
+          "lines": 24,
+          "functions": 2,
+          "classes": 0,
+          "constants": 4,
+          "cyclomaticComplexity": 35,
+          "maintainabilityIndex": 110.9954626039503
+        },
+        {
+          "filePath": "src/jwt/jwt.middleware.ts",
+          "characters": 1868,
+          "lines": 57,
+          "functions": 4,
+          "classes": 0,
+          "constants": 8,
+          "cyclomaticComplexity": 20,
+          "maintainabilityIndex": 108.50769936512918
+        },
+        {
+          "filePath": "src/jwt/jwt.routes.ts",
+          "characters": 426,
+          "lines": 12,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 105.08980068870773
+        },
+        {
+          "filePath": "src/jwt/jwt.service.ts",
+          "characters": 1719,
+          "lines": 62,
+          "functions": 8,
+          "classes": 0,
+          "constants": 6,
+          "cyclomaticComplexity": 50,
+          "maintainabilityIndex": 115.99541118513353
+        },
+        {
+          "filePath": "misconfigurations/apply-override.ts",
+          "characters": 197,
+          "lines": 5,
+          "functions": 1,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 160.33382472007025
+        },
+        {
+          "filePath": "src/variant-overrides.ts",
+          "characters": 1523,
+          "lines": 61,
+          "functions": 3,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 9,
+          "maintainabilityIndex": 120.33604156285352
+        },
+        {
+          "filePath": "misconfigurations/jwt/algorithm-misconfiguration/algorithm.config.ts",
+          "characters": 82,
+          "lines": 4,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 121.07719646942965
+        },
+        {
+          "filePath": "misconfigurations/jwt/algorithm-misconfiguration/app.variant.ts",
+          "characters": 242,
+          "lines": 9,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 111.89396362116777
+        }
+      ]
+    },
+    {
+      "label": "jwt-expiry-misconfiguration",
+      "scope": "misconfiguration",
+      "fileCount": 8,
+      "characters": 6867,
+      "lines": 234,
+      "functions": 18,
+      "classes": 0,
+      "constants": 21,
+      "cyclomaticComplexity": 118,
+      "maintainabilityIndexAverage": 119.27867502705526,
+      "files": [
+        {
+          "filePath": "src/jwt/jwt.controller.ts",
+          "characters": 834,
+          "lines": 24,
+          "functions": 2,
+          "classes": 0,
+          "constants": 4,
+          "cyclomaticComplexity": 35,
+          "maintainabilityIndex": 110.9954626039503
+        },
+        {
+          "filePath": "src/jwt/jwt.middleware.ts",
+          "characters": 1868,
+          "lines": 57,
+          "functions": 4,
+          "classes": 0,
+          "constants": 8,
+          "cyclomaticComplexity": 20,
+          "maintainabilityIndex": 108.50769936512918
+        },
+        {
+          "filePath": "src/jwt/jwt.routes.ts",
+          "characters": 426,
+          "lines": 12,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 105.08980068870773
+        },
+        {
+          "filePath": "src/jwt/jwt.service.ts",
+          "characters": 1719,
+          "lines": 62,
+          "functions": 8,
+          "classes": 0,
+          "constants": 6,
+          "cyclomaticComplexity": 50,
+          "maintainabilityIndex": 115.99541118513353
+        },
+        {
+          "filePath": "misconfigurations/apply-override.ts",
+          "characters": 197,
+          "lines": 5,
+          "functions": 1,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 160.33382472007025
+        },
+        {
+          "filePath": "src/variant-overrides.ts",
+          "characters": 1523,
+          "lines": 61,
+          "functions": 3,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 9,
+          "maintainabilityIndex": 120.33604156285352
+        },
+        {
+          "filePath": "misconfigurations/jwt/expiry-misconfiguration/expiry.config.ts",
+          "characters": 67,
+          "lines": 4,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 121.07719646942965
+        },
+        {
+          "filePath": "misconfigurations/jwt/expiry-misconfiguration/app.variant.ts",
+          "characters": 233,
+          "lines": 9,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 111.89396362116777
+        }
+      ]
+    },
+    {
+      "label": "sessions-fixation-misconfiguration",
+      "scope": "misconfiguration",
+      "fileCount": 8,
+      "characters": 7546,
+      "lines": 254,
+      "functions": 16,
+      "classes": 0,
+      "constants": 17,
+      "cyclomaticComplexity": 148,
+      "maintainabilityIndexAverage": 123.47733252217735,
+      "files": [
+        {
+          "filePath": "src/sessions/sessions.controller.ts",
+          "characters": 2434,
+          "lines": 65,
+          "functions": 4,
+          "classes": 0,
+          "constants": 11,
+          "cyclomaticComplexity": 68,
+          "maintainabilityIndex": 103.48475255417176
+        },
+        {
+          "filePath": "src/sessions/sessions.middleware.ts",
+          "characters": 733,
+          "lines": 29,
+          "functions": 1,
+          "classes": 0,
+          "constants": 2,
+          "cyclomaticComplexity": 35,
+          "maintainabilityIndex": 108.9229578870816
+        },
+        {
+          "filePath": "src/sessions/sessions.routes.ts",
+          "characters": 1320,
+          "lines": 38,
+          "functions": 2,
+          "classes": 0,
+          "constants": 2,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 143.58410236889637
+        },
+        {
+          "filePath": "src/sessions/session.service.ts",
+          "characters": 1004,
+          "lines": 43,
+          "functions": 5,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 32,
+          "maintainabilityIndex": 118.18582099374774
+        },
+        {
+          "filePath": "misconfigurations/apply-override.ts",
+          "characters": 197,
+          "lines": 5,
+          "functions": 1,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 160.33382472007025
+        },
+        {
+          "filePath": "src/variant-overrides.ts",
+          "characters": 1523,
+          "lines": 61,
+          "functions": 3,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 9,
+          "maintainabilityIndex": 120.33604156285352
+        },
+        {
+          "filePath": "misconfigurations/sessions/fixation-misconfiguration/fixation.config.ts",
+          "characters": 83,
+          "lines": 4,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 121.07719646942965
+        },
+        {
+          "filePath": "misconfigurations/sessions/fixation-misconfiguration/app.variant.ts",
+          "characters": 252,
+          "lines": 9,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 111.89396362116777
+        }
+      ]
+    },
+    {
+      "label": "sessions-cookie-flag-misconfiguration",
+      "scope": "misconfiguration",
+      "fileCount": 8,
+      "characters": 7598,
+      "lines": 258,
+      "functions": 16,
+      "classes": 0,
+      "constants": 17,
+      "cyclomaticComplexity": 148,
+      "maintainabilityIndexAverage": 122.47971844977229,
+      "files": [
+        {
+          "filePath": "src/sessions/sessions.controller.ts",
+          "characters": 2434,
+          "lines": 65,
+          "functions": 4,
+          "classes": 0,
+          "constants": 11,
+          "cyclomaticComplexity": 68,
+          "maintainabilityIndex": 103.48475255417176
+        },
+        {
+          "filePath": "src/sessions/sessions.middleware.ts",
+          "characters": 733,
+          "lines": 29,
+          "functions": 1,
+          "classes": 0,
+          "constants": 2,
+          "cyclomaticComplexity": 35,
+          "maintainabilityIndex": 108.9229578870816
+        },
+        {
+          "filePath": "src/sessions/sessions.routes.ts",
+          "characters": 1320,
+          "lines": 38,
+          "functions": 2,
+          "classes": 0,
+          "constants": 2,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 143.58410236889637
+        },
+        {
+          "filePath": "src/sessions/session.service.ts",
+          "characters": 1004,
+          "lines": 43,
+          "functions": 5,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 32,
+          "maintainabilityIndex": 118.18582099374774
+        },
+        {
+          "filePath": "misconfigurations/apply-override.ts",
+          "characters": 197,
+          "lines": 5,
+          "functions": 1,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 160.33382472007025
+        },
+        {
+          "filePath": "src/variant-overrides.ts",
+          "characters": 1523,
+          "lines": 61,
+          "functions": 3,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 9,
+          "maintainabilityIndex": 120.33604156285352
+        },
+        {
+          "filePath": "misconfigurations/sessions/cookie-flag-misconfiguration/cookie-flag.config.ts",
+          "characters": 142,
+          "lines": 8,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 113.09628389018921
+        },
+        {
+          "filePath": "misconfigurations/sessions/cookie-flag-misconfiguration/app.variant.ts",
+          "characters": 245,
+          "lines": 9,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 111.89396362116777
+        }
+      ]
+    },
+    {
+      "label": "sessions-logout-misconfiguration",
+      "scope": "misconfiguration",
+      "fileCount": 8,
+      "characters": 7525,
+      "lines": 254,
+      "functions": 16,
+      "classes": 0,
+      "constants": 17,
+      "cyclomaticComplexity": 148,
+      "maintainabilityIndexAverage": 123.47733252217735,
+      "files": [
+        {
+          "filePath": "src/sessions/sessions.controller.ts",
+          "characters": 2434,
+          "lines": 65,
+          "functions": 4,
+          "classes": 0,
+          "constants": 11,
+          "cyclomaticComplexity": 68,
+          "maintainabilityIndex": 103.48475255417176
+        },
+        {
+          "filePath": "src/sessions/sessions.middleware.ts",
+          "characters": 733,
+          "lines": 29,
+          "functions": 1,
+          "classes": 0,
+          "constants": 2,
+          "cyclomaticComplexity": 35,
+          "maintainabilityIndex": 108.9229578870816
+        },
+        {
+          "filePath": "src/sessions/sessions.routes.ts",
+          "characters": 1320,
+          "lines": 38,
+          "functions": 2,
+          "classes": 0,
+          "constants": 2,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 143.58410236889637
+        },
+        {
+          "filePath": "src/sessions/session.service.ts",
+          "characters": 1004,
+          "lines": 43,
+          "functions": 5,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 32,
+          "maintainabilityIndex": 118.18582099374774
+        },
+        {
+          "filePath": "misconfigurations/apply-override.ts",
+          "characters": 197,
+          "lines": 5,
+          "functions": 1,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 160.33382472007025
+        },
+        {
+          "filePath": "src/variant-overrides.ts",
+          "characters": 1523,
+          "lines": 61,
+          "functions": 3,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 9,
+          "maintainabilityIndex": 120.33604156285352
+        },
+        {
+          "filePath": "misconfigurations/sessions/logout-misconfiguration/logout.config.ts",
+          "characters": 82,
+          "lines": 4,
+          "functions": 0,
+          "classes": 0,
+          "constants": 1,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 121.07719646942965
+        },
+        {
+          "filePath": "misconfigurations/sessions/logout-misconfiguration/app.variant.ts",
+          "characters": 232,
+          "lines": 9,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 111.89396362116777
+        }
+      ]
+    }
+  ],
+  "aiMetrics": [
+    {
+      "label": "OAUTH AI Samples (Aggregate)",
+      "scope": "ai-generated",
+      "fileCount": 5,
+      "characters": 3535,
+      "lines": 112,
+      "functions": 7,
+      "classes": 0,
+      "constants": 23,
+      "cyclomaticComplexity": 173,
+      "maintainabilityIndexAverage": 109.44234714757894,
+      "files": [
+        {
+          "filePath": "ai-generated/oauth/sample1.ts",
+          "characters": 842,
+          "lines": 26,
+          "functions": 2,
+          "classes": 0,
+          "constants": 5,
+          "cyclomaticComplexity": 35,
+          "maintainabilityIndex": 109.51028233118645
+        },
+        {
+          "filePath": "ai-generated/oauth/sample2.ts",
+          "characters": 822,
+          "lines": 25,
+          "functions": 2,
+          "classes": 0,
+          "constants": 5,
+          "cyclomaticComplexity": 36,
+          "maintainabilityIndex": 109.51851918757471
+        },
+        {
+          "filePath": "ai-generated/oauth/sample3.ts",
+          "characters": 435,
+          "lines": 15,
+          "functions": 1,
+          "classes": 0,
+          "constants": 3,
+          "cyclomaticComplexity": 32,
+          "maintainabilityIndex": 110.50600721467256
+        },
+        {
+          "filePath": "ai-generated/oauth/sample4.ts",
+          "characters": 663,
+          "lines": 21,
+          "functions": 1,
+          "classes": 0,
+          "constants": 5,
+          "cyclomaticComplexity": 35,
+          "maintainabilityIndex": 109.02463553956007
+        },
+        {
+          "filePath": "ai-generated/oauth/sample5.ts",
+          "characters": 773,
+          "lines": 25,
+          "functions": 1,
+          "classes": 0,
+          "constants": 5,
+          "cyclomaticComplexity": 35,
+          "maintainabilityIndex": 108.65229146490105
+        }
+      ]
+    },
+    {
+      "label": "JWT AI Samples (Aggregate)",
+      "scope": "ai-generated",
+      "fileCount": 5,
+      "characters": 4239,
+      "lines": 138,
+      "functions": 10,
+      "classes": 0,
+      "constants": 28,
+      "cyclomaticComplexity": 11,
+      "maintainabilityIndexAverage": 110.5235177522161,
+      "files": [
+        {
+          "filePath": "ai-generated/jwt/sample1.ts",
+          "characters": 889,
+          "lines": 28,
+          "functions": 2,
+          "classes": 0,
+          "constants": 6,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 109.63882863521788
+        },
+        {
+          "filePath": "ai-generated/jwt/sample2.ts",
+          "characters": 807,
+          "lines": 27,
+          "functions": 2,
+          "classes": 0,
+          "constants": 5,
+          "cyclomaticComplexity": 2,
+          "maintainabilityIndex": 112.45613213855074
+        },
+        {
+          "filePath": "ai-generated/jwt/sample3.ts",
+          "characters": 828,
+          "lines": 27,
+          "functions": 2,
+          "classes": 0,
+          "constants": 5,
+          "cyclomaticComplexity": 2,
+          "maintainabilityIndex": 109.94826956327255
+        },
+        {
+          "filePath": "ai-generated/jwt/sample4.ts",
+          "characters": 852,
+          "lines": 28,
+          "functions": 2,
+          "classes": 0,
+          "constants": 6,
+          "cyclomaticComplexity": 2,
+          "maintainabilityIndex": 110.28717921201967
+        },
+        {
+          "filePath": "ai-generated/jwt/sample5.ts",
+          "characters": 863,
+          "lines": 28,
+          "functions": 2,
+          "classes": 0,
+          "constants": 6,
+          "cyclomaticComplexity": 2,
+          "maintainabilityIndex": 110.28717921201967
+        }
+      ]
+    },
+    {
+      "label": "SESSIONS AI Samples (Aggregate)",
+      "scope": "ai-generated",
+      "fileCount": 5,
+      "characters": 2785,
+      "lines": 103,
+      "functions": 18,
+      "classes": 0,
+      "constants": 0,
+      "cyclomaticComplexity": 6,
+      "maintainabilityIndexAverage": 131.94326954628286,
+      "files": [
+        {
+          "filePath": "ai-generated/sessions/sample1.ts",
+          "characters": 669,
+          "lines": 25,
+          "functions": 4,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 2,
+          "maintainabilityIndex": 128.53243151432932
+        },
+        {
+          "filePath": "ai-generated/sessions/sample2.ts",
+          "characters": 510,
+          "lines": 19,
+          "functions": 3,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 129.71911970939857
+        },
+        {
+          "filePath": "ai-generated/sessions/sample3.ts",
+          "characters": 541,
+          "lines": 20,
+          "functions": 4,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 135.80957503132083
+        },
+        {
+          "filePath": "ai-generated/sessions/sample4.ts",
+          "characters": 532,
+          "lines": 19,
+          "functions": 3,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 129.83476253814518
+        },
+        {
+          "filePath": "ai-generated/sessions/sample5.ts",
+          "characters": 533,
+          "lines": 20,
+          "functions": 4,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 1,
+          "maintainabilityIndex": 135.82045893822038
+        }
+      ]
+    }
+  ]
+}

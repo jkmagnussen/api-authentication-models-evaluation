@@ -2,6 +2,10 @@ import { Request, Response } from "express";
 import { prisma } from "../db";
 import crypto from "crypto";
 import { exchangeCodeForToken } from "./oauth.service";
+import { clientScopes } from "./clientScopes";
+import { getVariantOverrides } from "../variant-overrides";
+
+const DEFAULT_ALLOWED_REDIRECTS = ["https://example.com/callback"];
 
 function getRequestedRedirectUri(req: Request) {
   const redirectUri = req.body.redirectUri ?? req.body.redirect_uri;
@@ -13,17 +17,19 @@ function validateRedirectUri(redirectUri: string | undefined) {
     return true;
   }
 
+  const variantOverrides = getVariantOverrides();
+  const allowedRedirects = variantOverrides.oauth?.allowedRedirects ?? DEFAULT_ALLOWED_REDIRECTS;
   const normalized = decodeURIComponent(redirectUri);
-  return normalized === "https://example.com/callback";
+  return allowedRedirects.includes(normalized);
 }
 
 // ------------------------------------------------------
 // AUTHORIZE (Authorization Code + PKCE) — JSON ONLY
 // ------------------------------------------------------
 export async function authorize(req: Request, res: Response) {
+  const variantOverrides = getVariantOverrides();
   const {
     userId,
-    clientId,
     state,
     scope,
     code_challenge,
@@ -31,6 +37,7 @@ export async function authorize(req: Request, res: Response) {
     redirectUri,
     redirect_uri,
   } = req.body;
+  const clientId = req.body.clientId ?? req.body.client_id;
 
   if (!userId) {
     return res.status(400).json({ error: "Missing userId" });
@@ -51,6 +58,26 @@ export async function authorize(req: Request, res: Response) {
   if (!client) {
     return res.status(400).json({ error: "Invalid clientId" });
   }
+
+
+    // ------------------------------------------------------
+  // ⭐ SCOPE VALIDATION (NEW)
+  // ------------------------------------------------------
+  const requestedScopes: string[] = (scope ?? "read").split(" ");
+
+  const allowedScopes = variantOverrides.oauth?.defaultScopes ?? clientScopes[clientId] ?? [];
+
+  const invalid = requestedScopes.some(s => !allowedScopes.includes(s));
+
+  if (invalid) {
+    return res.status(400).json({
+      error: "invalid_scope",
+      error_description: `Client '${clientId}' is not allowed to request scope '${scope}'`,
+    });
+  }
+  // ------------------------------------------------------
+
+
 
   const requestedRedirectUri = getRequestedRedirectUri(req);
   const hasConflictingRedirectValues = redirectUri !== undefined && redirect_uri !== undefined && redirectUri !== redirect_uri;
@@ -85,7 +112,9 @@ export async function authorize(req: Request, res: Response) {
 // TOKEN (Authorization Code Exchange + PKCE + Client Auth)
 // ------------------------------------------------------
 export async function token(req: Request, res: Response) {
-  const { code, state, code_verifier } = req.body;
+  const variantOverrides = getVariantOverrides();
+  const { code, state } = req.body;
+  const codeVerifier = req.body.code_verifier ?? req.body.codeVerifier;
 
   const auth = req.headers.authorization;
   let authenticatedClientId: string | undefined;
@@ -126,7 +155,8 @@ export async function token(req: Request, res: Response) {
     return res.status(400).json({ error: "Authorization code already used" });
   }
 
-  if (stored.state && stored.state !== state) {
+  const validateState = variantOverrides.oauth?.validateState ?? true;
+  if (validateState && stored.state && stored.state !== state) {
     return res.status(400).json({ error: "Invalid state" });
   }
 
@@ -139,17 +169,17 @@ export async function token(req: Request, res: Response) {
 
   // PKCE verification (only if a challenge was stored)
   if (stored.codeChallenge) {
-    if (!code_verifier) {
+    if (!codeVerifier) {
       return res.status(400).json({
         error: "invalid_request",
         error_description: "Missing code_verifier",
       });
     }
 
-    const computedChallenge = crypto
-      .createHash("sha256")
-      .update(code_verifier)
-      .digest("base64url");
+    const method = (stored.codeChallengeMethod ?? "plain").toUpperCase();
+    const computedChallenge = method === "S256"
+      ? crypto.createHash("sha256").update(codeVerifier).digest("base64url")
+      : codeVerifier;
 
     if (computedChallenge !== stored.codeChallenge) {
       return res.status(400).json({
@@ -167,9 +197,7 @@ export async function token(req: Request, res: Response) {
 
   return res.status(200).json({
     access_token: tokenResult.accessToken,
-    accessToken: tokenResult.accessToken,
     refresh_token: tokenResult.refreshToken,
-    refreshToken: tokenResult.refreshToken,
     token_type: "Bearer",
     expires_in: 3600,
   });
@@ -179,31 +207,24 @@ export async function token(req: Request, res: Response) {
 // REFRESH TOKEN
 // ------------------------------------------------------
 export async function refresh(req: Request, res: Response) {
-  const { refresh_token, clientId } = req.body;
+  const refreshToken = req.body.refresh_token ?? req.body.refreshToken;
+  const clientId = req.body.clientId ?? req.body.client_id;
 
-  if (!refresh_token) {
+  if (!refreshToken) {
     return res.status(400).json({
       error: "invalid_request",
       error_description: "Missing refresh_token",
     });
   }
 
-  const stored = await prisma.oAuthAccessToken.findUnique({
-    where: { refreshToken: refresh_token },
-  });
-
-  if (!stored || stored.clientId !== clientId) {
-    return res.status(400).json({
-      error: "invalid_grant",
-      error_description: "Invalid refresh token",
-    });
-  }
-
   const newAccessToken = crypto.randomUUID();
   const newRefreshToken = crypto.randomUUID();
 
-  await prisma.oAuthAccessToken.update({
-    where: { refreshToken: refresh_token },
+  const rotated = await prisma.oAuthAccessToken.updateMany({
+    where: {
+      refreshToken,
+      clientId,
+    },
     data: {
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
@@ -211,11 +232,16 @@ export async function refresh(req: Request, res: Response) {
     },
   });
 
+  if (rotated.count !== 1) {
+    return res.status(400).json({
+      error: "invalid_grant",
+      error_description: "Invalid refresh token",
+    });
+  }
+
   return res.json({
     access_token: newAccessToken,
-    accessToken: newAccessToken,
     refresh_token: newRefreshToken,
-    refreshToken: newRefreshToken,
     token_type: "Bearer",
     expires_in: 3600,
   });
@@ -280,8 +306,8 @@ export async function introspect(req: Request, res: Response) {
     return res.json({
       active,
       scope: access.scope ?? null,
-      clientId: access.clientId,
-      userId: access.userId,
+      client_id: access.clientId,
+      user_id: access.userId,
       exp: Math.floor(access.expiresAt.getTime() / 1000),
       token_type: "access_token",
     });
@@ -298,8 +324,8 @@ export async function introspect(req: Request, res: Response) {
     return res.json({
       active,
       scope: refresh.scope ?? null,
-      clientId: refresh.clientId,
-      userId: refresh.userId,
+      client_id: refresh.clientId,
+      user_id: refresh.userId,
       exp: Math.floor(refresh.expiresAt.getTime() / 1000),
       token_type: "refresh_token",
     });

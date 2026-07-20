@@ -1,0 +1,83 @@
+[
+  {
+    "variantName": "oauth-redirect-misconfiguration",
+    "category": "oauth",
+    "focusedTest": "tests/variants/oauth/redirect-misconfiguration.variant.test.ts",
+    "regression": "Untrusted redirect URI is accepted instead of rejected.",
+    "command": "npm run test:variant:oauth:redirect",
+    "passed": true,
+    "durationMs": 1501
+  },
+  {
+    "variantName": "oauth-state-misconfiguration",
+    "category": "oauth",
+    "focusedTest": "tests/variants/oauth/state-misconfiguration.variant.test.ts",
+    "regression": "Authorization code exchange succeeds despite mismatched state.",
+    "command": "npm run test:variant:oauth:state",
+    "passed": true,
+    "durationMs": 1501
+  },
+  {
+    "variantName": "oauth-scope-misconfiguration",
+    "category": "oauth",
+    "focusedTest": "tests/variants/oauth/scope-misconfiguration.variant.test.ts",
+    "regression": "Over-privileged scopes are granted to low-privilege clients.",
+    "command": "npm run test:variant:oauth:scope",
+    "passed": true,
+    "durationMs": 1489
+  },
+  {
+    "variantName": "jwt-audience-misconfiguration",
+    "category": "jwt",
+    "focusedTest": "tests/variants/jwt/audience-misconfiguration.variant.test.ts",
+    "regression": "Tokens minted for weak audience/issuer values are accepted.",
+    "command": "npm run test:variant:jwt:audience",
+    "passed": true,
+    "durationMs": 1439
+  },
+  {
+    "variantName": "jwt-algorithm-misconfiguration",
+    "category": "jwt",
+    "focusedTest": "tests/variants/jwt/algorithm-misconfiguration.variant.test.ts",
+    "regression": "Unsigned JWTs with alg=none are accepted.",
+    "command": "npm run test:variant:jwt:algorithm",
+    "passed": true,
+    "durationMs": 1443
+  },
+  {
+    "variantName": "jwt-expiry-misconfiguration",
+    "category": "jwt",
+    "focusedTest": "tests/variants/jwt/expiry-misconfiguration.variant.test.ts",
+    "regression": "Issued JWT lifetime becomes excessively long.",
+    "command": "npm run test:variant:jwt:expiry",
+    "passed": true,
+    "durationMs": 1480
+  },
+  {
+    "variantName": "sessions-fixation-misconfiguration",
+    "category": "sessions",
+    "focusedTest": "tests/variants/sessions/fixation-misconfiguration.variant.test.ts",
+    "regression": "Attacker-controlled session id survives login.",
+    "command": "npm run test:variant:sessions:fixation",
+    "passed": true,
+    "durationMs": 1503
+  },
+  {
+    "variantName": "sessions-cookie-flag-misconfiguration",
+    "category": "sessions",
+    "focusedTest": "tests/variants/sessions/cookie-flag-misconfiguration.variant.test.ts",
+    "regression": "Session cookie loses HttpOnly protection.",
+    "command": "npm run test:variant:sessions:cookie",
+    "passed": true,
+    "durationMs": 1490
+  },
+  {
+    "variantName": "sessions-logout-misconfiguration",
+    "category": "sessions",
+    "focusedTest": "tests/variants/sessions/logout-misconfiguration.variant.test.ts",
+    "regression": "Logged-out session remains valid for replay with stolen cookie.",
+    "command": "npm run test:variant:sessions:logout",
+    "passed": true,
+    "durationMs": 1502
+  }
+]

@@ -37,16 +37,16 @@ describe("OAuth – Redirect URI Manipulation Attack", () => {
     });
 
     (prisma.oAuthClient.findUnique as jest.Mock).mockResolvedValue({
-      id: "client-123",
-      name: "Test Client",
-      secret: "test-secret",
+      id: "client-basic",
+      name: "Basic Client",
+      secret: "basic-secret",
     });
 
     // Mock authorization code creation
     (prisma.oAuthAuthorizationCode.create as jest.Mock).mockResolvedValue({
       code: "redirect-test-code",
       userId: "11111111-1111-1111-1111-111111111111",
-      clientId: "client-123",
+      clientId: "client-basic",
       expiresAt: new Date(Date.now() + 60000),
       used: false,
     });
@@ -57,7 +57,7 @@ describe("OAuth – Redirect URI Manipulation Attack", () => {
       .post("/oauth/authorize")
       .send({
         userId: "11111111-1111-1111-1111-111111111111",
-        clientId: "client-123",
+        clientId: "client-basic",
         redirectUri: "https://evil.example/callback"
       });
 
@@ -70,7 +70,7 @@ describe("OAuth – Redirect URI Manipulation Attack", () => {
       .post("/oauth/authorize")
       .send({
         userId: "11111111-1111-1111-1111-111111111111",
-        clientId: "client-123",
+        clientId: "client-basic",
         redirectUri: "https://example.com/callback%2Fextra"
       });
 
@@ -83,7 +83,7 @@ describe("OAuth – Redirect URI Manipulation Attack", () => {
       .post("/oauth/authorize")
       .send({
         userId: "11111111-1111-1111-1111-111111111111",
-        clientId: "client-123",
+        clientId: "client-basic",
         redirectUri: "https://example.com/callback",
         redirect_uri: "https://evil.example/callback"
       });

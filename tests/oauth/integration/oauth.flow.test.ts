@@ -31,7 +31,8 @@ describe("OAuth Integration Flow", () => {
       .post("/oauth/authorize")
       .send({
         userId: validUUID,
-        clientId: "client-123"
+        clientId: "client-basic",
+        scope: "read"
       });
 
     expect(res.status).toBe(200);
@@ -53,7 +54,8 @@ describe("OAuth Integration Flow", () => {
       .post("/oauth/authorize")
       .send({
         userId: validUUID,
-        clientId: "client-123"
+        clientId: "client-basic",
+        scope: "read"  
       });
 
     const stored = await prisma.oAuthAuthorizationCode.findFirst();
@@ -65,6 +67,7 @@ describe("OAuth Integration Flow", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("access_token");
+    expect(res.body).toHaveProperty("refresh_token");
     expect(res.body).toHaveProperty("token_type", "Bearer");
     expect(res.body).toHaveProperty("expires_in");
   });
@@ -106,7 +109,7 @@ describe("OAuth Integration Flow", () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       message: "Protected resource accessed",
-      userId: validUUID,
+      user_id: validUUID,
     });
   });
 

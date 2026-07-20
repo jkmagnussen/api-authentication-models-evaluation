@@ -1,7 +1,7 @@
 import { prisma } from "../src/db";
 import bcrypt from "bcrypt";
 
-// npx ts-node src/seed/seedClients.ts
+// npx ts-node prisma/seed.ts
 
 async function main() {
   // Seed main user with fixed ID
@@ -17,14 +17,42 @@ async function main() {
     },
   });
 
-  // Seed OAuth client
+  // -----------------------------
+  // BASIC CLIENT (read-only)
+  // -----------------------------
   await prisma.oAuthClient.upsert({
-    where: { id: "client-123" },
+    where: { id: "client-basic" },
     update: {},
     create: {
-      id: "client-123",
-      secret: "super-secret",
-      name: "Test Client",
+      id: "client-basic",
+      secret: "basic-secret",
+      name: "Basic Client",
+    },
+  });
+
+  // -----------------------------
+  // PRIVILEGED CLIENT (read + write)
+  // -----------------------------
+  await prisma.oAuthClient.upsert({
+    where: { id: "client-privileged" },
+    update: {},
+    create: {
+      id: "client-privileged",
+      secret: "privileged-secret",
+      name: "Privileged Client",
+    },
+  });
+
+  // -----------------------------
+  // ADMIN CLIENT (read + write + admin)
+  // -----------------------------
+  await prisma.oAuthClient.upsert({
+    where: { id: "client-admin" },
+    update: {},
+    create: {
+      id: "client-admin",
+      secret: "admin-secret",
+      name: "Admin Client",
     },
   });
 

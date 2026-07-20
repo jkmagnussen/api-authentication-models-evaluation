@@ -11,6 +11,18 @@ export async function createSession(userId: string) {
   });
 }
 
+export async function createSessionWithId(userId: string, sessionId: string) {
+  await prisma.session.deleteMany({ where: { id: sessionId } });
+
+  return prisma.session.create({
+    data: {
+      id: sessionId,
+      userId,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+    },
+  });
+}
+
 export async function deleteSession(sessionId: string) {
   return prisma.session.delete({
     where: { id: sessionId },

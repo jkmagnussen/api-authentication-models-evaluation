@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "jest",
+  "checkers": ["typescript"],
+  "jest": {
+    "projectType": "custom",
+    "configFile": "jest.config.js"
+  },
+  "mutate": [
+    "src/jwt/**/*.ts",
+    "src/oauth/**/*.ts",
+    "src/sessions/**/*.ts",
+    "!src/**/rateLimit.ts",
+    "!src/oauth/clientScopes.ts",
+    "!src/**/routes.ts"
+  ],
+  "reporters": ["clear-text", "html", "progress"],
+  "coverageAnalysis": "off",
+  "ignoreStatic": true,
+  "allowEmpty": false,
+  "tempDirName": ".stryker-tmp",
+  "htmlReporter": {
+    "fileName": "reports/mutation/mutation.html"
+  }
+}

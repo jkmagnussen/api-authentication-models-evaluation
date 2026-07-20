@@ -1,8 +1,7 @@
 import request from "supertest";
 import app from "../../../src/app";
 import { resetDatabase } from "../../setup";
-import { calculateStats } from "../utils";
-import fs from "fs";
+import { calculateStats, writePerformanceResult } from "../utils";
 import { prisma } from "../../../src/db"; // adjust if your DB import differs
 
 describe("Sessions – Performance Test", () => {
@@ -49,15 +48,6 @@ describe("Sessions – Performance Test", () => {
     }
 
     const stats = calculateStats(times);
-
-    const outputDir = "docs/performance-results/baseline";
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-
-    fs.writeFileSync(
-      `${outputDir}/sessions.json`,
-      JSON.stringify(stats, null, 2)
-    );
+    writePerformanceResult("baseline", "sessions", stats);
   });
 });

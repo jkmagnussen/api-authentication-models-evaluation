@@ -1,15 +1,13 @@
-// tests/setup.ts
-
 import { prisma } from "../src/db";
 import { authLimiter } from "../src/middleware/rateLimiter";
 
 async function safeDeleteMany(model: any) {
   if (!model?.deleteMany) return;
-  const promise = model.deleteMany();
-  if (promise?.catch) {
-    return promise.catch(() => {});
+  try {
+    await model.deleteMany();
+  } catch {
+    // ignore FK errors during test cleanup
   }
-  return promise;
 }
 
 export async function resetDatabase() {
@@ -23,18 +21,40 @@ export async function resetDatabase() {
   await safeDeleteMany((prisma as any).user);
 
   const oauthClient = (prisma as any).oAuthClient;
+
   if (oauthClient?.create) {
+    // ⭐ Recreate ALL clients used in tests
+    await oauthClient.create({
+      data: {
+        id: "client-basic",
+        name: "Basic Client",
+        secret: "basic-secret",
+      },
+    });
+
+    await oauthClient.create({
+      data: {
+        id: "client-privileged",
+        name: "Privileged Client",
+        secret: "privileged-secret",
+      },
+    });
+
+    await oauthClient.create({
+      data: {
+        id: "client-admin",
+        name: "Admin Client",
+        secret: "admin-secret",
+      },
+    });
+
+    // ⭐ Legacy client used in older tests
     await oauthClient.create({
       data: {
         id: "client-123",
-        name: "Test Client",
-        secret: "test-secret",
+        name: "Legacy Test Client",
+        secret: "legacy-secret",
       },
-    }).catch(() => {});
+    });
   }
 }
-
-export async function resetAuthState() {
-  await resetDatabase();
-}
-

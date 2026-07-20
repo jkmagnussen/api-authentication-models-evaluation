@@ -20,7 +20,7 @@ export async function requireSession(req: Request, res: Response, next: NextFunc
   }
 
   // Attach userId to request
-  req.userId = session.userId;
+  (req as any).userId = session.userId;
 
   next();
 }

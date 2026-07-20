@@ -62,7 +62,7 @@ describe("Auth security regression tests", () => {
   test("refresh tokens are rotated and cannot be reused", async () => {
     const authorizeRes = await request(app)
       .post("/oauth/authorize")
-      .send({ userId: "123e4567-e89b-12d3-a456-426614174000", clientId: "client-123" });
+      .send({ userId: "123e4567-e89b-12d3-a456-426614174000", clientId: "client-basic" });
 
     const code = authorizeRes.body.code;
 
@@ -74,13 +74,13 @@ describe("Auth security regression tests", () => {
 
     const firstRefresh = await request(app)
       .post("/oauth/refresh")
-      .send({ refresh_token: refreshToken, clientId: "client-123" });
+      .send({ refreshToken: refreshToken, clientId: "client-basic" });
 
     expect(firstRefresh.status).toBe(200);
 
     const replayRefresh = await request(app)
       .post("/oauth/refresh")
-      .send({ refresh_token: refreshToken, clientId: "client-123" });
+      .send({ refreshToken: refreshToken, clientId: "client-basic" });
 
     expect(replayRefresh.status).toBe(400);
     expect(replayRefresh.body.error).toBe("invalid_grant");
