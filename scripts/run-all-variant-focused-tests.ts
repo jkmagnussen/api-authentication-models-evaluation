@@ -9,6 +9,11 @@ type VariantResult = {
   focusedTest: string;
   regression: string;
   command: string;
+  severityClass: string;
+  severityScore: number;
+  exploitabilityScore10: number;
+  stride: string;
+  owaspCategory: string;
   passed: boolean;
   durationMs: number;
 };
@@ -36,6 +41,11 @@ function runFocusedVariantTest(variantName: VariantName): VariantResult {
     focusedTest: variantInfo.focusedTest,
     regression: variantInfo.regression,
     command: variantInfo.command,
+    severityClass: variantInfo.severityClass,
+    severityScore: variantInfo.severityScore,
+    exploitabilityScore10: variantInfo.exploitabilityScore10,
+    stride: variantInfo.stride,
+    owaspCategory: variantInfo.owaspCategory,
     passed: (result.status ?? 1) === 0,
     durationMs: Date.now() - startTime,
   };
@@ -48,12 +58,12 @@ function writeSummary(results: VariantResult[]) {
   markdownLines.push(`Generated: ${new Date().toISOString()}`);
   markdownLines.push("Regenerate: npm run test:variants:focused");
   markdownLines.push("");
-  markdownLines.push("| Variant | Category | Focused Test | Expected Regression | Result | Duration (ms) | Command |");
-  markdownLines.push("|---|---|---|---|---|---:|---|");
+  markdownLines.push("| Variant | Category | Severity | Exploitability (0-10) | Focused Test | Expected Regression | Result | Duration (ms) | Command |");
+  markdownLines.push("|---|---|---|---:|---|---|---|---:|---|");
 
   for (const result of results) {
     markdownLines.push(
-      `| ${result.variantName} | ${result.category.toUpperCase()} | ${result.focusedTest} | ${result.regression} | ${result.passed ? "PASS" : "FAIL"} | ${result.durationMs} | ${result.command} |`
+      `| ${result.variantName} | ${result.category.toUpperCase()} | ${result.severityClass} (${result.severityScore}) | ${result.exploitabilityScore10} | ${result.focusedTest} | ${result.regression} | ${result.passed ? "PASS" : "FAIL"} | ${result.durationMs} | ${result.command} |`
     );
   }
 

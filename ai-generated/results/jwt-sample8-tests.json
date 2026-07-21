@@ -1,0 +1,37 @@
+{
+  "model": "jwt",
+  "sample": "sample8",
+  "samplePath": "ai-generated\\jwt\\sample8.ts",
+  "passed": false,
+  "checks": [
+    {
+      "name": "audience validation present",
+      "passed": true,
+      "details": "Checks that audience validation is referenced in token verification."
+    },
+    {
+      "name": "issuer validation present",
+      "passed": true,
+      "details": "Checks that issuer validation is referenced in token verification."
+    },
+    {
+      "name": "secure algorithm enforced",
+      "passed": false,
+      "details": "Flags insecure none-algorithm use."
+    },
+    {
+      "name": "expiry not excessive",
+      "passed": true,
+      "details": "Flags insecurely long JWT lifetime."
+    }
+  ],
+  "correctnessFailures": [
+    "secure algorithm enforced"
+  ],
+  "securityFailures": [
+    "secure algorithm enforced"
+  ],
+  "misconfigurationDetections": [
+    "secure algorithm enforced"
+  ]
+}

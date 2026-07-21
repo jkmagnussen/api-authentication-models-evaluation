@@ -4,7 +4,36 @@ import ts from "typescript";
 
 const escomplex = require("escomplex");
 
-export const SAMPLE_COUNT = 5;
+const DEFAULT_SAMPLE_COUNT = 30;
+
+function parseSampleCountArg(): number | null {
+  const args = process.argv.slice(2);
+  for (let index = 0; index < args.length; index += 1) {
+    const current = args[index];
+    if ((current === "--samples" || current === "-n") && args[index + 1]) {
+      const parsed = Number(args[index + 1]);
+      if (Number.isInteger(parsed) && parsed > 0) {
+        return parsed;
+      }
+    }
+  }
+
+  return null;
+}
+
+function resolveSampleCount(): number {
+  const fromArg = parseSampleCountArg();
+  if (fromArg) return fromArg;
+
+  const fromEnv = Number(process.env.AI_SAMPLE_COUNT ?? "");
+  if (Number.isInteger(fromEnv) && fromEnv > 0) {
+    return fromEnv;
+  }
+
+  return DEFAULT_SAMPLE_COUNT;
+}
+
+export const SAMPLE_COUNT = resolveSampleCount();
 export const RESULTS_DIR = path.join(process.cwd(), "ai-generated", "results");
 
 export function ensureDirectory(dirPath: string) {
@@ -31,6 +60,18 @@ export function writeSampleFiles(model: string, samples: string[]) {
   samples.forEach((sample, index) => {
     fs.writeFileSync(getSamplePath(model, index + 1), sample);
   });
+}
+
+export function expandTemplateSamples(templates: string[], sampleCount = SAMPLE_COUNT): string[] {
+  if (templates.length === 0) return [];
+
+  const expanded: string[] = [];
+  for (let index = 0; index < sampleCount; index += 1) {
+    const template = templates[index % templates.length];
+    expanded.push(`// deterministic_variant_${index + 1}\n${template}`);
+  }
+
+  return expanded;
 }
 
 export function readSample(model: string, index: number) {

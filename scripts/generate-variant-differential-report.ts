@@ -19,12 +19,12 @@ function main() {
   lines.push("");
   lines.push("This report maps each misconfiguration variant to the baseline security expectation and the focused exploit test that demonstrates the weakened behavior.");
   lines.push("");
-  lines.push("| Variant | Category | Baseline Evidence | Focused Exploit Test | Expected Misconfigured Outcome | Focused Command |");
-  lines.push("|---|---|---|---|---|---|");
+  lines.push("| Variant | Category | Severity | Exploitability (0-10) | STRIDE | OWASP Category | Baseline Evidence | Focused Exploit Test | Expected Misconfigured Outcome | Focused Command |");
+  lines.push("|---|---|---|---:|---|---|---|---|---|---|");
 
   for (const [variantName, variantInfo] of Object.entries(variantTestMap)) {
     lines.push(
-      `| ${titleCase(variantName)} | ${variantInfo.category.toUpperCase()} | ${variantInfo.baselineEvidence.join("<br>")} | ${variantInfo.focusedTest} | ${variantInfo.regression} | ${variantInfo.command} |`
+      `| ${titleCase(variantName)} | ${variantInfo.category.toUpperCase()} | ${variantInfo.severityClass} (${variantInfo.severityScore}) | ${variantInfo.exploitabilityScore10} | ${variantInfo.stride} | ${variantInfo.owaspCategory} | ${variantInfo.baselineEvidence.join("<br>")} | ${variantInfo.focusedTest} | ${variantInfo.regression} | ${variantInfo.command} |`
     );
   }
 

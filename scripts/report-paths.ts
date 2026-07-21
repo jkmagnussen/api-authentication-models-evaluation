@@ -5,6 +5,8 @@ export const DOCS_PERFORMANCE_DIR = `${DOCS_DIR}/performance-results`;
 
 export const GENERATED_FILES = {
   aiSummary: `${DOCS_GENERATED_DIR}/AI_EVALUATION_SUMMARY.md`,
+  advancedResearchAnalysis: `${DOCS_GENERATED_DIR}/ADVANCED_SECURITY_RESEARCH_ANALYSIS.md`,
+  threeArmAiComparison: `${DOCS_GENERATED_DIR}/THREE_ARM_AI_COMPARISON.md`,
   codeFootprintSummary: `${DOCS_GENERATED_DIR}/CODE_FOOTPRINT_SUMMARY.md`,
   codeFootprintJson: `${DOCS_GENERATED_DIR}/code-footprint-summary.json`,
   variantDifferential: `${DOCS_GENERATED_DIR}/VARIANT_DIFFERENTIAL_REPORT.md`,
@@ -23,6 +25,8 @@ export const PERFORMANCE_FILES = {
 
 export const EXPECTED_GENERATED_DOC_FILES: string[] = [
   GENERATED_FILES.aiSummary,
+  GENERATED_FILES.advancedResearchAnalysis,
+  GENERATED_FILES.threeArmAiComparison,
   GENERATED_FILES.codeFootprintSummary,
   GENERATED_FILES.codeFootprintJson,
   GENERATED_FILES.variantDifferential,

@@ -1,0 +1,52 @@
+{
+  "model": "sessions",
+  "sample": "sample10",
+  "characters": 561,
+  "lines": 21,
+  "functions": 4,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 6,
+      "total": 16,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "function"
+      ]
+    },
+    "operands": {
+      "distinct": 15,
+      "total": 26,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "loginWithSession",
+        "logoutSession",
+        "req",
+        "res",
+        "session",
+        "regenerate",
+        "destroy"
+      ]
+    },
+    "length": 42,
+    "vocabulary": 21,
+    "difficulty": 5.2,
+    "volume": 184.47733175670794,
+    "effort": 959.2821251348813,
+    "bugs": 0.06149244391890265,
+    "time": 53.293451396382295
+  },
+  "maintainabilityIndex": 159.87714735729438
+}

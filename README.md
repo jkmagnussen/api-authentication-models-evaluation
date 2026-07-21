@@ -63,6 +63,7 @@ The artefact supports the dissertation’s aim: a fair, empirical comparison of 
   <li><a href="#quickstart">Quick Start</a></li>
   <li><a href="#database">Database Setup & Seeding</a></li>
   <li><a href="#run">Run the Project</a></li>
+  <li><a href="#dissertation-quickstart">Dissertation Command Quickstart</a></li>
   <li><a href="#testing">Testing Guide</a></li>
   <li><a href="#ai-evaluation">AI Code Generation Evaluation</a></li>
   <li><a href="#python-analysis">Python Analysis Layer</a></li>
@@ -316,6 +317,27 @@ npm start
 
 <hr>
 
+<h2 id="dissertation-quickstart">Dissertation Command Quickstart</h2>
+
+<p>Use these commands for the fastest repeatable dissertation workflow.</p>
+
+<table>
+  <tr><th>Purpose</th><th>Command</th></tr>
+  <tr><td>Full startup pipeline (tests + docs + performance + dashboard)</td><td><code>npm run startup</code></td></tr>
+  <tr><td>Rerun OAuth-focused evidence only</td><td><code>npm run rerun:oauth</code></td></tr>
+  <tr><td>Rerun JWT-focused evidence only</td><td><code>npm run rerun:jwt</code></td></tr>
+  <tr><td>Rerun Sessions-focused evidence only</td><td><code>npm run rerun:sessions</code></td></tr>
+  <tr><td>Rerun AI analysis/evidence only</td><td><code>npm run rerun:ai</code></td></tr>
+  <tr><td>Rerun performance evidence only</td><td><code>npm run rerun:perf</code></td></tr>
+  <tr><td>Refresh consolidated dashboard only</td><td><code>npm run results:index</code></td></tr>
+</table>
+
+<p>Primary one-page results view: <code>docs/generated/RESULTS_DASHBOARD.md</code></p>
+
+<p><strong>Workflow note:</strong> <code>npm run startup</code> is the recommended non-strict local workflow (it regenerates evidence and refreshes the dashboard). Use <code>npm run ci:local</code> when you want strict drift/lint checks as a reproducibility gate before commit or submission.</p>
+
+<hr>
+
 <h2 id="testing">Testing Guide</h2>
 
 <h3>Baseline Secure Test Runs</h3>
@@ -325,23 +347,6 @@ npm start
   <tr><td>All baseline tests</td><td><code>npm test</code></td></tr>
   <tr><td>Coverage report</td><td><code>npm run test:coverage</code></td></tr>
   <tr><td>Performance tests + analysis</td><td><code>npm run perf</code></td></tr>
-</table>
-
-<h3>Misconfigured Variant Test Runs</h3>
-
-<p>These commands run the shared suite with a misconfiguration variant loaded:</p>
-
-<table>
-  <tr><th>Variant</th><th>Command</th></tr>
-  <tr><td>OAuth redirect misconfiguration</td><td><code>npm run test:oauth:redirect-misconfigured</code></td></tr>
-  <tr><td>OAuth state misconfiguration</td><td><code>npm run test:oauth:state-misconfigured</code></td></tr>
-  <tr><td>OAuth scope misconfiguration</td><td><code>npm run test:oauth:scope-misconfigured</code></td></tr>
-  <tr><td>JWT audience misconfiguration</td><td><code>npm run test:jwt:audience-misconfigured</code></td></tr>
-  <tr><td>JWT algorithm misconfiguration</td><td><code>npm run test:jwt:algorithm-misconfigured</code></td></tr>
-  <tr><td>JWT expiry misconfiguration</td><td><code>npm run test:jwt:expiry-misconfigured</code></td></tr>
-  <tr><td>Session fixation misconfiguration</td><td><code>npm run test:sessions:fixation-misconfigured</code></td></tr>
-  <tr><td>Session cookie flag misconfiguration</td><td><code>npm run test:sessions:cookie-misconfigured</code></td></tr>
-  <tr><td>Session logout misconfiguration</td><td><code>npm run test:sessions:logout-misconfigured</code></td></tr>
 </table>
 
 <h3>Focused Exploit Proof Commands</h3>
@@ -390,27 +395,16 @@ npm run perf:analyze
 <h2 id="run-everything">Run Everything</h2>
 
 <p>
-If you want the shortest reproducible path through the full dissertation evidence pipeline, run the following in order:
+If you want the shortest reproducible path through the full dissertation evidence pipeline, run this:
 </p>
 
 <pre><code>
-npm test
-npm run test:coverage
-npm run test:variants:focused
-npm run variants:report
-npm run perf
-npm run perf:repeat
-npm run ai:generate:oauth
-npm run ai:generate:jwt
-npm run ai:generate:sessions
-npm run ai:analyse
-npm run ai:test:oauth
-npm run ai:test:jwt
-npm run ai:test:sessions
-npm run ai:validate-controls
-npm run ai:report
-npm run code:footprint
+npm run startup
 </code></pre>
+
+<p>
+If you only changed one area, use <code>npm run rerun:oauth</code>, <code>npm run rerun:jwt</code>, <code>npm run rerun:sessions</code>, <code>npm run rerun:ai</code>, or <code>npm run rerun:perf</code> and then review <code>docs/generated/RESULTS_DASHBOARD.md</code>.
+</p>
 
 <p>
 For a fuller methodological explanation and a reproducibility checklist, see:

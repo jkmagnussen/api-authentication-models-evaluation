@@ -45,18 +45,31 @@ type FailureRateRow = {
 };
 
 const MODELS = ["oauth", "jwt", "sessions"];
-const SAMPLE_COUNT = 5;
 const RESULTS_DIR = path.join(process.cwd(), "ai-generated", "results");
 
 function readJsonFile<T>(filePath: string): T {
   return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
 }
 
+function getModelSampleIndexes(model: string): number[] {
+  const fileNames = fs.readdirSync(RESULTS_DIR);
+  const regex = new RegExp(`^${model}-sample(\\d+)-tests\\.json$`);
+
+  return fileNames
+    .map((name) => {
+      const matched = name.match(regex);
+      return matched ? Number(matched[1]) : null;
+    })
+    .filter((value): value is number => value !== null)
+    .sort((a, b) => a - b);
+}
+
 function getCombinedResults() {
   const combinedResults: CombinedResult[] = [];
 
   for (const model of MODELS) {
-    for (let index = 1; index <= SAMPLE_COUNT; index += 1) {
+    const indexes = getModelSampleIndexes(model);
+    for (const index of indexes) {
       const complexity = readJsonFile<ComplexityResult>(
         path.join(RESULTS_DIR, `${model}-sample${index}.json`)
       );
@@ -173,13 +186,14 @@ function writeCsv(combinedResults: CombinedResult[], failureRateRows: FailureRat
 
 function writeMarkdown(combinedResults: CombinedResult[], failureRateRows: FailureRateRow[]) {
   const generatedAt = new Date().toISOString();
+  const totalSamples = combinedResults.length;
   const lines: string[] = [];
   lines.push("# AI Evaluation Summary");
   lines.push("");
   lines.push(`Generated: ${generatedAt}`);
   lines.push("Regenerate: npm run ai:report");
   lines.push("");
-  lines.push("This report aggregates the complexity metrics and automated check results for the 15 AI-generated authentication samples.");
+  lines.push(`This report aggregates the complexity metrics and automated check results for ${totalSamples} AI-generated authentication samples.`);
   lines.push("");
   lines.push("## Methodology Notes");
   lines.push("");

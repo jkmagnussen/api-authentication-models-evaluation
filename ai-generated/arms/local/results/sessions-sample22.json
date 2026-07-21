@@ -1,0 +1,66 @@
+{
+  "model": "sessions",
+  "sample": "sample22",
+  "characters": 538,
+  "lines": 20,
+  "functions": 3,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 7,
+      "total": 32,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "function",
+        "return"
+      ]
+    },
+    "operands": {
+      "distinct": 28,
+      "total": 48,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "loginWithSession",
+        "logoutSession",
+        "req",
+        "res",
+        "session",
+        "userId",
+        "body",
+        "\"sessionId\"",
+        "sessionID",
+        "httpOnly",
+        "secure",
+        "sameSite",
+        "\"lax\"",
+        "cookie",
+        "message",
+        "\"session_created\"",
+        200,
+        "status",
+        "json",
+        "destroy"
+      ]
+    },
+    "length": 80,
+    "vocabulary": 35,
+    "difficulty": 6,
+    "volume": 410.3426413555973,
+    "effort": 2462.055848133584,
+    "bugs": 0.13678088045186576,
+    "time": 136.78088045186576
+  },
+  "maintainabilityIndex": 127.51231821200156
+}

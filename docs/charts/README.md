@@ -9,25 +9,31 @@ They sit on top of the TypeScript-generated JSON and CSV artifacts already produ
 
 ## Expected Chart Outputs
 
-### 1. `ai-failure-rates.svg`
+### Core Charts
 
-- Compares the percentage of AI-generated samples with detected omissions or insecure patterns.
-- Categories: OAuth, JWT, Sessions.
-- Source data: `ai-generated/results/ai-samples-failure-rates.csv`.
+1. `ai-failure-rates.svg`
+2. `complexity-comparison.svg`
+3. `performance-comparison.svg`
 
-### 2. `complexity-comparison.svg`
+### Security Research Charts
 
-- Compares cyclomatic complexity across:
-  - secure baseline slices
-  - misconfiguration effective footprints
-  - AI-generated sample aggregates
-- Source data: `docs/generated/code-footprint-summary.json`.
+4. `security-severity-distribution.svg`
+- Distribution of Critical/High/Medium/Low misconfiguration classes.
 
-### 3. `performance-comparison.svg`
+5. `exploitability-heatmap.svg`
+- 0-10 risk matrix per variant (severity, exploitability, detectability, remediation ease).
 
-- Compares baseline vs attack average latency by authentication model.
-- Categories: JWT, OAuth, Sessions.
-- Source data: `docs/performance-results/statistical-summary.csv`.
+6. `ai-control-failure-frequency.svg`
+- AI failure frequency by security control category and model.
+
+7. `security-regression-curve.svg`
+- Baseline -> misconfigured -> AI-generated security score trend.
+
+8. `model-difficulty-vs-ai-failure.svg`
+- Correlation between model difficulty index and AI failure rate.
+
+9. `severity-vs-complexity.svg`
+- Relation between misconfiguration severity and effective complexity.
 
 ## Commands
 
@@ -41,7 +47,10 @@ npm run py:charts
 ## Input Files Used By The Python Layer
 
 - `ai-generated/results/ai-samples-failure-rates.csv`
+- `ai-generated/results/ai-samples-summary.csv`
 - `docs/generated/code-footprint-summary.json`
+- `docs/generated/MISCONFIGURATION_IMPACT_MATRIX.md`
+- `docs/generated/MODEL_RISK_SUMMARY.md`
 - `docs/performance-results/statistical-summary.csv`
 
 ## Output Location

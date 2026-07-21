@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-07-21T18:00:49.646Z",
+  "sampleCount": 30,
+  "providers": [
+    {
+      "provider": "local",
+      "status": "completed"
+    },
+    {
+      "provider": "azure",
+      "status": "skipped",
+      "reason": "Missing AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_API_KEY."
+    },
+    {
+      "provider": "claude",
+      "status": "skipped",
+      "reason": "Missing ANTHROPIC_API_KEY."
+    }
+  ]
+}

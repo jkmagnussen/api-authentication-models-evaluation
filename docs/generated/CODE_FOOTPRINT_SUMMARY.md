@@ -1,6 +1,6 @@
 # Code Footprint Summary
 
-Generated: 2026-07-20T14:32:36.717Z
+Generated: 2026-07-21T18:00:25.905Z
 Regenerate: npm run code:footprint
 
 ## Scope Rules
@@ -37,6 +37,6 @@ Regenerate: npm run code:footprint
 
 | Model | Files | Chars | Lines | Functions | Classes | Constants | Cyclomatic | Avg Maintainability |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| OAUTH AI Samples (Aggregate) | 5 | 3535 | 112 | 7 | 0 | 23 | 173 | 109.44 |
-| JWT AI Samples (Aggregate) | 5 | 4239 | 138 | 10 | 0 | 28 | 11 | 110.52 |
-| SESSIONS AI Samples (Aggregate) | 5 | 2785 | 103 | 18 | 0 | 0 | 6 | 131.94 |
+| OAUTH AI Samples (Aggregate) | 30 | 22041 | 702 | 42 | 0 | 138 | 1038 | 109.44 |
+| JWT AI Samples (Aggregate) | 30 | 26265 | 858 | 60 | 0 | 168 | 66 | 110.52 |
+| SESSIONS AI Samples (Aggregate) | 30 | 17541 | 648 | 108 | 0 | 0 | 36 | 131.94 |

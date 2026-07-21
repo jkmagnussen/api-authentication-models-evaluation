@@ -120,28 +120,27 @@ const variantScopes = {
 } as const;
 
 const aiScopes = {
-  oauth: [
-    "ai-generated/oauth/sample1.ts",
-    "ai-generated/oauth/sample2.ts",
-    "ai-generated/oauth/sample3.ts",
-    "ai-generated/oauth/sample4.ts",
-    "ai-generated/oauth/sample5.ts",
-  ],
-  jwt: [
-    "ai-generated/jwt/sample1.ts",
-    "ai-generated/jwt/sample2.ts",
-    "ai-generated/jwt/sample3.ts",
-    "ai-generated/jwt/sample4.ts",
-    "ai-generated/jwt/sample5.ts",
-  ],
-  sessions: [
-    "ai-generated/sessions/sample1.ts",
-    "ai-generated/sessions/sample2.ts",
-    "ai-generated/sessions/sample3.ts",
-    "ai-generated/sessions/sample4.ts",
-    "ai-generated/sessions/sample5.ts",
-  ],
+  oauth: "ai-generated/oauth",
+  jwt: "ai-generated/jwt",
+  sessions: "ai-generated/sessions",
 } as const;
+
+function listAiSampleFiles(model: keyof typeof aiScopes): string[] {
+  const relativeDir = aiScopes[model];
+  const absoluteDir = path.join(process.cwd(), relativeDir);
+
+  if (!fs.existsSync(absoluteDir)) return [];
+
+  return fs
+    .readdirSync(absoluteDir)
+    .filter((name) => /^sample\d+\.ts$/i.test(name))
+    .sort((a, b) => {
+      const aNum = Number(a.match(/\d+/)?.[0] ?? 0);
+      const bNum = Number(b.match(/\d+/)?.[0] ?? 0);
+      return aNum - bNum;
+    })
+    .map((name) => path.join(relativeDir, name).replace(/\\/g, "/"));
+}
 
 function readFileMetric(relativePath: string): FileMetric {
   const filePath = path.join(process.cwd(), relativePath);
@@ -216,7 +215,8 @@ function aggregateMetrics(label: string, scope: string, files: readonly string[]
 }
 
 function aggregateAiAverages(model: keyof typeof aiScopes): AggregateMetric {
-  const metric = aggregateMetrics(`${model.toUpperCase()} AI Samples`, "ai-generated", aiScopes[model]);
+  const aiSampleFiles = listAiSampleFiles(model);
+  const metric = aggregateMetrics(`${model.toUpperCase()} AI Samples`, "ai-generated", aiSampleFiles);
 
   return {
     ...metric,
