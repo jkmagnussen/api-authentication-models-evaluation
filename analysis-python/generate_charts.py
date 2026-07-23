@@ -372,7 +372,7 @@ def chart_ai_vs_human_severity_gap_ci() -> None:
                 va="center", fontsize=8.5, color=color, fontweight="bold")
 
     ax.axvline(0, color="black", linewidth=1.0, linestyle="--", alpha=0.5)
-    ax.text(-0.3, len(MODELS) - 0.5, "← baseline (0)",
+    ax.text(-0.3, len(MODELS) - 0.5, "baseline (0) →",
             fontsize=7.5, color="dimgray", va="top", ha="right")
     ax.set_yticks(y)
     ax.set_yticklabels(MODELS, fontsize=11)
