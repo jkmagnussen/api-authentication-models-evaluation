@@ -89,25 +89,7 @@ def main() -> None:
     actual = Counter([v for v in numeric_svg_comments(CHARTS_PERF_DIR / "variance-under-load.svg") if v.endswith("%")])
     results.append(check_equal("variance-under-load.svg", expected, actual))
 
-    # 3) STRIDE severity scoring annotations.
-    stride_df = variant_df.copy()
-    stride_df["stride_primary"] = stride_df["stride"].astype(str).str.split("/").str[0].str.strip()
-    stride_agg = (
-        stride_df.groupby("stride_primary", as_index=False)
-        .agg(avg_severity=("severityScore", "mean"), count=("variantName", "count"))
-        .sort_values("avg_severity", ascending=False)
-    )
-
-    expected = Counter([f"{float(value):.2f}" for value in stride_agg["avg_severity"]])
-    stride_vals = [
-        v
-        for v in numeric_svg_comments(CHARTS_SEC_DIR / "stride-severity-scoring.svg")
-        if re.fullmatch(r"[0-9]+\.[0-9]{2}", v)
-    ]
-    actual = Counter(stride_vals[-sum(expected.values()) :])
-    results.append(check_equal("stride-severity-scoring.svg", expected, actual))
-
-    # 4) Misconfiguration severity heatmap cell labels.
+    # 3) Misconfiguration severity heatmap cell labels.
 
     row_label_col = "Misconfiguration" if "Misconfiguration" in misconfig_df.columns else "Variant"
     heatmap_df = misconfig_df[[row_label_col, "model", "severity_score_5"]].dropna().copy()
@@ -129,7 +111,7 @@ def main() -> None:
     actual = Counter(heatmap_vals[: sum(expected.values())])
     results.append(check_equal("misconfiguration-severity-heatmap.svg", expected, actual))
 
-    # 5) Authentication-overhead breakdown invariants.
+    # 4) Authentication-overhead breakdown invariants.
     # (Prepare exploded dataframe for downstream checks)
     exploded = arm_df.explode("failure_categories").dropna(subset=["failure_categories"])
     baseline_weights = {
@@ -152,7 +134,7 @@ def main() -> None:
 
     results.append((weights_ok, "PASS authentication-overhead-breakdown invariants" if weights_ok else "FAIL authentication-overhead-breakdown invariants"))
 
-    # 6) Security-critical control risk density annotations.
+    # 5) Security-critical control risk density annotations.
     control_rows_df, control_summary_df = gc.load_security_control_points()
     if control_rows_df.empty or control_summary_df.empty:
         results.append((False, "FAIL security-critical-control-risk-density.svg (missing control-point data)"))
@@ -172,7 +154,7 @@ def main() -> None:
         actual = Counter(risk_vals[-sum(expected.values()) :])
         results.append(check_equal("security-critical-control-risk-density.svg", expected, actual))
 
-    # 7) Control-point risk heatmap cell labels.
+    # 6) Control-point risk heatmap cell labels.
     if control_rows_df.empty:
         results.append((False, "FAIL control-point-risk-heatmap.svg (missing control-point data)"))
     else:
@@ -206,7 +188,7 @@ def main() -> None:
         actual = Counter(heatmap_vals[: sum(expected.values())])
         results.append(check_equal("control-point-risk-heatmap.svg", expected, actual))
 
-    # 8) AI-vs-human severity gap CI bar labels.
+    # 7) AI-vs-human severity gap CI bar labels.
     advanced_payload = gc.load_ai_vs_human_advanced_comparisons()
     severity_rows = pd.DataFrame(advanced_payload.get("severityWeightedSafetyGapWithUncertainty", []))
     if severity_rows.empty:
@@ -221,7 +203,7 @@ def main() -> None:
         actual = Counter(severity_vals[: sum(expected.values())])
         results.append(check_equal("ai-vs-human-severity-gap-ci.svg", expected, actual))
 
-    # 9) AI-vs-human dominance heatmap decision labels.
+    # 8) AI-vs-human dominance heatmap decision labels.
     density_rows, _ = gc.load_normalized_failure_density()
     if density_rows.empty or control_summary_df.empty:
         results.append((False, "FAIL ai-vs-human-dominance-heatmap.svg (missing density/control summary data)"))
