@@ -1,18 +1,72 @@
 {
   "model": "jwt",
   "sample": "sample1",
-  "characters": 2942,
-  "lines": 101,
-  "functions": 0,
+  "characters": 1096,
+  "lines": 35,
+  "functions": 3,
   "classes": 0,
-  "cyclomaticComplexity": null,
+  "cyclomaticComplexity": 4,
   "halstead": {
-    "difficulty": null,
-    "volume": null,
-    "effort": null,
-    "bugs": null,
-    "time": null
+    "operators": {
+      "distinct": 8,
+      "total": 49,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const",
+        "||"
+      ]
+    },
+    "operands": {
+      "distinct": 33,
+      "total": 55,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "authenticateJWT",
+        0,
+        "express_1",
+        "\"express\"",
+        "require",
+        "jsonwebtoken_1",
+        "\"jsonwebtoken\"",
+        "dotenv_1",
+        "\"dotenv\"",
+        "default",
+        "config",
+        "JWT_SECRET",
+        "process",
+        "env",
+        "\"defaultSecret\"",
+        "JWT_AUDIENCE",
+        "\"yourAudience\"",
+        "JWT_ISSUER",
+        "\"yourIssuer\"",
+        "JWT_ALGORITHM",
+        "\"HS256\"",
+        "app",
+        "use",
+        3000,
+        "listen"
+      ]
+    },
+    "length": 104,
+    "vocabulary": 41,
+    "difficulty": 6.666666666666667,
+    "volume": 557.1854084802807,
+    "effort": 3714.569389868538,
+    "bugs": 0.1857284694934269,
+    "time": 206.36496610380766
   },
-  "maintainabilityIndex": null,
-  "analysisError": "Line 102: Unexpected token ILLEGAL"
+  "maintainabilityIndex": 96.67063442907428
 }

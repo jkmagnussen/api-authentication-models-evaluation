@@ -1,48 +1,131 @@
-import express, { Request, Response, NextFunction, Application } from 'express';
+```typescript
+import express, { Express, Request, Response, NextFunction } from 'express';
 import session from 'express-session';
+import crypto from 'crypto';
 
-const app: Application = express();
+interface SessionData {
+  userId?: string;
+  authenticated?: boolean;
+  loginTime?: number;
+}
 
-declare module 'express-session' {
-  interface SessionData {
-    userId?: string;
-    isLoggedIn?: boolean;
+declare global {
+  namespace Express {
+    interface Session {
+      userId?: string;
+      authenticated?: boolean;
+      loginTime?: number;
+    }
   }
 }
 
-app.use(session({
-  secret: 'yourSecretKey',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false, maxAge: 60000 } // 1 minute
-}));
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const SECURE_COOKIE_NAME = 'sid';
 
-app.get('/login', (req: Request, res: Response) => {
-  req.session.userId = 'uniqueUserId123';
-  req.session.isLoggedIn = true;
-  res.send('User logged in');
-});
+export function initializeSessionMiddleware(app: Express): void {
+  const sessionStore = new session.MemoryStore();
 
-app.get('/check-session', (req: Request, res: Response) => {
-  if (req.session.isLoggedIn) {
-    res.send(`User is logged in. User ID: ${req.session.userId}`);
-  } else {
-    res.send('No active session');
-  }
-});
+  app.use(
+    session({
+      store: sessionStore,
+      name: SECURE_COOKIE_NAME,
+      secret: crypto.randomBytes(32).toString('hex'),
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: SESSION_TIMEOUT,
+        domain: process.env.SESSION_DOMAIN,
+        path: '/',
+      },
+    })
+  );
+}
 
-app.get('/logout', (req: Request, res: Response) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).send('Error logging out');
-    }
-    res.clearCookie('connect.sid');
-    res.send('User logged out');
+export async function authenticateUser(
+  req: Request,
+  res: Response,
+  userId: string
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err: Error | null) => {
+      if (err) {
+        reject(new Error('Session regeneration failed'));
+        return;
+      }
+
+      req.session.userId = userId;
+      req.session.authenticated = true;
+      req.session.loginTime = Date.now();
+
+      req.session.save((saveErr: Error | null) => {
+        if (saveErr) {
+          reject(new Error('Session save failed'));
+          return;
+        }
+        resolve();
+      });
+    });
   });
-});
+}
 
-app.listen(3000, () => {
-  console.log('Server running on port 3000');
-});
+export async function invalidateSession(
+  req: Request,
+  res: Response
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (!req.session) {
+      resolve();
+      return;
+    }
 
-export { app };
+    const sessionId = req.sessionID;
+
+    req.session.destroy((err: Error | null) => {
+      if (err) {
+        reject(new Error('Session destruction failed'));
+        return;
+      }
+
+      res.clearCookie(SECURE_COOKIE_NAME, {
+        path: '/',
+        domain: process.env.SESSION_DOMAIN,
+        httpOnly: true,
+        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production',
+      });
+
+      console.log(`Session invalidated for session ID: ${sessionId}`);
+      resolve();
+    });
+  });
+}
+
+export function enforceSessionValidity(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
+  if (!req.session?.authenticated) {
+    res.status(401).json({ error: 'Unauthorized: No valid session' });
+    return;
+  }
+
+  const loginTime = req.session.loginTime || 0;
+  const currentTime = Date.now();
+
+  if (currentTime - loginTime > SESSION_TIMEOUT) {
+    req.session.destroy((err: Error | null) => {
+      if (err) console.error('Error destroying expired session:', err);
+      res.status(401).json({ error: 'Session expired' });
+    });
+    return;
+  }
+
+  next();
+}
+
+export async function performSessionRefresh(
+  req: Request,

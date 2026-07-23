@@ -1,138 +1,109 @@
 ```typescript
-import express, { Request, Response, NextFunction } from "express";
-import crypto from "crypto";
+import express, { Router, Request, Response } from "express";
+import { randomBytes } from "crypto";
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const router = Router();
 
-// In-memory storage for authorization codes and tokens
-const authorizationCodes = new Map<
-  string,
-  {
-    clientId: string;
-    redirectUri: string;
-    scope: string;
-    expiresAt: number;
-    userId: string;
-  }
->();
+// Types
+interface OAuthSession {
+  state: string;
+  codeChallenge?: string;
+  timestamp: number;
+}
 
-const accessTokens = new Map<
-  string,
-  {
-    clientId: string;
-    userId: string;
-    scope: string;
-    expiresAt: number;
-  }
->();
-
-const registeredClients = new Map<
-  string,
-  {
-    clientSecret: string;
-    redirectUris: string[];
-    name: string;
-  }
->();
-
-// Pre-register a test client
-registeredClients.set("test-client", {
-  clientSecret: "test-secret-key",
-  redirectUris: [
-    "http://localhost:3001/callback",
-    "https://example.com/oauth/callback",
-  ],
-  name: "Test Application",
-});
-
-export const validateClientCredentials = (
-  clientId: string,
-  clientSecret: string
-): boolean => {
-  const client = registeredClients.get(clientId);
-  if (!client) return false;
-  return client.clientSecret === clientSecret;
-};
-
-export const generateAuthorizationCode = (
-  clientId: string,
-  redirectUri: string,
-  scope: string,
-  userId: string
-): string => {
-  const code = crypto.randomBytes(32).toString("hex");
-  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-  authorizationCodes.set(code, {
-    clientId,
-    redirectUri,
-    scope,
-    expiresAt,
-    userId,
-  });
-
-  return code;
-};
-
-export const validateAuthorizationCode = (
-  code: string,
-  clientId: string,
-  redirectUri: string
-): boolean => {
-  const codeData = authorizationCodes.get(code);
-  if (!codeData) return false;
-
-  if (codeData.expiresAt < Date.now()) {
-    authorizationCodes.delete(code);
-    return false;
-  }
-
-  if (codeData.clientId !== clientId || codeData.redirectUri !== redirectUri) {
-    return false;
-  }
-
-  return true;
-};
-
-export const consumeAuthorizationCode = (
-  code: string
-): {
+interface AuthorizationRequest {
   clientId: string;
-  userId: string;
-  scope: string;
-} | null => {
-  const codeData = authorizationCodes.get(code);
-  if (!codeData) return null;
+  redirectUri: string;
+  scope: string[];
+  state: string;
+  responseType: string;
+  codeChallenge?: string;
+  codeChallengeMethod?: string;
+}
 
-  authorizationCodes.delete(code);
+// In-memory storage (use Redis in production)
+const activeSessions = new Map<string, OAuthSession>();
+const authorizedClients = new Set([
+  "client_app_primary",
+  "client_app_secondary",
+]);
+const validScopes = new Set(["read:user", "write:profile", "email", "openid"]);
+const allowedRedirectUris = new Map<string, string[]>([
+  ["client_app_primary", ["https://app1.example.com/callback"]],
+  ["client_app_secondary", ["https://app2.example.com/callback"]],
+]);
+
+// Session cleanup (30 minutes)
+const SESSION_TIMEOUT = 30 * 60 * 1000;
+
+// Helper: Generate secure state token
+function generateSecureState(): string {
+  return randomBytes(32).toString("hex");
+}
+
+// Helper: Validate redirect URI
+function validateRedirectUri(clientId: string, redirectUri: string): boolean {
+  const allowedUris = allowedRedirectUris.get(clientId);
+  if (!allowedUris) return false;
+  try {
+    const url = new URL(redirectUri);
+    return (
+      allowedUris.includes(redirectUri) &&
+      url.protocol === "https:" &&
+      !url.hostname.includes("localhost")
+    );
+  } catch {
+    return false;
+  }
+}
+
+// Helper: Validate requested scopes
+function validateScopes(requestedScopes: string[]): {
+  valid: boolean;
+  approved: string[];
+} {
+  const approved = requestedScopes.filter((scope) => validScopes.has(scope));
   return {
-    clientId: codeData.clientId,
-    userId: codeData.userId,
-    scope: codeData.scope,
+    valid: approved.length > 0 && approved.length === requestedScopes.length,
+    approved,
   };
-};
+}
 
-export const generateAccessToken = (
-  clientId: string,
-  userId: string,
-  scope: string
-): string => {
-  const token = crypto.randomBytes(32).toString("hex");
-  const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour
+// Helper: Build authorization response
+function buildAuthorizationResponse(
+  redirectUri: string,
+  code: string,
+  state: string
+): string {
+  const url = new URL(redirectUri);
+  url.searchParams.append("code", code);
+  url.searchParams.append("state", state);
+  return url.toString();
+}
 
-  accessTokens.set(token, {
-    clientId,
-    userId,
-    scope,
-    expiresAt,
-  });
+// Endpoint: Authorization handler
+export async function handleAuthorizationRequest(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    // Extract and validate query parameters
+    const clientId = req.query.client_id as string;
+    const redirectUri = req.query.redirect_uri as string;
+    const scope = (req.query.scope as string)?.split(" ") || [];
+    const state = req.query.state as string;
+    const responseType = req.query.response_type as string;
+    const codeChallenge = req.query.code_challenge as string;
+    const codeChallengeMethod = req.query.code_challenge_method as string;
 
-  return token;
-};
+    // Validate response type
+    if (responseType !== "code") {
+      res.status(400).json({
+        error: "unsupported_response_type",
+        error_description: "Only authorization code flow is supported",
+      });
+      return;
+    }
 
-export const validateAccessToken = (
-  token: string
-): {
-  clientId: string;
+    // Validate client_id
+    if (!clientId || !author

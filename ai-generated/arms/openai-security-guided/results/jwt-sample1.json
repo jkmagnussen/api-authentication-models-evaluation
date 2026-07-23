@@ -1,15 +1,15 @@
 {
   "model": "jwt",
   "sample": "sample1",
-  "characters": 991,
-  "lines": 38,
-  "functions": 2,
+  "characters": 1096,
+  "lines": 35,
+  "functions": 3,
   "classes": 0,
-  "cyclomaticComplexity": 2,
+  "cyclomaticComplexity": 4,
   "halstead": {
     "operators": {
       "distinct": 8,
-      "total": 23,
+      "total": 49,
       "identifiers": [
         "()",
         "{}",
@@ -22,8 +22,8 @@
       ]
     },
     "operands": {
-      "distinct": 22,
-      "total": 27,
+      "distinct": 33,
+      "total": 55,
       "identifiers": [
         "\"use strict\"",
         "exports",
@@ -35,27 +35,38 @@
         "defineProperty",
         "authenticateJWT",
         0,
+        "express_1",
+        "\"express\"",
+        "require",
         "jsonwebtoken_1",
         "\"jsonwebtoken\"",
-        "require",
-        "publicKey",
+        "dotenv_1",
+        "\"dotenv\"",
+        "default",
+        "config",
+        "JWT_SECRET",
         "process",
         "env",
-        "JWT_PUBLIC_KEY",
-        "\"your-secure-public-key\"",
-        "jwtIssuer",
-        "\"your-app-issuer\"",
-        "jwtAudience",
-        "\"your-app-audience\""
+        "\"defaultSecret\"",
+        "JWT_AUDIENCE",
+        "\"yourAudience\"",
+        "JWT_ISSUER",
+        "\"yourIssuer\"",
+        "JWT_ALGORITHM",
+        "\"HS256\"",
+        "app",
+        "use",
+        3000,
+        "listen"
       ]
     },
-    "length": 50,
-    "vocabulary": 30,
-    "difficulty": 4.909090909090909,
-    "volume": 245.34452978042594,
-    "effort": 1204.4186007402727,
-    "bugs": 0.08178150992680865,
-    "time": 66.9121444855707
+    "length": 104,
+    "vocabulary": 41,
+    "difficulty": 6.666666666666667,
+    "volume": 557.1854084802807,
+    "effort": 3714.569389868538,
+    "bugs": 0.1857284694934269,
+    "time": 206.36496610380766
   },
-  "maintainabilityIndex": 109.27806497953544
+  "maintainabilityIndex": 96.67063442907428
 }

@@ -11,7 +11,7 @@
     },
     {
       "name": "state handling present",
-      "passed": false,
+      "passed": true,
       "details": "Checks that the state parameter is referenced."
     },
     {
@@ -21,23 +21,23 @@
     },
     {
       "name": "no permissive admin default",
-      "passed": true,
+      "passed": false,
       "details": "Flags broad default admin scope grants."
     }
   ],
   "correctnessFailures": [
     "redirect validation present",
-    "state handling present",
-    "scope validation present"
+    "scope validation present",
+    "no permissive admin default"
   ],
   "securityFailures": [
     "redirect validation present",
-    "state handling present",
-    "scope validation present"
+    "scope validation present",
+    "no permissive admin default"
   ],
   "misconfigurationDetections": [
     "redirect validation present",
-    "state handling present",
-    "scope validation present"
+    "scope validation present",
+    "no permissive admin default"
   ]
 }

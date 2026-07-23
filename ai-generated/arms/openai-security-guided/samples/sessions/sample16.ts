@@ -1,57 +1,120 @@
-import express, { Request, Response, NextFunction } from 'express';
-import session from 'express-session';
-import connectRedis from 'connect-redis';
-import Redis from 'ioredis';
-import dotenv from 'dotenv';
+```typescript
+import express, { Request, Response, NextFunction } from "express";
+import session, { SessionOptions } from "express-session";
+import { randomBytes } from "crypto";
 
-dotenv.config();
+export const createSecureSessionMiddleware = () => {
+  const sessionConfig: SessionOptions = {
+    secret: process.env.SESSION_SECRET || randomBytes(32).toString("hex"),
+    name: "sid",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "strict",
+      maxAge: 1000 * 60 * 60 * 24,
+      path: "/",
+      domain: process.env.SESSION_DOMAIN,
+    },
+  };
 
-const RedisStore = connectRedis(session);
-const redisClient = new Redis(process.env.REDIS_URL || '');
+  return session(sessionConfig);
+};
 
-export const sessionMiddleware = session({
-  store: new RedisStore({ client: redisClient }),
-  secret: process.env.SESSION_SECRET || 'defaultSecret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 1000 * 60 * 60, // 1 hour
+export const validateSessionIntegrity = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.session) {
+    return res.status(401).json({ error: "Session unavailable" });
   }
-});
 
-const app = express();
-app.use(sessionMiddleware);
+  const now = Date.now();
+  const sessionCreatedAt = (req.session as any).createdAt || now;
+  const maxSessionAge = 1000 * 60 * 60 * 24;
 
-export const regenerateSession = (req: Request, res: Response, next: NextFunction) => {
-  req.session.regenerate((err) => {
-    if (err) {
-      return next(err);
-    }
-    req.session.userId = req.user?.id; // Assuming req.user is populated
-    next();
+  if (now - sessionCreatedAt > maxSessionAge) {
+    req.session.destroy(() => {
+      return res.status(401).json({ error: "Session expired" });
+    });
+    return;
+  }
+
+  next();
+};
+
+export const performSessionRegeneration = (
+  req: Request
+): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    const originalSessionData = { ...req.session };
+
+    req.session.regenerate((err) => {
+      if (err) {
+        reject(new Error(`Session regeneration failed: ${err.message}`));
+        return;
+      }
+
+      Object.assign(req.session, originalSessionData);
+
+      (req.session as any).regeneratedAt = Date.now();
+      (req.session as any).createdAt = Date.now();
+
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          reject(new Error(`Session save failed: ${saveErr.message}`));
+          return;
+        }
+        resolve(true);
+      });
+    });
   });
 };
 
-export const logoutUser = (req: Request, res: Response) => {
-  req.session.destroy(err => {
-    if (err) {
-      return res.status(500).send('Error logging out');
+export const handleLogout = (req: Request, res: Response): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (!req.session) {
+      resolve();
+      return;
     }
-    res.clearCookie('connect.sid');
-    res.status(200).send('Logged out successfully');
+
+    const sessionId = req.sessionID;
+
+    req.session.destroy((err) => {
+      if (err) {
+        reject(new Error(`Session destruction failed: ${err.message}`));
+        return;
+      }
+
+      res.clearCookie("sid", {
+        path: "/",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+
+      console.log(`Session ${sessionId} invalidated successfully`);
+      resolve();
+    });
   });
 };
 
-app.post('/login', (req: Request, res: Response, next: NextFunction) => {
-  // authenticateUser logic here
-  regenerateSession(req, res, next);
-});
+export const enforceSessionBinding = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const session = req.session as any;
 
-app.post('/logout', logoutUser);
+  if (!session.userAgent) {
+    session.userAgent = req.get("user-agent") || "unknown";
+    session.ipAddress = req.ip || "unknown";
+    return next();
+  }
 
-app.listen(3000, () => {
-  console.log('Server running on http://localhost:3000');
-});
+  const currentUserAgent = req.get("user-agent") || "unknown";
+  const currentIpAddress = req.ip || "unknown";
+
+  if

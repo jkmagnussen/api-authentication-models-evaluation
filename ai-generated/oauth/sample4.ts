@@ -2,105 +2,115 @@
 import Anthropic from "@anthropic-ai/sdk";
 import express, { Request, Response } from "express";
 import crypto from "crypto";
-import { URL } from "url";
 
 const client = new Anthropic();
 const app = express();
+app.use(express.json());
 
-// Configuration
-const VALID_SCOPES = ["read", "write", "delete"];
-const VALID_REDIRECT_DOMAINS = ["localhost:3001", "app.example.com"];
-const STATE_CACHE = new Map<string, { createdAt: number; used: boolean }>();
-const STATE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+interface AuthRequest {
+  client_id: string;
+  redirect_uri: string;
+  response_type: string;
+  scope: string;
+  state: string;
+}
 
-// Utility functions
-function validateRedirectUri(redirectUri: string): boolean {
-  try {
-    const url = new URL(redirectUri);
-    const host = url.hostname + (url.port ? `:${url.port}` : "");
+interface TokenRequest {
+  grant_type: string;
+  code: string;
+  client_id: string;
+  client_secret: string;
+  redirect_uri: string;
+}
 
-    if (url.protocol !== "https:" && url.hostname !== "localhost") {
-      return false;
-    }
+interface StoredAuthCode {
+  code: string;
+  client_id: string;
+  redirect_uri: string;
+  scope: string;
+  user_id: string;
+  expires_at: number;
+}
 
-    return VALID_REDIRECT_DOMAINS.some((domain) => host === domain);
-  } catch {
-    return false;
+interface StoredToken {
+  access_token: string;
+  refresh_token: string;
+  expires_at: number;
+  user_id: string;
+}
+
+const authorizationCodes = new Map<string, StoredAuthCode>();
+const accessTokens = new Map<string, StoredToken>();
+const registeredClients = new Map<
+  string,
+  { client_secret: string; name: string }
+>();
+
+registeredClients.set("test_client", {
+  client_secret: "test_secret",
+  name: "Test OAuth Client",
+});
+
+export const generateAuthorizationCode = (): string => {
+  return crypto.randomBytes(32).toString("hex");
+};
+
+export const generateAccessToken = (): string => {
+  return crypto.randomBytes(32).toString("hex");
+};
+
+export const generateRefreshToken = (): string => {
+  return crypto.randomBytes(32).toString("hex");
+};
+
+export const validateAuthRequest = (
+  req: AuthRequest
+): { valid: boolean; error?: string } => {
+  if (!registeredClients.has(req.client_id)) {
+    return { valid: false, error: "Invalid client_id" };
   }
-}
 
-function validateScopes(requestedScopes: string[]): boolean {
-  if (requestedScopes.length === 0) return false;
-  return requestedScopes.every((scope) => VALID_SCOPES.includes(scope));
-}
-
-function generateState(): string {
-  const state = crypto.randomBytes(32).toString("hex");
-  STATE_CACHE.set(state, { createdAt: Date.now(), used: false });
-  return state;
-}
-
-function validateState(state: string): boolean {
-  const entry = STATE_CACHE.get(state);
-
-  if (!entry) return false;
-  if (entry.used) return false;
-
-  const age = Date.now() - entry.createdAt;
-  if (age > STATE_EXPIRY_MS) {
-    STATE_CACHE.delete(state);
-    return false;
+  if (req.response_type !== "code") {
+    return { valid: false, error: "Unsupported response_type" };
   }
 
-  return true;
-}
-
-function markStateUsed(state: string): void {
-  const entry = STATE_CACHE.get(state);
-  if (entry) {
-    entry.used = true;
+  if (!req.redirect_uri || !req.state) {
+    return { valid: false, error: "Missing required parameters" };
   }
-}
 
-function cleanupExpiredStates(): void {
-  const now = Date.now();
-  for (const [state, entry] of STATE_CACHE.entries()) {
-    if (now - entry.createdAt > STATE_EXPIRY_MS) {
-      STATE_CACHE.delete(state);
-    }
-  }
-}
+  return { valid: true };
+};
 
-// Express routes
-export async function handleAuthorizationRequest(
-  req: Request,
+export const authorizeEndpoint = (
+  _req: Request,
   res: Response
-): Promise<void> {
-  const { client_id, redirect_uri, scope, response_type } = req.query;
+): Promise<void> => {
+  return (async () => {
+    try {
+      const authRequest: AuthRequest = {
+        client_id: _req.query.client_id as string,
+        redirect_uri: _req.query.redirect_uri as string,
+        response_type: _req.query.response_type as string,
+        scope: (_req.query.scope as string) || "openid profile email",
+        state: _req.query.state as string,
+      };
 
-  // Validate required parameters
-  if (!client_id || !redirect_uri || !scope || !response_type) {
-    return res.status(400).json({
-      error: "invalid_request",
-      error_description: "Missing required parameters",
-    });
-  }
+      const validation = validateAuthRequest(authRequest);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.error });
+      }
 
-  // Validate response_type
-  if (response_type !== "code") {
-    return res.status(400).json({
-      error: "unsupported_response_type",
-      error_description: "Only authorization code flow is supported",
-    });
-  }
+      const conversationHistory: Array<{
+        role: "user" | "assistant";
+        content: string;
+      }> = [];
 
-  // Validate client_id format
-  if (typeof client_id !== "string" || client_id.length === 0) {
-    return res.status(400).json({
-      error: "invalid_request",
-      error_description: "Invalid client_id",
-    });
-  }
+      const userMessage = `The user is attempting to authorize the OAuth2 client "${registeredClients.get(authRequest.client_id)?.name}" to access their profile with the following scopes: ${authRequest.scope}. Should we grant authorization? Please respond with either "GRANT" or "DENY".`;
 
-  // Validate redirect_uri
-  if (typeof redirect_uri !== "string" || !validate
+      conversationHistory.push({
+        role: "user",
+        content: userMessage,
+      });
+
+      const response = await client.messages.create({
+        model: "

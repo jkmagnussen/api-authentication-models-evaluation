@@ -1,6 +1,6 @@
 # AI Evaluation Summary
 
-Generated: 2026-07-23T00:52:23.964Z
+Generated: 2026-07-23T04:30:51.892Z
 Regenerate: npm run ai:report
 
 This report aggregates the complexity metrics and automated check results for 90 AI-generated authentication samples.
@@ -19,18 +19,18 @@ This report aggregates the complexity metrics and automated check results for 90
 |---|---:|---:|---:|---:|---|
 | OAUTH | 30 | 3 | 27 | 90.0% | 27 of 30 samples contained detected omissions or insecure patterns. |
 | JWT | 30 | 27 | 3 | 10.0% | 3 of 30 samples contained detected omissions or insecure patterns. |
-| SESSIONS | 30 | 24 | 6 | 20.0% | 6 of 30 samples contained detected omissions or insecure patterns. |
-| OVERALL | 90 | 54 | 36 | 40.0% | 36 of 90 samples contained detected omissions or insecure patterns. |
+| SESSIONS | 30 | 26 | 4 | 13.3% | 4 of 30 samples contained detected omissions or insecure patterns. |
+| OVERALL | 90 | 56 | 34 | 37.8% | 34 of 90 samples contained detected omissions or insecure patterns. |
 
 ## OAUTH Samples
 
 | Sample | Pass | Chars | Lines | Funcs | Classes | Cyclomatic | Maintainability | Security Failures | Interpretation |
 |---|---|---:|---:|---:|---:|---:|---:|---|---|
-| sample1 | FAIL | 2734 | 122 | 0 | 0 | n/a | n/a | redirect validation present; scope validation present | Sample could not be structurally analysed: Line 123: Unexpected token ILLEGAL |
-| sample2 | FAIL | 2929 | 107 | 0 | 0 | n/a | n/a | redirect validation present; scope validation present | Sample could not be structurally analysed: Line 108: Unexpected token ILLEGAL |
-| sample3 | FAIL | 2854 | 104 | 0 | 0 | n/a | n/a | redirect validation present; scope validation present | Sample could not be structurally analysed: Line 105: Unexpected token ILLEGAL |
-| sample4 | FAIL | 2847 | 106 | 0 | 0 | n/a | n/a | redirect validation present; scope validation present | Sample could not be structurally analysed: Line 112: Unexpected token ILLEGAL |
-| sample5 | FAIL | 2834 | 107 | 0 | 0 | n/a | n/a | redirect validation present; scope validation present | Sample could not be structurally analysed: Line 108: Unexpected token ILLEGAL |
+| sample1 | FAIL | 1506 | 43 | 2 | 0 | 1 | 104.97 | redirect validation present; scope validation present | Sample shows weaknesses or omissions relative to the expected secure baseline. |
+| sample2 | FAIL | 1450 | 40 | 3 | 0 | 6 | 104.25 | redirect validation present | Sample shows weaknesses or omissions relative to the expected secure baseline. |
+| sample3 | FAIL | 1555 | 50 | 5 | 0 | 1 | 112.84 | redirect validation present | Sample shows weaknesses or omissions relative to the expected secure baseline. |
+| sample4 | FAIL | 1228 | 33 | 4 | 0 | 1 | 102.45 | redirect validation present; scope validation present | Sample shows weaknesses or omissions relative to the expected secure baseline. |
+| sample5 | FAIL | 1864 | 63 | 6 | 0 | 1 | 140.47 | redirect validation present; scope validation present | Sample shows weaknesses or omissions relative to the expected secure baseline. |
 | sample6 | FAIL | 3047 | 109 | 0 | 0 | n/a | n/a | redirect validation present; scope validation present | Sample could not be structurally analysed: Line 110: Unexpected token ILLEGAL |
 | sample7 | FAIL | 2813 | 108 | 0 | 0 | n/a | n/a | scope validation present | Sample could not be structurally analysed: Line 135: Unexpected token : |
 | sample8 | FAIL | 2872 | 116 | 0 | 0 | n/a | n/a | redirect validation present | Sample could not be structurally analysed: Line 117: Unexpected token ILLEGAL |
@@ -61,11 +61,11 @@ This report aggregates the complexity metrics and automated check results for 90
 
 | Sample | Pass | Chars | Lines | Funcs | Classes | Cyclomatic | Maintainability | Security Failures | Interpretation |
 |---|---|---:|---:|---:|---:|---:|---:|---|---|
-| sample1 | PASS | 2942 | 101 | 0 | 0 | n/a | n/a | None | Sample could not be structurally analysed: Line 102: Unexpected token ILLEGAL |
-| sample2 | PASS | 3004 | 109 | 0 | 0 | n/a | n/a | None | Sample could not be structurally analysed: Line 131: Unexpected token ILLEGAL |
-| sample3 | PASS | 2934 | 105 | 0 | 0 | n/a | n/a | None | Sample could not be structurally analysed: Line 111: Unexpected token ILLEGAL |
-| sample4 | PASS | 3031 | 96 | 0 | 0 | n/a | n/a | None | Sample could not be structurally analysed: Line 102: Unexpected token ILLEGAL |
-| sample5 | PASS | 3236 | 105 | 0 | 0 | n/a | n/a | None | Sample could not be structurally analysed: Line 133: Unexpected token ILLEGAL |
+| sample1 | PASS | 1096 | 35 | 3 | 0 | 4 | 96.67 | None | Sample passed the local automated security checks. |
+| sample2 | PASS | 1003 | 38 | 1 | 0 | 3 | 101.03 | None | Sample passed the local automated security checks. |
+| sample3 | PASS | 1060 | 31 | 2 | 0 | 4 | 105.29 | None | Sample passed the local automated security checks. |
+| sample4 | PASS | 958 | 37 | 2 | 0 | 4 | 103.69 | None | Sample passed the local automated security checks. |
+| sample5 | PASS | 1531 | 55 | 5 | 0 | 1 | 88.20 | None | Sample passed the local automated security checks. |
 | sample6 | PASS | 2961 | 103 | 0 | 0 | n/a | n/a | None | Sample could not be structurally analysed: Line 104: Unexpected token ILLEGAL |
 | sample7 | PASS | 2840 | 109 | 0 | 0 | n/a | n/a | None | Sample could not be structurally analysed: Line 115: Unexpected token ILLEGAL |
 | sample8 | PASS | 3093 | 110 | 0 | 0 | n/a | n/a | None | Sample could not be structurally analysed: Line 54: Unexpected token ; |
@@ -96,11 +96,11 @@ This report aggregates the complexity metrics and automated check results for 90
 
 | Sample | Pass | Chars | Lines | Funcs | Classes | Cyclomatic | Maintainability | Security Failures | Interpretation |
 |---|---|---:|---:|---:|---:|---:|---:|---|---|
-| sample1 | PASS | 2948 | 118 | 0 | 0 | n/a | n/a | None | Sample could not be structurally analysed: Line 119: Unexpected token ILLEGAL |
-| sample2 | PASS | 2984 | 141 | 0 | 0 | n/a | n/a | None | Sample could not be structurally analysed: Line 142: Unexpected token ILLEGAL |
-| sample3 | FAIL | 2950 | 113 | 0 | 0 | n/a | n/a | httpOnly cookie flag present | Sample could not be structurally analysed: Line 128: Unexpected token ILLEGAL |
-| sample4 | PASS | 3132 | 111 | 0 | 0 | n/a | n/a | None | Sample could not be structurally analysed: Line 126: Unexpected token ILLEGAL |
-| sample5 | FAIL | 3078 | 112 | 0 | 0 | n/a | n/a | logout invalidation present | Sample could not be structurally analysed: Line 113: Unexpected token ILLEGAL |
+| sample1 | PASS | 1072 | 39 | 4 | 0 | 1 | 94.67 | None | Sample passed the local automated security checks. |
+| sample2 | PASS | 1299 | 48 | 6 | 0 | 2 | 89.83 | None | Sample passed the local automated security checks. |
+| sample3 | PASS | 1413 | 59 | 6 | 0 | 2 | 87.32 | None | Sample passed the local automated security checks. |
+| sample4 | PASS | 1481 | 61 | 6 | 0 | 3 | 130.10 | None | Sample passed the local automated security checks. |
+| sample5 | PASS | 1692 | 63 | 7 | 0 | 1 | 84.51 | None | Sample passed the local automated security checks. |
 | sample6 | PASS | 2923 | 112 | 0 | 0 | n/a | n/a | None | Sample could not be structurally analysed: Line 129: Unexpected token ILLEGAL |
 | sample7 | PASS | 2956 | 99 | 0 | 0 | n/a | n/a | None | Sample could not be structurally analysed: Line 105: Unexpected token ILLEGAL |
 | sample8 | PASS | 3196 | 113 | 0 | 0 | n/a | n/a | None | Sample could not be structurally analysed: Line 119: Unexpected token ILLEGAL |

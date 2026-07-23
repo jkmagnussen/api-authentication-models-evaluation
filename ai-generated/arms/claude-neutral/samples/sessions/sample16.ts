@@ -1,130 +1,120 @@
 ```typescript
-import express, { Express, Request, Response, NextFunction } from 'express';
-import session from 'express-session';
-import { v4 as uuidv4 } from 'uuid';
+import express, { Request, Response, NextFunction } from "express";
+import session, { SessionOptions } from "express-session";
+import { randomBytes } from "crypto";
 
-interface UserProfile {
-  id: string;
-  username: string;
-  email: string;
-  role: 'admin' | 'user' | 'guest';
-  loginTime: Date;
-}
-
-interface SessionData {
-  profile?: UserProfile;
-  visitCount: number;
-  preferences: {
-    theme: 'light' | 'dark';
-    language: string;
+export const createSecureSessionMiddleware = () => {
+  const sessionConfig: SessionOptions = {
+    secret: process.env.SESSION_SECRET || randomBytes(32).toString("hex"),
+    name: "sid",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "strict",
+      maxAge: 1000 * 60 * 60 * 24,
+      path: "/",
+      domain: process.env.SESSION_DOMAIN,
+    },
   };
-}
 
-declare global {
-  namespace Express {
-    interface Session {
-      data: SessionData;
-      authenticated: boolean;
-    }
-  }
-}
+  return session(sessionConfig);
+};
 
-export function initializeSessionMiddleware(app: Express): void {
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || 'your-session-secret-key',
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000,
-      },
-    })
-  );
-}
-
-export function trackVisitMiddleware(
+export const validateSessionIntegrity = (
   req: Request,
   res: Response,
   next: NextFunction
-): void {
-  if (!req.session.data) {
-    req.session.data = {
-      visitCount: 0,
-      preferences: {
-        theme: 'light',
-        language: 'en',
-      },
-    };
+) => {
+  if (!req.session) {
+    return res.status(401).json({ error: "Session unavailable" });
   }
-  req.session.data.visitCount++;
-  next();
-}
 
-export function verifyAuthenticationMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
-  if (req.session.authenticated && req.session.data.profile) {
-    next();
-  } else {
-    res.status(401).json({ error: 'Not authenticated' });
-  }
-}
+  const now = Date.now();
+  const sessionCreatedAt = (req.session as any).createdAt || now;
+  const maxSessionAge = 1000 * 60 * 60 * 24;
 
-export function loginHandler(req: Request, res: Response): void {
-  const { username, email } = req.body;
-
-  if (!username || !email) {
-    res.status(400).json({ error: 'Username and email required' });
+  if (now - sessionCreatedAt > maxSessionAge) {
+    req.session.destroy(() => {
+      return res.status(401).json({ error: "Session expired" });
+    });
     return;
   }
 
-  const userProfile: UserProfile = {
-    id: uuidv4(),
-    username,
-    email,
-    role: 'user',
-    loginTime: new Date(),
-  };
+  next();
+};
 
-  req.session.authenticated = true;
-  req.session.data = {
-    ...req.session.data,
-    profile: userProfile,
-    visitCount: 1,
-  };
+export const performSessionRegeneration = (
+  req: Request
+): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    const originalSessionData = { ...req.session };
 
-  res.json({
-    message: 'Login successful',
-    user: userProfile,
+    req.session.regenerate((err) => {
+      if (err) {
+        reject(new Error(`Session regeneration failed: ${err.message}`));
+        return;
+      }
+
+      Object.assign(req.session, originalSessionData);
+
+      (req.session as any).regeneratedAt = Date.now();
+      (req.session as any).createdAt = Date.now();
+
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          reject(new Error(`Session save failed: ${saveErr.message}`));
+          return;
+        }
+        resolve(true);
+      });
+    });
   });
-}
+};
 
-export function logoutHandler(req: Request, res: Response): void {
-  req.session.destroy((err) => {
-    if (err) {
-      res.status(500).json({ error: 'Logout failed' });
+export const handleLogout = (req: Request, res: Response): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (!req.session) {
+      resolve();
       return;
     }
-    res.json({ message: 'Logout successful' });
+
+    const sessionId = req.sessionID;
+
+    req.session.destroy((err) => {
+      if (err) {
+        reject(new Error(`Session destruction failed: ${err.message}`));
+        return;
+      }
+
+      res.clearCookie("sid", {
+        path: "/",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+
+      console.log(`Session ${sessionId} invalidated successfully`);
+      resolve();
+    });
   });
-}
+};
 
-export function getSessionStatusHandler(req: Request, res: Response): void {
-  const status = {
-    authenticated: req.session.authenticated || false,
-    visitCount: req.session.data?.visitCount || 0,
-    profile: req.session.data?.profile || null,
-    preferences: req.session.data?.preferences || null,
-  };
+export const enforceSessionBinding = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const session = req.session as any;
 
-  res.json(status);
-}
+  if (!session.userAgent) {
+    session.userAgent = req.get("user-agent") || "unknown";
+    session.ipAddress = req.ip || "unknown";
+    return next();
+  }
 
-export function updatePreferencesHandler(req: Request, res: Response): void {
-  const { theme, language } = req.body;
+  const currentUserAgent = req.get("user-agent") || "unknown";
+  const currentIpAddress = req.ip || "unknown";
 
-  if (!req.session.data) {
+  if

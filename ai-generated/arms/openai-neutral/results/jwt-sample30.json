@@ -1,57 +1,18 @@
 {
   "model": "jwt",
   "sample": "sample30",
-  "characters": 774,
-  "lines": 26,
-  "functions": 2,
+  "characters": 2781,
+  "lines": 113,
+  "functions": 0,
   "classes": 0,
-  "cyclomaticComplexity": 2,
+  "cyclomaticComplexity": null,
   "halstead": {
-    "operators": {
-      "distinct": 8,
-      "total": 19,
-      "identifiers": [
-        "()",
-        "{}",
-        ":",
-        ".",
-        "=",
-        "void (prefix)",
-        "const",
-        "||"
-      ]
-    },
-    "operands": {
-      "distinct": 18,
-      "total": 23,
-      "identifiers": [
-        "\"use strict\"",
-        "exports",
-        "\"__esModule\"",
-        "<anonymous>",
-        "value",
-        true,
-        "Object",
-        "defineProperty",
-        "authenticateJWT",
-        0,
-        "jsonwebtoken_1",
-        "\"jsonwebtoken\"",
-        "require",
-        "secretKey",
-        "process",
-        "env",
-        "JWT_SECRET",
-        "\"defaultSecretKey\""
-      ]
-    },
-    "length": 42,
-    "vocabulary": 26,
-    "difficulty": 5.111111111111111,
-    "volume": 197.4184681619259,
-    "effort": 1009.0277261609544,
-    "bugs": 0.0658061560539753,
-    "time": 56.057095897830806
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
   },
-  "maintainabilityIndex": 113.49836382726829
+  "maintainabilityIndex": null,
+  "analysisError": "Line 152: Unexpected token ILLEGAL"
 }

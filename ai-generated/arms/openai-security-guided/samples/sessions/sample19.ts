@@ -1,67 +1,115 @@
-import express, { Request, Response, NextFunction } from 'express';
-import session from 'express-session';
-import crypto from 'crypto';
-import { body, validationResult } from 'express-validator';
+```typescript
+import express, { Express, Request, Response, NextFunction } from "express";
+import session from "express-session";
+import crypto from "crypto";
 
-const app = express();
-
-const sessionConfig = {
-  secret: crypto.randomBytes(64).toString('hex'),
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 1000 * 60 * 15 // 15 minutes
-  }
-};
-
-app.use(session(sessionConfig));
-
-app.use(express.json());
-
-export const regenerateSession = (req: Request, res: Response, next: NextFunction) => {
-  req.session.regenerate((err: Error) => {
-    if (err) {
-      return next(err);
-    }
-    next();
+export function initializeSecureSession(app: Express): void {
+  const sessionConfig = session({
+    secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex"),
+    resave: false,
+    saveUninitialized: false,
+    name: "auth.token",
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "strict" as const,
+      maxAge: 30 * 60 * 1000,
+      domain: process.env.COOKIE_DOMAIN,
+    },
   });
-};
 
-export const validateSession = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ message: 'Unauthorized access' });
+  app.use(sessionConfig);
+}
+
+export async function authenticateUser(
+  req: Request,
+  res: Response,
+  userId: string
+): Promise<void> {
+  if (!req.session) {
+    throw new Error("Session not available");
   }
+
+  const validateUserId = (id: string): boolean => {
+    return /^[a-zA-Z0-9_-]{3,32}$/.test(id);
+  };
+
+  if (!validateUserId(userId)) {
+    throw new Error("Invalid user ID format");
+  }
+
+  req.session.userId = userId;
+  req.session.loginTime = Date.now();
+  req.session.ipAddress = req.ip;
+  req.session.userAgent = req.get("user-agent") || "";
+
+  await new Promise<void>((resolve, reject) => {
+    req.session!.regenerate((err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+}
+
+export async function verifySessionIntegrity(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  if (!req.session || !req.session.userId) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const currentIp = req.ip;
+  const currentUserAgent = req.get("user-agent") || "";
+
+  if (
+    req.session.ipAddress !== currentIp ||
+    req.session.userAgent !== currentUserAgent
+  ) {
+    await new Promise<void>((resolve) => {
+      req.session!.destroy(() => {
+        resolve();
+      });
+    });
+
+    res.status(401).json({ error: "Session validation failed" });
+    return;
+  }
+
+  const sessionAge = Date.now() - (req.session.loginTime || 0);
+  if (sessionAge > 2 * 60 * 60 * 1000) {
+    await new Promise<void>((resolve) => {
+      req.session!.destroy(() => {
+        resolve();
+      });
+    });
+
+    res.status(401).json({ error: "Session expired" });
+    return;
+  }
+
   next();
-};
+}
 
-app.post('/login', [
-  body('username').isString().isLength({ min: 3 }),
-  body('password').isString().isLength({ min: 8 })
-], (req: Request, res: Response, next: NextFunction) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+export async function terminateSession(req: Request, res: Response): Promise<void> {
+  if (!req.session) {
+    res.status(400).json({ error: "No active session" });
+    return;
   }
-  // Assume user authentication logic here
-  req.session.userId = req.body.username; // Example assignment
-  regenerateSession(req, res, () => {
-    res.status(200).json({ message: 'Login successful' });
-  });
-});
 
-app.post('/logout', validateSession, (req: Request, res: Response) => {
-  req.session.destroy((err: Error) => {
-    if (err) {
-      return res.status(500).json({ message: 'Session destruction failed' });
-    }
-    res.clearCookie('connect.sid');
-    res.status(200).json({ message: 'Logout successful' });
-  });
-});
+  const sessionId = req.sessionID;
 
-app.listen(3000, () => {
-  console.log('Server running on port 3000');
-});
+  await new Promise<void>((resolve, reject) => {
+    req.session!.destroy((err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+
+  res.clearCookie("auth.token", {
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    sameSite: "strict",
+    domain: process.env.

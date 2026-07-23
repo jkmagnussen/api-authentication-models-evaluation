@@ -1,69 +1,18 @@
 {
   "model": "oauth",
   "sample": "sample28",
-  "characters": 1578,
-  "lines": 46,
-  "functions": 1,
+  "characters": 2909,
+  "lines": 112,
+  "functions": 0,
   "classes": 0,
-  "cyclomaticComplexity": 1,
+  "cyclomaticComplexity": null,
   "halstead": {
-    "operators": {
-      "distinct": 9,
-      "total": 38,
-      "identifiers": [
-        "()",
-        "{}",
-        ":",
-        ".",
-        "=",
-        "void (prefix)",
-        "const",
-        "new",
-        "[]"
-      ]
-    },
-    "operands": {
-      "distinct": 29,
-      "total": 46,
-      "identifiers": [
-        "\"use strict\"",
-        "exports",
-        "\"__esModule\"",
-        "<anonymous>",
-        "value",
-        true,
-        "Object",
-        "defineProperty",
-        "authorizationEndpoint",
-        0,
-        "express_1",
-        "\"express\"",
-        "require",
-        "crypto_1",
-        "\"crypto\"",
-        "express_validator_1",
-        "\"express-validator\"",
-        "authRouter",
-        "default",
-        "Router",
-        "validRedirectUris",
-        "\"https://example.com/callback\"",
-        "Set",
-        "supportedScopes",
-        "\"read\"",
-        "\"write\"",
-        "\"profile\"",
-        "\"/authorize\"",
-        "get"
-      ]
-    },
-    "length": 84,
-    "vocabulary": 38,
-    "difficulty": 7.137931034482759,
-    "volume": 440.82591112926116,
-    "effort": 3146.584951853692,
-    "bugs": 0.14694197037642037,
-    "time": 174.8102751029829
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
   },
-  "maintainabilityIndex": 100.70234159529542
+  "maintainabilityIndex": null,
+  "analysisError": "Line 121: Unexpected token ILLEGAL"
 }

@@ -3,109 +3,136 @@ import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
 import crypto from 'crypto';
 
-// Types for session validation
-interface SecureSessionOptions {
-  sessionTimeout: number;
-  cookieDomain?: string;
-  cookiePath?: string;
-  sameSite?: 'strict' | 'lax' | 'none';
+const app = express();
+
+interface SessionOptions {
+  maxAge?: number;
+  resave?: boolean;
+  saveUninitialized?: boolean;
 }
 
-interface SessionStore {
-  sessions: Map<string, any>;
-  get(sessionId: string): Promise<any>;
-  set(sessionId: string, sessionData: any): Promise<void>;
-  destroy(sessionId: string): Promise<void>;
-}
-
-// In-memory session store with validation
-export const createValidatedSessionStore = (): SessionStore => {
-  const sessions = new Map<string, any>();
-
-  return {
-    sessions,
-    async get(sessionId: string) {
-      const session = sessions.get(sessionId);
-      if (!session) return undefined;
-      
-      if (session.expiresAt && Date.now() > session.expiresAt) {
-        sessions.delete(sessionId);
-        return undefined;
-      }
-      
-      return session;
-    },
-    async set(sessionId: string, sessionData: any) {
-      if (!sessionId || typeof sessionId !== 'string') {
-        throw new Error('Invalid session ID');
-      }
-      sessions.set(sessionId, sessionData);
-    },
-    async destroy(sessionId: string) {
-      sessions.delete(sessionId);
-    }
+interface AuthenticatedRequest extends Request {
+  session: session.Session & {
+    userId?: string;
+    email?: string;
   };
-};
+}
 
-// Create express-session middleware with secure defaults
-export const configureSecureSessionMiddleware = (
-  options: Partial<SecureSessionOptions> = {}
-): express.RequestHandler => {
-  const sessionTimeout = options.sessionTimeout || 30 * 60 * 1000; // 30 minutes
-  const cookiePath = options.cookiePath || '/';
-  const sameSite = options.sameSite || 'strict';
-  
-  const store = createValidatedSessionStore();
-
-  return session({
-    secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
+export function setupSecureSessionManagement(sessionOptions?: SessionOptions) {
+  const defaultOptions: SessionOptions = {
+    maxAge: 30 * 60 * 1000,
     resave: false,
     saveUninitialized: false,
-    store: session.Store.prototype.constructor.prototype || undefined,
-    name: 'sessionId',
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      maxAge: sessionTimeout,
-      path: cookiePath,
-      domain: options.cookieDomain,
-      sameSite: sameSite as any,
-    },
-  });
-};
+    ...sessionOptions,
+  };
 
-// Session regeneration with validation
-export const regenerateSession = (
-  req: Request,
-  res: Response
-): Promise<void> => {
+  app.use(
+    session({
+      secret: crypto.randomBytes(32).toString('hex'),
+      resave: defaultOptions.resave,
+      saveUninitialized: defaultOptions.saveUninitialized,
+      cookie: {
+        secure: true,
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: defaultOptions.maxAge,
+      },
+      name: 'auth_session_id',
+    })
+  );
+
+  return app;
+}
+
+export async function performSessionRenewal(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (!req.session) {
-      reject(new Error('Session not initialized'));
-      return;
-    }
+    const originalUserId = req.session.userId;
+    const originalEmail = req.session.email;
 
-    const originalData = { ...req.session };
-    
-    req.session.regenerate((err: any) => {
+    req.session.regenerate((err) => {
       if (err) {
-        reject(new Error(`Session regeneration failed: ${err.message}`));
-        return;
+        return reject(err);
       }
 
-      // Restore user data without maintaining old session ID
-      req.session.userId = originalData.userId;
-      req.session.role = originalData.role;
-      req.session.regeneratedAt = Date.now();
-      req.session.isRegenerated = true;
+      req.session.userId = originalUserId;
+      req.session.email = originalEmail;
 
-      req.session.save((saveErr: any) => {
+      req.session.save((saveErr) => {
         if (saveErr) {
-          reject(new Error(`Session save failed: ${saveErr.message}`));
-          return;
+          return reject(saveErr);
         }
         resolve();
       });
     });
   });
-};
+}
+
+export async function invalidateSessionOnLogout(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return reject(err);
+      }
+
+      res.clearCookie('auth_session_id', {
+        secure: true,
+        httpOnly: true,
+        sameSite: 'strict',
+      });
+
+      resolve();
+    });
+  });
+}
+
+export function validateSessionIntegrity(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): void {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({ error: 'Session invalid or expired' });
+  }
+
+  if (!req.session.email) {
+    return res.status(401).json({ error: 'Session data corrupted' });
+  }
+
+  next();
+}
+
+export async function authenticateUser(
+  req: AuthenticatedRequest,
+  userId: string,
+  email: string
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => {
+      if (err) {
+        return reject(err);
+      }
+
+      req.session.userId = userId;
+      req.session.email = email;
+
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          return reject(saveErr);
+        }
+        resolve();
+      });
+    });
+  });
+}
+
+// Routes
+app.post('/login', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = 'user_123

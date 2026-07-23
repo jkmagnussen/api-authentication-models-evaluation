@@ -16,22 +16,28 @@
     },
     {
       "name": "scope validation present",
-      "passed": true,
+      "passed": false,
       "details": "Checks that scope validation logic exists."
     },
     {
       "name": "no permissive admin default",
-      "passed": true,
+      "passed": false,
       "details": "Flags broad default admin scope grants."
     }
   ],
   "correctnessFailures": [
-    "redirect validation present"
+    "redirect validation present",
+    "scope validation present",
+    "no permissive admin default"
   ],
   "securityFailures": [
-    "redirect validation present"
+    "redirect validation present",
+    "scope validation present",
+    "no permissive admin default"
   ],
   "misconfigurationDetections": [
-    "redirect validation present"
+    "redirect validation present",
+    "scope validation present",
+    "no permissive admin default"
   ]
 }

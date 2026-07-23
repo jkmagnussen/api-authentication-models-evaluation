@@ -1,53 +1,18 @@
 {
   "model": "oauth",
   "sample": "sample27",
-  "characters": 1102,
-  "lines": 36,
-  "functions": 2,
+  "characters": 3097,
+  "lines": 109,
+  "functions": 0,
   "classes": 0,
-  "cyclomaticComplexity": 1,
+  "cyclomaticComplexity": null,
   "halstead": {
-    "operators": {
-      "distinct": 7,
-      "total": 17,
-      "identifiers": [
-        "()",
-        "{}",
-        ":",
-        ".",
-        "=",
-        "void (prefix)",
-        "const"
-      ]
-    },
-    "operands": {
-      "distinct": 15,
-      "total": 21,
-      "identifiers": [
-        "\"use strict\"",
-        "exports",
-        "\"__esModule\"",
-        "<anonymous>",
-        "value",
-        true,
-        "Object",
-        "defineProperty",
-        "createAuthEndpoint",
-        0,
-        "express_1",
-        "\"express\"",
-        "require",
-        "authUtils_1",
-        "\"./authUtils\""
-      ]
-    },
-    "length": 38,
-    "vocabulary": 22,
-    "difficulty": 4.8999999999999995,
-    "volume": 169.4584015082173,
-    "effort": 830.3461673902647,
-    "bugs": 0.05648613383607243,
-    "time": 46.130342632792484
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
   },
-  "maintainabilityIndex": 114.32434504897324
+  "maintainabilityIndex": null,
+  "analysisError": "Line 142: Unexpected token :"
 }

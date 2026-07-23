@@ -1,55 +1,120 @@
-import express from 'express';
-import session, { SessionOptions } from 'express-session';
-import path from 'path';
+```typescript
+import express, { Request, Response, NextFunction } from "express";
+import session, { SessionOptions } from "express-session";
+import { randomBytes } from "crypto";
 
-const app = express();
+export const createSecureSessionMiddleware = () => {
+  const sessionConfig: SessionOptions = {
+    secret: process.env.SESSION_SECRET || randomBytes(32).toString("hex"),
+    name: "sid",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "strict",
+      maxAge: 1000 * 60 * 60 * 24,
+      path: "/",
+      domain: process.env.SESSION_DOMAIN,
+    },
+  };
 
-const sessionConfiguration: SessionOptions = {
-  secret: process.env.SESSION_SECRET || 'default_secret_key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 1000 * 60 * 30, // 30 minutes
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    path: '/'
-  }
+  return session(sessionConfig);
 };
 
-app.use(session(sessionConfiguration));
-
-app.get('/', (req, res) => {
-  if (req.session) {
-    if (!req.session.views) {
-      req.session.views = 0;
-    }
-    req.session.views++;
-    res.send(`Number of views: ${req.session.views}`);
-  } else {
-    res.send('Session not established.');
+export const validateSessionIntegrity = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.session) {
+    return res.status(401).json({ error: "Session unavailable" });
   }
-});
 
-app.post('/login', (req, res) => {
-  if (req.session) {
-    req.session.userId = 'user123';
-    res.send('Logged in successfully!');
-  } else {
-    res.status(500).send('Session not established.');
-  }
-});
+  const now = Date.now();
+  const sessionCreatedAt = (req.session as any).createdAt || now;
+  const maxSessionAge = 1000 * 60 * 60 * 24;
 
-app.get('/logout', (req, res) => {
-  if (req.session) {
-    req.session.destroy(err => {
-      if (err) {
-        return res.status(500).send('Error logging out.');
-      }
-      res.send('Logged out successfully!');
+  if (now - sessionCreatedAt > maxSessionAge) {
+    req.session.destroy(() => {
+      return res.status(401).json({ error: "Session expired" });
     });
-  } else {
-    res.status(400).send('Session not found.');
+    return;
   }
-});
 
-export { app };
+  next();
+};
+
+export const performSessionRegeneration = (
+  req: Request
+): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    const originalSessionData = { ...req.session };
+
+    req.session.regenerate((err) => {
+      if (err) {
+        reject(new Error(`Session regeneration failed: ${err.message}`));
+        return;
+      }
+
+      Object.assign(req.session, originalSessionData);
+
+      (req.session as any).regeneratedAt = Date.now();
+      (req.session as any).createdAt = Date.now();
+
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          reject(new Error(`Session save failed: ${saveErr.message}`));
+          return;
+        }
+        resolve(true);
+      });
+    });
+  });
+};
+
+export const handleLogout = (req: Request, res: Response): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (!req.session) {
+      resolve();
+      return;
+    }
+
+    const sessionId = req.sessionID;
+
+    req.session.destroy((err) => {
+      if (err) {
+        reject(new Error(`Session destruction failed: ${err.message}`));
+        return;
+      }
+
+      res.clearCookie("sid", {
+        path: "/",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+
+      console.log(`Session ${sessionId} invalidated successfully`);
+      resolve();
+    });
+  });
+};
+
+export const enforceSessionBinding = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const session = req.session as any;
+
+  if (!session.userAgent) {
+    session.userAgent = req.get("user-agent") || "unknown";
+    session.ipAddress = req.ip || "unknown";
+    return next();
+  }
+
+  const currentUserAgent = req.get("user-agent") || "unknown";
+  const currentIpAddress = req.ip || "unknown";
+
+  if

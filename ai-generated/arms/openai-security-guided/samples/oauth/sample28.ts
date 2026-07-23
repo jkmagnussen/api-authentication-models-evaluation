@@ -1,46 +1,112 @@
-import express, { Request, Response } from 'express';
-import { randomBytes } from 'crypto';
-import { query, validationResult } from 'express-validator';
+```typescript
+import express, { Request, Response } from "express";
+import crypto from "crypto";
 
 const authRouter = express.Router();
 
-const validRedirectUris = new Set(['https://example.com/callback']);
-const supportedScopes = new Set(['read', 'write', 'profile']);
-
-export const authorizationEndpoint = async (req: Request, res: Response) => {
-  await query('redirect_uri').isURL().run(req);
-  await query('state').isString().notEmpty().run(req);
-  await query('scope').isString().notEmpty().run(req);
-
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const redirectUri = req.query.redirect_uri as string;
-  const state = req.query.state as string;
-  const scope = req.query.scope as string;
-
-  if (!validRedirectUris.has(redirectUri)) {
-    return res.status(400).send('Invalid redirect URI');
-  }
-
-  const requestedScopes = scope.split(' ');
-  for (const requestedScope of requestedScopes) {
-    if (!supportedScopes.has(requestedScope)) {
-      return res.status(400).send('Invalid scope');
-    }
-  }
-
-  const authCode = randomBytes(32).toString('hex');
-
-  // Simulate storing authCode, associated redirectUri, etc., in a secure store
-  // storeAuthCode(authCode, redirectUri, state, requestedScopes);
-
-  const redirectParams = new URLSearchParams({ code: authCode, state }).toString();
-  return res.redirect(`${redirectUri}?${redirectParams}`);
+// Validate configuration
+const REQUIRED_CONFIG = {
+  OAUTH_CLIENT_ID: process.env.OAUTH_CLIENT_ID,
+  OAUTH_CLIENT_SECRET: process.env.OAUTH_CLIENT_SECRET,
+  OAUTH_REDIRECT_DOMAIN: process.env.OAUTH_REDIRECT_DOMAIN || "localhost",
 };
 
-authRouter.get('/authorize', authorizationEndpoint);
+Object.entries(REQUIRED_CONFIG).forEach(([key, value]) => {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+});
 
-export default authRouter;
+const ALLOWED_SCOPES = new Set([
+  "openid",
+  "profile",
+  "email",
+  "offline_access",
+]);
+const STATE_VALIDITY_MS = 10 * 60 * 1000; // 10 minutes
+const stateStore = new Map<
+  string,
+  { timestamp: number; codeChallenge?: string }
+>();
+
+interface AuthorizeRequest extends Request {
+  query: {
+    client_id?: string;
+    redirect_uri?: string;
+    response_type?: string;
+    scope?: string;
+    state?: string;
+    code_challenge?: string;
+    code_challenge_method?: string;
+  };
+}
+
+function validateClientId(clientId: string | undefined): boolean {
+  return clientId === REQUIRED_CONFIG.OAUTH_CLIENT_ID;
+}
+
+function validateResponseType(type: string | undefined): boolean {
+  return type === "code";
+}
+
+function parseScopes(scopeString: string | undefined): string[] {
+  if (!scopeString) return [];
+  return scopeString.split(" ").filter((scope) => scope.length > 0);
+}
+
+function validateScopes(requestedScopes: string[]): boolean {
+  if (requestedScopes.length === 0) return false;
+  return requestedScopes.every((scope) => ALLOWED_SCOPES.has(scope));
+}
+
+function validateRedirectUri(redirectUri: string | undefined): boolean {
+  if (!redirectUri) return false;
+
+  try {
+    const url = new URL(redirectUri);
+
+    // Allow localhost for development
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+      return url.protocol === "http:" || url.protocol === "https:";
+    }
+
+    // For production, validate against allowed domain
+    return (
+      (url.protocol === "https:" &&
+        url.hostname === REQUIRED_CONFIG.OAUTH_REDIRECT_DOMAIN) ||
+      url.hostname.endsWith("." + REQUIRED_CONFIG.OAUTH_REDIRECT_DOMAIN)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function generateState(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function validateStateParameter(state: string | undefined): boolean {
+  if (!state) return false;
+  const entry = stateStore.get(state);
+  if (!entry) return false;
+
+  const age = Date.now() - entry.timestamp;
+  if (age > STATE_VALIDITY_MS) {
+    stateStore.delete(state);
+    return false;
+  }
+
+  return true;
+}
+
+function storeState(state: string, codeChallenge?: string): void {
+  stateStore.set(state, {
+    timestamp: Date.now(),
+    codeChallenge,
+  });
+}
+
+function cleanupExpiredStates(): void {
+  const now = Date.now();
+  for (const [state, entry] of stateStore.entries()) {
+    if (now - entry.

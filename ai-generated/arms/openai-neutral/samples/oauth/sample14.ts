@@ -1,35 +1,125 @@
-import express, { Request, Response } from 'express';
-import { generateAuthCode, verifyClient, saveAuthCode } from './authUtils';
-import { authenticateUser } from './userAuth';
+```typescript
+import express, { Router, Request, Response, NextFunction } from "express";
+import crypto from "crypto";
+import { URL } from "url";
 
-export const oauthRouter = express.Router();
+interface AuthorizationRequest {
+  clientId: string;
+  redirectUri: string;
+  responseType: string;
+  scope: string[];
+  state: string;
+  codeChallenge?: string;
+  codeChallengeMethod?: string;
+}
 
-oauthRouter.get('/authorize', authenticateUser, async (req: Request, res: Response) => {
-  const { client_id, response_type, redirect_uri, scope, state } = req.query;
+interface StoredAuthState {
+  clientId: string;
+  redirectUri: string;
+  scope: string[];
+  timestamp: number;
+  codeChallenge?: string;
+  codeChallengeMethod?: string;
+}
 
-  if (!client_id || response_type !== 'code' || !redirect_uri) {
-    return res.status(400).json({ error: 'invalid_request' });
+const VALID_SCOPES = new Set([
+  "openid",
+  "profile",
+  "email",
+  "offline_access",
+  "api",
+]);
+const STATE_EXPIRY_MS = 600000; // 10 minutes
+const ALLOWED_RESPONSE_TYPES = new Set(["code", "token"]);
+const ALLOWED_CODE_CHALLENGE_METHODS = new Set(["S256", "plain"]);
+
+const registeredClients = new Map<
+  string,
+  { redirectUris: string[]; secret: string }
+>([
+  [
+    "client_123",
+    {
+      redirectUris: ["https://app.example.com/callback"],
+      secret: "super_secret_key_123",
+    },
+  ],
+  [
+    "client_456",
+    {
+      redirectUris: ["http://localhost:3001/auth/callback"],
+      secret: "another_secret_key_456",
+    },
+  ],
+]);
+
+const authStateStore = new Map<string, StoredAuthState>();
+const authorizationCodes = new Map<
+  string,
+  { clientId: string; redirectUri: string; scope: string[]; expiresAt: number }
+>();
+
+function generateSecureState(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function generateAuthorizationCode(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function validateRedirectUri(
+  clientId: string,
+  redirectUri: string
+): boolean {
+  const client = registeredClients.get(clientId);
+  if (!client) {
+    return false;
   }
 
   try {
-    const isClientValid = await verifyClient(client_id as string, redirect_uri as string);
-    if (!isClientValid) {
-      return res.status(400).json({ error: 'unauthorized_client' });
+    const requestedUrl = new URL(redirectUri);
+    const isHttps = requestedUrl.protocol === "https:";
+    const isLocalhost = requestedUrl.hostname === "localhost";
+
+    if (!isHttps && !isLocalhost) {
+      return false;
     }
 
-    if (!req.user) {
-      return res.status(401).json({ error: 'access_denied' });
-    }
-
-    const authorizationCode = generateAuthCode();
-    await saveAuthCode(authorizationCode, client_id as string, req.user.id, scope as string);
-
-    const redirectUrl = new URL(redirect_uri as string);
-    redirectUrl.searchParams.append('code', authorizationCode);
-    if (state) redirectUrl.searchParams.append('state', state as string);
-
-    res.redirect(redirectUrl.toString());
-  } catch (error) {
-    res.status(500).json({ error: 'server_error' });
+    return client.redirectUris.some(
+      (uri) =>
+        uri === redirectUri || uri.startsWith(requestedUrl.origin + "/")
+    );
+  } catch {
+    return false;
   }
-});
+}
+
+function validateScopes(requestedScopes: string[]): boolean {
+  if (!Array.isArray(requestedScopes) || requestedScopes.length === 0) {
+    return false;
+  }
+
+  if (requestedScopes.length > 10) {
+    return false;
+  }
+
+  return requestedScopes.every((scope) => VALID_SCOPES.has(scope));
+}
+
+function validateState(state: string): boolean {
+  if (!state || typeof state !== "string" || state.length < 32) {
+    return false;
+  }
+
+  if (!/^[a-zA-Z0-9]+$/.test(state)) {
+    return false;
+  }
+
+  return true;
+}
+
+function validateCodeChallenge(
+  codeChallenge: string | undefined,
+  method: string | undefined
+): boolean {
+  if (!codeChall

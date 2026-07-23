@@ -1,63 +1,48 @@
-import express from 'express';
-import session from 'express-session';
-import { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
+import session, { SessionOptions } from 'express-session';
 import crypto from 'crypto';
 
 const app = express();
 
-const sessionMiddleware = session({
+const sessionConfig: SessionOptions = {
   secret: crypto.randomBytes(64).toString('hex'),
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 1000 * 60 * 15, // 15 minutes
-    sameSite: 'strict'
-  },
-});
-
-app.use(sessionMiddleware);
-
-export function regenerateSession(req: Request, res: Response, next: () => void): void {
-  req.session.regenerate((err) => {
-    if (err) {
-      res.status(500).send('Session regeneration failed');
-    } else {
-      next();
-    }
-  });
-}
-
-export function ensureLoggedIn(req: Request, res: Response, next: () => void): void {
-  if (req.session.user) {
-    next();
-  } else {
-    res.status(401).send('Unauthorized');
+    sameSite: 'strict',
+    maxAge: 1000 * 60 * 15 // 15 minutes
   }
-}
+};
 
-export function logOut(req: Request, res: Response): void {
+app.use(session(sessionConfig));
+
+const regenerateSession = (req: Request, callback: (err?: any) => void) => {
+  req.session.regenerate(callback);
+};
+
+const login = (req: Request, res: Response, next: NextFunction) => {
+  regenerateSession(req, (err) => {
+    if (err) return next(err);
+    req.session.userId = req.body.userId;
+    res.status(200).send('Logged in');
+  });
+};
+
+const logout = (req: Request, res: Response) => {
   req.session.destroy((err) => {
     if (err) {
-      res.status(500).send('Logout failed');
+      res.status(500).send('Error in session destruction');
     } else {
-      res.clearCookie('connect.sid', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-      });
+      res.clearCookie('connect.sid');
       res.status(200).send('Logged out');
     }
   });
-}
+};
 
-app.post('/login', regenerateSession, (req: Request, res: Response) => {
-  // Example login logic
-  req.session.user = { id: 1 }; // Simulate an authenticated user
-  res.status(200).send('Logged in');
-});
+app.post('/login', express.json(), login);
+app.post('/logout', logout);
 
-app.post('/logout', ensureLoggedIn, logOut);
-
-export default app;
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

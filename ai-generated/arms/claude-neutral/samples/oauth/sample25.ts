@@ -1,117 +1,95 @@
 ```typescript
-import express, { Request, Response } from "express";
-import crypto from "crypto";
+import express, { Router, Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 
-const app = express();
-app.use(express.urlencoded({ extended: true }));
+const oauthRouter = Router();
 
-interface ClientConfig {
-  clientId: string;
-  clientSecret: string;
-  redirectUris: string[];
-  scope: string[];
+interface AuthorizationRequest {
+  client_id: string;
+  redirect_uri: string;
+  response_type: string;
+  scope: string;
+  state: string;
+  code_challenge?: string;
+  code_challenge_method?: string;
 }
 
-interface AuthorizationCode {
-  code: string;
-  clientId: string;
-  userId: string;
-  redirectUri: string;
-  scope: string[];
-  expiresAt: number;
-  codeChallenge?: string;
+interface StoredAuthState {
+  client_id: string;
+  redirect_uri: string;
+  scope: string;
+  code_challenge?: string;
+  code_challenge_method?: string;
+  created_at: number;
+  expires_at: number;
 }
 
-interface AccessToken {
-  token: string;
-  clientId: string;
-  userId: string;
-  scope: string[];
-  issuedAt: number;
-  expiresAt: number;
-}
+const ALLOWED_RESPONSE_TYPES = ['code', 'token'];
+const VALID_SCOPES = ['read', 'write', 'delete', 'admin'];
+const STATE_EXPIRY_MS = 10 * 60 * 1000;
+const REDIRECT_TIMEOUT_MS = 5 * 60 * 1000;
 
-const registeredClients: Map<string, ClientConfig> = new Map([
-  [
-    "client_app_001",
-    {
-      clientId: "client_app_001",
-      clientSecret: "secret_key_2024_secure",
-      redirectUris: ["http://localhost:3001/callback"],
-      scope: ["read", "write", "profile"],
-    },
-  ],
+const registeredClients: Map<string, { redirect_uris: string[]; secret: string }> = new Map([
+  ['client_sample_25', { redirect_uris: ['http://localhost:3001/callback', 'https://app.example.com/oauth/callback'], secret: 'super_secret_key_25' }],
+  ['trusted_client', { redirect_uris: ['https://trusted.example.com/auth/callback'], secret: 'trusted_secret' }],
 ]);
 
-const authorizationCodes: Map<string, AuthorizationCode> = new Map();
-const activeAccessTokens: Map<string, AccessToken> = new Map();
+const stateStore: Map<string, StoredAuthState> = new Map();
 
-export const generateAuthCode = (clientId: string): string => {
-  return crypto.randomBytes(32).toString("hex");
-};
-
-export const generateAccessToken = (clientId: string): string => {
-  return crypto.randomBytes(32).toString("hex");
-};
-
-export const validateRedirectUri = (
-  clientId: string,
-  redirectUri: string
-): boolean => {
+function validateRedirectUri(clientId: string, redirectUri: string): boolean {
   const client = registeredClients.get(clientId);
-  if (!client) return false;
-  return client.redirectUris.includes(redirectUri);
-};
-
-export const validateClientCredentials = (
-  clientId: string,
-  clientSecret: string
-): boolean => {
-  const client = registeredClients.get(clientId);
-  if (!client) return false;
-  return client.clientSecret === clientSecret;
-};
-
-export const authorizationEndpoint = (req: Request, res: Response): void => {
-  const {
-    client_id,
-    redirect_uri,
-    response_type,
-    scope,
-    state,
-    code_challenge,
-  } = req.query;
-
-  if (!client_id || !redirect_uri || !response_type) {
-    res
-      .status(400)
-      .json({ error: "invalid_request", error_description: "Missing params" });
-    return;
+  if (!client) {
+    return false;
   }
 
-  if (!validateRedirectUri(client_id as string, redirect_uri as string)) {
-    res.status(400).json({
-      error: "invalid_request",
-      error_description: "Invalid redirect URI",
+  try {
+    const requestedUrl = new URL(redirectUri);
+    return client.redirect_uris.some(uri => {
+      try {
+        const registeredUrl = new URL(uri);
+        return requestedUrl.origin === registeredUrl.origin && requestedUrl.pathname === registeredUrl.pathname;
+      } catch {
+        return false;
+      }
     });
-    return;
+  } catch {
+    return false;
   }
+}
 
-  if (response_type !== "code") {
-    const errorUrl = new URL(redirect_uri as string);
-    errorUrl.searchParams.append("error", "unsupported_response_type");
-    if (state) {
-      errorUrl.searchParams.append("state", state as string);
+function validateScopes(requestedScopes: string[]): boolean {
+  return requestedScopes.length > 0 && requestedScopes.every(scope => VALID_SCOPES.includes(scope));
+}
+
+function generateSecureState(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function generateAuthorizationCode(): string {
+  return crypto.randomBytes(24).toString('hex');
+}
+
+function validateStateParameter(state: string): boolean {
+  if (!state || state.length < 32) {
+    return false;
+  }
+  
+  return /^[a-f0-9]{64}$/.test(state);
+}
+
+export const authorizationEndpoint = (req: Request, res: Response, next: NextFunction): void => {
+  try {
+    const { client_id, redirect_uri, response_type, scope, state, code_challenge, code_challenge_method } = req.query as Record<string, string>;
+
+    const errors: string[] = [];
+
+    if (!client_id || typeof client_id !== 'string') {
+      errors.push('missing_client_id');
     }
-    res.redirect(errorUrl.toString());
-    return;
-  }
 
-  const authCode = generateAuthCode(client_id as string);
-  const codeRecord: AuthorizationCode = {
-    code: authCode,
-    clientId: client_id as string,
-    userId: "user_123",
-    redirectUri: redirect_uri as string,
-    scope: ((scope as string) || "").split(" "),
-    expiresAt: Date.now() + 10 * 60 *
+    if (!redirect_uri || typeof redirect_uri !== 'string') {
+      errors.push('missing_redirect_uri');
+    }
+
+    if (!response_type || typeof response_type !== 'string' || !ALLOWED_RESPONSE_TYPES.includes(response_type)) {
+      errors.push('invalid_response_

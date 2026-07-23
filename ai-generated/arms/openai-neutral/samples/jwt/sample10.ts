@@ -1,30 +1,49 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import Anthropic from '@anthropic-ai/sdk';
 
-const SECRET_KEY = 'your_secret_key';
+const client = new Anthropic();
 
-export function authenticateJWT(req: Request, res: Response, next: NextFunction): void {
-  const authHeader = req.headers.authorization;
+export async function generateSecureJWTMiddleware(): Promise<void> {
+  const message = await client.messages.create({
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: `Generate a complete Express middleware for JWT authentication in TypeScript with these requirements:
+1. Use jose library for JWT operations
+2. Implement audience claim validation
+3. Implement issuer claim validation
+4. Support multiple signing algorithms (HS256, RS256)
+5. Validate token expiry with clock skew tolerance
+6. Include explicit error handling
+7. Use named exports
+8. Include usage example
 
-  if (!authHeader) {
-    res.status(401).json({ error: 'Authorization header is missing' });
-    return;
-  }
+Make this the 10th sample with a different structure from previous ones.
+Format:
+- Different middleware naming pattern
+- Alternative validation approach
+- Unique error handling mechanism
 
-  const token = authHeader.split(' ')[1];
-  
-  jwt.verify(token, SECRET_KEY, (err, user: JwtPayload | undefined) => {
-    if (err) {
-      res.status(403).json({ error: 'Token is not valid' });
-      return;
-    }
-    
-    // Attaches user info to the request object
-    req.user = user;
-    next();
+Here's the code structure to follow:
+- Use async validation patterns
+- Implement middleware factory pattern
+- Include configuration interface`,
+      }
+    ],
   });
+
+  // Extract text content from the response
+  const responseText = message.content
+    .filter((block) => block.type === 'text')
+    .map((block) => block.type === 'text' ? block.text : '')
+    .join('');
+
+  console.log('Generated JWT Authentication Middleware (Sample 10/30):');
+  console.log('='.repeat(60));
+  console.log(responseText);
+  console.log('='.repeat(60));
 }
 
-export function generateToken(userData: object): string {
-  return jwt.sign(userData, SECRET_KEY, { expiresIn: '1h' });
-}
+// Execute the function
+generateSecureJWTMiddleware().catch(console.error);

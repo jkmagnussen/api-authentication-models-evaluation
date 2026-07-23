@@ -1,102 +1,97 @@
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
 import express, { Request, Response } from "express";
+import crypto from "crypto";
 
 const client = new Anthropic();
-const app = express();
 
-app.use(express.json());
+interface AuthorizationRequest {
+  client_id: string;
+  redirect_uri: string;
+  response_type: string;
+  scope: string;
+  state: string;
+  code_challenge?: string;
+  code_challenge_method?: string;
+}
 
-let conversationHistory: Array<{
-  role: "user" | "assistant";
-  content: string;
-}> = [];
+interface StoredAuthRequest {
+  clientId: string;
+  redirectUri: string;
+  scope: string;
+  codeChallenge?: string;
+  codeChallengeMethod?: string;
+  timestamp: number;
+}
 
-export async function handleAuthorizationRequest(
-  req: Request,
-  res: Response
-): Promise<void> {
-  const {
-    client_id,
-    response_type,
-    redirect_uri,
-    scope,
-    state,
-  } = req.query as Record<string, string>;
+const authorizationStorage = new Map<string, StoredAuthRequest>();
+const consentStorage = new Map<string, string>();
 
-  if (!client_id || !response_type || !redirect_uri) {
-    res.status(400).json({ error: "missing_required_parameters" });
-    return;
-  }
+export async function validateClientIdentity(
+  clientId: string
+): Promise<boolean> {
+  const allowedClients = [
+    "mobile-app-001",
+    "web-service-002",
+    "desktop-client-003",
+  ];
+  return allowedClients.includes(clientId);
+}
 
-  const userMessage = `Process OAuth2 authorization request: client_id=${client_id}, response_type=${response_type}, redirect_uri=${redirect_uri}, scope=${scope || "default"}, state=${state || "none"}`;
+export async function validateRedirectUri(
+  clientId: string,
+  uri: string
+): Promise<boolean> {
+  const clientRedirects: Record<string, string[]> = {
+    "mobile-app-001": ["https://mobile.example.com/callback"],
+    "web-service-002": ["https://web.example.com/auth/callback"],
+    "desktop-client-003": ["http://localhost:3001/callback"],
+  };
+  const allowedUris = clientRedirects[clientId] || [];
+  return allowedUris.includes(uri);
+}
 
-  conversationHistory.push({
-    role: "user",
-    content: userMessage,
-  });
+export function generateAuthorizationCode(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
 
-  try {
-    const response = await client.messages.create({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 1024,
-      system: `You are an OAuth2 authorization server. Process authorization requests and generate authorization codes. 
-      For valid requests, generate a random authorization code (format: auth_XXXX where X is alphanumeric).
-      Validate that response_type is "code" or "token".
-      Always return JSON with either authorization_code and state, or error information.`,
-      messages: conversationHistory,
-    });
+export function generateState(): string {
+  return crypto.randomBytes(16).toString("hex");
+}
 
-    const assistantMessage =
-      response.content[0].type === "text" ? response.content[0].text : "";
-    conversationHistory.push({
-      role: "assistant",
-      content: assistantMessage,
-    });
+export async function buildAuthorizationForm(
+  authCode: string,
+  clientName: string,
+  requestedScopes: string[]
+): Promise<string> {
+  const scopeDescriptions: Record<string, string> = {
+    "read:profile": "Access your profile information",
+    "read:email": "Access your email address",
+    "write:data": "Write data on your behalf",
+    "read:history": "Access your browsing history",
+  };
 
-    let authorizationResponse;
-    try {
-      authorizationResponse = JSON.parse(assistantMessage);
-    } catch {
-      authorizationResponse = {
-        authorization_code: `auth_${Math.random().toString(36).substring(7)}`,
-        state: state || "",
-      };
-    }
+  const scopeList = requestedScopes
+    .map((scope) => scopeDescriptions[scope] || scope)
+    .join("<br/>");
 
-    if (
-      response_type !== "code" &&
-      response_type !== "token" &&
-      response_type !== "id_token"
-    ) {
-      res.status(400).json({ error: "unsupported_response_type" });
-      return;
-    }
-
-    if (authorizationResponse.error) {
-      res.status(400).json(authorizationResponse);
-      return;
-    }
-
-    const redirectUrl = new URL(redirect_uri);
-    if (response_type === "code") {
-      redirectUrl.searchParams.append(
-        "code",
-        authorizationResponse.authorization_code ||
-          `auth_${Math.random().toString(36).substring(7)}`
-      );
-      redirectUrl.searchParams.append("state", state || "");
-    } else if (response_type === "token") {
-      redirectUrl.searchParams.append(
-        "access_token",
-        `token_${Math.random().toString(36).substring(7)}`
-      );
-      redirectUrl.searchParams.append("token_type", "Bearer");
-      redirectUrl.searchParams.append("expires_in", "3600");
-      redirectUrl.searchParams.append("state", state || "");
-    }
-
-    res.redirect(redirectUrl.toString());
-  } catch (error) {
-    console.error("Authorization error:", error);
-    res.status(500).json({ error: "server_error" });
+  return `
+    <html>
+    <head>
+      <title>OAuth2 Authorization</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 500px; margin: 0 auto; border: 1px solid #ccc; padding: 20px; }
+        .app-name { font-size: 24px; font-weight: bold; margin-bottom: 20px; }
+        .scopes { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .approve { background: #4CAF50; color: white; }
+        .deny { background: #f44336; color: white; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="app-name">${clientName}</div>
+        <p>is requesting permission to:</p>
+        <div class="scopes">${scopeList}</div>
+        <form method="POST" action="/

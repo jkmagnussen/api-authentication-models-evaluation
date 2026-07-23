@@ -1,63 +1,118 @@
+```typescript
 import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
-import crypto from 'crypto';
+import { randomBytes } from 'crypto';
 
 const app = express();
 
-app.use(session({
-  secret: crypto.randomBytes(64).toString('hex'),
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 1000 * 60 * 15 // 15 minutes
-  }
-}));
+export interface AuthenticatedRequest extends Request {
+  session: session.Session & {
+    userId?: string;
+    regenerate?: (callback: (err?: Error) => void) => void;
+    destroy?: (callback: (err?: Error) => void) => void;
+  };
+}
 
-export const regenerateSession = (req: Request, res: Response, next: NextFunction) => {
-  if (req.session) {
-    req.session.regenerate((err) => {
-      if (err) {
-        return next(err);
-      }
-      next();
-    });
-  } else {
+export function initializeSessionEngine(
+  app: express.Application,
+  sessionSecret: string
+): express.Application {
+  const sessionConfig: session.SessionOptions = {
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    name: 'sid_secure',
+    cookie: {
+      secure: true,
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 1800000,
+      domain: process.env.COOKIE_DOMAIN || 'localhost',
+      path: '/',
+    },
+    genid: (req) => randomBytes(32).toString('hex'),
+  };
+
+  app.use(session(sessionConfig));
+  return app;
+}
+
+export async function validateSessionIntegrity(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  if (!req.session || !req.session.userId) {
+    res.status(401).json({ error: 'Session invalid or expired' });
+    return;
+  }
+
+  const userAgent = req.get('user-agent') || '';
+  const ipAddress = req.ip || '';
+
+  if (!req.session.userAgent) {
+    req.session.userAgent = userAgent;
+    req.session.ipAddress = ipAddress;
     next();
+    return;
   }
-};
 
-export const invalidateSession = (req: Request, res: Response) => {
-  if (req.session) {
+  if (
+    req.session.userAgent !== userAgent ||
+    req.session.ipAddress !== ipAddress
+  ) {
     req.session.destroy((err) => {
       if (err) {
-        res.status(500).json({ message: 'Error logging out' });
-      } else {
-        res.clearCookie('connect.sid', {
-          path: '/',
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict'
-        });
-        res.status(200).json({ message: 'Logged out successfully' });
+        console.error('Session destruction failed:', err);
       }
     });
-  } else {
-    res.status(400).json({ message: 'No session found' });
+    res.status(401).json({ error: 'Session validation failed' });
+    return;
   }
-};
 
-app.post('/login', regenerateSession, (req: Request, res: Response) => {
-  // Authentication logic
-  // If authenticated:
-  req.session.user = { id: 'user123' }; // Example user data
-  res.status(200).json({ message: 'Login successful' });
-});
+  next();
+}
 
-app.post('/logout', invalidateSession);
+export async function performSecureLogin(
+  req: AuthenticatedRequest,
+  userId: string
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => {
+      if (err) {
+        reject(new Error('Session regeneration failed: ' + err.message));
+        return;
+      }
 
-app.listen(3000, () => {
-  console.log('Server running on port 3000');
-});
+      req.session.userId = userId;
+      req.session.loginTimestamp = Date.now();
+      req.session.userAgent = req.get('user-agent') || '';
+      req.session.ipAddress = req.ip || '';
+      req.session.csrfToken = randomBytes(32).toString('hex');
+
+      req.session.save((err) => {
+        if (err) {
+          reject(new Error('Session save failed: ' + err.message));
+        } else {
+          resolve();
+        }
+      });
+    });
+  });
+}
+
+export async function executeSecureLogout(
+  req: AuthenticatedRequest
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const sessionId = req.sessionID;
+
+    req.session.destroy((err) => {
+      if (err) {
+        reject(new Error('Session destruction failed: ' + err.message));
+        return;
+      }
+
+      req.res?.clearCookie('sid_secure', {
+        path: '/',
+        domain: process.env.COOKIE_DOMAIN || 'localhost',

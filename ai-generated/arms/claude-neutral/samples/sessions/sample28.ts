@@ -1,110 +1,122 @@
 ```typescript
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import session from 'express-session';
-import { v4 as uuidv4 } from 'uuid';
-
-interface SessionData {
-  userId: string;
-  username: string;
-  email: string;
-  loginTime: Date;
-  lastActivityTime: Date;
-  ipAddress: string;
-  userAgent: string;
-}
+import crypto from 'crypto';
 
 declare global {
   namespace Express {
-    interface Session {
-      user?: SessionData;
+    interface Request {
+      userId?: string;
       sessionId?: string;
     }
   }
 }
 
-const app = express();
+// Session store implementation with in-memory storage
+class SessionRegistry {
+  private sessions: Map<string, { userId: string; expiresAt: number }> = new Map();
+  private readonly sessionTTL = 3600000; // 1 hour in milliseconds
 
-export const initializeSessionManager = () => {
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-prod',
-      resave: false,
-      saveUninitialized: false,
-      name: 'sessionId',
-      cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        sameSite: 'strict',
-        maxAge: 1000 * 60 * 60 * 24,
-      },
-    })
-  );
-};
-
-export const requireActiveSession = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: 'No active session found' });
-  }
-
-  const now = new Date();
-  const lastActivity = new Date(req.session.user.lastActivityTime);
-  const inactivityLimit = 30 * 60 * 1000;
-
-  if (now.getTime() - lastActivity.getTime() > inactivityLimit) {
-    req.session.destroy(() => {
-      res.status(401).json({ error: 'Session expired due to inactivity' });
+  set(sessionId: string, userId: string): void {
+    this.sessions.set(sessionId, {
+      userId,
+      expiresAt: Date.now() + this.sessionTTL,
     });
-    return;
   }
 
-  req.session.user.lastActivityTime = now;
-  next();
-};
+  get(sessionId: string): { userId: string } | null {
+    const record = this.sessions.get(sessionId);
+    if (!record) return null;
 
-export const createUserSession = (req: Request, res: Response) => {
-  const userId = uuidv4();
-  const userData: SessionData = {
-    userId,
-    username: req.body.username || 'guest',
-    email: req.body.email || 'guest@example.com',
-    loginTime: new Date(),
-    lastActivityTime: new Date(),
-    ipAddress: req.ip || 'unknown',
-    userAgent: req.get('user-agent') || 'unknown',
-  };
+    if (Date.now() > record.expiresAt) {
+      this.sessions.delete(sessionId);
+      return null;
+    }
 
-  req.session.user = userData;
-  req.session.sessionId = uuidv4();
+    return { userId: record.userId };
+  }
 
-  res.json({
-    message: 'Session created successfully',
-    sessionId: req.session.sessionId,
-    user: {
-      userId: userData.userId,
-      username: userData.username,
+  revoke(sessionId: string): void {
+    this.sessions.delete(sessionId);
+  }
+
+  clear(): void {
+    this.sessions.clear();
+  }
+}
+
+const sessionRegistry = new SessionRegistry();
+
+export const configureSecureSessionMiddleware = (): express.RequestHandler => {
+  return session({
+    secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
+    name: '__Host-sessionId',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 3600000,
+      domain: undefined,
+      path: '/',
+    },
+    genid: (req: Request): string => {
+      return crypto.randomBytes(32).toString('hex');
     },
   });
 };
 
-export const destroyUserSession = (req: Request, res: Response) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Failed to destroy session' });
-    }
-    res.json({ message: 'Session terminated successfully' });
+export const validateSessionIntegrity = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.sessionID) {
+    res.status(401).json({ error: 'Session not initialized' });
+    return;
+  }
+
+  const sessionData = sessionRegistry.get(req.sessionID);
+  if (!sessionData) {
+    res.clearCookie('__Host-sessionId', {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'strict',
+    });
+    res.status(401).json({ error: 'Session invalid or expired' });
+    return;
+  }
+
+  req.userId = sessionData.userId;
+  req.sessionId = req.sessionID;
+  next();
+};
+
+export const handleSessionEstablishment = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const userId = req.body?.userId;
+
+  if (!userId || typeof userId !== 'string') {
+    res.status(400).json({ error: 'Invalid user identifier' });
+    return;
+  }
+
+  if (!req.sessionID) {
+    res.status(500).json({ error: 'Session initialization failed' });
+    return;
+  }
+
+  sessionRegistry.set(req.sessionID, userId);
+  req.userId = userId;
+
+  res.status(200).json({
+    message: 'Session established',
+    sessionId: req.sessionID,
   });
 };
 
-export const getCurrentSessionInfo = (req: Request, res: Response) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: 'No active session' });
-  }
-
-  const sessionDuration = Date.now() - new Date(req.session.user.loginTime).getTime();
-
-  res.json({
-    sessionId: req.session.sessionId,
-    user: {
-      userId: req.session.user.userId,
-      username: req.session.user.username,
-      email: req.session.user
+export const performSessionRegeneration = (
+  req: Request,

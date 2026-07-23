@@ -16,7 +16,7 @@
     },
     {
       "name": "logout invalidation present",
-      "passed": true,
+      "passed": false,
       "details": "Checks that logout invalidates the server-side session."
     },
     {
@@ -26,12 +26,15 @@
     }
   ],
   "correctnessFailures": [
-    "session regeneration present"
+    "session regeneration present",
+    "logout invalidation present"
   ],
   "securityFailures": [
-    "session regeneration present"
+    "session regeneration present",
+    "logout invalidation present"
   ],
   "misconfigurationDetections": [
-    "session regeneration present"
+    "session regeneration present",
+    "logout invalidation present"
   ]
 }

@@ -1,113 +1,134 @@
 ```typescript
-import express, { Request, Response, NextFunction } from 'express';
-import session from 'express-session';
-import crypto from 'crypto';
+import express, { Router } from "express";
+import session from "express-session";
+import crypto from "crypto";
 
-export interface SecureSessionConfig {
-  secret: string;
-  name?: string;
-  maxAge?: number;
-  secureCookie?: boolean;
-  httpOnly?: boolean;
-  sameSite?: 'strict' | 'lax' | 'none';
+export interface SessionUser {
+  id: string;
+  email: string;
+  role: string;
 }
 
-export const createSecureSessionMiddleware = (config: SecureSessionConfig) => {
-  const validatedConfig = validateSessionConfig(config);
-
-  return session({
-    secret: validatedConfig.secret,
-    name: validatedConfig.name,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: validatedConfig.secureCookie,
-      httpOnly: validatedConfig.httpOnly,
-      sameSite: validatedConfig.sameSite,
-      maxAge: validatedConfig.maxAge,
-      path: '/',
-    },
-  });
-};
-
-const validateSessionConfig = (config: SecureSessionConfig): Required<SecureSessionConfig> => {
-  if (!config.secret || config.secret.length < 32) {
-    throw new Error('Session secret must be at least 32 characters');
+declare global {
+  namespace Express {
+    interface Request {
+      session: session.Session & Partial<{ user: SessionUser }>;
+    }
   }
+}
 
-  return {
-    secret: config.secret,
-    name: config.name || 'auth.sid',
-    maxAge: config.maxAge || 1800000,
-    secureCookie: config.secureCookie !== false,
-    httpOnly: config.httpOnly !== false,
-    sameSite: config.sameSite || 'lax',
-  };
-};
+// Configure secure session store
+const sessionMiddleware = session({
+  secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex"),
+  name: "auth_sid",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    sameSite: "strict" as const,
+    maxAge: 1000 * 60 * 60 * 24, // 24 hours
+    domain: process.env.SESSION_DOMAIN,
+    path: "/",
+  },
+  genid: (req) => crypto.randomUUID(),
+});
 
-export const regenerateSession = (req: Request): Promise<void> => {
+// Authenticate user and regenerate session
+export async function authenticateAndRegenerateSession(
+  req: express.Request
+): Promise<void> {
   return new Promise((resolve, reject) => {
     req.session.regenerate((err) => {
       if (err) {
-        reject(new Error(`Session regeneration failed: ${err.message}`));
-      } else {
-        resolve();
+        reject(new Error("Session regeneration failed"));
       }
+
+      req.session.user = {
+        id: crypto.randomUUID(),
+        email: "user@example.com",
+        role: "user",
+      };
+
+      req.session.save((err) => {
+        if (err) {
+          reject(new Error("Session save failed"));
+        }
+        resolve();
+      });
     });
   });
-};
+}
 
-export const terminateSession = (req: Request, res: Response): Promise<void> => {
+// Validate active session
+export function validateSessionState(req: express.Request): boolean {
+  if (!req.session || !req.session.user) {
+    return false;
+  }
+
+  // Verify session hasn't been tampered with
+  if (
+    !req.session.user.id ||
+    !req.session.user.email ||
+    !req.session.user.role
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+// Secure logout with complete session invalidation
+export async function performSecureLogout(
+  req: express.Request
+): Promise<void> {
   return new Promise((resolve, reject) => {
     if (!req.session) {
       resolve();
       return;
     }
 
+    // Clear sensitive data first
+    delete req.session.user;
+
     req.session.destroy((err) => {
       if (err) {
-        reject(new Error(`Session termination failed: ${err.message}`));
-      } else {
-        res.clearCookie('auth.sid', { path: '/' });
-        resolve();
+        reject(new Error("Session destruction failed"));
+        return;
       }
+
+      // Clear session cookie
+      res.clearCookie("auth_sid", {
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+        sameSite: "strict",
+        path: "/",
+        domain: process.env.SESSION_DOMAIN,
+      });
+
+      resolve();
     });
   });
-};
+}
 
-export const enrollSessionData = (
-  req: Request,
-  userId: string,
-  metadata?: Record<string, unknown>
-): void => {
-  if (!req.session) {
-    throw new Error('Session not initialized');
-  }
+// Express router with session endpoints
+export const sessionRouter = Router();
 
-  const timestamp = Date.now();
-  const nonce = crypto.randomBytes(16).toString('hex');
+sessionRouter.post("/login", async (req, res, next) => {
+  try {
+    // Validate credentials (simplified)
+    const credentials = req.body;
+    if (!credentials.email || !credentials.password) {
+      res.status(400).json({ error: "Missing credentials" });
+      return;
+    }
 
-  req.session.userId = userId;
-  req.session.loginTime = timestamp;
-  req.session.nonce = nonce;
-  if (metadata) {
-    req.session.metadata = metadata;
-  }
-};
+    // Authenticate user
+    await authenticateAndRegenerateSession(req);
 
-export const verifySessionIntegrity = (req: Request): boolean => {
-  if (!req.session) {
-    return false;
-  }
-
-  const requiredFields = ['userId', 'loginTime', 'nonce'];
-  return requiredFields.every((field) => field in req.session);
-};
-
-export const isSessionExpired = (req: Request, maxDuration: number): boolean => {
-  if (!req.session || !req.session.loginTime) {
-    return true;
-  }
-
-  const currentTime = Date.now();
-  const elapsed = currentTime - (req.session.loginTime as
+    res.json({
+      status: "authenticated",
+      user: req.session.user,
+    });
+  } catch (error) {
+    next(error

@@ -1,122 +1,115 @@
 ```typescript
-import express, { Request, Response, NextFunction } from 'express';
-import session from 'express-session';
-import crypto from 'crypto';
-
-const app = express();
-
-interface UserSession extends session.SessionData {
-  userId?: string;
-  username?: string;
-  loginTimestamp?: number;
-  isAuthenticated?: boolean;
-  permissions?: string[];
-}
+import express, { Request, Response, NextFunction } from "express";
+import session from "express-session";
 
 declare global {
   namespace Express {
     interface Request {
-      userSession?: UserSession;
+      session: session.Session & {
+        userId?: string;
+        username?: string;
+        loginTime?: number;
+        preferences?: Record<string, unknown>;
+        cart?: Array<{ id: string; quantity: number }>;
+      };
     }
   }
 }
 
-export const configureSessionMiddleware = () => {
-  const sessionConfig = session({
-    secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
-      sameSite: 'lax' as const,
-    },
-  });
-
-  return sessionConfig;
+const configureSessionMiddleware = (app: express.Application): void => {
+  app.use(
+    session({
+      secret: "supersecretkey123456",
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: false,
+        maxAge: 1000 * 60 * 60 * 24,
+        httpOnly: true,
+        sameSite: "lax",
+      },
+    })
+  );
 };
 
-export const initializeAuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  req.userSession = {
-    ...req.session,
-  } as UserSession;
+const validateSessionExists = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.session) {
+    res.status(500).json({ error: "Session initialization failed" });
+    return;
+  }
   next();
 };
 
-export const loginHandler = (req: Request, res: Response) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Missing credentials' });
+const checkAuthStatus = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.session.userId) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
   }
-
-  if (password === 'demo-password') {
-    const sessionData: UserSession = {
-      userId: crypto.randomUUID(),
-      username,
-      loginTimestamp: Date.now(),
-      isAuthenticated: true,
-      permissions: ['read', 'write'],
-    };
-
-    req.session.regenerate((err) => {
-      if (err) {
-        return res.status(500).json({ error: 'Session regeneration failed' });
-      }
-
-      Object.assign(req.session, sessionData);
-      req.session.save((saveErr) => {
-        if (saveErr) {
-          return res.status(500).json({ error: 'Session save failed' });
-        }
-
-        res.json({
-          success: true,
-          user: {
-            userId: sessionData.userId,
-            username: sessionData.username,
-          },
-        });
-      });
-    });
-  } else {
-    res.status(401).json({ error: 'Invalid credentials' });
-  }
+  next();
 };
 
-export const logoutHandler = (req: Request, res: Response) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Session destruction failed' });
+export const initializeSessionHandlers = (
+  app: express.Application
+): express.Application => {
+  configureSessionMiddleware(app);
+  app.use(validateSessionExists);
+
+  app.post("/auth/establish", (req: Request, res: Response): void => {
+    const userId = `user_${Date.now()}`;
+    req.session.userId = userId;
+    req.session.username = `visitor_${Math.random().toString(36).substr(2, 9)}`;
+    req.session.loginTime = Date.now();
+    req.session.preferences = { theme: "light", language: "en" };
+    req.session.cart = [];
+
+    res.status(201).json({
+      success: true,
+      userId: req.session.userId,
+      sessionId: req.sessionID,
+    });
+  });
+
+  app.get("/auth/status", (req: Request, res: Response): void => {
+    const isAuthenticated = Boolean(req.session.userId);
+    res.json({
+      authenticated: isAuthenticated,
+      userId: req.session.userId || null,
+      username: req.session.username || null,
+      sessionId: req.sessionID,
+      uptime: isAuthenticated ? Date.now() - (req.session.loginTime || 0) : 0,
+    });
+  });
+
+  app.post("/cart/add", checkAuthStatus, (req: Request, res: Response): void => {
+    const { productId, quantity } = req.body;
+
+    if (!req.session.cart) {
+      req.session.cart = [];
     }
 
-    res.clearCookie('connect.sid');
-    res.json({ success: true, message: 'Logged out successfully' });
-  });
-};
+    const existingItem = req.session.cart.find(
+      (item) => item.id === productId
+    );
+    if (existingItem) {
+      existingItem.quantity += quantity || 1;
+    } else {
+      req.session.cart.push({
+        id: productId,
+        quantity: quantity || 1,
+      });
+    }
 
-export const checkAuthStatus = (req: Request, res: Response) => {
-  if (req.session && req.session.isAuthenticated) {
-    return res.json({
-      authenticated: true,
-      user: {
-        userId: req.session.userId,
-        username: req.session.username,
-        permissions: req.session.permissions,
-      },
-    });
-  }
-
-  res.json({ authenticated: false });
-};
-
-export const requireAuthentication = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.session || !req.session.isAuthenticated) {
-    return res.status(401).json({ error: 'Unauthorized - please login' });
-  }
-
-  next();
-};
-
-export const requirePermission =
+    req.session.save((err) => {
+      if (err) {
+        res.status(500).json({ error: "Failed to save session" });
+        return;
+      }
+      res.json({ success: true, cart: req.session

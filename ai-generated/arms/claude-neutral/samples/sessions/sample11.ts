@@ -1,120 +1,107 @@
 ```typescript
 import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
-import crypto from 'crypto';
+import { randomBytes } from 'crypto';
 
-interface SessionData {
-  userId?: string;
-  username?: string;
-  email?: string;
-  roles?: string[];
-  loginTime?: Date;
-  lastActivity?: Date;
-  isAuthenticated?: boolean;
-}
+// Session configuration with secure defaults
+const createSecureSessionConfig = () => ({
+  secret: process.env.SESSION_SECRET || randomBytes(32).toString('hex'),
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict' as const,
+    maxAge: 15 * 60 * 1000, // 15 minutes
+    domain: process.env.SESSION_DOMAIN,
+  },
+  name: 'sid',
+});
 
+// Session type declaration
 declare global {
   namespace Express {
     interface Request {
-      session: session.Session & Partial<SessionData>;
+      user?: { id: string; email: string };
     }
   }
 }
 
-const generateSessionSecret = (): string => {
-  return crypto.randomBytes(32).toString('hex');
-};
-
-export const createSessionMiddleware = () => {
-  return session({
-    secret: process.env.SESSION_SECRET || generateSessionSecret(),
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24,
-      sameSite: 'lax' as const,
-    },
-    name: 'sessionId',
+// Regenerate session with new ID for security
+export const reestablishSession = (req: Request): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => {
+      if (err) reject(err);
+      else resolve();
+    });
   });
 };
 
-export const requireAuthenticationMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  if (!req.session.isAuthenticated || !req.session.userId) {
-    res.status(401).json({ error: 'Authentication required' });
+// Attach user data to session
+export const attachUserToSession = (req: Request, userId: string, email: string): void => {
+  if (req.session) {
+    req.session.user = { id: userId, email };
+  }
+};
+
+// Validate active session
+export const validateSessionIntegrity = (req: Request): boolean => {
+  return !!(req.session && req.session.user && req.session.user.id);
+};
+
+// Completely destroy session
+export const terminateSessionAndCookie = (req: Request, res: Response): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    res.clearCookie('sid', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+    });
+
+    req.session.destroy((err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+};
+
+// Middleware to enforce authentication
+export const enforceSessionAuth = (req: Request, res: Response, next: NextFunction): void => {
+  if (!validateSessionIntegrity(req)) {
+    res.status(401).json({ error: 'Unauthorized: Invalid or missing session' });
     return;
   }
-
-  req.session.lastActivity = new Date();
   next();
 };
 
-export const requireRoleMiddleware = (requiredRoles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.session.isAuthenticated) {
-      res.status(401).json({ error: 'Authentication required' });
-      return;
-    }
-
-    const userRoles = req.session.roles || [];
-    const hasRequiredRole = requiredRoles.some((role) =>
-      userRoles.includes(role)
-    );
-
-    if (!hasRequiredRole) {
-      res.status(403).json({ error: 'Insufficient permissions' });
-      return;
-    }
-
+// Middleware to prevent session fixation
+export const preventSessionFixation = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await reestablishSession(req);
     next();
-  };
-};
-
-export const loginHandler = (req: Request, res: Response): void => {
-  const { username, password, email } = req.body;
-
-  if (!username || !password) {
-    res.status(400).json({ error: 'Missing credentials' });
-    return;
+  } catch (error) {
+    res.status(500).json({ error: 'Session establishment failed' });
   }
-
-  const userId = crypto.randomUUID();
-  req.session.userId = userId;
-  req.session.username = username;
-  req.session.email = email || '';
-  req.session.roles = ['user'];
-  req.session.isAuthenticated = true;
-  req.session.loginTime = new Date();
-  req.session.lastActivity = new Date();
-
-  res.json({
-    message: 'Login successful',
-    user: {
-      userId,
-      username,
-      email: email || '',
-      roles: ['user'],
-    },
-  });
 };
 
-export const logoutHandler = (req: Request, res: Response): void => {
-  req.session.destroy((err) => {
-    if (err) {
-      res.status(500).json({ error: 'Logout failed' });
+// Initialize express app with session management
+export const setupSessionManagement = (app: express.Application): void => {
+  const sessionConfig = createSecureSessionConfig();
+  app.use(session(sessionConfig));
+};
+
+// Login endpoint with session establishment
+export const handleLogin = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      res.status(400).json({ error: 'Email and password required' });
       return;
     }
 
-    res.clearCookie('sessionId');
-    res.json({ message: 'Logout successful' });
-  });
-};
-
-export const getCurrentUserHandler = (req: Request, res: Response): void => {
-  if (!req.session.isAuthenticated) {
-    res.status(401).json({ error: 'Not authenticated' });
+    // Simulate authentication (replace with real logic)
+    if (!email.includes('@') || password.length < 8) {
+      res.status(401).json({ error: 'Invalid credentials' });

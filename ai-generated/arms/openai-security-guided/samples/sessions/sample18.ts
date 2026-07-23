@@ -1,67 +1,116 @@
-import express, { Request, Response } from 'express';
-import session, { SessionOptions } from 'express-session';
-import { randomBytes } from 'crypto';
-import helmet from 'helmet';
+```typescript
+import express, { Request, Response, NextFunction } from 'express';
+import session from 'express-session';
+import crypto from 'crypto';
 
-const app = express();
+interface AuthenticatedRequest extends Request {
+  session: session.Session & { userId?: string; loginTime?: number };
+}
 
-app.use(helmet());
-
-const sessionConfig: SessionOptions = {
-  secret: randomBytes(64).toString('hex'),
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 1000 * 60 * 15,
-    sameSite: 'lax'
-  }
+export const configureSessionMiddleware = (app: express.Application): void => {
+  const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+  
+  app.use(
+    session({
+      secret: sessionSecret,
+      name: 'auth_token',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: 30 * 60 * 1000,
+        domain: process.env.COOKIE_DOMAIN,
+        path: '/',
+      },
+      genid: () => crypto.randomUUID(),
+    })
+  );
 };
 
-app.use(session(sessionConfig));
-
-export function regenerateSession(req: Request, res: Response, next: () => void): void {
-  req.session.regenerate(err => {
-    if (err) {
-      res.status(500).send('Session regeneration failed');
-    } else {
-      next();
-    }
-  });
-}
-
-export function ensureAuthenticated(req: Request, res: Response, next: () => void): void {
-  if (req.session.userId) {
-    return next();
-  } else {
-    res.status(401).send('Unauthorized');
+export const handleUserLogin = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const userId = req.body?.userId;
+  
+  if (!userId || typeof userId !== 'string' || userId.length === 0) {
+    res.status(400).json({ error: 'Invalid user ID' });
+    return;
   }
-}
 
-export function logOut(req: Request, res: Response): void {
-  req.session.destroy(err => {
+  req.session.regenerate((err) => {
     if (err) {
-      res.status(500).send('Unable to log out');
-    } else {
-      res.clearCookie('connect.sid');
-      res.status(200).send('Logged out successfully');
+      res.status(500).json({ error: 'Session regeneration failed' });
+      return;
     }
+
+    req.session.userId = userId;
+    req.session.loginTime = Date.now();
+    req.session.save((saveErr) => {
+      if (saveErr) {
+        res.status(500).json({ error: 'Session save failed' });
+        return;
+      }
+      res.json({ message: 'Login successful', userId });
+    });
   });
-}
+};
 
-app.post('/login', (req: Request, res: Response) => {
-  // Assume user authentication logic
-  req.session.userId = 'user123'; // This should be set to the actual user ID
-  res.status(200).send('Logged in successfully');
-});
+export const handleUserLogout = (
+  req: AuthenticatedRequest,
+  res: Response
+): void => {
+  const sessionId = req.sessionID;
+  
+  req.session.destroy((err) => {
+    if (err) {
+      res.status(500).json({ error: 'Logout failed' });
+      return;
+    }
 
-app.post('/logout', logOut);
+    res.clearCookie('auth_token', {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'strict',
+      path: '/',
+    });
 
-app.use('/secure-endpoint', ensureAuthenticated, (req: Request, res: Response) => {
-  res.status(200).send('Secure data accessed');
-});
+    res.json({ message: 'Logout successful', sessionId });
+  });
+};
 
-app.use(regenerateSession);
+export const validateSessionMiddleware = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.session?.userId) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
 
-export default app;
+  const loginTime = req.session.loginTime || 0;
+  const sessionDuration = Date.now() - loginTime;
+  const maxDuration = 30 * 60 * 1000;
+
+  if (sessionDuration > maxDuration) {
+    req.session.destroy((err) => {
+      if (err) {
+        res.status(500).json({ error: 'Session invalidation failed' });
+        return;
+      }
+      res.status(401).json({ error: 'Session expired' });
+    });
+    return;
+  }
+
+  next();
+};
+
+export const handleSessionRefresh = (
+  req: AuthenticatedRequest,
+  res: Response
+): void => {
+  if (!req.session

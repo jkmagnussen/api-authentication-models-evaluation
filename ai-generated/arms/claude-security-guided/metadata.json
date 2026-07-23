@@ -1,7 +1,8 @@
 {
   "provider": "claude",
   "promptMode": "security-guided",
-  "generatedAt": "2026-07-23T00:52:24.159Z",
+  "sampleCount": 5,
+  "generatedAt": "2026-07-23T04:23:15.750Z",
   "providerModelIdentifier": "claude-haiku-4-5-20251001",
   "providerEndpoint": "https://api.anthropic.com/v1/messages",
   "generationParameters": {
@@ -47,8 +48,8 @@
     ]
   },
   "retrySummary": {
-    "totalAttempts": 90,
-    "successfulRequests": 90,
+    "totalAttempts": 15,
+    "successfulRequests": 15,
     "retries": 0,
     "retryableHttpFailures": 0,
     "networkFailures": 0,
@@ -57,7 +58,7 @@
   },
   "overallFailure": {
     "totalSamples": 90,
-    "failedSamples": 36,
-    "failureRatePct": 40
+    "failedSamples": 35,
+    "failureRatePct": 38.9
   }
 }

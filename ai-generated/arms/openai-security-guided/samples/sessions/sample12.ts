@@ -1,61 +1,120 @@
-import express, { Request, Response, NextFunction } from 'express';
-import session from 'express-session';
-import crypto from 'crypto';
-import { randomBytes } from 'crypto';
+```typescript
+import express, { Request, Response, NextFunction, Router } from "express";
+import session from "express-session";
+import crypto from "crypto";
 
-export const sessionMiddleware = session({
-  secret: randomBytes(64).toString('hex'),
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 60000, // 1 minute for demonstration
-    sameSite: 'strict'
-  }
-});
+// Session configuration with secure defaults
+const configureSessionMiddleware = (app: express.Application): void => {
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex"),
+      name: "sid",
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+        sameSite: "strict",
+        maxAge: 15 * 60 * 1000, // 15 minutes
+        domain: process.env.SESSION_DOMAIN,
+        path: "/",
+      },
+      genid: (req: Request): string => {
+        return crypto.randomBytes(24).toString("hex");
+      },
+    })
+  );
+};
 
-export const regenerateSession = (req: Request, res: Response, next: NextFunction) => {
-  req.session.regenerate((err) => {
-    if (err) {
-      console.error('Session regeneration failed:', err);
-      return res.status(500).send('Internal Server Error');
+// Session validation middleware
+export const validateSessionIntegrity = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (req.session && req.sessionID) {
+    // Verify session exists and hasn't been tampered with
+    if (!req.session.userId && req.path !== "/login" && req.path !== "/register") {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
     }
     next();
-  });
-};
-
-export const authenticateUser = (req: Request, res: Response, next: NextFunction) => {
-  if (req.session.isAuthenticated) {
-    return next();
+  } else {
+    next();
   }
-  res.status(401).send('Unauthorized');
 };
 
-export const userLogout = (req: Request, res: Response) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error('Session destruction failed:', err);
-      return res.status(500).send('Internal Server Error');
-    }
-    res.clearCookie('connect.sid', { path: '/' });
-    res.status(200).send('Logged Out');
+// Session regeneration after authentication
+export const performAuthenticationRenewal = async (
+  req: Request,
+  userId: string
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => {
+      if (err) {
+        reject(new Error("Session regeneration failed"));
+        return;
+      }
+
+      req.session.userId = userId;
+      req.session.authenticatedAt = Date.now();
+      req.session.ipAddress = req.ip;
+      req.session.userAgent = req.get("user-agent") || "";
+
+      req.session.save((err) => {
+        if (err) {
+          reject(new Error("Session save failed"));
+          return;
+        }
+        resolve();
+      });
+    });
   });
 };
 
-const app = express();
-app.use(sessionMiddleware);
+// Session termination with cleanup
+export const performCompleteLogout = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const sessionId = req.sessionID;
 
-// Sample route setup
-app.post('/login', regenerateSession, (req, res) => {
-  req.session.isAuthenticated = true;
-  res.status(200).send('Logged In');
-});
+    req.session.destroy((err) => {
+      if (err) {
+        reject(new Error("Session destruction failed"));
+        return;
+      }
 
-app.post('/logout', authenticateUser, userLogout);
+      // Clear session cookie
+      res.clearCookie("sid", {
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+        sameSite: "strict",
+        path: "/",
+      });
 
-app.get('/secure-data', authenticateUser, (req, res) => {
-  res.status(200).send('Secure Data');
-});
+      // Log session termination for audit purposes
+      console.log(`Session terminated: ${sessionId}`);
 
-export default app;
+      resolve();
+    });
+  });
+};
+
+// Validate session continuity
+export const verifySessionConsistency = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (req.session && req.session.userId) {
+    // Verify IP address hasn't changed (basic security check)
+    if (
+      req.session.ipAddress &&
+      req.session.ipAddress !== req.ip
+    ) {
+      console.warn(
+        `IP mismatch for session ${req.sessionID}: ${req.session.ipAddress} vs ${req.ip}`
+      );
+      //

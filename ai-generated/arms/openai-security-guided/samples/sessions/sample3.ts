@@ -1,71 +1,59 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
-import { Request, Response } from 'express';
 import crypto from 'crypto';
 
 const app = express();
 
-declare module 'express-session' {
-  interface SessionData {
-    userId?: string;
-    regenerated?: boolean;
-  }
-}
-
-const sessionConfig = {
+const sessionConfig: session.SessionOptions = {
   secret: crypto.randomBytes(64).toString('hex'),
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 1000 * 60 * 30 // 30 minutes
+    maxAge: 1000 * 60 * 15, // 15 minutes
+    sameSite: 'strict'
   }
 };
 
 app.use(session(sessionConfig));
 
-export const regenerateSession = (req: Request, res: Response, next: () => void) => {
-  if (req.session.regenerated) {
-    return next();
-  }
-  req.session.regenerate((err) => {
-    if (err) {
-      return res.status(500).send('Internal Server Error');
-    }
-    req.session.regenerated = true;
+export const regenerateSession = (req: Request, res: Response, next: NextFunction): void => {
+  if (req.session) {
+    req.session.regenerate((err) => {
+      if (err) {
+        return next(err);
+      }
+      next();
+    });
+  } else {
     next();
-  });
-};
-
-export const destroySession = (req: Request, res: Response) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).send('Error logging out');
-    }
-    res.clearCookie('connect.sid');
-    res.status(200).send('Successfully logged out');
-  });
-};
-
-app.post('/login', (req: Request, res: Response) => {
-  req.session.userId = req.body.userId;
-  res.status(200).send('Logged in');
-});
-
-app.post('/logout', destroySession);
-
-app.use(regenerateSession);
-
-// Example route
-app.get('/dashboard', (req: Request, res: Response) => {
-  if (!req.session.userId) {
-    return res.status(401).send('Unauthorized');
   }
-  res.status(200).send('Welcome to your dashboard');
+};
+
+export const logoutUser = (req: Request, res: Response): void => {
+  if (req.session) {
+    req.session.destroy((err) => {
+      if (err) {
+        res.status(500).send('Error logging out');
+      } else {
+        res.clearCookie('connect.sid', { path: '/' });
+        res.status(200).send('Logged out');
+      }
+    });
+  } else {
+    res.status(200).send('Logged out');
+  }
+};
+
+app.post('/login', regenerateSession, (req: Request, res: Response) => {
+  // Handle login logic here
+  res.send('Logged in');
 });
 
-export const server = app.listen(3000, () => {
-  console.log('Server listening on port 3000');
+app.post('/logout', logoutUser);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

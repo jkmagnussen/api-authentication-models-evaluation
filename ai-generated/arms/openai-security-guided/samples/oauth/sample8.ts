@@ -1,56 +1,116 @@
-import express, { Request, Response } from 'express';
-import { URL } from 'url';
-import { body, validationResult } from 'express-validator';
-import crypto from 'crypto';
+```typescript
+import Anthropic from "@anthropic-ai/sdk";
+import express, { Request, Response } from "express";
+import crypto from "crypto";
 
-const router = express.Router();
+const client = new Anthropic();
 
-const ALLOWED_REDIRECT_URIS = new Set(['https://example.com/callback']);
-const ALLOWED_SCOPES = new Set(['read', 'write']);
+interface AuthRequest {
+  clientId: string;
+  redirectUri: string;
+  scope: string;
+  state: string;
+  responseType: string;
+  codeChallenge?: string;
+  codeChallengeMethod?: string;
+}
 
-function validateRedirectUri(uri: string): boolean {
-  try {
-    const parsedUrl = new URL(uri);
-    return ALLOWED_REDIRECT_URIS.has(parsedUrl.origin + parsedUrl.pathname);
-  } catch {
+interface AuthResponse {
+  code: string;
+  state: string;
+  expiresIn: number;
+}
+
+interface StoredAuthSession {
+  clientId: string;
+  redirectUri: string;
+  scope: string;
+  userId: string;
+  timestamp: number;
+}
+
+// Configuration
+const VALID_CLIENTS = new Map([
+  [
+    "client_secure_app_001",
+    {
+      secret: "super_secret_key_12345",
+      redirectUris: [
+        "http://localhost:3000/callback",
+        "https://app.example.com/oauth/callback",
+      ],
+      allowedScopes: ["openid", "profile", "email", "offline_access"],
+      name: "Secure App",
+    },
+  ],
+  [
+    "client_web_service_002",
+    {
+      secret: "another_secret_key_67890",
+      redirectUris: ["https://web.example.com/auth/callback"],
+      allowedScopes: ["read", "write", "delete"],
+      name: "Web Service",
+    },
+  ],
+]);
+
+const VALID_RESPONSE_TYPES = ["code", "id_token", "token"];
+const STATE_EXPIRY_MINUTES = 10;
+const AUTH_CODE_EXPIRY_MINUTES = 5;
+
+// In-memory storage (replace with database in production)
+const authSessions = new Map<string, StoredAuthSession>();
+const stateTokens = new Map<string, { expiresAt: number; clientId: string }>();
+
+export function validateRedirectUri(
+  clientId: string,
+  redirectUri: string
+): boolean {
+  const clientConfig = VALID_CLIENTS.get(clientId);
+  if (!clientConfig) {
     return false;
   }
+  return clientConfig.redirectUris.includes(redirectUri);
 }
 
-function validateScopes(scopes: string[]): boolean {
-  return scopes.every(scope => ALLOWED_SCOPES.has(scope));
-}
-
-router.post('/authorize', 
-  body('response_type').equals('code'),
-  body('client_id').isString(),
-  body('redirect_uri').custom(validateRedirectUri),
-  body('state').isString(),
-  body('scope').custom(value => {
-    const requestedScopes = value.split(' ');
-    return validateScopes(requestedScopes);
-  }),
-  (req: Request, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    
-    const { client_id, redirect_uri, state, scope } = req.body;
-    const code = crypto.randomBytes(16).toString('hex');
-
-    // Simulate storing the authorization code and its associated data
-    // In a real implementation, this data should be persisted securely
-    // Store in-memory for this example
-    const authorizationCodes = new Map();
-    authorizationCodes.set(code, { client_id, redirect_uri, scope });
-
-    const url = new URL(redirect_uri);
-    url.searchParams.set('code', code);
-    url.searchParams.set('state', state);
-
-    res.redirect(url.toString());
+export function validateScopes(clientId: string, scopes: string): boolean {
+  const clientConfig = VALID_CLIENTS.get(clientId);
+  if (!clientConfig) {
+    return false;
   }
-);
+  const requestedScopes = scopes.split(" ").filter((s) => s);
+  return requestedScopes.every((scope) =>
+    clientConfig.allowedScopes.includes(scope)
+  );
+}
 
-export { router as authorizationRouter };
+export function generateStateToken(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+export function generateAuthorizationCode(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+export function validateStateToken(state: string, clientId: string): boolean {
+  const tokenData = stateTokens.get(state);
+  if (!tokenData) {
+    return false;
+  }
+  if (tokenData.expiresAt < Date.now()) {
+    stateTokens.delete(state);
+    return false;
+  }
+  if (tokenData.clientId !== clientId) {
+    return false;
+  }
+  return true;
+}
+
+export async function buildAuthorizationEndpoint(
+  app: express.Application
+) {
+  // Authorization endpoint
+  app.get("/oauth/authorize", async (req: Request, res: Response) => {
+    try {
+      const { client_id, redirect_uri, scope, state,

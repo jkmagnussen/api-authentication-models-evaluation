@@ -1,37 +1,35 @@
 import express, { Request, Response } from 'express';
-import { generateAuthCode, validateClient, storeAuthCode } from './authService';
+import { generateAuthorizationCode, validateClient, storeAuthorizationCode } from './authService';
+import { OAuth2Client, AuthorizationRequest } from './types';
 
-export const authRouter = express.Router();
+const authRouter = express.Router();
 
 authRouter.get('/authorize', async (req: Request, res: Response) => {
-    try {
-        const { client_id, redirect_uri, response_type, scope, state } = req.query;
+  const { response_type, client_id, redirect_uri, scope, state } = req.query as AuthorizationRequest;
 
-        if (!client_id || !redirect_uri || !response_type) {
-            return res.status(400).json({ error: 'invalid_request' });
-        }
-
-        const isValidClient = await validateClient(client_id as string, redirect_uri as string);
-        if (!isValidClient) {
-            return res.status(400).json({ error: 'unauthorized_client' });
-        }
-
-        if (response_type !== 'code') {
-            return res.status(400).json({ error: 'unsupported_response_type' });
-        }
-
-        const authorizationCode = generateAuthCode();
-        await storeAuthCode(client_id as string, authorizationCode, scope as string);
-
-        const redirectURL = new URL(redirect_uri as string);
-        redirectURL.searchParams.append('code', authorizationCode);
-        if (state) {
-            redirectURL.searchParams.append('state', state as string);
-        }
-
-        return res.redirect(redirectURL.toString());
-    } catch (error) {
-        console.error('Authorization error:', error);
-        return res.status(500).json({ error: 'server_error' });
+  try {
+    if (!response_type || response_type !== 'code') {
+      return res.status(400).json({ error: 'unsupported_response_type' });
     }
+
+    const client: OAuth2Client | null = await validateClient(client_id, redirect_uri);
+    if (!client) {
+      return res.status(400).json({ error: 'invalid_client' });
+    }
+
+    const authorizationCode = generateAuthorizationCode();
+    await storeAuthorizationCode(authorizationCode, client_id, redirect_uri, scope);
+
+    const redirectUrl = new URL(redirect_uri);
+    redirectUrl.searchParams.append('code', authorizationCode);
+    if (state) {
+      redirectUrl.searchParams.append('state', state);
+    }
+
+    res.redirect(redirectUrl.toString());
+  } catch (error) {
+    res.status(500).json({ error: 'server_error' });
+  }
 });
+
+export { authRouter };

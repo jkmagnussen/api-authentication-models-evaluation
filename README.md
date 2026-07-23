@@ -1,5 +1,9 @@
 # API Authentication Models Evaluation
 
+**Production commands:** `npm run prod` (clean build + start), `npm run prod:full` (full pipeline + start)
+
+**Build commands:** `npm run build` (clean compile, keeps repo cleaner), `npm run build:full` (runs db setup + tests + docs/report generation + compile, will update generated artifacts)
+
 **Run everything (start to finish):** `npm run run:all:offline`
 
 This repository is a dissertation-focused evaluation of three API authentication models in one controlled backend:

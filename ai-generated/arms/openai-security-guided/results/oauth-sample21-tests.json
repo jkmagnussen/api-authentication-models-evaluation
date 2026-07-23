@@ -2,11 +2,11 @@
   "model": "oauth",
   "sample": "sample21",
   "samplePath": "ai-generated\\oauth\\sample21.ts",
-  "passed": false,
+  "passed": true,
   "checks": [
     {
       "name": "redirect validation present",
-      "passed": false,
+      "passed": true,
       "details": "Checks that redirect validation logic exists."
     },
     {
@@ -16,7 +16,7 @@
     },
     {
       "name": "scope validation present",
-      "passed": false,
+      "passed": true,
       "details": "Checks that scope validation logic exists."
     },
     {
@@ -25,16 +25,7 @@
       "details": "Flags broad default admin scope grants."
     }
   ],
-  "correctnessFailures": [
-    "redirect validation present",
-    "scope validation present"
-  ],
-  "securityFailures": [
-    "redirect validation present",
-    "scope validation present"
-  ],
-  "misconfigurationDetections": [
-    "redirect validation present",
-    "scope validation present"
-  ]
+  "correctnessFailures": [],
+  "securityFailures": [],
+  "misconfigurationDetections": []
 }

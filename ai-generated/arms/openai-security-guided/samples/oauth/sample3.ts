@@ -1,42 +1,50 @@
-import express, { Request, Response } from 'express';
-import { query, validationResult } from 'express-validator';
+import { Request, Response, NextFunction } from 'express';
 
-export const oauthRouter = express.Router();
+export const oauthAuthorize = (req: Request, res: Response, next: NextFunction): void => {
+  try {
+    const { client_id, redirect_uri, state, scope } = req.query;
 
-const validRedirectUris = ['https://example.com/callback'];
-const validScopes = ['read', 'write', 'admin'];
+    if (typeof client_id !== 'string' || !client_id) {
+      res.status(400).send('Invalid client_id');
+      return;
+    }
 
-oauthRouter.get('/auth', [
-  query('response_type').equals('code'),
-  query('client_id').isString().notEmpty(),
-  query('redirect_uri').isURL(),
-  query('scope').isString().custom(scope => {
-    const scopes = scope.split(' ');
-    return scopes.every(s => validScopes.includes(s));
-  }),
-  query('state').isString().optional()
-], (req: Request, res: Response) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    if (typeof redirect_uri !== 'string' || !isValidRedirectUri(redirect_uri)) {
+      res.status(400).send('Invalid redirect_uri');
+      return;
+    }
+
+    if (typeof state !== 'string' || !state) {
+      res.status(400).send('Invalid state parameter');
+      return;
+    }
+
+    if (!isValidScope(scope)) {
+      res.status(400).send('Invalid scope');
+      return;
+    }
+
+    const authCode = generateAuthorizationCode(client_id, redirect_uri, scope);
+
+    res.redirect(`${redirect_uri}?code=${authCode}&state=${state}`);
+  } catch (err) {
+    next(err);
   }
+};
 
-  const { redirect_uri, state } = req.query;
+const isValidRedirectUri = (uri: string): boolean => {
+  const allowedUris = ['https://example.com/callback', 'https://another.com/callback'];
+  return allowedUris.includes(uri);
+};
 
-  if (!validRedirectUris.includes(redirect_uri as string)) {
-    return res.status(400).json({ error: 'Invalid redirect URI' });
-  }
+const isValidScope = (scope: any): boolean => {
+  const allowedScopes = ['read', 'write'];
+  if (typeof scope !== 'string') return false;
+  const requestedScopes = scope.split(' ');
+  return requestedScopes.every(s => allowedScopes.includes(s));
+};
 
-  const authCode = generateAuthCode(); // Assume this function securely generates an auth code
-  const redirectUrl = new URL(redirect_uri as string);
-  redirectUrl.searchParams.append('code', authCode);
-  if (state) {
-    redirectUrl.searchParams.append('state', state as string);
-  }
-
-  res.redirect(redirectUrl.toString());
-});
-
-function generateAuthCode(): string {
-  return Math.random().toString(36).substring(2, 15);
-}
+const generateAuthorizationCode = (clientId: string, redirectUri: string, scope: string): string => {
+  // A secure random string generation implementation is required here
+  return 'secureRandomString';
+};

@@ -1,119 +1,112 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response } from "express";
-import crypto from "crypto";
+import express, { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 
-const client = new Anthropic();
 const app = express();
 
-// In-memory storage for demo purposes
-const authorizationCodes = new Map<
-  string,
-  {
-    clientId: string;
-    redirectUri: string;
-    scope: string;
-    expiresAt: number;
-    userId: string;
-  }
->();
-
-const refreshTokenStore = new Map<
-  string,
-  {
-    clientId: string;
-    userId: string;
-    scope: string;
-  }
->();
-
-const conversationHistory: Array<{
-  role: "user" | "assistant";
-  content: string;
-}> = [];
-
-export async function handleOAuthFlow(
-  req: Request,
-  res: Response
-): Promise<void> {
-  const { message } = req.body;
-
-  conversationHistory.push({
-    role: "user",
-    content: message,
-  });
-
-  const response = await client.messages.create({
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 1024,
-    system: `You are an OAuth2 authorization server assistant. Help users understand and process OAuth2 authorization requests.
-    
-    When a user asks about:
-    - Authorization requests: Explain the flow and validate request parameters
-    - Token requests: Guide them through the token exchange process
-    - Scope requests: Help them understand what permissions they're requesting
-    
-    Always ask clarifying questions about clientId, redirectUri, and scope when needed.
-    Be concise and focus on OAuth2 best practices.`,
-    messages: conversationHistory,
-  });
-
-  const assistantMessage =
-    response.content[0].type === "text" ? response.content[0].text : "";
-
-  conversationHistory.push({
-    role: "assistant",
-    content: assistantMessage,
-  });
-
-  res.json({
-    response: assistantMessage,
-    conversationId: crypto.randomBytes(16).toString("hex"),
-  });
+interface ClientConfig {
+  clientId: string;
+  redirectUris: string[];
+  allowedScopes: string[];
 }
 
-export function authorizationEndpoint(
-  req: Request,
-  res: Response
-): Record<string, string> {
-  const { response_type, client_id, redirect_uri, scope, state } = req.query;
+interface AuthorizationRequest {
+  clientId: string;
+  redirectUri: string;
+  scopes: string[];
+  state: string;
+  codeChallenge?: string;
+  codeChallengeMethod?: string;
+}
 
-  // Validation
-  const errors: Record<string, string> = {};
+const registeredClients: Map<string, ClientConfig> = new Map([
+  [
+    'secure-client-123',
+    {
+      clientId: 'secure-client-123',
+      redirectUris: ['https://client.example.com/callback', 'https://client.example.com/auth/callback'],
+      allowedScopes: ['read:profile', 'write:data', 'openid', 'email'],
+    },
+  ],
+]);
 
-  if (response_type !== "code") {
-    errors.error = "unsupported_response_type";
-    errors.error_description =
-      "Only authorization code flow is supported";
+const authorizationSessions: Map<string, AuthorizationRequest> = new Map();
+
+function validateRedirectUri(clientId: string, redirectUri: string): boolean {
+  const client = registeredClients.get(clientId);
+  if (!client) return false;
+
+  try {
+    const parsedUri = new URL(redirectUri);
+
+    if (!parsedUri.protocol.startsWith('https://') && parsedUri.hostname !== 'localhost') {
+      return false;
+    }
+
+    return client.redirectUris.some((allowedUri) => {
+      const allowedUrl = new URL(allowedUri);
+      return (
+        allowedUrl.protocol === parsedUri.protocol &&
+        allowedUrl.hostname === parsedUri.hostname &&
+        allowedUrl.pathname === parsedUri.pathname
+      );
+    });
+  } catch {
+    return false;
+  }
+}
+
+function validateScopes(clientId: string, requestedScopes: string[]): boolean {
+  const client = registeredClients.get(clientId);
+  if (!client) return false;
+
+  const normalizedScopes = requestedScopes.map((s) => s.trim()).filter((s) => s.length > 0);
+
+  if (normalizedScopes.length === 0) {
+    return false;
   }
 
-  if (!client_id) {
-    errors.error = "invalid_request";
-    errors.error_description = "client_id parameter is required";
+  return normalizedScopes.every((scope) => client.allowedScopes.includes(scope));
+}
+
+function generateState(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function validateStateParameter(state: string): boolean {
+  if (!state || typeof state !== 'string') {
+    return false;
   }
 
-  if (!redirect_uri) {
-    errors.error = "invalid_request";
-    errors.error_description = "redirect_uri parameter is required";
+  if (state.length < 32 || state.length > 500) {
+    return false;
   }
 
-  if (!scope) {
-    errors.error = "invalid_scope";
-    errors.error_description = "scope parameter is required";
+  return /^[a-zA-Z0-9\-._~]*$/.test(state);
+}
+
+function validateCodeChallenge(codeChallenge: string | undefined, method: string | undefined): boolean {
+  if (!codeChallenge) {
+    return true;
   }
 
-  if (Object.keys(errors).length > 0) {
-    res.status(400).json(errors);
-    return errors;
+  if (codeChallenge.length < 43 || codeChallenge.length > 128) {
+    return false;
   }
 
-  // Generate authorization code
-  const code = crypto.randomBytes(32).toString("hex");
-  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+  if (!/^[A-Za-z0-9\-._~]*$/.test(codeChallenge)) {
+    return false;
+  }
 
-  authorizationCodes.set(code, {
-    clientId: client_id as string,
-    redirectUri: redirect_uri as string,
-    scope: scope as string,
-    expiresAt,
-    userId: "user123", // In real app, would be from user session
+  const validMethods = ['S256', 'plain'];
+  return !method || validMethods.includes(method);
+}
+
+function buildAuthorizationError(
+  redirectUri: string,
+  error: string,
+  description: string,
+  state?: string,
+): string {
+  const url = new URL(redirectUri);
+  url.searchParams.append('error', error);

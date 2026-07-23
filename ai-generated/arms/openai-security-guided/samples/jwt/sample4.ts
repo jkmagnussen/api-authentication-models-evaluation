@@ -1,55 +1,37 @@
-import express, { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secure-secret';
-const JWT_ISSUER = process.env.JWT_ISSUER || 'issuer.example.com';
-const JWT_AUDIENCE = process.env.JWT_AUDIENCE || 'audience.example.com';
-const JWT_ALGORITHM: jwt.Algorithm = 'HS256';
-const TOKEN_EXPIRATION: string = '1h';
+dotenv.config();
 
-export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+const { JWT_SECRET_KEY, JWT_ISSUER, JWT_AUDIENCE } = process.env;
+
+if (!JWT_SECRET_KEY || !JWT_ISSUER || !JWT_AUDIENCE) {
+  throw new Error('Missing JWT configurations in environment variables');
+}
+
+interface JwtRequest extends Request {
+  user?: string | JwtPayload;
+}
+
+const authenticateJwt = (req: JwtRequest, res: Response, next: NextFunction): void => {
+  const token = req.header('Authorization')?.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ error: 'Token missing' });
+    return res.status(401).send('Access denied. No token provided.');
   }
 
-  jwt.verify(token, JWT_SECRET, {
-    algorithms: [JWT_ALGORITHM],
-    issuer: JWT_ISSUER,
-    audience: JWT_AUDIENCE
-  }, (err, decoded: JwtPayload | undefined) => {
+  jwt.verify(token, JWT_SECRET_KEY, { 
+    algorithms: ['HS256'], 
+    issuer: JWT_ISSUER, 
+    audience: JWT_AUDIENCE 
+  }, (err, decoded) => {
     if (err) {
-      return res.status(403).json({ error: 'Token invalid' });
+      return res.status(401).send('Invalid token.');
     }
-
     req.user = decoded;
     next();
   });
 };
 
-export const generateToken = (userId: string): string => {
-  const payload = { sub: userId };
-  return jwt.sign(payload, JWT_SECRET, {
-    algorithm: JWT_ALGORITHM,
-    expiresIn: TOKEN_EXPIRATION,
-    issuer: JWT_ISSUER,
-    audience: JWT_AUDIENCE
-  });
-};
-
-export const validateToken = (token: string): Promise<JwtPayload> => {
-  return new Promise((resolve, reject) => {
-    jwt.verify(token, JWT_SECRET, {
-      algorithms: [JWT_ALGORITHM],
-      issuer: JWT_ISSUER,
-      audience: JWT_AUDIENCE
-    }, (err, decoded: JwtPayload | undefined) => {
-      if (err) {
-        return reject(new Error('Token validation failed'));
-      }
-      resolve(decoded as JwtPayload);
-    });
-  });
-};
+export { authenticateJwt };

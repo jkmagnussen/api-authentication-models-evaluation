@@ -1,107 +1,102 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response, NextFunction } from "express";
-import crypto from "crypto";
-import url from "url";
+import express, { Request, Response } from 'express';
+import crypto from 'crypto';
+import url from 'url';
 
 const app = express();
-const client = new Anthropic();
 
-// Configuration with secure defaults
-const OAUTH_CONFIG = {
-  VALID_REDIRECT_URIS: [
-    "http://localhost:3000/callback",
-    "http://localhost:3001/oauth/return",
-    "https://app.example.com/auth/callback",
-  ],
-  ALLOWED_SCOPES: ["openid", "profile", "email", "offline_access"],
-  STATE_VALIDITY_MINUTES: 10,
-  MAX_STATE_LENGTH: 128,
-};
+interface AuthorizationParams {
+  clientId: string;
+  redirectUri: string;
+  scope: string;
+  state: string;
+  responseType: string;
+}
 
-// In-memory state store (use Redis in production)
-const stateStore = new Map<string, { createdAt: number; clientId: string }>();
+interface StoredAuthRequest {
+  clientId: string;
+  redirectUri: string;
+  scope: string;
+  timestamp: number;
+  userId?: string;
+}
 
-// Validate redirect URI against whitelist
-export function validateRedirectUri(redirectUri: string): boolean {
-  if (!redirectUri || typeof redirectUri !== "string") {
+const VALID_SCOPES = new Set(['read', 'write', 'profile', 'email', 'openid']);
+const VALID_RESPONSE_TYPES = new Set(['code', 'token']);
+const AUTHORIZED_CLIENTS = new Map([
+  ['client_web_app', 'https://localhost:3001/callback'],
+  ['client_mobile', 'https://mobile.example.com/oauth/callback'],
+  ['client_spa', 'http://localhost:3000/auth/callback'],
+]);
+
+const authorizationStates = new Map<string, StoredAuthRequest>();
+const STATE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+
+function validateClientId(clientId: string): boolean {
+  return AUTHORIZED_CLIENTS.has(clientId);
+}
+
+function validateRedirectUri(clientId: string, redirectUri: string): boolean {
+  if (!validateClientId(clientId)) {
+    return false;
+  }
+
+  const allowedUri = AUTHORIZED_CLIENTS.get(clientId);
+  if (!allowedUri) {
     return false;
   }
 
   try {
-    const parsedUri = new url.URL(redirectUri);
-    return OAUTH_CONFIG.VALID_REDIRECT_URIS.some(
-      (validUri) => new url.URL(validUri).href === parsedUri.href
+    const parsedProvided = new URL(redirectUri);
+    const parsedAllowed = new URL(allowedUri);
+
+    return (
+      parsedProvided.protocol === parsedAllowed.protocol &&
+      parsedProvided.hostname === parsedAllowed.hostname &&
+      parsedProvided.pathname === parsedAllowed.pathname
     );
   } catch {
     return false;
   }
 }
 
-// Validate requested scopes
-export function validateScopes(requestedScopes: string): string[] {
-  if (!requestedScopes || typeof requestedScopes !== "string") {
-    return [];
-  }
-
-  const scopes = requestedScopes.split(" ").filter((scope) => scope.length > 0);
-  return scopes.filter((scope) =>
-    OAUTH_CONFIG.ALLOWED_SCOPES.includes(scope.toLowerCase())
-  );
-}
-
-// Generate secure state parameter
-export function generateStateParameter(): string {
-  return crypto.randomBytes(32).toString("hex");
-}
-
-// Validate state parameter format and existence
-export function validateStateParameter(state: string): boolean {
-  if (!state || typeof state !== "string") {
+function validateScopes(scopes: string): boolean {
+  if (!scopes || scopes.trim().length === 0) {
     return false;
   }
 
-  if (state.length > OAUTH_CONFIG.MAX_STATE_LENGTH) {
+  const requestedScopes = scopes.split(' ').map(s => s.trim());
+  if (requestedScopes.length === 0) {
     return false;
   }
 
-  return /^[a-f0-9]{64}$/.test(state);
+  return requestedScopes.every(scope => VALID_SCOPES.has(scope));
 }
 
-// Store state with timestamp
-export function storeState(
-  state: string,
-  clientId: string
-): { success: boolean; error?: string } {
-  if (!validateStateParameter(state)) {
-    return { success: false, error: "Invalid state format" };
-  }
-
-  if (!clientId || typeof clientId !== "string" || clientId.length > 256) {
-    return { success: false, error: "Invalid client ID" };
-  }
-
-  stateStore.set(state, {
-    createdAt: Date.now(),
-    clientId,
-  });
-
-  return { success: true };
+function generateStateToken(): string {
+  return crypto.randomBytes(32).toString('hex');
 }
 
-// Verify and consume state parameter
-export function verifyState(
-  state: string
-): { valid: boolean; clientId?: string; error?: string } {
-  if (!validateStateParameter(state)) {
-    return { valid: false, error: "Invalid state format" };
+function validateAndParseParams(query: Record<string, string | string[] | undefined>): 
+  { valid: true; params: AuthorizationParams } | { valid: false; error: string } {
+  
+  const clientId = query.client_id;
+  const redirectUri = query.redirect_uri;
+  const scope = query.scope;
+  const state = query.state;
+  const responseType = query.response_type;
+
+  if (!clientId || typeof clientId !== 'string' || clientId.length === 0) {
+    return { valid: false, error: 'Missing or invalid client_id' };
   }
 
-  const storedState = stateStore.get(state);
-  if (!storedState) {
-    return { valid: false, error: "State not found or expired" };
+  if (!redirectUri || typeof redirectUri !== 'string' || redirectUri.length === 0) {
+    return { valid: false, error: 'Missing or invalid redirect_uri' };
   }
 
-  const age = Date.now() - storedState.createdAt;
-  if (age > OAUTH_CONFIG.STATE_VALIDITY_MINUTES * 60 * 1000) {
-    stateStore.delete(
+  if (!scope || typeof scope !== 'string') {
+    return { valid: false, error: 'Missing or invalid scope' };
+  }
+
+  if (!state || typeof state !== 'string' || state.length < 20) {
+    return { valid: false, error: '

@@ -1,45 +1,125 @@
-import express, { Request, Response, NextFunction } from 'express';
-import crypto from 'crypto';
-import { body, validationResult } from 'express-validator';
+```typescript
+import express, { Router, Request, Response, NextFunction } from "express";
+import crypto from "crypto";
+import { URL } from "url";
 
-const authRouter = express.Router();
+interface AuthorizationRequest {
+  clientId: string;
+  redirectUri: string;
+  responseType: string;
+  scope: string[];
+  state: string;
+  codeChallenge?: string;
+  codeChallengeMethod?: string;
+}
 
-const validRedirectUris = ['https://trusted-client.com/callback'];
-const validScopes = ['read', 'write', 'admin'];
+interface StoredAuthState {
+  clientId: string;
+  redirectUri: string;
+  scope: string[];
+  timestamp: number;
+  codeChallenge?: string;
+  codeChallengeMethod?: string;
+}
 
-authRouter.post(
-  '/authorize',
+const VALID_SCOPES = new Set([
+  "openid",
+  "profile",
+  "email",
+  "offline_access",
+  "api",
+]);
+const STATE_EXPIRY_MS = 600000; // 10 minutes
+const ALLOWED_RESPONSE_TYPES = new Set(["code", "token"]);
+const ALLOWED_CODE_CHALLENGE_METHODS = new Set(["S256", "plain"]);
+
+const registeredClients = new Map<
+  string,
+  { redirectUris: string[]; secret: string }
+>([
   [
-    body('response_type').equals('code').withMessage('Invalid response type'),
-    body('client_id').isString().withMessage('Client ID must be a string'),
-    body('redirect_uri').isURL().withMessage('Invalid redirect URI'),
-    body('scope').isString().withMessage('Scope must be a string'),
-    body('state').optional().isString().withMessage('State must be a string')
+    "client_123",
+    {
+      redirectUris: ["https://app.example.com/callback"],
+      secret: "super_secret_key_123",
+    },
   ],
-  (req: Request, res: Response, next: NextFunction) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+  [
+    "client_456",
+    {
+      redirectUris: ["http://localhost:3001/auth/callback"],
+      secret: "another_secret_key_456",
+    },
+  ],
+]);
 
-    const { redirect_uri, scope, state } = req.body;
+const authStateStore = new Map<string, StoredAuthState>();
+const authorizationCodes = new Map<
+  string,
+  { clientId: string; redirectUri: string; scope: string[]; expiresAt: number }
+>();
 
-    if (!validRedirectUris.includes(redirect_uri)) {
-      return res.status(400).json({ error: 'Invalid redirect URI' });
-    }
+function generateSecureState(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
 
-    const requestedScopes = scope.split(' ');
-    const invalidScopes = requestedScopes.filter(s => !validScopes.includes(s));
-    if (invalidScopes.length > 0) {
-      return res.status(400).json({ error: 'Invalid scopes requested', invalidScopes });
-    }
+function generateAuthorizationCode(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
 
-    const code = crypto.randomBytes(20).toString('hex');
-    const queryParams = new URLSearchParams({ code, state }).toString();
-    const redirectUrl = `${redirect_uri}?${queryParams}`;
-
-    return res.redirect(302, redirectUrl);
+function validateRedirectUri(
+  clientId: string,
+  redirectUri: string
+): boolean {
+  const client = registeredClients.get(clientId);
+  if (!client) {
+    return false;
   }
-);
 
-export { authRouter };
+  try {
+    const requestedUrl = new URL(redirectUri);
+    const isHttps = requestedUrl.protocol === "https:";
+    const isLocalhost = requestedUrl.hostname === "localhost";
+
+    if (!isHttps && !isLocalhost) {
+      return false;
+    }
+
+    return client.redirectUris.some(
+      (uri) =>
+        uri === redirectUri || uri.startsWith(requestedUrl.origin + "/")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function validateScopes(requestedScopes: string[]): boolean {
+  if (!Array.isArray(requestedScopes) || requestedScopes.length === 0) {
+    return false;
+  }
+
+  if (requestedScopes.length > 10) {
+    return false;
+  }
+
+  return requestedScopes.every((scope) => VALID_SCOPES.has(scope));
+}
+
+function validateState(state: string): boolean {
+  if (!state || typeof state !== "string" || state.length < 32) {
+    return false;
+  }
+
+  if (!/^[a-zA-Z0-9]+$/.test(state)) {
+    return false;
+  }
+
+  return true;
+}
+
+function validateCodeChallenge(
+  codeChallenge: string | undefined,
+  method: string | undefined
+): boolean {
+  if (!codeChall

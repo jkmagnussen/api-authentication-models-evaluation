@@ -1,114 +1,113 @@
 ```typescript
-import express, { Request, Response, NextFunction } from "express";
-import session from "express-session";
-import crypto from "crypto";
+import express, { Request, Response, NextFunction } from 'express';
+import session, { Session, SessionData } from 'express-session';
+import RedisStore from 'connect-redis';
+import { createClient } from 'redis';
+import crypto from 'crypto';
 
-export const createSessionManager = () => {
-  const sessionStore = new Map<
-    string,
-    { userId: string; username: string; expiresAt: number }
-  >();
+interface AuthenticatedSession extends Session {
+  userId?: string;
+  username?: string;
+  createdAt?: number;
+  previousSessionId?: string;
+}
 
-  const sessionMiddleware = session({
-    secret: crypto.randomBytes(32).toString("hex"),
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false, httpOnly: true, maxAge: 3600000 },
-  });
+// Redis client initialization with error handling
+const redisClient = createClient({
+  socket: {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+  },
+  password: process.env.REDIS_PASSWORD,
+});
 
-  return { sessionMiddleware, sessionStore };
+redisClient.connect().catch((err) => {
+  console.error('Redis connection failed:', err);
+  process.exit(1);
+});
+
+redisClient.on('error', (err) => {
+  console.error('Redis client error:', err);
+});
+
+const redisStore = new RedisStore({ client: redisClient });
+
+export const configureSessionManagement = (app: express.Application): void => {
+  app.use(
+    session({
+      store: redisStore,
+      secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
+      resave: false,
+      saveUninitialized: false,
+      name: '__Secure-sessionId',
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'strict' as const,
+        maxAge: 30 * 60 * 1000, // 30 minutes
+        domain: process.env.SESSION_DOMAIN,
+        path: '/',
+      },
+      genid: (req: Request): string => {
+        // Generate cryptographically secure session ID
+        return crypto.randomBytes(32).toString('hex');
+      },
+    })
+  );
 };
 
-export const attachUserToSession = (
+export const initiateLogin = (
   req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  if (req.session && !req.session.userId) {
-    req.session.userId = `user_${crypto.randomBytes(8).toString("hex")}`;
-    req.session.loginTime = Date.now();
-  }
-  next();
-};
-
-export const validateSessionToken = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  if (!req.session || !req.session.userId) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  next();
-};
-
-export const refreshSessionTimeout = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  if (req.session) {
-    req.session.touch?.();
-  }
-  next();
-};
-
-export const setupSessionRoutes = (app: express.Application) => {
-  app.get("/api/session/current", (req: Request, res: Response) => {
-    if (!req.session || !req.session.userId) {
-      return res.status(401).json({ error: "No active session" });
-    }
-
-    res.json({
-      sessionId: req.sessionID,
-      userId: req.session.userId,
-      loginTime: req.session.loginTime,
-    });
-  });
-
-  app.post("/api/session/login", (req: Request, res: Response) => {
-    if (!req.session) {
-      return res.status(500).json({ error: "Session unavailable" });
-    }
-
-    const userId = `user_${Date.now()}`;
-    const username = `user_${Math.random().toString(36).substring(7)}`;
-
-    req.session.userId = userId;
-    req.session.username = username;
-    req.session.loginTime = Date.now();
-
-    res.json({
-      message: "Login successful",
-      sessionId: req.sessionID,
-      userId,
-      username,
-    });
-  });
-
-  app.post("/api/session/logout", (req: Request, res: Response) => {
-    req.session?.destroy((err) => {
+  userId: string,
+  username: string
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const currentSessionId = req.sessionID;
+    
+    // Store previous session ID for tracking
+    req.session.previousSessionId = currentSessionId;
+    
+    // Regenerate session to prevent fixation attacks
+    req.session.regenerate((err) => {
       if (err) {
-        return res.status(500).json({ error: "Logout failed" });
+        reject(new Error('Session regeneration failed'));
+        return;
       }
-      res.json({ message: "Logout successful" });
+
+      // Set authenticated user data
+      (req.session as AuthenticatedSession).userId = userId;
+      (req.session as AuthenticatedSession).username = username;
+      (req.session as AuthenticatedSession).createdAt = Date.now();
+
+      // Save session explicitly
+      req.session.save((err) => {
+        if (err) {
+          reject(new Error('Session save failed'));
+          return;
+        }
+
+        // Invalidate old session from store
+        redisClient.del(`sess:${currentSessionId}`).catch((err) => {
+          console.error('Failed to invalidate previous session:', err);
+        });
+
+        resolve();
+      });
     });
-  });
-
-  app.get("/api/session/extend", (req: Request, res: Response) => {
-    if (!req.session) {
-      return res.status(401).json({ error: "No session to extend" });
-    }
-
-    req.session.touch?.();
-    res.json({ message: "Session extended", expiresIn: "1 hour" });
   });
 };
 
-export const startSessionServer = (port: number = 3000) => {
-  const app = express();
+export const performLogout = (req: Request): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const sessionId = req.sessionID;
+    const userId = (req.session as AuthenticatedSession).userId;
 
-  app.use(express.json());
+    // Clear session data
+    req.session.destroy((err) => {
+      if (err) {
+        reject(new Error('Session destruction failed'));
+        return;
+      }
 
-  const { sessionMiddleware } = createSessionManager();
-  app.use(sessionMidd
+      // Clear the session cookie
+      res

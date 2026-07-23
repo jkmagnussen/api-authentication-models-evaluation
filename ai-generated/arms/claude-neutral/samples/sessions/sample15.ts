@@ -1,115 +1,107 @@
 ```typescript
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import session from 'express-session';
-import crypto from 'crypto';
-
-const app = express();
-
-interface UserProfile {
-  id: string;
-  email: string;
-  role: string;
-  loginTime: number;
-}
+import { randomBytes } from 'crypto';
 
 declare global {
   namespace Express {
     interface Session {
-      userProfile?: UserProfile;
-      lastActivity?: number;
-      preferences?: Record<string, string>;
-      visitCount?: number;
+      userId?: string;
+      isAuthenticated?: boolean;
+      loginTimestamp?: number;
+      ipAddress?: string;
     }
   }
 }
 
-export function initializeSessionManager() {
+interface SessionValidationOptions {
+  maxSessionAge?: number;
+  requireSecureConnection?: boolean;
+  validateIpAddress?: boolean;
+}
+
+const DEFAULT_SESSION_OPTIONS: SessionValidationOptions = {
+  maxSessionAge: 30 * 60 * 1000,
+  requireSecureConnection: true,
+  validateIpAddress: true,
+};
+
+export function setupSecureSessionManagement(
+  app: Express,
+  validationOptions: SessionValidationOptions = {}
+): void {
+  const options = { ...DEFAULT_SESSION_OPTIONS, ...validationOptions };
+
   app.use(
     session({
-      secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
+      name: '__Secure-sessionId',
+      secret: process.env.SESSION_SECRET || randomBytes(32).toString('hex'),
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: options.requireSecureConnection ?? true,
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000,
-        sameSite: 'strict'
+        sameSite: 'strict',
+        maxAge: options.maxSessionAge,
+        path: '/',
       },
-      name: 'sessionId'
+      genid: () => randomBytes(32).toString('hex'),
     })
   );
 }
 
-export function validateSessionActivity(req: Request, res: Response, next: NextFunction) {
-  if (req.session.userProfile) {
-    const now = Date.now();
-    const lastActivity = req.session.lastActivity || now;
-    const inactivityTimeout = 30 * 60 * 1000;
+export function validateSessionIntegrity(
+  validationOptions: SessionValidationOptions = {}
+): (req: Request, res: Response, next: NextFunction) => void {
+  const options = { ...DEFAULT_SESSION_OPTIONS, ...validationOptions };
 
-    if (now - lastActivity > inactivityTimeout) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.session) {
+      return res.status(401).json({ error: 'Session not available' });
+    }
+
+    const now = Date.now();
+    const sessionCreatedAt = req.session.loginTimestamp || now;
+    const sessionAge = now - sessionCreatedAt;
+
+    if (sessionAge > (options.maxSessionAge || 1800000)) {
       req.session.destroy((err) => {
         if (err) console.error('Session destruction error:', err);
-        res.status(401).json({ error: 'Session expired due to inactivity' });
       });
-      return;
+      return res.status(401).json({ error: 'Session expired' });
     }
 
-    req.session.lastActivity = now;
-  }
+    if (options.validateIpAddress && req.ip) {
+      if (!req.session.ipAddress) {
+        req.session.ipAddress = req.ip;
+      } else if (req.session.ipAddress !== req.ip) {
+        req.session.destroy((err) => {
+          if (err) console.error('Session destruction error:', err);
+        });
+        return res.status(401).json({ error: 'IP address mismatch' });
+      }
+    }
 
-  next();
-}
-
-export function enforceAuthentication(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.userProfile) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-  next();
-}
-
-export function handleLoginRequest(req: Request, res: Response) {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required' });
-  }
-
-  const mockUserId = crypto.randomUUID();
-  const userProfile: UserProfile = {
-    id: mockUserId,
-    email: email,
-    role: 'user',
-    loginTime: Date.now()
+    next();
   };
-
-  req.session.userProfile = userProfile;
-  req.session.lastActivity = Date.now();
-  req.session.visitCount = (req.session.visitCount || 0) + 1;
-
-  req.session.save((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Failed to establish session' });
-    }
-    res.json({
-      message: 'Login successful',
-      user: userProfile,
-      sessionId: req.sessionID
-    });
-  });
 }
 
-export function handleLogoutRequest(req: Request, res: Response) {
-  if (!req.session.userProfile) {
-    return res.status(400).json({ error: 'No active session' });
+export function performAuthenticationRefresh(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
+  if (!req.session) {
+    return res.status(401).json({ error: 'No session available' });
   }
 
-  const logoutUser = req.session.userProfile.email;
+  if (!req.session.isAuthenticated) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
 
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Failed to logout' });
-    }
-    res.clearCookie('sessionId');
-    res.json({ message: `${logoutUser} logged out successfully` });
-  });
-}
+  const currentTimestamp = Date.now();
+  const lastRefreshTime = (req.session as any).lastRefreshTime || 0;
+  const refreshInterval = 5 * 60 * 1000;
+
+  if (currentTimestamp - lastRefreshTime > refreshInterval) {
+    req.session.regenerate((err) => {

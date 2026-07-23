@@ -1,115 +1,106 @@
 ```typescript
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 
-export interface AuthRequest extends Request {
-  userId?: string;
-  email?: string;
+interface TokenPayload {
+  sub: string;
+  aud: string;
+  iss: string;
+  iat: number;
+  exp: number;
+  [key: string]: unknown;
 }
 
-const SECRET_KEY = process.env.JWT_SECRET || "your-secret-key-here";
-const REFRESH_SECRET = process.env.REFRESH_SECRET || "refresh-secret-here";
+interface AuthConfig {
+  publicKey: string;
+  expectedAudience: string;
+  expectedIssuer: string;
+  allowedAlgorithms: string[];
+  maxTokenAge: number;
+}
 
-export const generateAccessToken = (userId: string, email: string): string => {
-  return jwt.sign({ userId, email }, SECRET_KEY, { expiresIn: "15m" });
+const defaultConfig: AuthConfig = {
+  publicKey: process.env.JWT_PUBLIC_KEY || '',
+  expectedAudience: process.env.JWT_AUDIENCE || 'api.example.com',
+  expectedIssuer: process.env.JWT_ISSUER || 'auth.example.com',
+  allowedAlgorithms: ['RS256', 'RS384', 'RS512'],
+  maxTokenAge: 3600,
 };
 
-export const generateRefreshToken = (userId: string): string => {
-  return jwt.sign({ userId }, REFRESH_SECRET, { expiresIn: "7d" });
-};
+export function createAuthMiddleware(config: Partial<AuthConfig> = {}) {
+  const mergedConfig = { ...defaultConfig, ...config };
 
-export const validateJWTToken = (token: string): { userId: string; email: string } => {
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY) as { userId: string; email: string };
-    return decoded;
-  } catch (error) {
-    throw new Error("Invalid token");
-  }
-};
-
-export const refreshAccessToken = (token: string): string => {
-  try {
-    const decoded = jwt.verify(token, REFRESH_SECRET) as { userId: string };
-    return generateAccessToken(decoded.userId, "");
-  } catch (error) {
-    throw new Error("Invalid refresh token");
-  }
-};
-
-export const jwtAuthMiddleware = (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-    res.status(401).json({ error: "No authorization header" });
-    return;
+  if (!mergedConfig.publicKey) {
+    throw new Error('JWT_PUBLIC_KEY environment variable is required');
   }
 
-  const token = authHeader.startsWith("Bearer ")
-    ? authHeader.slice(7)
-    : authHeader;
-
-  try {
-    const decoded = validateJWTToken(token);
-    req.userId = decoded.userId;
-    req.email = decoded.email;
-    next();
-  } catch (error) {
-    res.status(401).json({ error: "Invalid or expired token" });
-  }
-};
-
-export const optionalJWTAuth = (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
-
-  if (authHeader) {
-    const token = authHeader.startsWith("Bearer ")
-      ? authHeader.slice(7)
-      : authHeader;
-
+  return function verifyJWTToken(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): void {
     try {
-      const decoded = validateJWTToken(token);
-      req.userId = decoded.userId;
-      req.email = decoded.email;
-    } catch (error) {
-      console.warn("Invalid token in optional auth:", error);
-    }
-  }
+      const authHeader = req.headers.authorization;
 
-  next();
-};
-
-export const roleBasedAuthMiddleware = (allowedRoles: string[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction): void => {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader) {
-      res.status(401).json({ error: "No authorization header" });
-      return;
-    }
-
-    const token = authHeader.startsWith("Bearer ")
-      ? authHeader.slice(7)
-      : authHeader;
-
-    try {
-      const decoded = jwt.verify(token, SECRET_KEY) as {
-        userId: string;
-        email: string;
-        role?: string;
-      };
-
-      if (!decoded.role || !allowedRoles.includes(decoded.role)) {
-        res.status(403).json({ error: "Insufficient permissions" });
+      if (!authHeader || typeof authHeader !== 'string') {
+        res.status(401).json({ error: 'Missing authorization header' });
         return;
       }
 
-      req.userId = decoded.userId;
-      req.email = decoded.
+      const parts = authHeader.split(' ');
+      if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
+        res.status(401).json({ error: 'Invalid authorization header format' });
+        return;
+      }
+
+      const token = parts[1];
+
+      if (!token || typeof token !== 'string' || token.length === 0) {
+        res.status(401).json({ error: 'Empty token' });
+        return;
+      }
+
+      const decoded = jwt.verify(token, mergedConfig.publicKey, {
+        algorithms: mergedConfig.allowedAlgorithms as jwt.Algorithm[],
+        audience: mergedConfig.expectedAudience,
+        issuer: mergedConfig.expectedIssuer,
+        maxAge: `${mergedConfig.maxTokenAge}s`,
+      }) as TokenPayload;
+
+      if (!decoded.sub || typeof decoded.sub !== 'string') {
+        res.status(401).json({ error: 'Invalid token subject' });
+        return;
+      }
+
+      req.user = {
+        id: decoded.sub,
+        audience: decoded.aud,
+        issuer: decoded.iss,
+      };
+
+      next();
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        res.status(401).json({ error: 'Token has expired' });
+        return;
+      }
+
+      if (error instanceof jwt.JsonWebTokenError) {
+        res.status(401).json({ error: 'Invalid token' });
+        return;
+      }
+
+      if (error instanceof jwt.NotBeforeError) {
+        res.status(401).json({ error: 'Token not yet valid' });
+        return;
+      }
+
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+}
+
+export function createTokenGenerator(config: Partial<AuthConfig> = {}) {
+  const mergedConfig = { ...defaultConfig, ...config };
+
+  const privateKey = process.env.JWT_PRIVATE_KEY;

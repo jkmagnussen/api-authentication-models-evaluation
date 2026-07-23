@@ -1,121 +1,106 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response } from "express";
+import express from "express";
 import crypto from "crypto";
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// In-memory storage for demo purposes
-const authorizationCodes = new Map<
-  string,
-  {
-    clientId: string;
-    redirectUri: string;
-    scope: string;
-    expiresAt: number;
-  }
->();
-const accessTokens = new Map<
-  string,
-  {
-    clientId: string;
-    scope: string;
-    expiresAt: number;
-  }
->();
-
-// Registered OAuth2 clients
-const registeredClients = new Map<
-  string,
-  {
-    clientSecret: string;
-    redirectUris: string[];
-    clientName: string;
-  }
->();
-
-registeredClients.set("demo-client-123", {
-  clientSecret: "demo-secret-456",
-  redirectUris: [
-    "http://localhost:3001/callback",
-    "https://example.com/callback",
-  ],
-  clientName: "Demo Application",
-});
-
-const client = new Anthropic();
-
-async function analyzeAuthRequest(
-  clientId: string,
-  requestedScope: string,
-  userId: string
-): Promise<string> {
-  const message = await client.messages.create({
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 100,
-    messages: [
-      {
-        role: "user",
-        content: `Analyze this OAuth2 authorization request and provide a brief security assessment:
-Client ID: ${clientId}
-Requested Scope: ${requestedScope}
-User ID: ${userId}
-
-Provide a one-sentence assessment of whether this request appears legitimate.`,
-      },
-    ],
-  });
-
-  const textContent = message.content.find((block) => block.type === "text");
-  return textContent && textContent.type === "text" ? textContent.text : "OK";
+interface AuthRequest {
+  client_id: string;
+  redirect_uri: string;
+  response_type: string;
+  scope: string;
+  state: string;
 }
 
-export const authorize = async (req: Request, res: Response) => {
-  const { client_id, redirect_uri, scope, response_type, state } = req.query;
+interface AuthGrant {
+  code: string;
+  client_id: string;
+  redirect_uri: string;
+  scope: string;
+  expires_at: number;
+  user_id: string;
+}
 
-  // Validate request parameters
-  if (!client_id || !redirect_uri || !scope) {
-    return res.status(400).json({
-      error: "invalid_request",
-      error_description: "Missing required parameters",
-    });
+// In-memory storage for authorization codes and client registrations
+const authorizationCodes = new Map<string, AuthGrant>();
+const registeredClients = new Map<
+  string,
+  { client_secret: string; redirect_uris: string[] }
+>();
+
+// Register some test clients
+registeredClients.set("test-client-1", {
+  client_secret: "test-secret-1",
+  redirect_uris: ["http://localhost:3001/callback"],
+});
+
+registeredClients.set("test-client-2", {
+  client_secret: "test-secret-2",
+  redirect_uris: ["http://localhost:3002/callback", "https://example.com/auth"],
+});
+
+function isValidClient(clientId: string, redirectUri: string): boolean {
+  const client = registeredClients.get(clientId);
+  if (!client) return false;
+  return client.redirect_uris.includes(redirectUri);
+}
+
+function generateAuthorizationCode(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function validateAuthRequest(params: Record<string, string>): AuthRequest | null {
+  const required = ["client_id", "redirect_uri", "response_type", "state"];
+  for (const field of required) {
+    if (!params[field]) return null;
   }
 
-  // Verify client is registered
-  const clientConfig = registeredClients.get(client_id as string);
-  if (!clientConfig) {
-    return res.status(400).json({
-      error: "invalid_client",
-      error_description: "Client not found",
-    });
-  }
+  if (params.response_type !== "code") return null;
+  if (!isValidClient(params.client_id, params.redirect_uri)) return null;
 
-  // Verify redirect URI
-  if (!clientConfig.redirectUris.includes(redirect_uri as string)) {
-    return res.status(400).json({
-      error: "invalid_request",
-      error_description: "Redirect URI not registered",
-    });
-  }
+  return {
+    client_id: params.client_id,
+    redirect_uri: params.redirect_uri,
+    response_type: params.response_type,
+    scope: params.scope || "openid profile email",
+    state: params.state,
+  };
+}
 
-  if (response_type !== "code") {
-    return res.status(400).json({
-      error: "unsupported_response_type",
-      error_description: "Only code response type is supported",
-    });
-  }
+export function createAuthorizationServer() {
+  const app = express();
+  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
 
-  try {
-    // Use Claude to analyze the authorization request
-    const assessment = await analyzeAuthRequest(
-      client_id as string,
-      scope as string,
-      "user-123"
-    );
-    console.log("Authorization assessment:", assessment);
+  // Authorization endpoint - GET
+  app.get("/oauth/authorize", (req, res) => {
+    const authRequest = validateAuthRequest(req.query as Record<string, string>);
 
-    // Generate authorization code
-    const authCode = crypto.randomBytes(32).toString("hex");
-    const expiresAt =
+    if (!authRequest) {
+      return res.status(400).json({
+        error: "invalid_request",
+        error_description: "Invalid authorization request",
+      });
+    }
+
+    // In a real implementation, this would redirect to a login page
+    // For demo purposes, we'll simulate user approval
+    const code = generateAuthorizationCode();
+    const grant: AuthGrant = {
+      code,
+      client_id: authRequest.client_id,
+      redirect_uri: authRequest.redirect_uri,
+      scope: authRequest.scope,
+      expires_at: Date.now() + 10 * 60 * 1000, // 10 minutes
+      user_id: "demo-user-123",
+    };
+
+    authorizationCodes.set(code, grant);
+
+    const redirectUrl = new URL(authRequest.redirect_uri);
+    redirectUrl.searchParams.append("code", code);
+    redirectUrl.searchParams.append("state", authRequest.state);
+
+    res.redirect(redirectUrl.toString());
+  });
+
+  // Token endpoint - POST
+  app.post("/oauth/token",

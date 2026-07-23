@@ -1,15 +1,15 @@
 {
   "model": "oauth",
   "sample": "sample1",
-  "characters": 1768,
-  "lines": 57,
-  "functions": 3,
+  "characters": 1506,
+  "lines": 43,
+  "functions": 2,
   "classes": 0,
   "cyclomaticComplexity": 1,
   "halstead": {
     "operators": {
-      "distinct": 8,
-      "total": 63,
+      "distinct": 7,
+      "total": 29,
       "identifiers": [
         "()",
         "{}",
@@ -17,13 +17,12 @@
         ".",
         "=",
         "void (prefix)",
-        "const",
-        "[]"
+        "const"
       ]
     },
     "operands": {
-      "distinct": 47,
-      "total": 77,
+      "distinct": 21,
+      "total": 36,
       "identifiers": [
         "\"use strict\"",
         "exports",
@@ -33,7 +32,7 @@
         true,
         "Object",
         "defineProperty",
-        "authRouter",
+        "oauth2AuthEndpoint",
         0,
         "express_1",
         "\"express\"",
@@ -42,45 +41,19 @@
         "\"express-validator\"",
         "crypto_1",
         "\"crypto\"",
-        "router",
+        "app",
         "default",
-        "Router",
-        "VALID_SCOPES",
-        "\"read\"",
-        "\"write\"",
-        "\"admin\"",
-        "VALID_CLIENT_IDS",
-        "\"client_123\"",
-        "\"client_456\"",
-        "REDIRECT_URI_WHITELIST",
-        "\"https://client.example.com/callback\"",
         "\"/authorize\"",
-        "\"Invalid response type. Expected \"code\".\"",
-        "\"code\"",
-        "\"response_type\"",
-        "body",
-        "equals",
-        "withMessage",
-        "\"Invalid client ID.\"",
-        "\"client_id\"",
-        "isIn",
-        "\"redirect_uri\"",
-        "custom",
-        "\"scope\"",
-        "\"State must be a string.\"",
-        "\"state\"",
-        "optional",
-        "isString",
         "get"
       ]
     },
-    "length": 140,
-    "vocabulary": 55,
-    "difficulty": 6.553191489361702,
-    "volume": 809.3903598934523,
-    "effort": 5304.090018025177,
-    "bugs": 0.26979678663115075,
-    "time": 294.6716676680654
+    "length": 65,
+    "vocabulary": 28,
+    "difficulty": 6,
+    "volume": 312.4780699337442,
+    "effort": 1874.8684196024653,
+    "bugs": 0.10415935664458141,
+    "time": 104.15935664458141
   },
-  "maintainabilityIndex": 100.11710182733816
+  "maintainabilityIndex": 104.9703876151577
 }

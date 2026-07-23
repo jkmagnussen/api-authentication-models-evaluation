@@ -1,47 +1,121 @@
-import express, { Request, Response, NextFunction } from 'express';
-import session from 'express-session';
-import crypto from 'crypto';
+```typescript
+import express, { Request, Response, NextFunction } from "express";
+import session from "express-session";
+import { randomBytes } from "crypto";
 
-const app = express();
-
-const sessionConfig: session.SessionOptions = {
-  secret: crypto.randomBytes(64).toString('hex'),
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 1000 * 60 * 15, // 15 minutes
-    sameSite: 'strict'
+// Extend Express session types
+declare global {
+  namespace Express {
+    interface Session {
+      userId?: string;
+      regeneratedAt?: number;
+    }
   }
+}
+
+// Configuration constants
+const SESSION_SECRET = process.env.SESSION_SECRET || randomBytes(32).toString("hex");
+const SESSION_MAX_AGE = 30 * 60 * 1000; // 30 minutes
+const SECURE_COOKIE_FLAGS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict" as const,
+  maxAge: SESSION_MAX_AGE,
 };
 
-app.use(session(sessionConfig));
+// Initialize session middleware
+export const configureSessionMiddleware = () => {
+  return session({
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: SECURE_COOKIE_FLAGS,
+    name: "secureSessionId",
+  });
+};
 
-export const regenerateSession = (req: Request, res: Response, next: NextFunction): void => {
+// Regenerate session for privilege escalation
+export const regenerateSession = (
+  req: Request,
+  res: Response,
+  callback?: (err?: Error) => void
+): void => {
+  const oldSessionId = req.sessionID;
+
   req.session.regenerate((err) => {
     if (err) {
-      return next(err);
+      console.error("Session regeneration failed:", err);
+      if (callback) callback(err);
+      return;
     }
-    next();
+
+    // Track regeneration timestamp
+    req.session.regeneratedAt = Date.now();
+
+    // Optionally clear old session data
+    req.sessionStore?.destroy(oldSessionId, (destroyErr) => {
+      if (destroyErr && destroyErr.code !== "ENOENT") {
+        console.warn("Failed to destroy old session:", destroyErr);
+      }
+      if (callback) callback();
+    });
   });
 };
 
-export const logoutAndInvalidate = (req: Request, res: Response): void => {
-  req.session.destroy((err) => {
+// Authenticate user and establish session
+export const authenticateAndCreateSession = (
+  req: Request,
+  userId: string,
+  callback?: (err?: Error) => void
+): void => {
+  regenerateSession(req, new Response(), (err) => {
     if (err) {
-      return res.status(500).send('Error logging out');
+      console.error("Authentication session creation failed:", err);
+      if (callback) callback(err);
+      return;
     }
-    res.clearCookie('connect.sid', { path: '/' });
-    res.status(200).send('Logged out');
+
+    req.session.userId = userId;
+    req.session.save((saveErr) => {
+      if (saveErr) {
+        console.error("Session save failed:", saveErr);
+        if (callback) callback(saveErr);
+        return;
+      }
+
+      if (callback) callback();
+    });
   });
 };
 
-app.post('/login', regenerateSession, (req: Request, res: Response) => {
-  // Authentication logic here
-  res.status(200).send('Logged in');
-});
+// Validate active session
+export const validateActiveSession = (req: Request): boolean => {
+  if (!req.session) {
+    return false;
+  }
 
-app.post('/logout', logoutAndInvalidate);
+  const isAuthenticated = Boolean(req.session.userId);
+  const sessionAge = Date.now() - (req.session.regeneratedAt || req.session.cookie._expires || 0);
 
-export default app;
+  // Enforce maximum session lifetime (e.g., 8 hours)
+  const MAX_SESSION_LIFETIME = 8 * 60 * 60 * 1000;
+  if (sessionAge > MAX_SESSION_LIFETIME) {
+    return false;
+  }
+
+  return isAuthenticated;
+};
+
+// Comprehensive logout with session destruction
+export const invalidateSessionAndLogout = (
+  req: Request,
+  res: Response,
+  callback?: (err?: Error) => void
+): void => {
+  if (!req.session) {
+    if (callback) callback();
+    return;
+  }
+
+  // Clear session data
+  req

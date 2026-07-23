@@ -1,105 +1,55 @@
-```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import express, { Request, Response, NextFunction } from 'express';
+import jwt, { Secret, SignOptions, VerifyOptions } from 'jsonwebtoken';
+import { RequestHandler } from 'express-serve-static-core';
 
-const client = new Anthropic();
+const JWT_SECRET: Secret = process.env.JWT_SECRET!;
+const JWT_ISSUER = 'YourIssuer';
+const JWT_AUDIENCE = 'YourAudience';
+const JWT_ALGORITHM: jwt.Algorithm = 'HS256';
+
+export const jwtSignOptions: SignOptions = {
+  issuer: JWT_ISSUER,
+  audience: JWT_AUDIENCE,
+  algorithm: JWT_ALGORITHM,
+  expiresIn: '1h'
+};
+
+const jwtVerifyOptions: VerifyOptions = {
+  issuer: JWT_ISSUER,
+  audience: JWT_AUDIENCE,
+  algorithms: [JWT_ALGORITHM]
+};
+
+export const generateToken = (payload: object): string => {
+  return jwt.sign(payload, JWT_SECRET, jwtSignOptions);
+};
+
+export const authenticateJWT: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+  const token = req.header('Authorization')?.replace('Bearer ', '');
+
+  if (!token) {
+    return res.status(401).json({ error: 'Token is missing' });
+  }
+
+  jwt.verify(token, JWT_SECRET, jwtVerifyOptions, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: 'Token is invalid or expired' });
+    }
+
+    // Attach user data or token info to request object
+    req.user = decoded;
+    next();
+  });
+};
+
 const app = express();
 
-interface JWTPayload {
-  sub?: string;
-  aud?: string | string[];
-  iss?: string;
-  exp?: number;
-  iat?: number;
-}
+app.use(authenticateJWT);
 
-interface AuthConfig {
-  expectedAudience: string;
-  expectedIssuer: string;
-  allowedAlgorithms: string[];
-  maxExpirySeconds: number;
-}
+app.get('/protected', (req: Request, res: Response) => {
+  res.send('You have access to this protected route!');
+});
 
-export function createSecureJWTValidator(config: AuthConfig) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Missing or invalid authorization header" });
-    }
-
-    const token = authHeader.substring(7);
-
-    try {
-      // Verify without decoding first to check signature
-      const decoded = jwt.decode(token, { complete: true });
-
-      if (!decoded) {
-        return res.status(401).json({ error: "Invalid token format" });
-      }
-
-      // Validate algorithm before verification
-      if (!config.allowedAlgorithms.includes(decoded.header.alg)) {
-        return res.status(401).json({
-          error: `Algorithm ${decoded.header.alg} not allowed`,
-        });
-      }
-
-      const payload = decoded.payload as JWTPayload;
-
-      // Validate issuer
-      if (payload.iss !== config.expectedIssuer) {
-        return res.status(401).json({
-          error: `Invalid issuer: expected ${config.expectedIssuer}`,
-        });
-      }
-
-      // Validate audience
-      const audiences = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
-      if (!audiences.includes(config.expectedAudience)) {
-        return res.status(401).json({
-          error: `Invalid audience: expected ${config.expectedAudience}`,
-        });
-      }
-
-      // Validate expiry
-      if (payload.exp) {
-        const now = Math.floor(Date.now() / 1000);
-        if (now > payload.exp) {
-          return res.status(401).json({ error: "Token has expired" });
-        }
-
-        // Check if token expiry is too far in future (potential replay attack indicator)
-        const tokenAge = payload.exp - (payload.iat || 0);
-        if (tokenAge > config.maxExpirySeconds) {
-          return res.status(401).json({
-            error: `Token expiry exceeds maximum allowed duration`,
-          });
-        }
-      }
-
-      // Get public key from environment (in production, this would be from a key server)
-      const publicKey = process.env.JWT_PUBLIC_KEY;
-      if (!publicKey) {
-        return res.status(500).json({ error: "Server configuration error" });
-      }
-
-      // Verify signature
-      jwt.verify(token, publicKey, {
-        algorithms: config.allowedAlgorithms,
-        issuer: config.expectedIssuer,
-        audience: config.expectedAudience,
-      });
-
-      // Store decoded payload in request for downstream handlers
-      (req as any).jwtPayload = payload;
-      next();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Token verification failed";
-      return res.status(401).json({ error: errorMessage });
-    }
-  };
-}
-
-export function createTokenGener
+app.listen(3000, () => {
+  console.log('Server is running on port 3000');
+});

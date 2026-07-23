@@ -2,112 +2,51 @@
 import Anthropic from "@anthropic-ai/sdk";
 import express, { Request, Response } from "express";
 import crypto from "crypto";
-import url from "url";
 
-const client = new Anthropic();
-const app = express();
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-interface AuthorizationRequest {
-  client_id: string;
-  redirect_uri: string;
-  response_type: string;
+interface AuthorizationSession {
+  clientId: string;
+  redirectUri: string;
   scope: string;
   state: string;
+  codeChallenge?: string;
+  codeChallengeMethod?: string;
+  timestamp: number;
 }
 
-interface OAuthConfig {
-  validClientIds: Set<string>;
-  validScopes: Set<string>;
-  allowedRedirectUris: Map<string, string[]>;
-  tokenExpiry: number;
+interface OAuth2Client {
+  id: string;
+  secret: string;
+  redirectUris: string[];
+  allowedScopes: string[];
 }
 
-const oauthConfiguration: OAuthConfig = {
-  validClientIds: new Set(["app_client_123", "mobile_app_456"]),
-  validScopes: new Set([
-    "openid",
-    "profile",
-    "email",
-    "offline_access",
-    "api_read",
-    "api_write",
-  ]),
-  allowedRedirectUris: new Map([
-    ["app_client_123", ["https://app.example.com/callback"]],
-    ["mobile_app_456", ["https://mobile.example.com/oauth/callback"]],
-  ]),
-  tokenExpiry: 3600,
-};
+const app = express();
+const client = new Anthropic();
+app.use(express.json());
 
-const sessionStore = new Map<
-  string,
-  {
-    state: string;
-    nonce: string;
-    challenge: string;
-    expiry: number;
-  }
->();
+const authorizationSessions = new Map<string, AuthorizationSession>();
+const registeredClients = new Map<string, OAuth2Client>();
+
+function generateAuthCode(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
 
 function validateRedirectUri(clientId: string, redirectUri: string): boolean {
-  const allowedUris = oauthConfiguration.allowedRedirectUris.get(clientId);
-  if (!allowedUris) {
-    return false;
-  }
-
-  try {
-    const parsedUri = new url.URL(redirectUri);
-    const isHttps =
-      parsedUri.protocol === "https:" || parsedUri.hostname === "localhost";
-
-    return allowedUris.some((allowedUri) => {
-      const allowedUrl = new url.URL(allowedUri);
-      return (
-        allowedUrl.href === parsedUri.href &&
-        (isHttps || allowedUrl.hostname === "localhost")
-      );
-    });
-  } catch {
-    return false;
-  }
+  const registeredClient = registeredClients.get(clientId);
+  if (!registeredClient) return false;
+  return registeredClient.redirectUris.includes(redirectUri);
 }
 
-function validateScopes(requestedScopes: string): {
-  valid: boolean;
-  scopes: string[];
-} {
-  const scopes = requestedScopes.split(" ").filter((s) => s.length > 0);
-
-  const invalidScopes = scopes.filter(
-    (scope) => !oauthConfiguration.validScopes.has(scope)
+function validateScopes(clientId: string, scopes: string): boolean {
+  const registeredClient = registeredClients.get(clientId);
+  if (!registeredClient) return false;
+  const requestedScopes = scopes.split(" ");
+  return requestedScopes.every((scope) =>
+    registeredClient.allowedScopes.includes(scope)
   );
-
-  if (invalidScopes.length > 0) {
-    return { valid: false, scopes: [] };
-  }
-
-  return { valid: true, scopes };
 }
 
-function generateStateToken(): string {
-  return crypto.randomBytes(32).toString("hex");
-}
-
-function generateNonce(): string {
-  return crypto.randomBytes(32).toString("hex");
-}
-
-function generateChallenge(length = 128): string {
-  return crypto
-    .randomBytes(length)
-    .toString("base64url")
-    .replace(/[^a-zA-Z0-9_-]/g, "");
-}
-
-export const authorizeEndpoint = async (
+export const handleAuthorizationRequest = async (
   req: Request,
   res: Response
 ): Promise<void> => {
@@ -119,4 +58,56 @@ export const authorizeEndpoint = async (
     state,
     code_challenge,
     code_challenge_method,
+  } = req.query;
+
+  if (!client_id || !redirect_uri || response_type !== "code") {
+    res.status(400).json({
+      error: "invalid_request",
+      error_description: "Missing or invalid required parameters",
+    });
+    return;
   }
+
+  if (!validateRedirectUri(client_id as string, redirect_uri as string)) {
+    res.status(400).json({
+      error: "invalid_client",
+      error_description: "Redirect URI mismatch",
+    });
+    return;
+  }
+
+  if (scope && !validateScopes(client_id as string, scope as string)) {
+    res.status(400).json({
+      error: "invalid_scope",
+      error_description: "Invalid scope requested",
+    });
+    return;
+  }
+
+  const authCode = generateAuthCode();
+  const authSession: AuthorizationSession = {
+    clientId: client_id as string,
+    redirectUri: redirect_uri as string,
+    scope: (scope as string) || "openid profile email",
+    state: (state as string) || "",
+    codeChallenge: code_challenge as string | undefined,
+    codeChallengeMethod: code_challenge_method as string | undefined,
+    timestamp: Date.now(),
+  };
+
+  authorizationSessions.set(authCode, authSession);
+
+  const redirectUrl = new URL(redirect_uri as string);
+  redirectUrl.searchParams.append("code", authCode);
+  if (state) {
+    redirectUrl.searchParams.append("state", state as string);
+  }
+
+  res.redirect(redirectUrl.toString());
+};
+
+export const handleTokenRequest = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { code, client_id, client_secret, grant_type, redirect_uri

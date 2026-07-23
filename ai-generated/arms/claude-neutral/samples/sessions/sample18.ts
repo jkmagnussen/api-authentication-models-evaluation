@@ -1,113 +1,116 @@
 ```typescript
-import express, { Express, Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
+import crypto from 'crypto';
 
-export interface AuthUser {
-  id: string;
-  username: string;
-  email: string;
-  role: 'admin' | 'user' | 'moderator';
-  loginTime: Date;
+interface AuthenticatedRequest extends Request {
+  session: session.Session & { userId?: string; loginTime?: number };
 }
 
-export interface SessionData {
-  user?: AuthUser;
-  visitCount: number;
-  lastActivity: Date;
-  theme: 'light' | 'dark';
-  language: string;
-}
-
-declare global {
-  namespace Express {
-    interface Request {
-      session: session.Session & Partial<SessionData>;
-    }
-  }
-}
-
-export function configureSessionMiddleware(): express.RequestHandler {
-  return session({
-    secret: process.env.SESSION_SECRET || 'supersecret-dev-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24,
-      sameSite: 'lax',
-      domain: process.env.COOKIE_DOMAIN
-    },
-    name: 'auth_session_id'
-  });
-}
-
-export function initializeSessionData(req: Request, res: Response, next: NextFunction): void {
-  if (!req.session.visitCount) {
-    req.session.visitCount = 0;
-    req.session.theme = 'light';
-    req.session.language = 'en';
-  }
+export const configureSessionMiddleware = (app: express.Application): void => {
+  const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
   
-  req.session.visitCount++;
-  req.session.lastActivity = new Date();
-  
-  next();
-}
+  app.use(
+    session({
+      secret: sessionSecret,
+      name: 'auth_token',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: 30 * 60 * 1000,
+        domain: process.env.COOKIE_DOMAIN,
+        path: '/',
+      },
+      genid: () => crypto.randomUUID(),
+    })
+  );
+};
 
-export function createAuthenticationHandler(users: Map<string, { password: string; email: string; role: string }>) {
-  return async (req: Request, res: Response): Promise<void> => {
-    const { username, password } = req.body;
-    
-    if (!username || !password) {
-      res.status(400).json({ error: 'Username and password required' });
+export const handleUserLogin = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const userId = req.body?.userId;
+  
+  if (!userId || typeof userId !== 'string' || userId.length === 0) {
+    res.status(400).json({ error: 'Invalid user ID' });
+    return;
+  }
+
+  req.session.regenerate((err) => {
+    if (err) {
+      res.status(500).json({ error: 'Session regeneration failed' });
       return;
     }
-    
-    const userData = users.get(username);
-    
-    if (!userData || userData.password !== password) {
-      res.status(401).json({ error: 'Invalid credentials' });
-      return;
-    }
-    
-    const authUser: AuthUser = {
-      id: Math.random().toString(36).substring(7),
-      username,
-      email: userData.email,
-      role: userData.role as 'admin' | 'user' | 'moderator',
-      loginTime: new Date()
-    };
-    
-    req.session.user = authUser;
-    
-    res.json({
-      success: true,
-      message: 'Authentication successful',
-      user: authUser
+
+    req.session.userId = userId;
+    req.session.loginTime = Date.now();
+    req.session.save((saveErr) => {
+      if (saveErr) {
+        res.status(500).json({ error: 'Session save failed' });
+        return;
+      }
+      res.json({ message: 'Login successful', userId });
     });
-  };
-}
+  });
+};
 
-export function protectRoute(req: Request, res: Response, next: NextFunction): void {
-  if (!req.session.user) {
-    res.status(401).json({ error: 'Unauthorized - please login' });
-    return;
-  }
+export const handleUserLogout = (
+  req: AuthenticatedRequest,
+  res: Response
+): void => {
+  const sessionId = req.sessionID;
   
-  next();
-}
-
-export function requireAdminRole(req: Request, res: Response, next: NextFunction): void {
-  if (!req.session.user || req.session.user.role !== 'admin') {
-    res.status(403).json({ error: 'Forbidden - admin access required' });
-    return;
-  }
-  
-  next();
-}
-
-export function handleLogout(req: Request, res: Response): void {
   req.session.destroy((err) => {
     if (err) {
-      res.status(500).json({ error
+      res.status(500).json({ error: 'Logout failed' });
+      return;
+    }
+
+    res.clearCookie('auth_token', {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'strict',
+      path: '/',
+    });
+
+    res.json({ message: 'Logout successful', sessionId });
+  });
+};
+
+export const validateSessionMiddleware = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.session?.userId) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const loginTime = req.session.loginTime || 0;
+  const sessionDuration = Date.now() - loginTime;
+  const maxDuration = 30 * 60 * 1000;
+
+  if (sessionDuration > maxDuration) {
+    req.session.destroy((err) => {
+      if (err) {
+        res.status(500).json({ error: 'Session invalidation failed' });
+        return;
+      }
+      res.status(401).json({ error: 'Session expired' });
+    });
+    return;
+  }
+
+  next();
+};
+
+export const handleSessionRefresh = (
+  req: AuthenticatedRequest,
+  res: Response
+): void => {
+  if (!req.session

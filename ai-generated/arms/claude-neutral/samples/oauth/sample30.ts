@@ -1,108 +1,125 @@
 ```typescript
-import express, { Request, Response, NextFunction } from 'express';
-import crypto from 'crypto';
-import querystring from 'querystring';
+import express, { Router, Request, Response, NextFunction } from "express";
+import crypto from "crypto";
 
-interface AuthorizationRequest {
-  client_id: string;
-  redirect_uri: string;
-  response_type: string;
-  scope: string;
-  state: string;
-  code_challenge?: string;
-  code_challenge_method?: string;
+const router = Router();
+
+interface OAuthConfig {
+  clientId: string;
+  clientSecret: string;
+  redirectUris: Set<string>;
+  allowedScopes: Set<string>;
+  stateTimeout: number;
 }
 
-interface StoredAuthCode {
-  code: string;
-  client_id: string;
-  redirect_uri: string;
-  scope: string;
-  user_id: string;
-  expires_at: number;
-  code_challenge?: string;
-  code_challenge_method?: string;
-}
+const stateStore = new Map<string, { timestamp: number; clientId: string }>();
 
-interface ClientRegistry {
-  [key: string]: {
-    client_secret: string;
-    redirect_uris: string[];
-    allowed_scopes: string[];
-  };
-}
+export const validateOAuthConfiguration = (config: OAuthConfig): boolean => {
+  if (!config.clientId || !config.clientSecret) {
+    return false;
+  }
+  if (config.redirectUris.size === 0 || config.allowedScopes.size === 0) {
+    return false;
+  }
+  return true;
+};
 
-const authorizationCodes: Map<string, StoredAuthCode> = new Map();
-const tokenStorage: Map<string, {
-  access_token: string;
-  refresh_token: string;
-  expires_at: number;
-  scope: string;
-}> = new Map();
-
-const registeredClients: ClientRegistry = {
-  'sample-client-id': {
-    client_secret: 'sample-client-secret-123',
-    redirect_uris: ['http://localhost:3001/callback', 'https://example.com/callback'],
-    allowed_scopes: ['read', 'write', 'profile']
-  },
-  'mobile-app-client': {
-    client_secret: 'mobile-app-secret-456',
-    redirect_uris: ['myapp://oauth/callback'],
-    allowed_scopes: ['read', 'profile', 'email']
+export const sanitizeRedirectUri = (uri: string): string => {
+  try {
+    const parsed = new URL(uri);
+    if (!parsed.protocol.match(/^https?:$/)) {
+      throw new Error("Invalid protocol");
+    }
+    return parsed.toString();
+  } catch {
+    return "";
   }
 };
 
-function validateClientExists(clientId: string): boolean {
-  return clientId in registeredClients;
-}
+export const isValidRedirectUri = (
+  uri: string,
+  allowedUris: Set<string>
+): boolean => {
+  if (!uri) return false;
+  const sanitized = sanitizeRedirectUri(uri);
+  return allowedUris.has(sanitized);
+};
 
-function validateRedirectUri(clientId: string, redirectUri: string): boolean {
-  const client = registeredClients[clientId];
-  if (!client) return false;
-  return client.redirect_uris.includes(redirectUri);
-}
+export const parseRequestedScopes = (scopeParam: string): string[] => {
+  if (!scopeParam || typeof scopeParam !== "string") {
+    return [];
+  }
+  return scopeParam
+    .split(" ")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+};
 
-function validateScopesForClient(clientId: string, requestedScopes: string): boolean {
-  const client = registeredClients[clientId];
-  if (!client) return false;
-  const scopes = requestedScopes.split(' ');
-  return scopes.every(scope => client.allowed_scopes.includes(scope));
-}
+export const validateRequestedScopes = (
+  requested: string[],
+  allowed: Set<string>
+): string[] => {
+  return requested.filter((scope) => allowed.has(scope));
+};
 
-function generateAuthorizationCode(): string {
-  return crypto.randomBytes(32).toString('hex');
-}
+export const generateSecureState = (): string => {
+  return crypto.randomBytes(32).toString("hex");
+};
 
-function generateAccessToken(): string {
-  return 'bearer_' + crypto.randomBytes(32).toString('hex');
-}
-
-function generateRefreshToken(): string {
-  return 'refresh_' + crypto.randomBytes(32).toString('hex');
-}
-
-function storeAuthorizationCode(
-  code: string,
+export const storeAuthorizationState = (
+  state: string,
   clientId: string,
-  redirectUri: string,
-  scope: string,
-  userId: string,
-  codeChallenge?: string,
-  codeChallengeMethod?: string
-): void {
-  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-  authorizationCodes.set(code, {
-    code,
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    scope,
-    user_id: userId,
-    expires_at: expiresAt,
-    code_challenge: codeChallenge,
-    code_challenge_method: codeChallengeMethod
+  expirationMs: number
+): void => {
+  stateStore.set(state, {
+    timestamp: Date.now(),
+    clientId: clientId,
   });
-}
 
-function retrieveAndInvalidateAuthCode(code: string): StoredAuthCode | null {
-  const authCode = auth
+  setTimeout(() => {
+    stateStore.delete(state);
+  }, expirationMs);
+};
+
+export const verifyAuthorizationState = (
+  state: string,
+  clientId: string,
+  maxAgeMs: number
+): boolean => {
+  const entry = stateStore.get(state);
+  if (!entry) {
+    return false;
+  }
+
+  if (Date.now() - entry.timestamp > maxAgeMs) {
+    stateStore.delete(state);
+    return false;
+  }
+
+  if (entry.clientId !== clientId) {
+    stateStore.delete(state);
+    return false;
+  }
+
+  stateStore.delete(state);
+  return true;
+};
+
+export const createAuthorizationEndpoint = (config: OAuthConfig) => {
+  if (!validateOAuthConfiguration(config)) {
+    throw new Error("Invalid OAuth configuration");
+  }
+
+  const authRouter = Router();
+
+  authRouter.get(
+    "/authorize",
+    (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const { client_id, redirect_uri, scope, state, response_type } =
+          req.query;
+
+        // Validate response_type
+        if (response_type !== "code") {
+          return res.status(400).json({
+            error: "uns

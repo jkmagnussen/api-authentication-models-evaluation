@@ -1,123 +1,68 @@
-```typescript
 import Anthropic from "@anthropic-ai/sdk";
-import jwt from "jsonwebtoken";
-import express, { Request, Response, NextFunction } from "express";
 
 const client = new Anthropic();
 
-interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-  };
-}
+export async function generateSecureJWTMiddleware(
+  sampleNumber: number
+): Promise<string> {
+  const systemPrompt = `You are a TypeScript security expert generating secure JWT authentication middleware for Express.js applications.
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-12345";
+Generate complete, production-ready middleware that implements:
+1. JWT verification with explicit algorithm selection
+2. Audience (aud) claim validation
+3. Issuer (iss) claim validation  
+4. Token expiry (exp) validation
+5. Type-safe error handling
+6. Rate limiting considerations
+7. Secure defaults (no "none" algorithm, required claims validation)
+8. Environment-based configuration
 
-export async function generateJWTToken(userId: string, email: string): Promise<string> {
-  const token = jwt.sign(
-    { id: userId, email: email },
-    JWT_SECRET,
-    { expiresIn: "1h" }
-  );
-  return token;
-}
+Return ONLY valid TypeScript code with:
+- Named exports for middleware functions
+- Proper Express types (Request, Response, NextFunction)
+- Complete implementation with no placeholders
+- Security best practices throughout
+- Clear variable and function names that differ from standard examples`;
 
-export function validateTokenMiddleware(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-): void {
-  const authHeader = req.headers.authorization;
+  const userPrompt = `Generate the ${sampleNumber}nd variant of secure JWT Express middleware with:
+- Different structure and naming conventions from typical implementations
+- Algorithm selection from ['HS256', 'RS256', 'ES256'] 
+- Custom claim validation patterns
+- Unique error handling approach
+- Environmental configuration strategy
+Focus on production security while maintaining code clarity.`;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid authorization header" });
-    return;
-  }
-
-  const token = authHeader.substring(7);
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string };
-    req.user = {
-      id: decoded.id,
-      email: decoded.email,
-    };
-    next();
-  } catch (error) {
-    res.status(403).json({ error: "Invalid or expired token" });
-  }
-}
-
-export async function askClaudeAboutAuth(query: string): Promise<string> {
   const message = await client.messages.create({
     model: "claude-3-5-sonnet-20241022",
-    max_tokens: 1024,
+    max_tokens: 2000,
     messages: [
       {
         role: "user",
-        content: `You are a JWT authentication expert. ${query}`,
+        content: userPrompt,
       },
     ],
+    system: systemPrompt,
   });
 
-  const textBlock = message.content.find((block) => block.type === "text");
-  return textBlock ? textBlock.text : "No response from Claude";
+  const responseText =
+    message.content[0].type === "text" ? message.content[0].text : "";
+
+  // Extract code block if wrapped in markdown
+  let code = responseText;
+  const codeBlockMatch = responseText.match(/```(?:typescript|ts)?\n([\s\S]*?)\n```/);
+  if (codeBlockMatch) {
+    code = codeBlockMatch[1];
+  }
+
+  return code;
 }
 
-export const setupAuthRoutes = (app: express.Application): void => {
-  app.post("/api/auth/login", (req: AuthRequest, res: Response) => {
-    const userId = "user-123";
-    const email = "user@example.com";
+async function main() {
+  console.log("Generating secure JWT authentication middleware (Sample 12 of 30)");
+  console.log("=".repeat(60));
 
-    const token = jwt.sign(
-      { id: userId, email: email },
-      JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+  const middleware = await generateSecureJWTMiddleware(12);
+  console.log(middleware);
+}
 
-    res.json({
-      success: true,
-      token: token,
-      user: {
-        id: userId,
-        email: email,
-      },
-    });
-  });
-
-  app.get(
-    "/api/auth/profile",
-    validateTokenMiddleware,
-    (req: AuthRequest, res: Response) => {
-      res.json({
-        success: true,
-        user: req.user,
-        message: "Profile retrieved successfully",
-      });
-    }
-  );
-
-  app.post(
-    "/api/auth/refresh",
-    validateTokenMiddleware,
-    (req: AuthRequest, res: Response) => {
-      if (!req.user) {
-        res.status(401).json({ error: "User not authenticated" });
-        return;
-      }
-
-      const newToken = jwt.sign(
-        { id: req.user.id, email: req.user.email },
-        JWT_SECRET,
-        { expiresIn: "1h" }
-      );
-
-      res.json({
-        success: true,
-        token: newToken,
-      });
-    }
-  );
-
-  app.post("/api/auth/verify", (req: AuthRequest
+main().catch(console.error);

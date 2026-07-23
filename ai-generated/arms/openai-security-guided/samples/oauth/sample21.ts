@@ -1,59 +1,106 @@
-import express, { Request, Response } from 'express';
-import { randomBytes } from 'crypto';
-import { URL } from 'url';
+```typescript
+import Anthropic from "@anthropic-ai/sdk";
+import express, { Request, Response } from "express";
+import crypto from "crypto";
 
 const app = express();
+app.use(express.json());
 
-interface OAuthRequest extends Request {
-  query: {
-    response_type?: string;
-    client_id?: string;
-    redirect_uri?: string;
-    scope?: string;
-    state?: string;
-  };
+interface OAuthState {
+  state: string;
+  clientId: string;
+  redirectUri: string;
+  scopes: string[];
+  expiresAt: number;
+  codeChallenge?: string;
 }
 
-const validClients = new Map<string, string>([['client123', 'http://localhost:3000/callback']]);
-const validScopes = new Set(['read', 'write', 'delete']);
+interface ValidatedAuthRequest {
+  clientId: string;
+  redirectUri: string;
+  requestedScopes: string[];
+  state: string;
+  codeChallenge?: string;
+}
 
-export const authorize = (req: OAuthRequest, res: Response): void => {
-  const { response_type, client_id, redirect_uri, scope, state } = req.query;
+const ALLOWED_SCOPES = ["read:user", "write:posts", "delete:account"];
+const ALLOWED_CLIENTS = new Map([
+  ["client-123", "https://app.example.com"],
+  ["client-456", "https://trusted-service.example.com"],
+]);
 
-  if (response_type !== 'code' || !client_id || !redirect_uri || !scope) {
-    return res.status(400).send('Invalid request parameters.');
-  }
+const STATE_STORE = new Map<string, OAuthState>();
+const STATE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 
-  const registeredRedirectURI = validClients.get(client_id);
-  if (!registeredRedirectURI || registeredRedirectURI !== redirect_uri) {
-    return res.status(400).send('Invalid client or redirect URI.');
-  }
+export function generateSecureState(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+export function validateRedirectUri(
+  clientId: string,
+  redirectUri: string
+): boolean {
+  const registeredUri = ALLOWED_CLIENTS.get(clientId);
+  if (!registeredUri) return false;
 
   try {
-    const redirectURL = new URL(redirect_uri);
-    if (redirectURL.protocol !== 'http:' && redirectURL.protocol !== 'https:') {
-      throw new Error('Invalid protocol');
-    }
+    const urlObj = new URL(redirectUri);
+    const registeredObj = new URL(registeredUri);
+
+    return (
+      urlObj.protocol === registeredObj.protocol &&
+      urlObj.hostname === registeredObj.hostname &&
+      urlObj.port === registeredObj.port &&
+      urlObj.pathname === registeredObj.pathname
+    );
   } catch {
-    return res.status(400).send('Invalid redirect URI.');
+    return false;
+  }
+}
+
+export function validateRequestedScopes(scopes: string[]): boolean {
+  return (
+    scopes.length > 0 &&
+    scopes.every((scope) => ALLOWED_SCOPES.includes(scope))
+  );
+}
+
+export function validateCodeChallenge(challenge: string): boolean {
+  // PKCE code_challenge must be 43-128 characters of unreserved characters
+  return /^[A-Za-z0-9._~-]{43,128}$/.test(challenge);
+}
+
+export async function validateAuthorizationRequest(
+  req: Request
+): Promise<ValidatedAuthRequest | { error: string }> {
+  const { client_id, redirect_uri, scope, state, code_challenge } = req.query;
+
+  if (!client_id || typeof client_id !== "string") {
+    return { error: "missing_client_id" };
   }
 
-  const requestedScopes = scope.split(' ');
-  for (const requestedScope of requestedScopes) {
-    if (!validScopes.has(requestedScope)) {
-      return res.status(400).send('Invalid or unauthorized scopes.');
-    }
+  if (!redirect_uri || typeof redirect_uri !== "string") {
+    return { error: "missing_redirect_uri" };
   }
 
-  const authorizationCode = randomBytes(16).toString('hex');
-  const redirectWithParams = new URL(redirect_uri);
-  redirectWithParams.searchParams.append('code', authorizationCode);
-  if (state) {
-    redirectWithParams.searchParams.append('state', state);
+  if (!validateRedirectUri(client_id, redirect_uri)) {
+    return { error: "invalid_redirect_uri" };
   }
 
-  res.redirect(redirectWithParams.toString());
-};
+  if (!scope || typeof scope !== "string") {
+    return { error: "missing_scope" };
+  }
 
-app.get('/authorize', authorize);
-export default app;
+  const requestedScopes = scope.split(" ");
+  if (!validateRequestedScopes(requestedScopes)) {
+    return { error: "invalid_scope" };
+  }
+
+  if (!state || typeof state !== "string" || state.length < 20) {
+    return { error: "invalid_state" };
+  }
+
+  const codeChallenge =
+    typeof code_challenge === "string" ? code_challenge : undefined;
+  if (codeChallenge && !validateCodeChallenge(codeChallenge)) {
+    return { error:

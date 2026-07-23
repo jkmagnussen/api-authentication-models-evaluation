@@ -1,35 +1,98 @@
-import express, { Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+```typescript
+import express, { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 
-const authorizationRouter = express.Router();
+const app = express();
 
-const clients = new Map<string, { redirectUri: string, clientSecret: string }>();
-clients.set('client123', { redirectUri: 'http://localhost:3000/callback', clientSecret: 'secret123' });
+interface ClientConfig {
+  clientId: string;
+  redirectUris: string[];
+  allowedScopes: string[];
+}
 
-const authorizationCodes = new Map<string, { clientId: string, redirectUri: string, userId: string }>();
+interface AuthorizationRequest {
+  clientId: string;
+  redirectUri: string;
+  scope: string[];
+  state: string;
+  responseType: string;
+}
 
-authorizationRouter.get('/authorize', (req: Request, res: Response) => {
-  const { response_type, client_id, redirect_uri, state } = req.query;
+const registeredClients: Map<string, ClientConfig> = new Map([
+  ['client_123', {
+    clientId: 'client_123',
+    redirectUris: ['https://app.example.com/callback', 'https://localhost:3001/callback'],
+    allowedScopes: ['profile', 'email', 'openid']
+  }]
+]);
 
-  if (response_type !== 'code' || typeof client_id !== 'string' || typeof redirect_uri !== 'string') {
-    return res.status(400).json({ error: 'invalid_request' });
+const validateUrl = (urlString: string): boolean => {
+  try {
+    const url = new URL(urlString);
+    return url.protocol === 'https:' || (url.hostname === 'localhost' && url.protocol === 'http:');
+  } catch {
+    return false;
   }
+};
 
-  const client = clients.get(client_id);
-  if (!client || client.redirectUri !== redirect_uri) {
-    return res.status(400).json({ error: 'unauthorized_client' });
+const validateRedirectUri = (clientId: string, redirectUri: string): boolean => {
+  const client = registeredClients.get(clientId);
+  if (!client) return false;
+  
+  if (!validateUrl(redirectUri)) return false;
+  
+  return client.redirectUris.includes(redirectUri);
+};
+
+const validateRequestedScopes = (clientId: string, requestedScopes: string[]): boolean => {
+  const client = registeredClients.get(clientId);
+  if (!client) return false;
+  
+  return requestedScopes.length > 0 && 
+         requestedScopes.every(scope => client.allowedScopes.includes(scope));
+};
+
+const parseAuthorizationRequest = (query: any): AuthorizationRequest | null => {
+  const { client_id, redirect_uri, scope, state, response_type } = query;
+  
+  if (!client_id || typeof client_id !== 'string') return null;
+  if (!redirect_uri || typeof redirect_uri !== 'string') return null;
+  if (!scope || typeof scope !== 'string') return null;
+  if (!state || typeof state !== 'string') return null;
+  if (response_type !== 'code') return null;
+  
+  const scopes = scope.split(' ').filter((s: string) => s.length > 0);
+  if (scopes.length === 0) return null;
+  
+  if (state.length < 16 || state.length > 256) return null;
+  
+  return {
+    clientId: client_id,
+    redirectUri: redirect_uri,
+    scope: scopes,
+    state: state,
+    responseType: response_type
+  };
+};
+
+const generateAuthorizationCode = (): string => {
+  return crypto.randomBytes(32).toString('hex');
+};
+
+const authorizationCache = new Map<string, { request: AuthorizationRequest; expiresAt: number }>();
+
+export const validateAuthorizationRequest = (req: Request, res: Response, next: NextFunction): void => {
+  const authReq = parseAuthorizationRequest(req.query);
+  
+  if (!authReq) {
+    res.status(400).json({
+      error: 'invalid_request',
+      error_description: 'Missing or invalid required parameters'
+    });
+    return;
   }
-
-  const authorizationCode = uuidv4();
-  authorizationCodes.set(authorizationCode, { clientId: client_id, redirectUri: redirect_uri, userId: 'user123' });
-
-  const redirectUrl = new URL(redirect_uri);
-  redirectUrl.searchParams.append('code', authorizationCode);
-  if (state) {
-    redirectUrl.searchParams.append('state', state as string);
-  }
-
-  res.redirect(redirectUrl.toString());
-});
-
-export { authorizationRouter };
+  
+  if (!registeredClients.has(authReq.clientId)) {
+    res.status(401).json({
+      error: 'invalid_client',
+      error_description: 'Client authentication failed'

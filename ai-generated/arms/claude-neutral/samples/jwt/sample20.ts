@@ -1,133 +1,130 @@
 ```typescript
-import { Router, Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-interface TokenPayload {
-  userId: string;
-  email: string;
-  iat?: number;
-  exp?: number;
+export interface JwtPayload {
+  sub: string;
+  aud: string;
+  iss: string;
+  iat: number;
+  exp: number;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      authenticatedUser?: TokenPayload;
-    }
-  }
+export interface JwtConfig {
+  audience: string;
+  issuer: string;
+  algorithms: string[];
+  publicKey: string;
+  clockTolerance?: number;
 }
 
-const SECRET_KEY = process.env.JWT_SECRET || "your-secret-key-change-me";
+export interface AuthRequest extends Request {
+  user?: JwtPayload;
+}
 
-export const validateToken = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid authorization header" });
-    return;
-  }
-
-  const token = authHeader.substring(7);
-
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY) as TokenPayload;
-    req.authenticatedUser = decoded;
-    next();
-  } catch (error) {
-    res.status(403).json({
-      error: "Invalid or expired token",
-      details: error instanceof Error ? error.message : "Unknown error",
-    });
-  }
+const validateTokenStructure = (token: string): boolean => {
+  if (typeof token !== "string") return false;
+  const parts = token.split(".");
+  return parts.length === 3;
 };
 
-export const issueAccessToken = (payload: TokenPayload): string => {
-  return jwt.sign(
-    {
-      userId: payload.userId,
-      email: payload.email,
-    },
-    SECRET_KEY,
-    { expiresIn: "1h" }
+const extractBearerToken = (authHeader: string): string | null => {
+  if (!authHeader) return null;
+  const match = authHeader.match(/^Bearer\s+(.+)$/);
+  return match ? match[1] : null;
+};
+
+const verifyAudience = (payload: any, expected: string): boolean => {
+  if (!payload.aud) return false;
+  if (Array.isArray(payload.aud)) {
+    return payload.aud.includes(expected);
+  }
+  return payload.aud === expected;
+};
+
+const verifyIssuer = (payload: any, expected: string): boolean => {
+  return payload.iss === expected;
+};
+
+const verifyAlgorithm = (
+  decoded: jwt.JwtPayload,
+  allowed: string[]
+): boolean => {
+  return allowed.includes(decoded.alg || "");
+};
+
+export const createJwtAuthGuard = (config: JwtConfig) => {
+  const {
+    audience,
+    issuer,
+    algorithms,
+    publicKey,
+    clockTolerance = 0,
+  } = config;
+
+  if (!audience || audience.length === 0) {
+    throw new Error("Audience configuration is required");
+  }
+
+  if (!issuer || issuer.length === 0) {
+    throw new Error("Issuer configuration is required");
+  }
+
+  if (!algorithms || algorithms.length === 0) {
+    throw new Error("At least one algorithm must be specified");
+  }
+
+  if (!publicKey || publicKey.length === 0) {
+    throw new Error("Public key is required for JWT verification");
+  }
+
+  const allowedAlgorithms: jwt.Algorithm[] = algorithms.filter(
+    (alg): alg is jwt.Algorithm =>
+      [
+        "HS256",
+        "HS384",
+        "HS512",
+        "RS256",
+        "RS384",
+        "RS512",
+        "ES256",
+        "ES384",
+        "ES512",
+        "PS256",
+        "PS384",
+        "PS512",
+      ].includes(alg)
   );
-};
 
-export const refreshTokenHandler = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const { refreshToken } = req.body;
+  return (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ): void => {
+    try {
+      const authHeader = req.headers.authorization;
 
-  if (!refreshToken) {
-    res.status(400).json({ error: "Refresh token is required" });
-    return;
-  }
+      if (!authHeader) {
+        res.status(401).json({
+          error: "Unauthorized",
+          message: "Missing authorization header",
+        });
+        return;
+      }
 
-  try {
-    const decoded = jwt.verify(refreshToken, SECRET_KEY) as TokenPayload;
-    const newToken = issueAccessToken(decoded);
-    res.json({ accessToken: newToken });
-  } catch (error) {
-    res.status(401).json({
-      error: "Invalid refresh token",
-      details: error instanceof Error ? error.message : "Unknown error",
-    });
-  }
-};
+      const token = extractBearerToken(authHeader);
 
-export const protectedRoute = (
-  req: Request,
-  res: Response,
-  _next: NextFunction
-): void => {
-  if (!req.authenticatedUser) {
-    res.status(401).json({ error: "User not authenticated" });
-    return;
-  }
+      if (!token) {
+        res.status(401).json({
+          error: "Unauthorized",
+          message: "Invalid authorization header format",
+        });
+        return;
+      }
 
-  res.json({
-    message: "Access granted to protected resource",
-    user: req.authenticatedUser,
-  });
-};
-
-export const loginHandler = (req: Request, res: Response): void => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    res.status(400).json({ error: "Email and password are required" });
-    return;
-  }
-
-  // Simulated user validation
-  if (password === "demo123") {
-    const token = issueAccessToken({
-      userId: "user_123",
-      email: email,
-    });
-
-    const refreshToken = jwt.sign(
-      {
-        userId: "user_123",
-        email: email,
-      },
-      SECRET_KEY,
-      { expiresIn: "7d" }
-    );
-
-    res.json({
-      accessToken: token,
-      refreshToken: refreshToken,
-      user: { userId: "user_123", email: email },
-    });
-  } else {
-    res.status(401).json({ error: "Invalid credentials" });
-  }
-};
-
-export const setupAuthRoutes =
+      if (!validateTokenStructure(token)) {
+        res.status(401).json({
+          error: "Unauthorized",
+          message: "Invalid token structure",
+        });
+        return;

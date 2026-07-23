@@ -1,15 +1,15 @@
 {
   "model": "jwt",
   "sample": "sample3",
-  "characters": 1261,
-  "lines": 43,
-  "functions": 4,
+  "characters": 714,
+  "lines": 26,
+  "functions": 2,
   "classes": 0,
-  "cyclomaticComplexity": 1,
+  "cyclomaticComplexity": 2,
   "halstead": {
     "operators": {
-      "distinct": 7,
-      "total": 45,
+      "distinct": 8,
+      "total": 24,
       "identifiers": [
         "()",
         "{}",
@@ -17,12 +17,13 @@
         ".",
         "=",
         "void (prefix)",
-        "const"
+        "const",
+        "||"
       ]
     },
     "operands": {
-      "distinct": 26,
-      "total": 54,
+      "distinct": 18,
+      "total": 29,
       "identifiers": [
         "\"use strict\"",
         "exports",
@@ -32,33 +33,25 @@
         true,
         "Object",
         "defineProperty",
-        "app",
-        "authenticate",
-        "verifyToken",
+        "jwtMiddleware",
+        "authenticateJWT",
         0,
-        "express_1",
-        "\"express\"",
-        "require",
         "jsonwebtoken_1",
         "\"jsonwebtoken\"",
-        "SECRET_KEY",
-        "\"your_secret_key\"",
-        "default",
-        "json",
-        "use",
-        "\"/login\"",
-        "post",
-        "\"/protected\"",
-        "get"
+        "require",
+        "JWT_SECRET",
+        "process",
+        "env",
+        "\"your_secret_key\""
       ]
     },
-    "length": 99,
-    "vocabulary": 33,
-    "difficulty": 7.26923076923077,
-    "volume": 499.39501781648687,
-    "effort": 3630.217629512155,
-    "bugs": 0.16646500593882896,
-    "time": 201.67875719511972
+    "length": 53,
+    "vocabulary": 26,
+    "difficulty": 6.444444444444445,
+    "volume": 249.1233050614779,
+    "effort": 1605.4612992850798,
+    "bugs": 0.08304110168715931,
+    "time": 89.19229440472665
   },
-  "maintainabilityIndex": 99.0956829976898
+  "maintainabilityIndex": 110.00194887973966
 }

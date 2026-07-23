@@ -1,104 +1,101 @@
-import express, { Request, Response, NextFunction, Router } from "express";
-import jwt from "jsonwebtoken";
+```typescript
+import { Router, Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 
-interface AuthenticatedRequest extends Request {
-  userId?: string;
-  token?: string;
+interface JWTPayload {
+  sub: string;
+  aud: string;
+  iss: string;
+  iat: number;
+  exp: number;
+  [key: string]: unknown;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key-change-in-production";
+interface TokenConfig {
+  secret: string;
+  allowedAudiences: string[];
+  trustedIssuers: string[];
+  requiredAlgorithm: string;
+  maxExpirySeconds: number;
+}
 
-export const createAuthToken = (userId: string): string => {
-  const payload = { userId, iat: Math.floor(Date.now() / 1000) };
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "24h" });
+const defaultTokenConfig: TokenConfig = {
+  secret: process.env.JWT_SECRET || '',
+  allowedAudiences: (process.env.JWT_AUDIENCES || '').split(',').filter(Boolean),
+  trustedIssuers: (process.env.JWT_ISSUERS || '').split(',').filter(Boolean),
+  requiredAlgorithm: 'HS256',
+  maxExpirySeconds: 3600,
 };
 
-export const verifyAuthToken = (token: string): { userId: string } | null => {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    return decoded;
-  } catch {
-    return null;
+interface AuthenticatedRequest extends Request {
+  tokenPayload?: JWTPayload;
+  userId?: string;
+}
+
+export function validateTokenConfig(config: TokenConfig): void {
+  if (!config.secret || config.secret.length < 32) {
+    throw new Error('JWT secret must be at least 32 characters');
   }
-};
-
-export const extractTokenFromHeader = (authHeader?: string): string | null => {
-  if (!authHeader) return null;
-  const parts = authHeader.split(" ");
-  if (parts.length === 2 && parts[0].toLowerCase() === "bearer") {
-    return parts[1];
+  if (config.allowedAudiences.length === 0) {
+    throw new Error('At least one allowed audience must be configured');
   }
-  return null;
-};
-
-export const guardWithToken = (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.get("Authorization");
-  const token = extractTokenFromHeader(authHeader);
-
-  if (!token) {
-    res.status(401).json({ error: "Missing authentication token" });
-    return;
+  if (config.trustedIssuers.length === 0) {
+    throw new Error('At least one trusted issuer must be configured');
   }
-
-  const decoded = verifyAuthToken(token);
-  if (!decoded) {
-    res.status(403).json({ error: "Invalid or expired token" });
-    return;
+  if (!['HS256', 'HS512', 'RS256'].includes(config.requiredAlgorithm)) {
+    throw new Error('Algorithm must be HS256, HS512, or RS256');
   }
+}
 
-  req.userId = decoded.userId;
-  req.token = token;
-  next();
-};
+export function createAuthMiddleware(config: TokenConfig = defaultTokenConfig) {
+  validateTokenConfig(config);
 
-export const setupAuthRoutes = (): Router => {
-  const router = express.Router();
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    const authHeader = req.headers.authorization;
 
-  router.post("/authenticate", (req: Request, res: Response): void => {
-    const userId = req.body.userId || `user-${Date.now()}`;
-    const token = createAuthToken(userId);
-    res.json({ token, userId });
-  });
-
-  router.get(
-    "/me",
-    guardWithToken,
-    (req: AuthenticatedRequest, res: Response): void => {
-      res.json({ userId: req.userId, token: req.token });
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Missing or invalid authorization header' });
+      return;
     }
-  );
 
-  router.post(
-    "/refresh",
-    guardWithToken,
-    (req: AuthenticatedRequest, res: Response): void => {
-      const newToken = createAuthToken(req.userId!);
-      res.json({ token: newToken });
+    const token = authHeader.slice(7);
+
+    try {
+      const decoded = jwt.verify(token, config.secret, {
+        algorithms: [config.requiredAlgorithm] as jwt.VerifyOptions['algorithms'],
+        audience: config.allowedAudiences,
+        issuer: config.trustedIssuers,
+      }) as JWTPayload;
+
+      const now = Math.floor(Date.now() / 1000);
+      const tokenAge = now - decoded.iat;
+
+      if (tokenAge > config.maxExpirySeconds) {
+        res.status(401).json({ error: 'Token has expired beyond maximum allowed age' });
+        return;
+      }
+
+      if (!decoded.sub) {
+        res.status(401).json({ error: 'Token missing subject claim' });
+        return;
+      }
+
+      req.tokenPayload = decoded;
+      req.userId = decoded.sub;
+      next();
+    } catch (error) {
+      const errorMessage = error instanceof jwt.TokenExpiredError 
+        ? 'Token has expired'
+        : error instanceof jwt.JsonWebTokenError
+        ? 'Invalid token signature'
+        : 'Token validation failed';
+
+      res.status(401).json({ error: errorMessage });
     }
-  );
+  };
+}
 
-  return router;
-};
-
-export const createAuthApp = (): express.Application => {
-  const app = express();
-  app.use(express.json());
-  app.use("/api/auth", setupAuthRoutes());
-
-  app.get("/health", (req: Request, res: Response): void => {
-    res.json({ status: "ok" });
-  });
-
-  return app;
-};
-
-const PORT = process.env.PORT || 3000;
-const app = createAuthApp();
-
-app.listen(PORT, () => {
-  console.log(`Auth server listening on port ${PORT}`);
-});
+export function issueToken(
+  userId: string,
+  audience: string,
+  issuer: string

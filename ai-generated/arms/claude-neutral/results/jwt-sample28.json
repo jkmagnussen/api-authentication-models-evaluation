@@ -1,58 +1,18 @@
 {
   "model": "jwt",
   "sample": "sample28",
-  "characters": 2606,
-  "lines": 106,
-  "functions": 8,
+  "characters": 2996,
+  "lines": 95,
+  "functions": 0,
   "classes": 0,
-  "cyclomaticComplexity": 1,
+  "cyclomaticComplexity": null,
   "halstead": {
-    "operators": {
-      "distinct": 7,
-      "total": 37,
-      "identifiers": [
-        "()",
-        "{}",
-        ":",
-        ".",
-        "=",
-        "void (prefix)",
-        "const"
-      ]
-    },
-    "operands": {
-      "distinct": 20,
-      "total": 41,
-      "identifiers": [
-        "\"use strict\"",
-        "exports",
-        "\"__esModule\"",
-        "<anonymous>",
-        "value",
-        true,
-        "Object",
-        "defineProperty",
-        "decodeTokenWithoutVerification",
-        "createAuthRouter",
-        "issueAuthToken",
-        "validateJWT",
-        0,
-        "express_1",
-        "\"express\"",
-        "require",
-        "jsonwebtoken_1",
-        "\"jsonwebtoken\"",
-        "SECRET_KEY",
-        "\"your-secret-key-change-this\""
-      ]
-    },
-    "length": 78,
-    "vocabulary": 27,
-    "difficulty": 7.174999999999999,
-    "volume": 370.8812251687506,
-    "effort": 2661.072790585785,
-    "bugs": 0.12362707505625019,
-    "time": 147.8373772547658
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
   },
-  "maintainabilityIndex": 100.15780932395421
+  "maintainabilityIndex": null,
+  "analysisError": "Line 101: Unexpected token ILLEGAL"
 }

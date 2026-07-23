@@ -1,115 +1,110 @@
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response, NextFunction, Express } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import express, { Router, Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+
+interface JWTPayload {
+  sub: string;
+  aud: string;
+  iss: string;
+  exp: number;
+  iat: number;
+}
+
+interface AuthConfig {
+  expectedAudience: string;
+  expectedIssuer: string;
+  allowedAlgorithms: string[];
+  maxTokenAgeDays: number;
+}
 
 const client = new Anthropic();
 
-// Types for JWT payload
-interface TokenPayload extends JwtPayload {
-  userId: string;
-  email: string;
-  role: string;
-}
+export function createTokenValidator(config: AuthConfig) {
+  return (token: string, secret: string): JWTPayload => {
+    const payload = jwt.verify(token, secret, {
+      algorithms: config.allowedAlgorithms as jwt.Algorithm[],
+      audience: config.expectedAudience,
+      issuer: config.expectedIssuer,
+    }) as JWTPayload;
 
-// Extend Express Request to include decoded token
-declare global {
-  namespace Express {
-    interface Request {
-      decodedToken?: TokenPayload;
+    const tokenAgeSeconds = Math.floor(Date.now() / 1000) - payload.iat;
+    const maxAgeSeconds = config.maxTokenAgeDays * 24 * 60 * 60;
+
+    if (tokenAgeSeconds > maxAgeSeconds) {
+      throw new Error("Token exceeds maximum allowed age");
     }
-  }
-}
 
-const SECRET_KEY = process.env.JWT_SECRET || "your-secret-key-change-in-prod";
-
-export function validateJWTMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
-  const authorizationHeader = req.headers.authorization;
-
-  if (!authorizationHeader) {
-    res.status(401).json({ error: "No authorization header provided" });
-    return;
-  }
-
-  const tokenParts = authorizationHeader.split(" ");
-  if (tokenParts.length !== 2 || tokenParts[0] !== "Bearer") {
-    res.status(401).json({ error: "Invalid authorization header format" });
-    return;
-  }
-
-  const token = tokenParts[1];
-
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY) as TokenPayload;
-    req.decodedToken = decoded;
-    next();
-  } catch (error) {
-    res.status(401).json({ error: "Invalid or expired token" });
-  }
-}
-
-export function generateAuthToken(payload: {
-  userId: string;
-  email: string;
-  role: string;
-}): string {
-  const tokenPayload: TokenPayload = {
-    userId: payload.userId,
-    email: payload.email,
-    role: payload.role,
-    iat: Math.floor(Date.now() / 1000),
+    return payload;
   };
-
-  return jwt.sign(tokenPayload, SECRET_KEY, { expiresIn: "24h" });
 }
 
-export function requireAdminRole(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
-  if (!req.decodedToken) {
-    res.status(401).json({ error: "No token found" });
-    return;
-  }
+export function buildAuthenticationMiddleware(
+  config: AuthConfig,
+  secret: string
+) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization;
 
-  if (req.decodedToken.role !== "admin") {
-    res.status(403).json({ error: "Admin role required" });
-    return;
-  }
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        error: "Missing or invalid authorization header",
+      });
+    }
 
-  next();
+    const token = authHeader.slice(7);
+
+    try {
+      const validator = createTokenValidator(config);
+      const payload = validator(token, secret);
+      (req as any).user = payload;
+      next();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Token validation failed";
+      return res.status(403).json({ error: message });
+    }
+  };
 }
 
-export function requireUserRole(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
-  if (!req.decodedToken) {
-    res.status(401).json({ error: "No token found" });
-    return;
-  }
+export function generateSecureToken(
+  payload: Omit<JWTPayload, "exp" | "iat">,
+  secret: string,
+  expiryHours: number
+): string {
+  const now = Math.floor(Date.now() / 1000);
+  const expirySeconds = expiryHours * 60 * 60;
 
-  if (req.decodedToken.role !== "user" && req.decodedToken.role !== "admin") {
-    res.status(403).json({ error: "User role required" });
-    return;
-  }
-
-  next();
+  return jwt.sign(
+    {
+      ...payload,
+      iat: now,
+      exp: now + expirySeconds,
+    },
+    secret,
+    { algorithm: "HS256" }
+  );
 }
 
-async function generateSecurityAnalysis(
-  tokenPayload: TokenPayload
-): Promise<string> {
+export async function generateSecurityInsights(config: AuthConfig) {
   const message = await client.messages.create({
     model: "claude-3-5-sonnet-20241022",
     max_tokens: 1024,
     messages: [
       {
         role: "user",
-        content: `Analyze this JWT token payload for security implications and provide recommendations. Token data: userId=${tokenPayload.userId}, role=${tokenPayload.role}, issued=${new Date(tokenPayload.iat! * 1000).toISOString()}. What are
+        content: `Provide security insights for JWT configuration: audience=${config.expectedAudience}, issuer=${config.expectedIssuer}, algorithms=${config.allowedAlgorithms.join(",")}, maxAge=${config.maxTokenAgeDays}d. Keep response concise.`,
+      },
+    ],
+  });
+
+  if (message.content[0].type === "text") {
+    return message.content[0].text;
+  }
+  return "Security configuration appears valid";
+}
+
+export function createAuthRouter(): Router {
+  const router = Router();
+
+  const jwtConfig: AuthConfig = {

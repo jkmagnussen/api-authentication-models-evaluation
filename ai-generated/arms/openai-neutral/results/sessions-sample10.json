@@ -1,70 +1,18 @@
 {
   "model": "sessions",
   "sample": "sample10",
-  "characters": 1136,
-  "lines": 48,
-  "functions": 5,
+  "characters": 3029,
+  "lines": 131,
+  "functions": 0,
   "classes": 0,
-  "cyclomaticComplexity": 1,
+  "cyclomaticComplexity": null,
   "halstead": {
-    "operators": {
-      "distinct": 7,
-      "total": 39,
-      "identifiers": [
-        "()",
-        "{}",
-        ":",
-        ".",
-        "=",
-        "void (prefix)",
-        "const"
-      ]
-    },
-    "operands": {
-      "distinct": 32,
-      "total": 54,
-      "identifiers": [
-        "\"use strict\"",
-        "exports",
-        "\"__esModule\"",
-        "<anonymous>",
-        "value",
-        true,
-        "Object",
-        "defineProperty",
-        "app",
-        0,
-        "express_1",
-        "\"express\"",
-        "require",
-        "express_session_1",
-        "\"express-session\"",
-        "default",
-        "secret",
-        "\"yourSecretKey\"",
-        "resave",
-        false,
-        "saveUninitialized",
-        "cookie",
-        "secure",
-        "maxAge",
-        60000,
-        "use",
-        "\"/login\"",
-        "get",
-        "\"/check-session\"",
-        "\"/logout\"",
-        3000,
-        "listen"
-      ]
-    },
-    "length": 93,
-    "vocabulary": 39,
-    "difficulty": 5.90625,
-    "volume": 491.54240635418915,
-    "effort": 2903.1723375294296,
-    "bugs": 0.16384746878472972,
-    "time": 161.28735208496832
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
   },
-  "maintainabilityIndex": 96.03051563716481
+  "maintainabilityIndex": null,
+  "analysisError": "Line 104: Unexpected token :"
 }

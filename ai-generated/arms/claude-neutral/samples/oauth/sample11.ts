@@ -1,116 +1,98 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response } from "express";
-import crypto from "crypto";
+import express, { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 
 const app = express();
-app.use(express.json());
-
-interface AuthorizationRequest {
-  client_id: string;
-  redirect_uri: string;
-  response_type: string;
-  scope: string;
-  state: string;
-}
 
 interface ClientConfig {
-  client_id: string;
-  client_secret: string;
-  redirect_uris: string[];
+  clientId: string;
+  redirectUris: string[];
+  allowedScopes: string[];
+}
+
+interface AuthorizationRequest {
+  clientId: string;
+  redirectUri: string;
+  scope: string[];
+  state: string;
+  responseType: string;
 }
 
 const registeredClients: Map<string, ClientConfig> = new Map([
-  [
-    "demo-app-001",
-    {
-      client_id: "demo-app-001",
-      client_secret: "secret-key-demo-app",
-      redirect_uris: ["http://localhost:3001/oauth/callback"],
-    },
-  ],
+  ['client_123', {
+    clientId: 'client_123',
+    redirectUris: ['https://app.example.com/callback', 'https://localhost:3001/callback'],
+    allowedScopes: ['profile', 'email', 'openid']
+  }]
 ]);
 
-const authorizationCodes: Map<
-  string,
-  { client_id: string; expires_at: number; scope: string; user_id: string }
-> = new Map();
+const validateUrl = (urlString: string): boolean => {
+  try {
+    const url = new URL(urlString);
+    return url.protocol === 'https:' || (url.hostname === 'localhost' && url.protocol === 'http:');
+  } catch {
+    return false;
+  }
+};
 
-function generateAuthCode(): string {
-  return crypto.randomBytes(32).toString("hex");
-}
+const validateRedirectUri = (clientId: string, redirectUri: string): boolean => {
+  const client = registeredClients.get(clientId);
+  if (!client) return false;
+  
+  if (!validateUrl(redirectUri)) return false;
+  
+  return client.redirectUris.includes(redirectUri);
+};
 
-function validateClientRedirectUri(
-  client_id: string,
-  redirect_uri: string
-): boolean {
-  const client = registeredClients.get(client_id);
-  return client ? client.redirect_uris.includes(redirect_uri) : false;
-}
+const validateRequestedScopes = (clientId: string, requestedScopes: string[]): boolean => {
+  const client = registeredClients.get(clientId);
+  if (!client) return false;
+  
+  return requestedScopes.length > 0 && 
+         requestedScopes.every(scope => client.allowedScopes.includes(scope));
+};
 
-export async function handleAuthorizationRequest(
-  req: Request,
-  res: Response
-): Promise<void> {
-  const {
-    client_id,
-    redirect_uri,
-    response_type,
-    scope,
-    state,
-  }: AuthorizationRequest = req.query as unknown as AuthorizationRequest;
+const parseAuthorizationRequest = (query: any): AuthorizationRequest | null => {
+  const { client_id, redirect_uri, scope, state, response_type } = query;
+  
+  if (!client_id || typeof client_id !== 'string') return null;
+  if (!redirect_uri || typeof redirect_uri !== 'string') return null;
+  if (!scope || typeof scope !== 'string') return null;
+  if (!state || typeof state !== 'string') return null;
+  if (response_type !== 'code') return null;
+  
+  const scopes = scope.split(' ').filter((s: string) => s.length > 0);
+  if (scopes.length === 0) return null;
+  
+  if (state.length < 16 || state.length > 256) return null;
+  
+  return {
+    clientId: client_id,
+    redirectUri: redirect_uri,
+    scope: scopes,
+    state: state,
+    responseType: response_type
+  };
+};
 
-  // Validate required parameters
-  if (!client_id || !redirect_uri || !response_type) {
-    res.status(400).json({ error: "Missing required parameters" });
+const generateAuthorizationCode = (): string => {
+  return crypto.randomBytes(32).toString('hex');
+};
+
+const authorizationCache = new Map<string, { request: AuthorizationRequest; expiresAt: number }>();
+
+export const validateAuthorizationRequest = (req: Request, res: Response, next: NextFunction): void => {
+  const authReq = parseAuthorizationRequest(req.query);
+  
+  if (!authReq) {
+    res.status(400).json({
+      error: 'invalid_request',
+      error_description: 'Missing or invalid required parameters'
+    });
     return;
   }
-
-  // Validate client and redirect URI
-  if (!validateClientRedirectUri(client_id, redirect_uri)) {
-    res.status(400).json({ error: "Invalid client or redirect URI" });
-    return;
-  }
-
-  // Validate response type
-  if (response_type !== "code") {
-    const error_uri = `${redirect_uri}?error=unsupported_response_type&state=${state || ""}`;
-    res.redirect(error_uri);
-    return;
-  }
-
-  // Generate authorization code
-  const authCode = generateAuthCode();
-  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-  authorizationCodes.set(authCode, {
-    client_id,
-    expires_at: expiresAt,
-    scope: scope || "openid profile email",
-    user_id: "user-123",
-  });
-
-  // Redirect back to client with authorization code
-  const redirectUrl = new URL(redirect_uri);
-  redirectUrl.searchParams.append("code", authCode);
-  if (state) {
-    redirectUrl.searchParams.append("state", state);
-  }
-
-  res.redirect(redirectUrl.toString());
-}
-
-export async function handleTokenRequest(
-  req: Request,
-  res: Response
-): Promise<void> {
-  const { grant_type, code, client_id, client_secret, redirect_uri } = req.body;
-
-  // Validate grant type
-  if (grant_type !== "authorization_code") {
-    res.status(400).json({ error: "unsupported_grant_type" });
-    return;
-  }
-
-  // Validate client credentials
-  const client = registered
+  
+  if (!registeredClients.has(authReq.clientId)) {
+    res.status(401).json({
+      error: 'invalid_client',
+      error_description: 'Client authentication failed'

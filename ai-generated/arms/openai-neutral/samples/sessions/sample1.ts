@@ -1,52 +1,36 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import session from 'express-session';
-import path from 'path';
+import connectRedis from 'connect-redis';
+import redis from 'redis';
 
 const app = express();
+const RedisStore = connectRedis(session);
+const redisClient = redis.createClient();
 
-export const sessionConfig = session({
-  secret: 'mySuperSecretKey',
+app.use(session({
+  store: new RedisStore({ client: redisClient }),
+  secret: 'your-secret-key',
   resave: false,
-  saveUninitialized: true,
-  cookie: { 
-    maxAge: 60000,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production'
+  saveUninitialized: false,
+  cookie: { secure: false, maxAge: 60000 }
+}));
+
+app.get('/', (req: Request, res: Response) => {
+  if (req.session.views) {
+    req.session.views++;
+  } else {
+    req.session.views = 1;
   }
+  res.send(`You have visited this page ${req.session.views} times`);
 });
 
-app.use(sessionConfig);
-
-export const logSessionInfo = (req: Request, res: Response, next: NextFunction) => {
-  if (req.session) {
-    console.log('Session ID:', req.session.id);
-    console.log('Session Data:', req.session);
-  }
-  next();
-};
-
-app.use(logSessionInfo);
-
-export const setSessionValue = (req: Request, res: Response) => {
-  req.session!.views = (req.session!.views || 0) + 1;
-  res.send(`You have visited this page ${req.session!.views} times`);
-};
-
-app.get('/view-count', setSessionValue);
-
-export const logOutUser = (req: Request, res: Response) => {
-  req.session!.destroy(err => {
+app.get('/logout', (req: Request, res: Response) => {
+  req.session.destroy((err) => {
     if (err) {
-      return res.status(500).send('Failed to destroy session');
+      return res.status(500).send('Error destroying session');
     }
-    res.redirect('/');
+    res.send('Session ended');
   });
-};
+});
 
-app.get('/logout', logOutUser);
-
-export const initServer = (port: number) => {
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-  });
-};
+export { app };

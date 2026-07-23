@@ -1,62 +1,63 @@
 import express, { Request, Response, NextFunction } from 'express';
-import session, { SessionOptions } from 'express-session';
-import helmet from 'helmet';
+import session from 'express-session';
+import crypto from 'crypto';
 
-// Session configuration
-const sessionConfig: SessionOptions = {
-  secret: process.env.SESSION_SECRET || 'your-default-secret',
+const app = express();
+
+const sessionOptions: session.SessionOptions = {
+  secret: crypto.randomBytes(64).toString('hex'),
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 1000 * 60 * 30 // 30 minutes
+    maxAge: 1000 * 60 * 30, // 30 minutes
+    sameSite: 'strict'
   }
 };
 
-// Middleware to regenerate session
-function regenerateSession(req: Request, res: Response, next: NextFunction): void {
-  if (!req.session) {
-    return next(new Error('Session not initialized'));
-  }
-  req.session.regenerate((err) => {
-    if (err) {
-      return next(err);
-    }
-    next();
-  });
-}
+app.use(session(sessionOptions));
 
-// Middleware to log out and invalidate session
-function logoutHandler(req: Request, res: Response, next: NextFunction): void {
-  if (!req.session) {
-    return next(new Error('Session not initialized'));
-  }
-  req.session.destroy((err) => {
+const regenerateSession = (req: Request, callback: () => void): void => {
+  req.session.regenerate(err => {
     if (err) {
-      return next(err);
+      console.error('Session regeneration error:', err);
     }
-    res.clearCookie('connect.sid', {
-      path: '/',
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
+    callback();
+  });
+};
+
+const authenticateUser = (req: Request, res: Response, next: NextFunction): void => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+};
+
+const login = (req: Request, res: Response): void => {
+  const { userId } = req.body;
+  if (userId) {
+    regenerateSession(req, () => {
+      req.session.userId = userId;
+      res.json({ message: 'Login successful' });
     });
-    res.status(200).send('Logout successful');
+  } else {
+    res.status(400).json({ error: 'Invalid credentials' });
+  }
+};
+
+const logout = (req: Request, res: Response): void => {
+  req.session.destroy(err => {
+    if (err) {
+      console.error('Session destruction error:', err);
+      return res.status(500).json({ error: 'Failed to log out' });
+    }
+    res.clearCookie('connect.sid');
+    res.json({ message: 'Logout successful' });
   });
-}
+};
 
-// Express app setup
-const app = express();
-app.use(helmet());
-app.use(session(sessionConfig));
+app.post('/login', login);
+app.post('/logout', authenticateUser, logout);
 
-app.post('/login', regenerateSession, (req: Request, res: Response) => {
-  // handle user login logic
-  res.send('User logged in');
-});
-
-app.post('/logout', logoutHandler);
-
-export { app, sessionConfig, regenerateSession, logoutHandler };
+export { app, authenticateUser, sessionOptions, regenerateSession, login, logout };

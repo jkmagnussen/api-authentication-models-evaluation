@@ -1,114 +1,119 @@
 ```typescript
-import express, { Request, Response, NextFunction } from 'express';
-import session, { SessionOptions } from 'express-session';
-import { v4 as uuidv4 } from 'uuid';
+import express, { Request, Response, NextFunction } from "express";
+import session from "express-session";
+import { randomBytes } from "crypto";
 
-interface CustomSessionData {
+interface SessionData {
   userId?: string;
-  username?: string;
-  email?: string;
-  loginTime?: Date;
-  lastActivity?: Date;
-  permissions?: string[];
+  loginTimestamp?: number;
+  ipAddress?: string;
 }
 
 declare global {
   namespace Express {
-    interface Session extends CustomSessionData {}
+    interface Request {
+      session: session.Session & Partial<SessionData>;
+    }
   }
 }
 
-const sessionConfig: SessionOptions = {
-  secret: process.env.SESSION_SECRET || 'default-secret-key-change-in-production',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
-    sameSite: 'strict',
-  },
-  name: 'sessionId',
+const createSessionMiddleware = () => {
+  return session({
+    secret: process.env.SESSION_SECRET || randomBytes(32).toString("hex"),
+    resave: false,
+    saveUninitialized: false,
+    name: "_secure_sid",
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "strict" as const,
+      maxAge: 15 * 60 * 1000,
+      domain: process.env.COOKIE_DOMAIN,
+    },
+    store: new session.MemoryStore(),
+  });
 };
 
-export function createSessionMiddleware() {
-  return session(sessionConfig);
-}
-
-export function requireAuthMiddleware(req: Request, res: Response, next: NextFunction) {
-  if (!req.session?.userId) {
-    return res.status(401).json({ error: 'Unauthorized - Session not found' });
+const validateSessionIntegrity = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.session.userId) {
+    return next();
   }
-  req.session.lastActivity = new Date();
+
+  const currentIp = req.ip || req.connection.remoteAddress || "";
+  if (req.session.ipAddress && req.session.ipAddress !== currentIp) {
+    return res.status(401).json({ error: "Session IP mismatch" });
+  }
+
   next();
-}
+};
 
-export function optionalSessionMiddleware(req: Request, res: Response, next: NextFunction) {
-  if (req.session?.userId) {
-    req.session.lastActivity = new Date();
+const enforceSessionTimeout = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (req.session.userId && req.session.loginTimestamp) {
+    const sessionAge = Date.now() - req.session.loginTimestamp;
+    const maxAge = 15 * 60 * 1000;
+
+    if (sessionAge > maxAge) {
+      req.session.destroy((err) => {
+        if (err) console.error("Session destruction error:", err);
+      });
+      return res.status(401).json({ error: "Session expired" });
+    }
   }
+
   next();
-}
+};
 
-export async function loginHandler(req: Request, res: Response) {
-  const { username, email, password } = req.body;
+export const performLogin = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { username, password } = req.body;
 
-  if (!username || !email || !password) {
-    return res.status(400).json({ error: 'Missing required fields' });
+  if (!username || !password) {
+    res.status(400).json({ error: "Missing credentials" });
+    return;
   }
 
-  const userId = uuidv4();
-  req.session.userId = userId;
-  req.session.username = username;
-  req.session.email = email;
-  req.session.loginTime = new Date();
-  req.session.lastActivity = new Date();
-  req.session.permissions = ['read', 'write'];
+  if (username !== "validuser" || password !== "validpass") {
+    res.status(401).json({ error: "Invalid credentials" });
+    return;
+  }
 
-  res.json({
-    message: 'Login successful',
-    user: {
-      userId,
-      username,
-      email,
-    },
+  req.session.regenerate((err) => {
+    if (err) {
+      res.status(500).json({ error: "Session regeneration failed" });
+      return;
+    }
+
+    req.session.userId = `user_${username}`;
+    req.session.loginTimestamp = Date.now();
+    req.session.ipAddress = req.ip || req.connection.remoteAddress || "";
+
+    req.session.save((saveErr) => {
+      if (saveErr) {
+        res.status(500).json({ error: "Failed to save session" });
+        return;
+      }
+
+      res.status(200).json({
+        message: "Login successful",
+        sessionId: req.sessionID,
+      });
+    });
   });
-}
+};
 
-export async function logoutHandler(req: Request, res: Response) {
+export const performLogout = (req: Request, res: Response): void => {
+  const sessionId = req.sessionID;
+
   req.session.destroy((err) => {
     if (err) {
-      return res.status(500).json({ error: 'Failed to logout' });
-    }
-    res.clearCookie('sessionId');
-    res.json({ message: 'Logout successful' });
-  });
-}
-
-export async function profileHandler(req: Request, res: Response) {
-  if (!req.session?.userId) {
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
-
-  res.json({
-    userId: req.session.userId,
-    username: req.session.username,
-    email: req.session.email,
-    loginTime: req.session.loginTime,
-    lastActivity: req.session.lastActivity,
-    permissions: req.session.permissions,
-  });
-}
-
-export async function updateSessionHandler(req: Request, res: Response) {
-  if (!req.session?.userId) {
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
-
-  const { permissions } = req.body;
-
-  if (permissions && Array.isArray(permissions)) {
-    req.session.permissions = permissions;
-  }
-
-  req.session.lastActivity = new Date();
+      res.status(500).json({ error: "Logout failed"

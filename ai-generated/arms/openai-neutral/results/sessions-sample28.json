@@ -1,69 +1,18 @@
 {
   "model": "sessions",
   "sample": "sample28",
-  "characters": 832,
-  "lines": 40,
-  "functions": 4,
+  "characters": 2911,
+  "lines": 122,
+  "functions": 0,
   "classes": 0,
-  "cyclomaticComplexity": 1,
+  "cyclomaticComplexity": null,
   "halstead": {
-    "operators": {
-      "distinct": 7,
-      "total": 37,
-      "identifiers": [
-        "()",
-        "{}",
-        ":",
-        ".",
-        "=",
-        "void (prefix)",
-        "const"
-      ]
-    },
-    "operands": {
-      "distinct": 31,
-      "total": 51,
-      "identifiers": [
-        "\"use strict\"",
-        "exports",
-        "\"__esModule\"",
-        "<anonymous>",
-        "value",
-        true,
-        "Object",
-        "defineProperty",
-        "app",
-        0,
-        "express_1",
-        "\"express\"",
-        "require",
-        "express_session_1",
-        "\"express-session\"",
-        "default",
-        "secret",
-        "\"supersecretkey\"",
-        "resave",
-        false,
-        "saveUninitialized",
-        "cookie",
-        "maxAge",
-        60000,
-        "secure",
-        "use",
-        "\"/\"",
-        "get",
-        "\"/login\"",
-        "post",
-        "\"/logout\""
-      ]
-    },
-    "length": 88,
-    "vocabulary": 38,
-    "difficulty": 5.758064516129033,
-    "volume": 461.8176211830355,
-    "effort": 2659.1756574571564,
-    "bugs": 0.15393920706101183,
-    "time": 147.73198096984203
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
   },
-  "maintainabilityIndex": 97.20663916125507
+  "maintainabilityIndex": null,
+  "analysisError": "Line 123: Unexpected token ILLEGAL"
 }

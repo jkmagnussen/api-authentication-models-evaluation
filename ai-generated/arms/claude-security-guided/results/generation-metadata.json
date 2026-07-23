@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-23T00:52:18.643Z",
-  "startedAt": "2026-07-23T00:44:13.574Z",
+  "generatedAt": "2026-07-23T04:23:10.351Z",
+  "startedAt": "2026-07-23T04:21:44.904Z",
   "provider": "claude",
   "providerModel": "claude-haiku-4-5-20251001",
   "providerModelIdentifier": "claude-haiku-4-5-20251001",
@@ -11,7 +11,7 @@
     "jwt",
     "sessions"
   ],
-  "sampleCount": 30,
+  "sampleCount": 5,
   "generationParameters": {
     "temperature": 0.8,
     "maxTokens": 900
@@ -55,8 +55,8 @@
     ]
   },
   "retrySummary": {
-    "totalAttempts": 90,
-    "successfulRequests": 90,
+    "totalAttempts": 15,
+    "successfulRequests": 15,
     "retries": 0,
     "retryableHttpFailures": 0,
     "networkFailures": 0,

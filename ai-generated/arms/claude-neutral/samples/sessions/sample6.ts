@@ -1,138 +1,112 @@
 ```typescript
-import express, { Express, Request, Response } from "express";
-import session from "express-session";
+import express, { Request, Response, NextFunction } from 'express';
+import session, { SessionOptions } from 'express-session';
+import MemoryStore from 'memorystore';
 
-const app: Express = express();
+const MemStoreFactory = MemoryStore(session);
 
-// Configure session middleware
-app.use(
-  session({
-    secret: "your-secret-key-change-in-production",
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-      secure: false,
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24,
-    },
-  })
-);
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Type definitions for session data
-declare global {
-  namespace Express {
-    interface Session {
-      userId?: string;
-      username?: string;
-      roles?: string[];
-      loginTime?: Date;
-      lastActivity?: Date;
-      preferences?: {
-        theme?: string;
-        language?: string;
-      };
-    }
-  }
-}
-
-interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  roles: string[];
-}
-
-// Middleware to update last activity timestamp
-export const updateActivityTimestamp = (
-  req: Request,
-  res: Response,
-  next: Function
-) => {
-  if (req.session) {
-    req.session.lastActivity = new Date();
-  }
-  next();
-};
-
-// Middleware to check if user is authenticated
-export const requireAuthMiddleware = (
-  req: Request,
-  res: Response,
-  next: Function
-) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "Not authenticated" });
-    return;
-  }
-  next();
-};
-
-// Middleware to check user roles
-export const checkRoleMiddleware = (allowedRoles: string[]) => {
-  return (req: Request, res: Response, next: Function) => {
-    const userRoles = req.session.roles || [];
-    const hasRole = allowedRoles.some((role) => userRoles.includes(role));
-
-    if (!hasRole) {
-      res.status(403).json({ error: "Insufficient permissions" });
-      return;
-    }
-    next();
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    username: string;
+    roles: string[];
   };
+  sessionID?: string;
+}
+
+const buildSessionConfig = (): SessionOptions => ({
+  store: new MemStoreFactory({
+    checkInterval: 86400000,
+  }),
+  secret: process.env.SESSION_SECRET || 'change-me-in-production',
+  resave: false,
+  saveUninitialized: false,
+  name: 'auth_session_id',
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict' as const,
+    maxAge: 1800000,
+    domain: process.env.COOKIE_DOMAIN,
+    path: '/',
+  },
+  proxy: process.env.NODE_ENV === 'production',
+});
+
+export const initializeSessionMiddleware = (app: express.Application): void => {
+  const sessionConfig = buildSessionConfig();
+  app.use(session(sessionConfig));
 };
 
-app.use(updateActivityTimestamp);
-
-// Login endpoint
-export const loginEndpoint = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { username, password } = req.body;
-
-  // Mock authentication
-  if (username === "admin" && password === "admin123") {
-    const userProfile: UserProfile = {
-      id: "user-001",
-      name: "Administrator",
-      email: "admin@example.com",
-      roles: ["admin", "user"],
-    };
-
-    req.session.userId = userProfile.id;
-    req.session.username = username;
-    req.session.roles = userProfile.roles;
-    req.session.loginTime = new Date();
-    req.session.preferences = {
-      theme: "dark",
-      language: "en",
-    };
-
-    res.json({
-      message: "Login successful",
-      user: {
-        id: userProfile.id,
-        username: userProfile.name,
-        roles: userProfile.roles,
-      },
-    });
-  } else {
-    res.status(401).json({ error: "Invalid credentials" });
-  }
-};
-
-// Get current session info
-export const getSessionInfoEndpoint = (
-  req: Request,
-  res: Response
+export const requireAuthenticatedSession = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
 ): void => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "Not authenticated" });
+  if (!req.session || !req.session.userId) {
+    res.status(401).json({ error: 'Session expired or invalid' });
     return;
   }
 
-  res.json({
-    userId
+  if (req.session.expiresAt && Date.now() > req.session.expiresAt) {
+    req.session.destroy((err) => {
+      if (err) console.error('Session destruction error:', err);
+    });
+    res.status(401).json({ error: 'Session has expired' });
+    return;
+  }
+
+  next();
+};
+
+export const performSessionRegeneration = async (
+  req: AuthenticatedRequest
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const previousSessionId = req.sessionID;
+
+    req.session.regenerate((err) => {
+      if (err) {
+        reject(new Error(`Session regeneration failed: ${err.message}`));
+        return;
+      }
+
+      const expirationTime = Date.now() + 1800000;
+      req.session.expiresAt = expirationTime;
+      req.session.regeneratedFrom = previousSessionId;
+      req.session.createdAt = Date.now();
+
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          reject(new Error(`Failed to save regenerated session: ${saveErr.message}`));
+          return;
+        }
+        resolve(req.sessionID || '');
+      });
+    });
+  });
+};
+
+export const handleUserLogin = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  userId: string,
+  username: string,
+  roles: string[]
+): Promise<void> => {
+  try {
+    const newSessionId = await performSessionRegeneration(req);
+
+    req.session.userId = userId;
+    req.session.username = username;
+    req.session.roles = roles;
+    req.session.loginTime = Date.now();
+
+    req.session.save((err) => {
+      if (err) {
+        res.status(500).json({ error: 'Failed to establish session' });
+        return;
+      }
+
+      res.status(200).json({
+        message:

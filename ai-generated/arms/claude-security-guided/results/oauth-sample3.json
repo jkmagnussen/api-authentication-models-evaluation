@@ -1,8 +1,8 @@
 {
   "model": "oauth",
   "sample": "sample3",
-  "characters": 2854,
-  "lines": 104,
+  "characters": 2823,
+  "lines": 128,
   "functions": 0,
   "classes": 0,
   "cyclomaticComplexity": null,
@@ -14,5 +14,5 @@
     "time": null
   },
   "maintainabilityIndex": null,
-  "analysisError": "Line 105: Unexpected token ILLEGAL"
+  "analysisError": "Line 129: Unexpected token ILLEGAL"
 }

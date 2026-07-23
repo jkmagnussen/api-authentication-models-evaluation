@@ -1,47 +1,116 @@
+```typescript
 import express, { Request, Response, NextFunction } from 'express';
-import session, { SessionOptions } from 'express-session';
-import { v4 as uuidv4 } from 'uuid';
+import session from 'express-session';
+import crypto from 'crypto';
 
-const app = express();
+interface AuthenticatedRequest extends Request {
+  session: session.Session & { userId?: string; loginTime?: number };
+}
 
-const sessionConfig: SessionOptions = {
-  secret: 'supersecretkey',
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    maxAge: 1000 * 60 * 60, // 1 hour
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-  },
-  genid: () => uuidv4(),
+export const configureSessionMiddleware = (app: express.Application): void => {
+  const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+  
+  app.use(
+    session({
+      secret: sessionSecret,
+      name: 'auth_token',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: 30 * 60 * 1000,
+        domain: process.env.COOKIE_DOMAIN,
+        path: '/',
+      },
+      genid: () => crypto.randomUUID(),
+    })
+  );
 };
 
-app.use(session(sessionConfig));
+export const handleUserLogin = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const userId = req.body?.userId;
+  
+  if (!userId || typeof userId !== 'string' || userId.length === 0) {
+    res.status(400).json({ error: 'Invalid user ID' });
+    return;
+  }
 
-const sessionLogger = (req: Request, res: Response, next: NextFunction) => {
-  console.log(`Session ID: ${req.sessionID}`);
-  console.log(`Session Data: ${JSON.stringify(req.session)}`);
+  req.session.regenerate((err) => {
+    if (err) {
+      res.status(500).json({ error: 'Session regeneration failed' });
+      return;
+    }
+
+    req.session.userId = userId;
+    req.session.loginTime = Date.now();
+    req.session.save((saveErr) => {
+      if (saveErr) {
+        res.status(500).json({ error: 'Session save failed' });
+        return;
+      }
+      res.json({ message: 'Login successful', userId });
+    });
+  });
+};
+
+export const handleUserLogout = (
+  req: AuthenticatedRequest,
+  res: Response
+): void => {
+  const sessionId = req.sessionID;
+  
+  req.session.destroy((err) => {
+    if (err) {
+      res.status(500).json({ error: 'Logout failed' });
+      return;
+    }
+
+    res.clearCookie('auth_token', {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'strict',
+      path: '/',
+    });
+
+    res.json({ message: 'Logout successful', sessionId });
+  });
+};
+
+export const validateSessionMiddleware = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.session?.userId) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const loginTime = req.session.loginTime || 0;
+  const sessionDuration = Date.now() - loginTime;
+  const maxDuration = 30 * 60 * 1000;
+
+  if (sessionDuration > maxDuration) {
+    req.session.destroy((err) => {
+      if (err) {
+        res.status(500).json({ error: 'Session invalidation failed' });
+        return;
+      }
+      res.status(401).json({ error: 'Session expired' });
+    });
+    return;
+  }
+
   next();
 };
 
-app.use(sessionLogger);
-
-app.get('/', (req: Request, res: Response) => {
-  if (!req.session.views) {
-    req.session.views = 1;
-  } else {
-    req.session.views++;
-  }
-  res.send(`Welcome! You've visited this page ${req.session.views} times.`);
-});
-
-app.post('/session-reset', (req: Request, res: Response) => {
-  req.session.destroy(err => {
-    if (err) {
-      return res.status(500).send('Error resetting session');
-    }
-    res.send('Session reset successful');
-  });
-});
-
-export { app, sessionConfig };
+export const handleSessionRefresh = (
+  req: AuthenticatedRequest,
+  res: Response
+): void => {
+  if (!req.session

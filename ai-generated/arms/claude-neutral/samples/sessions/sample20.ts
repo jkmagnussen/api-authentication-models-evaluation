@@ -1,126 +1,121 @@
 ```typescript
 import express, { Request, Response, NextFunction } from "express";
 import session from "express-session";
-import crypto from "crypto";
+import { randomBytes } from "crypto";
 
+// Extend Express session types
 declare global {
   namespace Express {
-    interface Request {
-      session: session.Session & {
-        userId?: string;
-        userName?: string;
-        loginTime?: Date;
-        permissions?: string[];
-        accessToken?: string;
-      };
+    interface Session {
+      userId?: string;
+      regeneratedAt?: number;
     }
   }
 }
 
-const sessionConfig: session.SessionOptions = {
-  secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex"),
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 1000 * 60 * 60 * 24,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  },
-  genid: (req: Request) => crypto.randomUUID(),
+// Configuration constants
+const SESSION_SECRET = process.env.SESSION_SECRET || randomBytes(32).toString("hex");
+const SESSION_MAX_AGE = 30 * 60 * 1000; // 30 minutes
+const SECURE_COOKIE_FLAGS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict" as const,
+  maxAge: SESSION_MAX_AGE,
 };
 
-export const initializeSessionMiddleware = (app: express.Application) => {
-  app.use(session(sessionConfig));
-};
-
-export const authenticateUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  if (
-    req.session &&
-    req.session.userId &&
-    req.session.accessToken &&
-    !isSessionExpired(req.session)
-  ) {
-    return next();
-  }
-
-  res.status(401).json({ error: "Unauthorized access" });
-};
-
-export const createUserSession = (
-  req: Request,
-  userId: string,
-  userName: string,
-  permissions: string[] = []
-) => {
-  req.session.userId = userId;
-  req.session.userName = userName;
-  req.session.loginTime = new Date();
-  req.session.permissions = permissions;
-  req.session.accessToken = generateAccessToken(userId);
-};
-
-export const terminateUserSession = (req: Request, res: Response) => {
-  req.session.destroy((err) => {
-    if (err) {
-      res.status(500).json({ error: "Failed to terminate session" });
-      return;
-    }
-    res.clearCookie("connect.sid");
-    res.status(200).json({ message: "Session terminated successfully" });
+// Initialize session middleware
+export const configureSessionMiddleware = () => {
+  return session({
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: SECURE_COOKIE_FLAGS,
+    name: "secureSessionId",
   });
 };
 
-export const checkUserPermission = (
-  requiredPermission: string
-) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    if (
-      !req.session.permissions ||
-      !req.session.permissions.includes(requiredPermission)
-    ) {
-      res.status(403).json({ error: "Insufficient permissions" });
+// Regenerate session for privilege escalation
+export const regenerateSession = (
+  req: Request,
+  res: Response,
+  callback?: (err?: Error) => void
+): void => {
+  const oldSessionId = req.sessionID;
+
+  req.session.regenerate((err) => {
+    if (err) {
+      console.error("Session regeneration failed:", err);
+      if (callback) callback(err);
       return;
     }
-    next();
-  };
+
+    // Track regeneration timestamp
+    req.session.regeneratedAt = Date.now();
+
+    // Optionally clear old session data
+    req.sessionStore?.destroy(oldSessionId, (destroyErr) => {
+      if (destroyErr && destroyErr.code !== "ENOENT") {
+        console.warn("Failed to destroy old session:", destroyErr);
+      }
+      if (callback) callback();
+    });
+  });
 };
 
-export const refreshSessionTimeout = (
+// Authenticate user and establish session
+export const authenticateAndCreateSession = (
   req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  if (req.session && req.session.userId) {
-    req.session.touch();
+  userId: string,
+  callback?: (err?: Error) => void
+): void => {
+  regenerateSession(req, new Response(), (err) => {
+    if (err) {
+      console.error("Authentication session creation failed:", err);
+      if (callback) callback(err);
+      return;
+    }
+
+    req.session.userId = userId;
+    req.session.save((saveErr) => {
+      if (saveErr) {
+        console.error("Session save failed:", saveErr);
+        if (callback) callback(saveErr);
+        return;
+      }
+
+      if (callback) callback();
+    });
+  });
+};
+
+// Validate active session
+export const validateActiveSession = (req: Request): boolean => {
+  if (!req.session) {
+    return false;
   }
-  next();
+
+  const isAuthenticated = Boolean(req.session.userId);
+  const sessionAge = Date.now() - (req.session.regeneratedAt || req.session.cookie._expires || 0);
+
+  // Enforce maximum session lifetime (e.g., 8 hours)
+  const MAX_SESSION_LIFETIME = 8 * 60 * 60 * 1000;
+  if (sessionAge > MAX_SESSION_LIFETIME) {
+    return false;
+  }
+
+  return isAuthenticated;
 };
 
-export const getSessionInfo = (req: Request): object => {
-  return {
-    sessionId: req.sessionID,
-    userId: req.session.userId,
-    userName: req.session.userName,
-    loginTime: req.session.loginTime,
-    permissions: req.session.permissions,
-    isActive: req.session.userId ? true : false,
-  };
-};
-
-export const validateSessionIntegrity = (
+// Comprehensive logout with session destruction
+export const invalidateSessionAndLogout = (
   req: Request,
   res: Response,
-  next: NextFunction
-) => {
-  if (
-    req.session &&
-    req.session.userId &&
-    req.session.accessToken &&
-    req.session.loginTime
-  ) {
-    const tokenValidity = verify
+  callback?: (err?: Error) => void
+): void => {
+  if (!req.session) {
+    if (callback) callback();
+    return;
+  }
+
+  // Clear session data
+  req

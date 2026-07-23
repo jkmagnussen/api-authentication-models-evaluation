@@ -1,15 +1,15 @@
 {
   "model": "oauth",
   "sample": "sample5",
-  "characters": 1218,
-  "lines": 36,
+  "characters": 1060,
+  "lines": 31,
   "functions": 1,
   "classes": 0,
   "cyclomaticComplexity": 1,
   "halstead": {
     "operators": {
-      "distinct": 8,
-      "total": 50,
+      "distinct": 7,
+      "total": 22,
       "identifiers": [
         "()",
         "{}",
@@ -17,13 +17,12 @@
         ".",
         "=",
         "void (prefix)",
-        "const",
-        "[]"
+        "const"
       ]
     },
     "operands": {
-      "distinct": 31,
-      "total": 59,
+      "distinct": 20,
+      "total": 27,
       "identifiers": [
         "\"use strict\"",
         "exports",
@@ -33,38 +32,27 @@
         true,
         "Object",
         "defineProperty",
-        "oauthRouter",
+        "authRouter",
         0,
         "express_1",
         "\"express\"",
         "require",
         "authUtils_1",
         "\"./authUtils\"",
-        "express_validator_1",
-        "\"express-validator\"",
+        "router",
         "default",
         "Router",
         "\"/authorize\"",
-        "\"code\"",
-        "\"response_type\"",
-        "query",
-        "isString",
-        "equals",
-        "\"client_id\"",
-        "\"redirect_uri\"",
-        "\"scope\"",
-        "\"state\"",
-        "optional",
         "get"
       ]
     },
-    "length": 109,
-    "vocabulary": 39,
-    "difficulty": 7.612903225806452,
-    "volume": 576.1088418559851,
-    "effort": 4385.860860581049,
-    "bugs": 0.1920362806186617,
-    "time": 243.65893669894714
+    "length": 49,
+    "vocabulary": 27,
+    "difficulty": 4.7250000000000005,
+    "volume": 232.98948760601,
+    "effort": 1100.8753289383974,
+    "bugs": 0.07766316253533666,
+    "time": 61.15974049657763
   },
-  "maintainabilityIndex": 105.01751857259858
+  "maintainabilityIndex": 111.45175758309726
 }

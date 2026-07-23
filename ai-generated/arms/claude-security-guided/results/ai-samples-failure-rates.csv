@@ -1,5 +1,5 @@
 label,totalSamples,passedSamples,failedSamples,failureRatePct
 OAUTH,30,3,27,90.0
 JWT,30,27,3,10.0
-SESSIONS,30,24,6,20.0
-OVERALL,90,54,36,40.0
+SESSIONS,30,25,5,16.7
+OVERALL,90,55,35,38.9

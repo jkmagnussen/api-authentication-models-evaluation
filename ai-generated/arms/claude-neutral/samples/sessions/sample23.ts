@@ -1,110 +1,113 @@
 ```typescript
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import session from 'express-session';
 import crypto from 'crypto';
 
-const createSessionMiddleware = () => {
-  return session({
-    secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
+interface SessionUserData {
+  userId: string;
+  username: string;
+  loginTimestamp: number;
+  ipAddress: string;
+}
+
+interface SessionRequest extends Request {
+  session: session.Session & { user?: SessionUserData; regenerationError?: Error };
+}
+
+export const configureSessionMiddleware = (app: Express): void => {
+  const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+
+  const sessionConfig: session.SessionOptions = {
+    secret: sessionSecret,
+    name: '__Host-sessionId',
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'lax' as const,
+      sameSite: 'strict' as const,
+      maxAge: 30 * 60 * 1000,
+      path: '/',
+      domain: process.env.SESSION_DOMAIN,
     },
-  });
+  };
+
+  app.use(session(sessionConfig));
 };
 
-export const initializeSessionManager = (app: express.Application) => {
-  app.use(express.urlencoded({ extended: true }));
-  app.use(createSessionMiddleware());
-};
-
-export const requireAuthentication = (
-  req: Request,
+export const authenticateSession = async (
+  req: SessionRequest,
   res: Response,
   next: NextFunction
-) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Unauthorized access' });
+): Promise<void> => {
+  if (!req.session.user) {
+    return next();
   }
+
+  const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress;
+
+  if (req.session.user.ipAddress !== clientIp) {
+    req.session.destroy((err) => {
+      if (err) console.error('Session destruction error:', err);
+    });
+    res.status(401).json({ error: 'Session validation failed' });
+    return;
+  }
+
+  if (Date.now() - req.session.user.loginTimestamp > 30 * 60 * 1000) {
+    req.session.destroy((err) => {
+      if (err) console.error('Session destruction error:', err);
+    });
+    res.status(401).json({ error: 'Session expired' });
+    return;
+  }
+
   next();
 };
 
-export const handleLogin = (req: Request, res: Response) => {
-  const { username, password } = req.body;
+export const performLogin = async (
+  req: SessionRequest,
+  res: Response,
+  userId: string,
+  username: string
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress;
 
-  // Mock validation - in production, verify against database
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Missing credentials' });
-  }
+    req.session.regenerate((err) => {
+      if (err) {
+        req.session.regenerationError = err;
+        reject(new Error('Failed to regenerate session'));
+        return;
+      }
 
-  // Mock user authentication
-  const userId = crypto.randomBytes(8).toString('hex');
+      req.session.user = {
+        userId,
+        username,
+        loginTimestamp: Date.now(),
+        ipAddress: clientIp || '',
+      };
 
-  // Set session data
-  req.session.userId = userId;
-  req.session.username = username;
-  req.session.loginTime = Date.now();
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          reject(new Error('Failed to save session'));
+          return;
+        }
 
-  res.json({
-    message: 'Login successful',
-    sessionId: req.sessionID,
-    user: { userId, username },
-  });
-};
-
-export const handleLogout = (req: Request, res: Response) => {
-  const sessionId = req.sessionID;
-
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Logout failed' });
-    }
-
-    res.clearCookie('connect.sid');
-    res.json({
-      message: 'Logout successful',
-      previousSessionId: sessionId,
+        res.status(200).json({
+          success: true,
+          message: 'Login successful',
+          sessionId: req.sessionID,
+        });
+        resolve();
+      });
     });
   });
 };
 
-export const handleSessionStatus = (req: Request, res: Response) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ authenticated: false });
-  }
-
-  const sessionAge = Date.now() - (req.session.loginTime || 0);
-
-  res.json({
-    authenticated: true,
-    user: {
-      userId: req.session.userId,
-      username: req.session.username,
-    },
-    sessionId: req.sessionID,
-    sessionAgeMs: sessionAge,
-    loginTime: new Date(req.session.loginTime || 0).toISOString(),
-  });
-};
-
-export const handleSessionUpdate = (req: Request, res: Response) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'No active session' });
-  }
-
-  const { field, value } = req.body;
-
-  if (!field || value === undefined) {
-    return res.status(400).json({ error: 'Missing field or value' });
-  }
-
-  // Whitelist safe fields to update
-  const allowedFields = ['preferences', 'theme', 'language'];
-
-  if (!allowedFields.includes(field)) {
-    return res.status(403).json({ error: 'Cannot update this field' });
-  }
+export const performLogout = async (req: SessionRequest, res: Response): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (!req.session.user) {
+      res.status(400).json({ error: 'No active session' });
+      resolve();
+      return;

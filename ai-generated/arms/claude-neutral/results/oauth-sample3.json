@@ -1,8 +1,8 @@
 {
   "model": "oauth",
   "sample": "sample3",
-  "characters": 2992,
-  "lines": 124,
+  "characters": 2971,
+  "lines": 99,
   "functions": 0,
   "classes": 0,
   "cyclomaticComplexity": null,
@@ -14,5 +14,5 @@
     "time": null
   },
   "maintainabilityIndex": null,
-  "analysisError": "Line 125: Unexpected token ILLEGAL"
+  "analysisError": "Line 93: Unexpected quasi ,\n      },\n    ],\n  });\n\n  const consentMessage =\n    message.content[0].type === \"text\" ? message.content[0].text : \"\";\n\n  // Return authorization consent page\n  res.setHeader(\"Content-Type\", \"text/html\");\n  res.send("
 }

@@ -1,112 +1,63 @@
-```typescript
 import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
-import RedisStore from 'connect-redis';
-import { createClient } from 'redis';
+import crypto from 'crypto';
 
-// Initialize Redis client for session storage
-const redisClient = createClient();
-redisClient.connect();
+const app = express();
 
-// Create Redis store for sessions
-const sessionStore = new RedisStore({ client: redisClient });
-
-// Configure secure session middleware
-export const configureSecureSessionMiddleware = () => {
-  return session({
-    store: sessionStore,
-    secret: process.env.SESSION_SECRET || 'default-secret-change-in-production',
-    name: 'sid',
-    resave: false,
-    saveUninitialized: false,
-    proxy: true,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      sameSite: 'strict',
-      maxAge: 1800000, // 30 minutes
-      domain: process.env.COOKIE_DOMAIN,
-    },
-  });
+const sessionOptions: session.SessionOptions = {
+  secret: crypto.randomBytes(64).toString('hex'),
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 1000 * 60 * 30, // 30 minutes
+    sameSite: 'strict'
+  }
 };
 
-// Interface for authenticated session data
-interface AuthenticatedSessionData extends session.SessionData {
-  userId?: string;
-  email?: string;
-  roles?: string[];
-  loginTimestamp?: number;
-  csrfToken?: string;
-}
+app.use(session(sessionOptions));
 
-// Regenerate session after successful authentication
-export const regenerateAuthenticationSession = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  req.session.regenerate((err) => {
+const regenerateSession = (req: Request, callback: () => void): void => {
+  req.session.regenerate(err => {
     if (err) {
       console.error('Session regeneration error:', err);
-      return res.status(500).json({ error: 'Session initialization failed' });
     }
-    next();
+    callback();
   });
 };
 
-// Attach user data to session after login
-export const attachUserToSession = (
-  req: Request<object, object, { userId: string; email: string; roles?: string[] }>,
-  res: Response,
-  next: NextFunction
-) => {
-  const { userId, email, roles = [] } = req.body;
-
-  if (!userId || !email) {
-    return res.status(400).json({ error: 'User ID and email are required' });
+const authenticateUser = (req: Request, res: Response, next: NextFunction): void => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
-
-  const authSession = req.session as AuthenticatedSessionData;
-  authSession.userId = userId;
-  authSession.email = email;
-  authSession.roles = roles;
-  authSession.loginTimestamp = Date.now();
-  authSession.csrfToken = generateSecureToken();
-
-  req.session.save((err) => {
-    if (err) {
-      console.error('Session save error:', err);
-      return res.status(500).json({ error: 'Failed to establish session' });
-    }
-    next();
-  });
-};
-
-// Verify active authenticated session
-export const verifyActiveSession = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const authSession = req.session as AuthenticatedSessionData;
-
-  if (!authSession.userId) {
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
-
-  // Verify session hasn't exceeded maximum duration
-  const sessionAge = Date.now() - (authSession.loginTimestamp || 0);
-  const maxSessionDuration = 86400000; // 24 hours
-
-  if (sessionAge > maxSessionDuration) {
-    return res.status(401).json({ error: 'Session expired' });
-  }
-
   next();
 };
 
-// Validate CSRF token from session
-export const validateCsrfToken = (
-  req: Request<object, object, { csrfToken?: string }>,
-  res: Response,
-  next:
+const login = (req: Request, res: Response): void => {
+  const { userId } = req.body;
+  if (userId) {
+    regenerateSession(req, () => {
+      req.session.userId = userId;
+      res.json({ message: 'Login successful' });
+    });
+  } else {
+    res.status(400).json({ error: 'Invalid credentials' });
+  }
+};
+
+const logout = (req: Request, res: Response): void => {
+  req.session.destroy(err => {
+    if (err) {
+      console.error('Session destruction error:', err);
+      return res.status(500).json({ error: 'Failed to log out' });
+    }
+    res.clearCookie('connect.sid');
+    res.json({ message: 'Logout successful' });
+  });
+};
+
+app.post('/login', login);
+app.post('/logout', authenticateUser, logout);
+
+export { app, authenticateUser, sessionOptions, regenerateSession, login, logout };

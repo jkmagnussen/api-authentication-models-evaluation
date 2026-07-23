@@ -1,111 +1,113 @@
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
 import express, { Request, Response } from "express";
-import crypto from "crypto";
 
-const app = express();
 const client = new Anthropic();
 
-interface AuthorizationState {
-  clientId: string;
-  redirectUri: string;
-  scope: string;
-  state: string;
-  codeChallenge?: string;
-  requestedAt: number;
+const app = express();
+app.use(express.json());
+
+interface AuthorizeQuery {
+  client_id?: string;
+  redirect_uri?: string;
+  response_type?: string;
+  scope?: string;
+  state?: string;
 }
 
-const authorizationRegistry = new Map<string, AuthorizationState>();
-const issuedTokens = new Map<string, { clientId: string; scope: string }>();
+const ALLOWED_SCOPES = new Set([
+  "openid",
+  "profile",
+  "email",
+  "read:user",
+  "write:user",
+]);
+const REGISTERED_CLIENTS: Record<
+  string,
+  { redirectUris: string[]; name: string }
+> = {
+  test_client_123: {
+    name: "Test Application",
+    redirectUris: [
+      "http://localhost:3001/callback",
+      "https://app.example.com/callback",
+    ],
+  },
+  trusted_app_456: {
+    name: "Trusted Partner App",
+    redirectUris: ["https://partner.example.com/oauth/callback"],
+  },
+};
 
-function generateSecureCode(): string {
-  return crypto.randomBytes(32).toString("hex");
-}
-
-function validateRedirectUri(
+export function validateRedirectUri(
   clientId: string,
   redirectUri: string
-): Promise<boolean> {
-  const allowedClients: Record<string, string[]> = {
-    "test-client": ["http://localhost:3000/callback"],
-    "mobile-app": ["myapp://oauth/callback"],
-  };
+): boolean {
+  const client = REGISTERED_CLIENTS[clientId];
+  if (!client) return false;
 
-  const allowed = allowedClients[clientId] || [];
-  return Promise.resolve(allowed.includes(redirectUri));
+  try {
+    const requestedUrl = new URL(redirectUri);
+    return client.redirectUris.some((allowed) => {
+      const allowedUrl = new URL(allowed);
+      return (
+        requestedUrl.protocol === allowedUrl.protocol &&
+        requestedUrl.hostname === allowedUrl.hostname &&
+        requestedUrl.pathname === allowedUrl.pathname
+      );
+    });
+  } catch {
+    return false;
+  }
 }
 
-async function invokeAuthorizationValidator(
+export function validateScopes(requestedScopes: string): string[] {
+  const scopes = requestedScopes.split(" ").filter((s) => s.length > 0);
+  const validScopes = scopes.filter((scope) => ALLOWED_SCOPES.has(scope));
+
+  if (validScopes.length === 0) {
+    throw new Error("No valid scopes requested");
+  }
+
+  return validScopes;
+}
+
+export function generateStateToken(): string {
+  const randomBytes = new Uint8Array(32);
+  crypto.getRandomValues(randomBytes);
+  return Array.from(randomBytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export function validateStateParameter(state: string): boolean {
+  if (!state || typeof state !== "string") return false;
+  if (state.length < 20 || state.length > 500) return false;
+  if (!/^[a-zA-Z0-9\-._~]+$/.test(state)) return false;
+  return true;
+}
+
+async function generateAuthorizationResponse(
   clientId: string,
-  scope: string,
-  redirectUri: string
+  state: string,
+  scopes: string[]
 ): Promise<string> {
-  const prompt = `Validate this OAuth2 authorization request:
-Client ID: ${clientId}
-Requested Scopes: ${scope}
-Redirect URI: ${redirectUri}
+  const conversationHistory: Array<{
+    role: "user" | "assistant";
+    content: string;
+  }> = [];
 
-Response should be 'APPROVED' or 'DENIED' with reason.`;
+  const userMessage = `Generate a secure OAuth2 authorization response for:
+- Client ID: ${clientId}
+- Requested Scopes: ${scopes.join(", ")}
+- State Parameter: ${state}
+- Authorization Code: ${generateStateToken().substring(0, 20)}
 
-  const response = await client.messages.create({
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 100,
-    messages: [{ role: "user", content: prompt }],
+Provide a JSON object with authorization_code, expires_in (3600), scope (space-separated), and state.`;
+
+  conversationHistory.push({
+    role: "user",
+    content: userMessage,
   });
 
-  const responseText =
-    response.content[0].type === "text" ? response.content[0].text : "";
-  return responseText.includes("APPROVED") ? "APPROVED" : "DENIED";
-}
-
-export async function initializeAuthorizationFlow(
-  req: Request,
-  res: Response
-): Promise<void> {
-  const clientId = req.query.client_id as string;
-  const redirectUri = req.query.redirect_uri as string;
-  const scope = req.query.scope as string;
-  const state = req.query.state as string;
-  const responseType = req.query.response_type as string;
-
-  if (!clientId || !redirectUri || !scope || !state) {
-    res.status(400).json({ error: "missing_required_parameters" });
-    return;
-  }
-
-  if (responseType !== "code") {
-    res.status(400).json({ error: "unsupported_response_type" });
-    return;
-  }
-
-  const isValidRedirect = await validateRedirectUri(clientId, redirectUri);
-  if (!isValidRedirect) {
-    res.status(400).json({ error: "invalid_redirect_uri" });
-    return;
-  }
-
-  const authCode = generateSecureCode();
-  const authState: AuthorizationState = {
-    clientId,
-    redirectUri,
-    scope,
-    state,
-    requestedAt: Date.now(),
-  };
-
-  authorizationRegistry.set(authCode, authState);
-
-  const validationResult = await invokeAuthorizationValidator(
-    clientId,
-    scope,
-    redirectUri
-  );
-
-  if (validationResult === "DENIED") {
-    res
-      .status(403)
-      .json({ error: "access_denied", state: state, details: "Validation failed" });
-    return;
-  }
-
-  const redirectUrl = new URL(redirectUri);
+  const response = await client.messages.create

@@ -1,105 +1,112 @@
 ```typescript
-import { Request, Response, NextFunction } from 'express';
-import jwt, { VerifyOptions, JwtPayload } from 'jsonwebtoken';
+import Anthropic from "@anthropic-ai/sdk";
+import express, { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 
-interface AuthenticatedRequest extends Request {
-  user?: JwtPayload;
+interface VerifyOptions {
+  audience?: string;
+  issuer?: string;
+  algorithms?: string[];
+  maxAge?: string;
 }
 
-interface JWTConfig {
-  secret: string;
-  issuer: string;
-  audience: string;
-  algorithms: string[];
-  maxAge: number;
+interface AuthRequest extends Request {
+  user?: Record<string, unknown>;
 }
 
-interface TokenPayload extends JwtPayload {
-  sub: string;
-  aud?: string | string[];
-  iss?: string;
-}
+const client = new Anthropic();
 
-const DEFAULT_CONFIG: JWTConfig = {
-  secret: process.env.JWT_SECRET || 'your-secret-key',
-  issuer: process.env.JWT_ISSUER || 'auth-service',
-  audience: process.env.JWT_AUDIENCE || 'api-service',
-  algorithms: ['HS256'],
-  maxAge: 3600,
+export const generateSecurityPolicy = async (): Promise<string> => {
+  const message = await client.messages.create({
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content:
+          'Generate a security policy for JWT token validation including: 1) Audience validation patterns, 2) Issuer whitelist, 3) Algorithm restrictions, 4) Token expiry handling. Format as JSON config.',
+      },
+    ],
+  });
+
+  const responseText =
+    message.content[0].type === "text" ? message.content[0].text : "";
+  return responseText;
 };
 
-export function createJWTVerifier(config: Partial<JWTConfig> = {}) {
-  const finalConfig: JWTConfig = { ...DEFAULT_CONFIG, ...config };
+export const createJWTValidator = (config: {
+  secret: string;
+  audience?: string;
+  issuer?: string;
+  algorithms?: string[];
+  maxAge?: string;
+}) => {
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+    const authHeader = req.headers.authorization;
 
-  if (!finalConfig.secret || finalConfig.secret === 'your-secret-key') {
-    throw new Error('JWT_SECRET must be configured');
-  }
-
-  if (!finalConfig.issuer || !finalConfig.audience) {
-    throw new Error('JWT issuer and audience must be configured');
-  }
-
-  if (!finalConfig.algorithms || finalConfig.algorithms.length === 0) {
-    throw new Error('At least one algorithm must be specified');
-  }
-
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const token = extractTokenFromRequest(req);
-
-    if (!token) {
-      return res.status(401).json({
-        error: 'Authentication required',
-        code: 'NO_TOKEN',
-      });
+    if (!authHeader?.startsWith("Bearer ")) {
+      res.status(401).json({ error: "Missing or invalid authorization header" });
+      return;
     }
 
-    const verifyOptions: VerifyOptions = {
-      algorithms: finalConfig.algorithms as jwt.Algorithm[],
-      issuer: finalConfig.issuer,
-      audience: finalConfig.audience,
-      maxAge: `${finalConfig.maxAge}s`,
-    };
+    const token = authHeader.slice(7);
 
-    jwt.verify(token, finalConfig.secret, verifyOptions, (err, decoded) => {
-      if (err) {
-        const statusCode = err.name === 'TokenExpiredError' ? 401 : 403;
-        const errorCode =
-          err.name === 'TokenExpiredError' ? 'TOKEN_EXPIRED' : 'INVALID_TOKEN';
+    try {
+      const verifyOptions: jwt.VerifyOptions = {
+        algorithms: config.algorithms || ["HS256", "HS512"],
+        issuer: config.issuer,
+        audience: config.audience,
+        maxAge: config.maxAge,
+      };
 
-        return res.status(statusCode).json({
-          error: err.message,
-          code: errorCode,
-        });
+      const decoded = jwt.verify(token, config.secret, verifyOptions);
+
+      if (
+        typeof decoded === "object" &&
+        decoded !== null &&
+        "sub" in decoded &&
+        typeof decoded.sub === "string"
+      ) {
+        req.user = decoded as Record<string, unknown>;
+        next();
+      } else {
+        res.status(401).json({ error: "Invalid token structure" });
       }
-
-      if (!decoded || typeof decoded === 'string') {
-        return res.status(403).json({
-          error: 'Invalid token payload',
-          code: 'INVALID_PAYLOAD',
-        });
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        res.status(401).json({ error: "Token has expired" });
+      } else if (error instanceof jwt.JsonWebTokenError) {
+        res.status(403).json({ error: "Invalid token" });
+      } else {
+        res.status(403).json({ error: "Token verification failed" });
       }
-
-      if (!decoded.sub) {
-        return res.status(403).json({
-          error: 'Token missing subject claim',
-          code: 'MISSING_SUBJECT',
-        });
-      }
-
-      req.user = decoded as TokenPayload;
-      next();
-    });
+    }
   };
-}
+};
 
-export function createJWTIssuer(config: Partial<JWTConfig> = {}) {
-  const finalConfig: JWTConfig = { ...DEFAULT_CONFIG, ...config };
+export const buildTokenFromPolicy = async (
+  policyConfig: VerifyOptions
+): Promise<string> => {
+  const message = await client.messages.create({
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: 512,
+    messages: [
+      {
+        role: "user",
+        content: `Based on this JWT policy config: ${JSON.stringify(policyConfig)}, generate a sample JWT token payload. Return only valid JSON.`,
+      },
+    ],
+  });
 
-  if (!finalConfig.secret || finalConfig.secret === 'your-secret-key') {
-    throw new Error('JWT_SECRET must be configured');
-  }
+  const content =
+    message.content[0].type === "text" ? message.content[0].text : "{}";
+  return content;
+};
 
-  return (payload: Partial<TokenPayload>) => {
-    if (!payload.sub) {
-      throw new Error('Token subject (sub) is required');
-    }
+export const establishSecureTokenEndpoint = (
+  app: express.Application,
+  config: {
+    secret: string;
+    issuer: string;
+    audience: string;
+    ex

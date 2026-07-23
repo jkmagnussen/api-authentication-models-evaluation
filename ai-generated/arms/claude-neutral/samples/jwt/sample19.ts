@@ -1,118 +1,115 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
+import express, { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { Request, Response, NextFunction } from "express";
+import crypto from "crypto";
 
-const client = new Anthropic();
-
-interface AuthRequest extends Request {
-  user?: { id: string; email: string };
+interface TokenPayload {
+  sub: string;
+  aud: string;
+  iss: string;
+  iat: number;
+  exp: number;
+  [key: string]: unknown;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-prod";
+interface AuthConfig {
+  publicKey: string;
+  expectedAudience: string;
+  expectedIssuer: string;
+  allowedAlgorithms: string[];
+  maxTokenAge: number;
+  clockTolerance: number;
+}
 
-export const issueAccessToken = (userId: string, email: string): string => {
-  return jwt.sign({ id: userId, email }, JWT_SECRET, { expiresIn: "1h" });
-};
+interface AuthRequest extends Request {
+  user?: TokenPayload;
+}
 
-export const validateTokenMiddleware = (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid authorization header" });
-    return;
+const validateTokenStructure = (
+  token: string
+): { valid: boolean; error?: string } => {
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    return { valid: false, error: "Invalid token format" };
   }
-
-  const token = authHeader.slice(7);
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as {
-      id: string;
-      email: string;
-    };
-    req.user = decoded;
-    next();
+    const payload = JSON.parse(
+      Buffer.from(parts[1], "base64").toString("utf8")
+    );
+    if (!payload.exp || !payload.iat) {
+      return { valid: false, error: "Missing required claims" };
+    }
+    return { valid: true };
   } catch {
-    res.status(401).json({ error: "Invalid or expired token" });
+    return { valid: false, error: "Invalid token payload" };
   }
 };
 
-export const refreshTokenMiddleware = (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
+const verifyTokenExpiry = (payload: TokenPayload, maxAge: number) => {
+  const currentTime = Math.floor(Date.now() / 1000);
+  const tokenAge = currentTime - payload.iat;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid authorization header" });
-    return;
+  if (tokenAge > maxAge) {
+    throw new Error("Token age exceeds maximum allowed");
   }
 
-  const token = authHeader.slice(7);
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET, { ignoreExpiration: true }) as {
-      id: string;
-      email: string;
-    };
-    req.user = decoded;
-    next();
-  } catch {
-    res.status(401).json({ error: "Invalid token" });
+  if (payload.exp && currentTime > payload.exp) {
+    throw new Error("Token has expired");
   }
 };
 
-export const aiSecurityAnalyzer = async (
-  tokenPayload: string
-): Promise<string> => {
-  const message = await client.messages.create({
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 1024,
-    messages: [
-      {
-        role: "user",
-        content: `Analyze this JWT token payload for security concerns: ${tokenPayload}. Provide a brief security assessment.`,
-      },
-    ],
-  });
+const validateAudienceClaim = (
+  payload: TokenPayload,
+  expectedAudience: string
+) => {
+  if (!payload.aud) {
+    throw new Error("Missing audience claim");
+  }
 
-  const textContent = message.content.find((block) => block.type === "text");
-  return textContent && textContent.type === "text" ? textContent.text : "";
+  const audiences = Array.isArray(payload.aud)
+    ? payload.aud
+    : [payload.aud];
+
+  if (!audiences.includes(expectedAudience)) {
+    throw new Error(
+      `Invalid audience. Expected: ${expectedAudience}, Got: ${audiences.join(", ")}`
+    );
+  }
 };
 
-export const optionalAuthMiddleware = (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
+const validateIssuerClaim = (
+  payload: TokenPayload,
+  expectedIssuer: string
+) => {
+  if (!payload.iss) {
+    throw new Error("Missing issuer claim");
+  }
 
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    const token = authHeader.slice(7);
+  if (payload.iss !== expectedIssuer) {
+    throw new Error(
+      `Invalid issuer. Expected: ${expectedIssuer}, Got: ${payload.iss}`
+    );
+  }
+};
+
+export const createAuthMiddleware = (config: AuthConfig) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Missing or invalid authorization header" });
+    }
+
+    const token = authHeader.substring(7);
+
+    const structureValidation = validateTokenStructure(token);
+    if (!structureValidation.valid) {
+      return res.status(401).json({ error: structureValidation.error });
+    }
 
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as {
-        id: string;
-        email: string;
-      };
-      req.user = decoded;
-    } catch {
-      // Token is invalid but we don't fail the request
-    }
-  }
-
-  next();
-};
-
-export const roleBasedAccessControl =
-  (requiredRole: string) =>
-  (req: AuthRequest, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      res.status(401).json({ error: "Authentication required" });
-      return;
-    }
+      const decoded = jwt.verify(token, config.publicKey, {
+        algorithms: config.allowedAlgorithms,
+        audience: config.expectedAudience,
+        issuer: config.expectedIssuer,

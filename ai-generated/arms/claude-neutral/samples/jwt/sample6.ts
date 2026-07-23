@@ -1,121 +1,103 @@
 ```typescript
-import express, { Request, Response, NextFunction } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import { Router, Request, Response, NextFunction } from 'express';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
-const app = express();
-const port = 3000;
-
-// Secret key for signing JWT tokens
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-me";
-
-// Extend Express Request to include user info
-declare global {
-  namespace Express {
-    interface Request {
-      authenticatedUser?: JwtPayload;
-    }
-  }
+interface TokenPayload extends JwtPayload {
+  sub: string;
+  aud: string;
+  iss: string;
 }
 
-// Middleware to verify JWT tokens
-export const authenticateToken = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
+interface AuthConfig {
+  publicKey: string;
+  expectedAudience: string;
+  expectedIssuer: string;
+  allowedAlgorithms: string[];
+  maxTokenAge: string;
+}
 
-  if (!token) {
-    res.status(401).json({ error: "Access token required" });
-    return;
-  }
+const createAuthenticationGuard = (config: AuthConfig) => {
+  const validateTokenStructure = (token: string): boolean => {
+    const parts = token.split('.');
+    return parts.length === 3;
+  };
 
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) {
-      res.status(403).json({ error: "Invalid or expired token" });
-      return;
+  const extractBearerToken = (authHeader: string | undefined): string | null => {
+    if (!authHeader) return null;
+    const [scheme, token] = authHeader.split(' ');
+    if (scheme !== 'Bearer') return null;
+    return token || null;
+  };
+
+  const verifyTokenClaims = (payload: TokenPayload): { valid: boolean; error?: string } => {
+    if (!payload.aud || payload.aud !== config.expectedAudience) {
+      return { valid: false, error: 'Invalid audience claim' };
     }
 
-    req.authenticatedUser = decoded as JwtPayload;
-    next();
-  });
-};
+    if (!payload.iss || payload.iss !== config.expectedIssuer) {
+      return { valid: false, error: 'Invalid issuer claim' };
+    }
 
-// Optional middleware for role-based access control
-export const requireRole = (allowedRoles: string[]) => {
+    if (!payload.sub) {
+      return { valid: false, error: 'Missing subject claim' };
+    }
+
+    return { valid: true };
+  };
+
   return (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.authenticatedUser) {
-      res.status(401).json({ error: "Authentication required" });
-      return;
-    }
+    try {
+      const authorizationHeader = req.headers.authorization;
+      const token = extractBearerToken(authorizationHeader);
 
-    const userRole = req.authenticatedUser.role as string;
-    if (!allowedRoles.includes(userRole)) {
-      res.status(403).json({ error: "Insufficient permissions" });
-      return;
-    }
+      if (!token) {
+        res.status(401).json({ error: 'Missing or malformed authorization header' });
+        return;
+      }
 
-    next();
+      if (!validateTokenStructure(token)) {
+        res.status(401).json({ error: 'Invalid token format' });
+        return;
+      }
+
+      const decoded = jwt.verify(token, config.publicKey, {
+        algorithms: config.allowedAlgorithms as jwt.Algorithm[],
+        audience: config.expectedAudience,
+        issuer: config.expectedIssuer,
+        maxAge: config.maxTokenAge,
+      }) as TokenPayload;
+
+      const claimsValidation = verifyTokenClaims(decoded);
+      if (!claimsValidation.valid) {
+        res.status(401).json({ error: claimsValidation.error });
+        return;
+      }
+
+      (req as Request & { user: TokenPayload }).user = decoded;
+      next();
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        res.status(401).json({ error: 'Token has expired' });
+      } else if (error instanceof jwt.JsonWebTokenError) {
+        res.status(401).json({ error: 'Invalid token' });
+      } else {
+        res.status(500).json({ error: 'Authentication failed' });
+      }
+    }
   };
 };
 
-// Utility function to generate JWT tokens
-export const createToken = (
-  payload: object,
-  expiresIn: string = "1h"
+const generateAccessToken = (
+  payload: { sub: string; aud: string; iss: string },
+  privateKey: string,
+  expiresIn: string = '1h'
 ): string => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn });
+  return jwt.sign(payload, privateKey, {
+    algorithm: 'RS256',
+    expiresIn,
+    issuer: payload.iss,
+    audience: payload.aud,
+  });
 };
 
-// Mock user database
-interface User {
-  id: string;
-  username: string;
-  password: string;
-  role: string;
-}
-
-const mockUsers: User[] = [
-  { id: "1", username: "admin", password: "admin123", role: "admin" },
-  { id: "2", username: "user", password: "user123", role: "user" },
-];
-
-// Routes
-app.use(express.json());
-
-// Login route - generates JWT token
-app.post("/login", (req: Request, res: Response): void => {
-  const { username, password } = req.body;
-
-  const user = mockUsers.find(
-    (u) => u.username === username && u.password === password
-  );
-
-  if (!user) {
-    res.status(401).json({ error: "Invalid credentials" });
-    return;
-  }
-
-  const token = createToken({ id: user.id, username: user.username, role: user.role });
-  res.json({ token, message: "Login successful" });
-});
-
-// Protected route - requires authentication
-app.get("/protected", authenticateToken, (req: Request, res: Response): void => {
-  res.json({
-    message: "Access granted to protected resource",
-    user: req.authenticatedUser,
-  });
-});
-
-// Admin-only route
-app.get(
-  "/admin",
-  authenticateToken,
-  requireRole(["admin"]),
-  (req: Request, res: Response): void => {
-    res.json({
-      message: "Admin access granted",
-      user: req.authenticatedUser,
-    });
+const

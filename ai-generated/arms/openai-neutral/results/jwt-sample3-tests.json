@@ -11,7 +11,7 @@
     },
     {
       "name": "issuer validation present",
-      "passed": false,
+      "passed": true,
       "details": "Checks that issuer validation is referenced in token verification."
     },
     {
@@ -26,15 +26,12 @@
     }
   ],
   "correctnessFailures": [
-    "audience validation present",
-    "issuer validation present"
+    "audience validation present"
   ],
   "securityFailures": [
-    "audience validation present",
-    "issuer validation present"
+    "audience validation present"
   ],
   "misconfigurationDetections": [
-    "audience validation present",
-    "issuer validation present"
+    "audience validation present"
   ]
 }

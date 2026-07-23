@@ -1,51 +1,113 @@
-import express, { Request, Response } from 'express';
-import { randomBytes } from 'crypto';
-import { query, validationResult } from 'express-validator';
+```typescript
+import Anthropic from "@anthropic-ai/sdk";
+import express, { Request, Response } from "express";
+
+const client = new Anthropic();
 
 const app = express();
+app.use(express.json());
 
-const validClients = new Set(['client-id-123', 'client-id-456']);
-const allowedRedirectUris = new Set(['https://valid-redirect-uri.com/callback']);
-const validScopes = new Set(['read', 'write', 'admin']);
-
-export interface OAuthState {
-  state: string;
-  redirectUri: string;
+interface AuthorizeQuery {
+  client_id?: string;
+  redirect_uri?: string;
+  response_type?: string;
+  scope?: string;
+  state?: string;
 }
 
-const stateStore: Map<string, OAuthState> = new Map();
+const ALLOWED_SCOPES = new Set([
+  "openid",
+  "profile",
+  "email",
+  "read:user",
+  "write:user",
+]);
+const REGISTERED_CLIENTS: Record<
+  string,
+  { redirectUris: string[]; name: string }
+> = {
+  test_client_123: {
+    name: "Test Application",
+    redirectUris: [
+      "http://localhost:3001/callback",
+      "https://app.example.com/callback",
+    ],
+  },
+  trusted_app_456: {
+    name: "Trusted Partner App",
+    redirectUris: ["https://partner.example.com/oauth/callback"],
+  },
+};
 
-export const authorize = [
-  query('response_type').equals('code'),
-  query('client_id').custom((value) => validClients.has(value)),
-  query('redirect_uri').custom((value) => allowedRedirectUris.has(value)),
-  query('scope').custom((value) => {
-    const scopes = value.split(' ');
-    return scopes.every(scope => validScopes.has(scope));
-  }),
-  query('state').isLength({ min: 16, max: 128 }),
+export function validateRedirectUri(
+  clientId: string,
+  redirectUri: string
+): boolean {
+  const client = REGISTERED_CLIENTS[clientId];
+  if (!client) return false;
 
-  (req: Request, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { client_id, redirect_uri, scope, state } = req.query as Record<string, string>;
-
-    const generatedState = randomBytes(16).toString('hex');
-    stateStore.set(generatedState, { state, redirectUri: redirect_uri });
-
-    const authorizationCode = randomBytes(20).toString('hex');
-
-    const redirectUrl = new URL(redirect_uri);
-    redirectUrl.searchParams.set('code', authorizationCode);
-    redirectUrl.searchParams.set('state', generatedState);
-
-    res.redirect(redirectUrl.toString());
+  try {
+    const requestedUrl = new URL(redirectUri);
+    return client.redirectUris.some((allowed) => {
+      const allowedUrl = new URL(allowed);
+      return (
+        requestedUrl.protocol === allowedUrl.protocol &&
+        requestedUrl.hostname === allowedUrl.hostname &&
+        requestedUrl.pathname === allowedUrl.pathname
+      );
+    });
+  } catch {
+    return false;
   }
-];
+}
 
-app.get('/oauth2/authorize', authorize);
+export function validateScopes(requestedScopes: string): string[] {
+  const scopes = requestedScopes.split(" ").filter((s) => s.length > 0);
+  const validScopes = scopes.filter((scope) => ALLOWED_SCOPES.has(scope));
 
-export default app;
+  if (validScopes.length === 0) {
+    throw new Error("No valid scopes requested");
+  }
+
+  return validScopes;
+}
+
+export function generateStateToken(): string {
+  const randomBytes = new Uint8Array(32);
+  crypto.getRandomValues(randomBytes);
+  return Array.from(randomBytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export function validateStateParameter(state: string): boolean {
+  if (!state || typeof state !== "string") return false;
+  if (state.length < 20 || state.length > 500) return false;
+  if (!/^[a-zA-Z0-9\-._~]+$/.test(state)) return false;
+  return true;
+}
+
+async function generateAuthorizationResponse(
+  clientId: string,
+  state: string,
+  scopes: string[]
+): Promise<string> {
+  const conversationHistory: Array<{
+    role: "user" | "assistant";
+    content: string;
+  }> = [];
+
+  const userMessage = `Generate a secure OAuth2 authorization response for:
+- Client ID: ${clientId}
+- Requested Scopes: ${scopes.join(", ")}
+- State Parameter: ${state}
+- Authorization Code: ${generateStateToken().substring(0, 20)}
+
+Provide a JSON object with authorization_code, expires_in (3600), scope (space-separated), and state.`;
+
+  conversationHistory.push({
+    role: "user",
+    content: userMessage,
+  });
+
+  const response = await client.messages.create

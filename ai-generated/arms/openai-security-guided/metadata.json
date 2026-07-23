@@ -1,7 +1,8 @@
 {
   "provider": "openai",
   "promptMode": "security-guided",
-  "generatedAt": "2026-07-23T00:36:13.882Z",
+  "sampleCount": 5,
+  "generatedAt": "2026-07-23T04:30:52.104Z",
   "providerModelIdentifier": "gpt-4o",
   "providerEndpoint": "https://api.openai.com/v1",
   "generationParameters": {
@@ -47,8 +48,8 @@
     ]
   },
   "retrySummary": {
-    "totalAttempts": 90,
-    "successfulRequests": 90,
+    "totalAttempts": 15,
+    "successfulRequests": 15,
     "retries": 0,
     "retryableHttpFailures": 0,
     "networkFailures": 0,
@@ -57,7 +58,7 @@
   },
   "overallFailure": {
     "totalSamples": 90,
-    "failedSamples": 32,
-    "failureRatePct": 35.6
+    "failedSamples": 34,
+    "failureRatePct": 37.8
   }
 }

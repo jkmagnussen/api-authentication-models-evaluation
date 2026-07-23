@@ -1,18 +1,59 @@
 {
   "model": "oauth",
   "sample": "sample1",
-  "characters": 2734,
-  "lines": 122,
-  "functions": 0,
+  "characters": 1506,
+  "lines": 43,
+  "functions": 2,
   "classes": 0,
-  "cyclomaticComplexity": null,
+  "cyclomaticComplexity": 1,
   "halstead": {
-    "difficulty": null,
-    "volume": null,
-    "effort": null,
-    "bugs": null,
-    "time": null
+    "operators": {
+      "distinct": 7,
+      "total": 29,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const"
+      ]
+    },
+    "operands": {
+      "distinct": 21,
+      "total": 36,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "oauth2AuthEndpoint",
+        0,
+        "express_1",
+        "\"express\"",
+        "require",
+        "express_validator_1",
+        "\"express-validator\"",
+        "crypto_1",
+        "\"crypto\"",
+        "app",
+        "default",
+        "\"/authorize\"",
+        "get"
+      ]
+    },
+    "length": 65,
+    "vocabulary": 28,
+    "difficulty": 6,
+    "volume": 312.4780699337442,
+    "effort": 1874.8684196024653,
+    "bugs": 0.10415935664458141,
+    "time": 104.15935664458141
   },
-  "maintainabilityIndex": null,
-  "analysisError": "Line 123: Unexpected token ILLEGAL"
+  "maintainabilityIndex": 104.9703876151577
 }

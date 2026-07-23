@@ -1,111 +1,123 @@
-import express, { Request, Response, NextFunction } from "express";
+```typescript
+import { Router, Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-interface TokenPayload {
-  userId: string;
-  username: string;
+interface AuthPayload {
+  sub: string;
+  aud: string;
+  iss: string;
   iat: number;
+  exp: number;
+}
+
+interface JwtConfig {
+  secret: string;
+  audience: string;
+  issuer: string;
+  expiresIn: string | number;
+  algorithm: jwt.Algorithm;
 }
 
 interface AuthenticatedRequest extends Request {
-  user?: TokenPayload;
+  authContext?: AuthPayload;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
-const TOKEN_EXPIRY = "24h";
-
-export const issueToken = (userId: string, username: string): string => {
-  return jwt.sign({ userId, username }, JWT_SECRET, {
-    expiresIn: TOKEN_EXPIRY,
-  });
+const DEFAULT_CONFIG: JwtConfig = {
+  secret: process.env.JWT_SECRET || "your-secret-key",
+  audience: process.env.JWT_AUDIENCE || "app-users",
+  issuer: process.env.JWT_ISSUER || "app-auth-service",
+  expiresIn: process.env.JWT_EXPIRES_IN || "1h",
+  algorithm: "HS256",
 };
 
-export const validateToken = (token: string): TokenPayload | null => {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    return decoded as TokenPayload;
-  } catch {
-    return null;
-  }
-};
-
-export const protectedRoute = (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid authorization header" });
-    return;
+function validateJwtConfig(config: JwtConfig): boolean {
+  if (!config.secret || config.secret.length < 32) {
+    console.error("JWT secret must be at least 32 characters long");
+    return false;
   }
 
-  const token = authHeader.substring(7);
-  const payload = validateToken(token);
-
-  if (!payload) {
-    res.status(401).json({ error: "Invalid or expired token" });
-    return;
+  if (!config.audience || config.audience.trim().length === 0) {
+    console.error("JWT audience must be defined");
+    return false;
   }
 
-  req.user = payload;
-  next();
-};
+  if (!config.issuer || config.issuer.trim().length === 0) {
+    console.error("JWT issuer must be defined");
+    return false;
+  }
 
-export const createAuthApp = (): express.Application => {
-  const app = express();
-  app.use(express.json());
+  const validAlgorithms: jwt.Algorithm[] = [
+    "HS256",
+    "HS384",
+    "HS512",
+    "RS256",
+    "RS384",
+    "RS512",
+    "ES256",
+    "ES384",
+    "ES512",
+  ];
 
-  app.post("/auth/login", (req: Request, res: Response) => {
-    const { userId, username } = req.body;
+  if (!validAlgorithms.includes(config.algorithm)) {
+    console.error("Invalid JWT algorithm");
+    return false;
+  }
 
-    if (!userId || !username) {
-      res.status(400).json({ error: "userId and username required" });
-      return;
-    }
+  return true;
+}
 
-    const token = issueToken(userId, username);
-    res.json({ token, expiresIn: TOKEN_EXPIRY });
-  });
+export function createSecureAuthMiddleware(
+  customConfig?: Partial<JwtConfig>
+) {
+  const config = { ...DEFAULT_CONFIG, ...customConfig };
 
-  app.get("/auth/verify", protectedRoute, (req: AuthenticatedRequest, res: Response) => {
-    res.json({ user: req.user, message: "Token is valid" });
-  });
+  if (!validateJwtConfig(config)) {
+    throw new Error("Invalid JWT configuration");
+  }
 
-  app.post("/auth/refresh", (req: Request, res: Response) => {
+  return (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): void => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      res.status(401).json({ error: "Missing token" });
+      res.status(401).json({
+        error: "Missing or invalid authorization header",
+        code: "AUTH_HEADER_MISSING",
+      });
       return;
     }
 
-    const token = authHeader.substring(7);
-    const payload = validateToken(token);
+    const token = authHeader.slice(7);
 
-    if (!payload) {
-      res.status(401).json({ error: "Invalid token" });
-      return;
-    }
+    try {
+      const decoded = jwt.verify(token, config.secret, {
+        algorithms: [config.algorithm],
+        audience: config.audience,
+        issuer: config.issuer,
+      }) as AuthPayload;
 
-    const newToken = issueToken(payload.userId, payload.username);
-    res.json({ token: newToken, expiresIn: TOKEN_EXPIRY });
-  });
+      if (!decoded.sub) {
+        res.status(401).json({
+          error: "Invalid token: missing subject claim",
+          code: "INVALID_TOKEN_SUBJECT",
+        });
+        return;
+      }
 
-  app.get("/protected-data", protectedRoute, (req: AuthenticatedRequest, res: Response) => {
-    res.json({
-      message: "This is protected data",
-      user: req.user,
-    });
-  });
+      req.authContext = decoded;
+      next();
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        res.status(401).json({
+          error: "Token has expired",
+          code: "TOKEN_EXPIRED",
+          expiredAt: error.expiredAt,
+        });
+        return;
+      }
 
-  return app;
-};
-
-const server = createAuthApp();
-const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, () => {
-  console.log(`JWT Auth Server running on port ${PORT}`);
-});
+      if (error instanceof jwt.JsonWebTokenError) {
+        res.status(403).json({

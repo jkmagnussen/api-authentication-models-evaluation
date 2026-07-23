@@ -2,7 +2,7 @@
   "model": "sessions",
   "sample": "sample22",
   "samplePath": "ai-generated\\sessions\\sample22.ts",
-  "passed": true,
+  "passed": false,
   "checks": [
     {
       "name": "session regeneration present",
@@ -16,7 +16,7 @@
     },
     {
       "name": "logout invalidation present",
-      "passed": true,
+      "passed": false,
       "details": "Checks that logout invalidates the server-side session."
     },
     {
@@ -25,7 +25,13 @@
       "details": "Flags insecure SameSite=None with secure=false."
     }
   ],
-  "correctnessFailures": [],
-  "securityFailures": [],
-  "misconfigurationDetections": []
+  "correctnessFailures": [
+    "logout invalidation present"
+  ],
+  "securityFailures": [
+    "logout invalidation present"
+  ],
+  "misconfigurationDetections": [
+    "logout invalidation present"
+  ]
 }

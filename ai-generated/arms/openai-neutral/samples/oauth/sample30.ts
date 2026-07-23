@@ -1,57 +1,125 @@
-import express, { Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
-import bodyParser from 'body-parser';
+```typescript
+import express, { Router, Request, Response, NextFunction } from "express";
+import crypto from "crypto";
 
-const authApp = express();
-authApp.use(bodyParser.urlencoded({ extended: true }));
+const router = Router();
 
-interface Client {
+interface OAuthConfig {
   clientId: string;
-  redirectUris: string[];
+  clientSecret: string;
+  redirectUris: Set<string>;
+  allowedScopes: Set<string>;
+  stateTimeout: number;
 }
 
-interface AuthorizationCode {
-  code: string;
-  clientId: string;
-  redirectUri: string;
-  user: string;
-}
+const stateStore = new Map<string, { timestamp: number; clientId: string }>();
 
-const clients: Record<string, Client> = {
-  'client123': { clientId: 'client123', redirectUris: ['http://localhost/callback'] }
+export const validateOAuthConfiguration = (config: OAuthConfig): boolean => {
+  if (!config.clientId || !config.clientSecret) {
+    return false;
+  }
+  if (config.redirectUris.size === 0 || config.allowedScopes.size === 0) {
+    return false;
+  }
+  return true;
 };
 
-const authorizationCodes: AuthorizationCode[] = [];
-
-export const authorizationEndpoint = authApp.post('/authorize', (req: Request, res: Response) => {
-  const { response_type, client_id, redirect_uri, scope, state, user } = req.body;
-
-  if (response_type !== 'code') {
-    return res.status(400).send('Invalid response_type');
+export const sanitizeRedirectUri = (uri: string): string => {
+  try {
+    const parsed = new URL(uri);
+    if (!parsed.protocol.match(/^https?:$/)) {
+      throw new Error("Invalid protocol");
+    }
+    return parsed.toString();
+  } catch {
+    return "";
   }
+};
 
-  const client = clients[client_id];
-  if (!client || !client.redirectUris.includes(redirect_uri)) {
-    return res.status(400).send('Invalid client_id or redirect_uri');
+export const isValidRedirectUri = (
+  uri: string,
+  allowedUris: Set<string>
+): boolean => {
+  if (!uri) return false;
+  const sanitized = sanitizeRedirectUri(uri);
+  return allowedUris.has(sanitized);
+};
+
+export const parseRequestedScopes = (scopeParam: string): string[] => {
+  if (!scopeParam || typeof scopeParam !== "string") {
+    return [];
   }
+  return scopeParam
+    .split(" ")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+};
 
-  if (!user) {
-    return res.status(400).send('User must be authenticated');
-  }
+export const validateRequestedScopes = (
+  requested: string[],
+  allowed: Set<string>
+): string[] => {
+  return requested.filter((scope) => allowed.has(scope));
+};
 
-  const code = uuidv4();
-  authorizationCodes.push({
-    code,
-    clientId: client_id,
-    redirectUri: redirect_uri,
-    user
+export const generateSecureState = (): string => {
+  return crypto.randomBytes(32).toString("hex");
+};
+
+export const storeAuthorizationState = (
+  state: string,
+  clientId: string,
+  expirationMs: number
+): void => {
+  stateStore.set(state, {
+    timestamp: Date.now(),
+    clientId: clientId,
   });
 
-  const redirectUrl = new URL(redirect_uri);
-  redirectUrl.searchParams.append('code', code);
-  if (state) {
-    redirectUrl.searchParams.append('state', state);
+  setTimeout(() => {
+    stateStore.delete(state);
+  }, expirationMs);
+};
+
+export const verifyAuthorizationState = (
+  state: string,
+  clientId: string,
+  maxAgeMs: number
+): boolean => {
+  const entry = stateStore.get(state);
+  if (!entry) {
+    return false;
   }
 
-  res.redirect(redirectUrl.toString());
-});
+  if (Date.now() - entry.timestamp > maxAgeMs) {
+    stateStore.delete(state);
+    return false;
+  }
+
+  if (entry.clientId !== clientId) {
+    stateStore.delete(state);
+    return false;
+  }
+
+  stateStore.delete(state);
+  return true;
+};
+
+export const createAuthorizationEndpoint = (config: OAuthConfig) => {
+  if (!validateOAuthConfiguration(config)) {
+    throw new Error("Invalid OAuth configuration");
+  }
+
+  const authRouter = Router();
+
+  authRouter.get(
+    "/authorize",
+    (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const { client_id, redirect_uri, scope, state, response_type } =
+          req.query;
+
+        // Validate response_type
+        if (response_type !== "code") {
+          return res.status(400).json({
+            error: "uns

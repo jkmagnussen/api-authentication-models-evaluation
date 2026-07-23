@@ -1,46 +1,21 @@
-import express, { Request, Response, NextFunction } from 'express';
-import jwt, { Secret } from 'jsonwebtoken';
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 
-const secretKey: Secret = 'your_secret_key_here';
+const secretKey = process.env.JWT_SECRET || 'defaultSecret';
 
-interface JwtPayload {
-  userId: string;
-  iat: number;
-  exp: number;
-}
-
-export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunction): void {
-  const authHeader = req.headers.authorization;
-  
-  if (!authHeader) {
-    res.status(401).json({ message: 'Authorization header missing' });
-    return;
-  }
-
-  const token = authHeader.split(' ')[1];
+export const jwtAuthMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+  const token = req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
-    res.status(401).json({ message: 'Token missing' });
+    res.status(401).json({ message: 'No token provided, authorization denied' });
     return;
   }
 
   try {
-    const decodedToken = jwt.verify(token, secretKey) as JwtPayload;
-    (req as any).userId = decodedToken.userId;
+    const decoded = jwt.verify(token, secretKey);
+    (req as any).user = decoded;
     next();
   } catch (error) {
-    res.status(403).json({ message: 'Token is not valid' });
+    res.status(401).json({ message: 'Invalid token, authorization denied' });
   }
-}
-
-const app = express();
-
-app.use(jwtAuthMiddleware);
-
-app.get('/protected', (req: Request, res: Response) => {
-  res.send(`Hello, user with ID: ${(req as any).userId}`);
-});
-
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
-});
+};

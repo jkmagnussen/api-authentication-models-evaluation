@@ -1,69 +1,112 @@
-import express from 'express';
-import session from 'express-session';
-import crypto from 'crypto';
+```typescript
+import express, { Request, Response, NextFunction } from 'express';
+import session, { SessionOptions } from 'express-session';
+import MemoryStore from 'memorystore';
 
-const app = express();
+const MemStoreFactory = MemoryStore(session);
 
-const sessionConfig: session.SessionOptions = {
-  secret: crypto.randomBytes(64).toString('hex'),
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    username: string;
+    roles: string[];
+  };
+  sessionID?: string;
+}
+
+const buildSessionConfig = (): SessionOptions => ({
+  store: new MemStoreFactory({
+    checkInterval: 86400000,
+  }),
+  secret: process.env.SESSION_SECRET || 'change-me-in-production',
   resave: false,
   saveUninitialized: false,
+  name: 'auth_session_id',
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 1000 * 60 * 15  // 15 minutes
-  }
+    sameSite: 'strict' as const,
+    maxAge: 1800000,
+    domain: process.env.COOKIE_DOMAIN,
+    path: '/',
+  },
+  proxy: process.env.NODE_ENV === 'production',
+});
+
+export const initializeSessionMiddleware = (app: express.Application): void => {
+  const sessionConfig = buildSessionConfig();
+  app.use(session(sessionConfig));
 };
 
-app.use(session(sessionConfig));
-
-export function regenerateSession(req: express.Request, callback: (err?: any) => void): void {
-  req.session.regenerate((err: any) => {
-    callback(err);
-  });
-}
-
-export function destroySession(req: express.Request, callback: (err?: any) => void): void {
-  req.session.destroy((err: any) => {
-    if (!err) {
-      res.clearCookie('connect.sid');
-    }
-    callback(err);
-  });
-}
-
-export const isAuthenticated = (req: express.Request, res: express.Response, next: express.NextFunction): void => {
-  if (req.session.userId) {
-    return next();
+export const requireAuthenticatedSession = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.session || !req.session.userId) {
+    res.status(401).json({ error: 'Session expired or invalid' });
+    return;
   }
-  res.status(401).json({ error: 'Unauthorized access' });
-};
 
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  if (validateCredentials(username, password)) {
-    regenerateSession(req, (err) => {
-      if (err) {
-        return res.status(500).json({ error: 'Session error' });
-      }
-      req.session.userId = username;
-      res.status(200).json({ message: 'Login successful' });
+  if (req.session.expiresAt && Date.now() > req.session.expiresAt) {
+    req.session.destroy((err) => {
+      if (err) console.error('Session destruction error:', err);
     });
-  } else {
-    res.status(401).json({ error: 'Invalid credentials' });
+    res.status(401).json({ error: 'Session has expired' });
+    return;
   }
-});
 
-app.post('/logout', isAuthenticated, (req, res) => {
-  destroySession(req, (err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Session error' });
-    }
-    res.status(200).json({ message: 'Logout successful' });
+  next();
+};
+
+export const performSessionRegeneration = async (
+  req: AuthenticatedRequest
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const previousSessionId = req.sessionID;
+
+    req.session.regenerate((err) => {
+      if (err) {
+        reject(new Error(`Session regeneration failed: ${err.message}`));
+        return;
+      }
+
+      const expirationTime = Date.now() + 1800000;
+      req.session.expiresAt = expirationTime;
+      req.session.regeneratedFrom = previousSessionId;
+      req.session.createdAt = Date.now();
+
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          reject(new Error(`Failed to save regenerated session: ${saveErr.message}`));
+          return;
+        }
+        resolve(req.sessionID || '');
+      });
+    });
   });
-});
+};
 
-function validateCredentials(username: string, password: string): boolean {
-  // Replace with actual credential validation logic
-  return username === 'user' && password === 'pass';
-}
+export const handleUserLogin = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  userId: string,
+  username: string,
+  roles: string[]
+): Promise<void> => {
+  try {
+    const newSessionId = await performSessionRegeneration(req);
+
+    req.session.userId = userId;
+    req.session.username = username;
+    req.session.roles = roles;
+    req.session.loginTime = Date.now();
+
+    req.session.save((err) => {
+      if (err) {
+        res.status(500).json({ error: 'Failed to establish session' });
+        return;
+      }
+
+      res.status(200).json({
+        message:

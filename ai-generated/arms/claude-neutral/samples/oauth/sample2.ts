@@ -1,92 +1,104 @@
 ```typescript
-import express, { Request, Response } from 'express';
-import crypto from 'crypto';
+import Anthropic from "@anthropic-ai/sdk";
+import express, { Request, Response } from "express";
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const client = new Anthropic();
 
-interface AuthorizationRequest {
-  client_id: string;
-  redirect_uri: string;
-  response_type: string;
-  scope: string;
-  state: string;
-}
+const authorizationEndpoint = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const conversationHistory: Array<{
+    role: "user" | "assistant";
+    content: string;
+  }> = [];
 
-interface StoredClient {
-  client_id: string;
-  client_secret: string;
-  redirect_uris: string[];
-  name: string;
-}
+  const systemPrompt = `You are an OAuth2 authorization server expert. You will help implement and understand OAuth2 authorization endpoints.
+For any request, provide concise technical guidance on OAuth2 authorization flow implementation.
+Include relevant security considerations and RFC 6749 compliance notes.
+When asked about code, provide TypeScript/JavaScript examples.
+Keep responses focused and practical.`;
 
-const registeredClients: Map<string, StoredClient> = new Map([
-  ['mobile_app_001', {
-    client_id: 'mobile_app_001',
-    client_secret: 'secret_mobile_12345',
-    redirect_uris: ['https://app.example.com/callback'],
-    name: 'Mobile Application'
-  }],
-  ['web_service_002', {
-    client_id: 'web_service_002',
-    client_secret: 'secret_web_67890',
-    redirect_uris: ['http://localhost:3001/oauth/callback', 'https://service.example.com/auth/callback'],
-    name: 'Web Service'
-  }]
-]);
+  const userQuery = `I need to implement an OAuth2 authorization endpoint. The request parameters are:
+- client_id: ${req.query.client_id}
+- redirect_uri: ${req.query.redirect_uri}
+- response_type: ${req.query.response_type}
+- scope: ${req.query.scope}
+- state: ${req.query.state}
 
-const pendingAuthorizations: Map<string, AuthorizationRequest & { expiresAt: number }> = new Map();
-const issuedTokens: Map<string, { client_id: string; scope: string; expiresAt: number }> = new Map();
+Can you validate these parameters and explain the authorization code flow for this scenario?`;
 
-export function validateRedirectUri(clientId: string, redirectUri: string): boolean {
-  const client = registeredClients.get(clientId);
-  if (!client) return false;
-  return client.redirect_uris.includes(redirectUri);
-}
+  conversationHistory.push({
+    role: "user",
+    content: userQuery,
+  });
 
-export function generateAuthorizationCode(): string {
-  return crypto.randomBytes(32).toString('hex');
-}
+  const response = await client.messages.create({
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: 1024,
+    system: systemPrompt,
+    messages: conversationHistory,
+  });
 
-export function generateAccessToken(): string {
-  return crypto.randomBytes(32).toString('hex');
-}
+  const assistantMessage =
+    response.content[0].type === "text" ? response.content[0].text : "";
+  conversationHistory.push({
+    role: "assistant",
+    content: assistantMessage,
+  });
 
-export function handleAuthorizationInitiate(req: Request, res: Response): void {
-  const { client_id, redirect_uri, response_type, scope, state } = req.query;
+  // Validate OAuth2 parameters
+  const clientId = req.query.client_id as string;
+  const redirectUri = req.query.redirect_uri as string;
+  const responseType = req.query.response_type as string;
+  const scope = req.query.scope as string;
+  const state = req.query.state as string;
 
-  if (!client_id || typeof client_id !== 'string') {
-    res.status(400).json({ error: 'invalid_request', error_description: 'Missing client_id' });
-    return;
-  }
-
-  if (!redirect_uri || typeof redirect_uri !== 'string') {
-    res.status(400).json({ error: 'invalid_request', error_description: 'Missing redirect_uri' });
-    return;
-  }
-
-  if (!registeredClients.has(client_id)) {
-    res.status(401).json({ error: 'invalid_client', error_description: 'Unknown client_id' });
-    return;
-  }
-
-  if (!validateRedirectUri(client_id, redirect_uri)) {
-    res.status(403).json({ error: 'invalid_grant', error_description: 'Invalid redirect_uri' });
-    return;
-  }
-
-  if (response_type !== 'code') {
-    const params = new URLSearchParams({
-      error: 'unsupported_response_type',
-      state: state ? String(state) : ''
+  // Validate required parameters
+  if (!clientId || !redirectUri || !responseType) {
+    res.status(400).json({
+      error: "invalid_request",
+      error_description: "Missing required parameters",
     });
-    res.redirect(`${redirect_uri}?${params.toString()}`);
     return;
   }
 
-  const authCode = generateAuthorizationCode();
-  const expiresAt = Date.now() + 10 * 60 * 1000;
+  // Validate response_type
+  if (responseType !== "code" && responseType !== "token") {
+    res.status(400).json({
+      error: "unsupported_response_type",
+      error_description: "Only 'code' and 'token' are supported",
+    });
+    return;
+  }
 
-  pendingAuthorizations.set(authCode, {
-    client_id: client_id as string,
+  // Validate redirect_uri format
+  try {
+    new URL(redirectUri);
+  } catch {
+    res.status(400).json({
+      error: "invalid_request",
+      error_description: "Invalid redirect_uri format",
+    });
+    return;
+  }
+
+  // Generate authorization code (mock implementation)
+  const authCode = Buffer.from(clientId + Date.now()).toString("hex");
+  const params = new URLSearchParams();
+  params.append("code", authCode);
+  if (state) {
+    params.append("state", state);
+  }
+
+  const followUpQuery = `The authorization code has been generated as ${authCode}. 
+What should happen next in the OAuth2 authorization code flow?`;
+
+  conversationHistory.push({
+    role: "user",
+    content: followUpQuery,
+  });
+
+  const followUpResponse = await client.messages.create({
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: 512,

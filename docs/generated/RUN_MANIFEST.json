@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T03:49:04.860Z",
+  "generatedAt": "2026-07-23T04:51:46.033Z",
   "runtime": {
     "nodeVersion": "v24.14.1",
     "npmVersion": "11.12.1",
@@ -12,13 +12,13 @@
     "hostname": "JOE-PC"
   },
   "vcs": {
-    "gitCommit": "cf54f5621cf11efc8e79c06bb119b242a3982fa2",
+    "gitCommit": "f5c29207be92082a7d3a6c0029e2600bc544df5b",
     "gitBranch": "main",
     "dirtyWorkingTree": true
   },
   "dataStack": {
-    "databaseProvider": "unknown",
-    "databaseUrlPresent": false,
+    "databaseProvider": "postgresql",
+    "databaseUrlPresent": true,
     "prismaClientVersion": "^6.0.0",
     "prismaCliVersion": "^6.0.0",
     "prismaVersion": null
@@ -36,19 +36,19 @@
       }
     },
     "generationMetadata": {
-      "generatedAt": "2026-07-23T00:52:18.643Z",
-      "startedAt": "2026-07-23T00:44:13.574Z",
-      "provider": "claude",
-      "providerModel": "claude-haiku-4-5-20251001",
-      "providerModelIdentifier": "claude-haiku-4-5-20251001",
-      "providerEndpoint": "https://api.anthropic.com/v1/messages",
+      "generatedAt": "2026-07-23T04:30:46.685Z",
+      "startedAt": "2026-07-23T04:29:56.141Z",
+      "provider": "openai",
+      "providerModel": "gpt-4o",
+      "providerModelIdentifier": "gpt-4o",
+      "providerEndpoint": "https://api.openai.com/v1",
       "promptMode": "security-guided",
       "models": [
         "oauth",
         "jwt",
         "sessions"
       ],
-      "sampleCount": 30,
+      "sampleCount": 5,
       "generationParameters": {
         "temperature": 0.8,
         "maxTokens": 900
@@ -92,8 +92,8 @@
         ]
       },
       "retrySummary": {
-        "totalAttempts": 90,
-        "successfulRequests": 90,
+        "totalAttempts": 15,
+        "successfulRequests": 15,
         "retries": 0,
         "retryableHttpFailures": 0,
         "networkFailures": 0,
@@ -102,7 +102,7 @@
       }
     },
     "aiMatrix": {
-      "generatedAt": "2026-07-23T00:52:24.159Z",
+      "generatedAt": "2026-07-23T04:23:15.750Z",
       "allowPartial": false,
       "requiredArms": [
         "openai-neutral",
@@ -156,8 +156,8 @@
             ]
           },
           "retrySummary": {
-            "totalAttempts": 90,
-            "successfulRequests": 90,
+            "totalAttempts": 15,
+            "successfulRequests": 15,
             "retries": 0,
             "retryableHttpFailures": 0,
             "networkFailures": 0,
@@ -210,8 +210,8 @@
             ]
           },
           "retrySummary": {
-            "totalAttempts": 90,
-            "successfulRequests": 90,
+            "totalAttempts": 15,
+            "successfulRequests": 15,
             "retries": 0,
             "retryableHttpFailures": 0,
             "networkFailures": 0,
@@ -264,8 +264,8 @@
             ]
           },
           "retrySummary": {
-            "totalAttempts": 90,
-            "successfulRequests": 90,
+            "totalAttempts": 15,
+            "successfulRequests": 15,
             "retries": 0,
             "retryableHttpFailures": 0,
             "networkFailures": 0,
@@ -318,8 +318,8 @@
             ]
           },
           "retrySummary": {
-            "totalAttempts": 90,
-            "successfulRequests": 90,
+            "totalAttempts": 15,
+            "successfulRequests": 15,
             "retries": 0,
             "retryableHttpFailures": 0,
             "networkFailures": 0,

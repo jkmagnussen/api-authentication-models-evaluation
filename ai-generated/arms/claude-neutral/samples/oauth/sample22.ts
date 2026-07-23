@@ -1,114 +1,121 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response } from "express";
-import crypto from "crypto";
-import querystring from "querystring";
+import express, { Router, Request, Response, NextFunction } from "express";
+import { randomBytes } from "crypto";
+import { URL } from "url";
 
-const client = new Anthropic();
-const app = express();
-
-interface AuthorizationRequest {
-  client_id: string;
-  redirect_uri: string;
-  scope: string;
-  state: string;
-  response_type: string;
+interface OAuthConfig {
+  clientId: string;
+  clientSecret: string;
+  redirectUris: string[];
+  allowedScopes: string[];
+  stateExpiryMs: number;
 }
 
-interface ClientRegistration {
-  client_id: string;
-  client_secret: string;
-  redirect_uris: string[];
-  scopes: string[];
+interface StoredAuthState {
+  clientId: string;
+  redirectUri: string;
+  scope: string[];
+  timestamp: number;
 }
 
-const registeredClients: Map<string, ClientRegistration> = new Map();
-const authorizationCodes: Map<string, AuthorizationRequest & { expiresAt: number }> = new Map();
-const accessTokens: Map<string, { client_id: string; scopes: string[]; expiresAt: number }> = new Map();
+const stateStore = new Map<string, StoredAuthState>();
 
-const AUTHORIZATION_CODE_EXPIRY = 10 * 60 * 1000;
-const ACCESS_TOKEN_EXPIRY = 3600 * 1000;
+export function createOAuthAuthorizationRouter(config: OAuthConfig): Router {
+  const router = Router();
 
-export function registerClient(req: Request, res: Response): void {
-  const { name, redirect_uris, scopes } = req.body;
-
-  const clientId = crypto.randomBytes(16).toString("hex");
-  const clientSecret = crypto.randomBytes(32).toString("hex");
-
-  const registration: ClientRegistration = {
-    client_id: clientId,
-    client_secret: clientSecret,
-    redirect_uris,
-    scopes: scopes || ["profile", "email"],
-  };
-
-  registeredClients.set(clientId, registration);
-
-  res.json({
-    client_id: clientId,
-    client_secret: clientSecret,
-    name,
-    redirect_uris,
-    scopes: registration.scopes,
-  });
-}
-
-export function validateRequest(req: Request, res: Response): void {
-  const {
-    client_id,
-    redirect_uri,
-    scope,
-    state,
-    response_type,
-  } = req.query as unknown as AuthorizationRequest;
-
-  const client = registeredClients.get(client_id);
-
-  if (!client) {
-    res.status(400).json({ error: "invalid_client" });
-    return;
+  function isValidUrl(urlString: string): boolean {
+    try {
+      new URL(urlString);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
-  if (!client.redirect_uris.includes(redirect_uri)) {
-    res.status(400).json({ error: "invalid_redirect_uri" });
-    return;
+  function validateRedirectUri(
+    redirectUri: string,
+    clientId: string
+  ): boolean {
+    if (!isValidUrl(redirectUri)) {
+      return false;
+    }
+
+    const registeredUris = config.redirectUris.filter(
+      (uri) => uri.startsWith(`${clientId}:`)
+    );
+
+    return registeredUris.some((registered) => {
+      const registeredUri = registered.substring(clientId.length + 1);
+      return redirectUri === registeredUri;
+    });
   }
 
-  if (response_type !== "code") {
-    const error_uri = `${redirect_uri}?error=unsupported_response_type&state=${state}`;
-    res.redirect(error_uri);
-    return;
+  function validateScopes(requestedScopes: string[]): boolean {
+    return (
+      requestedScopes.length > 0 &&
+      requestedScopes.every((scope) => config.allowedScopes.includes(scope))
+    );
   }
 
-  const requestedScopes = scope ? scope.split(" ") : [];
-  const validScopes = requestedScopes.every((s) =>
-    client.scopes.includes(s)
-  );
-
-  if (!validScopes) {
-    const error_uri = `${redirect_uri}?error=invalid_scope&state=${state}`;
-    res.redirect(error_uri);
-    return;
+  function generateSecureState(): string {
+    return randomBytes(32).toString("hex");
   }
 
-  res.json({
-    valid: true,
-    client_id,
-    scopes: requestedScopes,
-    redirect_uri,
-    state,
-  });
-}
+  function storeAuthState(
+    state: string,
+    clientId: string,
+    redirectUri: string,
+    scope: string[]
+  ): void {
+    stateStore.set(state, {
+      clientId,
+      redirectUri,
+      scope,
+      timestamp: Date.now(),
+    });
+  }
 
-export async function authorizeWithAI(req: Request, res: Response): Promise<void> {
-  const {
-    client_id,
-    redirect_uri,
-    scope,
-    state,
-    response_type,
-  } = req.query as unknown as AuthorizationRequest;
+  function cleanupExpiredStates(): void {
+    const now = Date.now();
+    for (const [state, data] of stateStore.entries()) {
+      if (now - data.timestamp > config.stateExpiryMs) {
+        stateStore.delete(state);
+      }
+    }
+  }
 
-  const client = registeredClients.get(client_id);
+  router.get(
+    "/authorize",
+    (req: Request, res: Response, next: NextFunction): void => {
+      try {
+        cleanupExpiredStates();
 
-  if
+        const clientId = req.query.client_id as string;
+        const redirectUri = req.query.redirect_uri as string;
+        const scope = (req.query.scope as string)?.split(" ") || [];
+        const responseType = req.query.response_type as string;
+        const state = req.query.state as string;
+
+        const errors: string[] = [];
+
+        if (!clientId || clientId !== config.clientId) {
+          errors.push("invalid_client");
+        }
+
+        if (!redirectUri) {
+          errors.push("missing_redirect_uri");
+        } else if (!validateRedirectUri(redirectUri, clientId)) {
+          errors.push("invalid_redirect_uri");
+        }
+
+        if (!scope || scope.length === 0) {
+          errors.push("missing_scope");
+        } else if (!validateScopes(scope)) {
+          errors.push("invalid_scope");
+        }
+
+        if (responseType !== "code") {
+          errors.push("unsupported_response_type");
+        }
+
+        if (!state || typeof state !== "string" || state.

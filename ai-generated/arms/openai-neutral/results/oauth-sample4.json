@@ -1,15 +1,15 @@
 {
   "model": "oauth",
   "sample": "sample4",
-  "characters": 1409,
-  "lines": 37,
+  "characters": 1229,
+  "lines": 35,
   "functions": 1,
   "classes": 0,
   "cyclomaticComplexity": 1,
   "halstead": {
     "operators": {
       "distinct": 7,
-      "total": 21,
+      "total": 22,
       "identifiers": [
         "()",
         "{}",
@@ -22,7 +22,7 @@
     },
     "operands": {
       "distinct": 19,
-      "total": 26,
+      "total": 27,
       "identifiers": [
         "\"use strict\"",
         "exports",
@@ -45,13 +45,13 @@
         "get"
       ]
     },
-    "length": 47,
+    "length": 49,
     "vocabulary": 26,
-    "difficulty": 4.7894736842105265,
-    "volume": 220.92066675263135,
-    "effort": 1058.0937197099713,
-    "bugs": 0.07364022225087712,
-    "time": 58.78298442833174
+    "difficulty": 4.973684210526316,
+    "volume": 230.32154618891354,
+    "effort": 1145.5466376238069,
+    "bugs": 0.07677384872963784,
+    "time": 63.64147986798927
   },
-  "maintainabilityIndex": 113.49540029344223
+  "maintainabilityIndex": 111.31572257241753
 }

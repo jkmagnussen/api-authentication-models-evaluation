@@ -1,15 +1,15 @@
 {
   "model": "sessions",
   "sample": "sample2",
-  "characters": 1144,
-  "lines": 49,
-  "functions": 4,
+  "characters": 785,
+  "lines": 33,
+  "functions": 3,
   "classes": 0,
   "cyclomaticComplexity": 1,
   "halstead": {
     "operators": {
-      "distinct": 10,
-      "total": 71,
+      "distinct": 8,
+      "total": 47,
       "identifiers": [
         "()",
         "{}",
@@ -18,14 +18,12 @@
         "=",
         "void (prefix)",
         "const",
-        "new",
-        "===",
-        "*"
+        "==="
       ]
     },
     "operands": {
-      "distinct": 49,
-      "total": 89,
+      "distinct": 34,
+      "total": 60,
       "identifiers": [
         "\"use strict\"",
         "exports",
@@ -35,29 +33,18 @@
         true,
         "Object",
         "defineProperty",
-        "sessionMiddleware",
-        "app",
+        "sessionLogger",
+        "sessionConfig",
         0,
         "express_1",
         "\"express\"",
         "require",
         "express_session_1",
         "\"express-session\"",
-        "connect_redis_1",
-        "\"connect-redis\"",
-        "ioredis_1",
-        "\"ioredis\"",
-        "RedisStore",
+        "app",
         "default",
-        "redisClient",
-        "host",
-        "\"localhost\"",
-        "port",
-        6379,
-        "store",
-        "client",
         "secret",
-        "\"superSecretKey123\"",
+        "\"mySuperSecretKey\"",
         "resave",
         false,
         "saveUninitialized",
@@ -67,24 +54,20 @@
         "env",
         "NODE_ENV",
         "\"production\"",
-        "maxAge",
-        1000,
-        60,
         "use",
         "\"/\"",
         "get",
-        "\"/login\"",
-        "post",
-        "\"/logout\""
+        3000,
+        "listen"
       ]
     },
-    "length": 160,
-    "vocabulary": 59,
-    "difficulty": 9.081632653061224,
-    "volume": 941.2228878978947,
-    "effort": 8547.840512542103,
-    "bugs": 0.31374096263263157,
-    "time": 474.8800284745613
+    "length": 107,
+    "vocabulary": 42,
+    "difficulty": 7.0588235294117645,
+    "volume": 576.9779642373273,
+    "effort": 4072.7856299105456,
+    "bugs": 0.1923259880791091,
+    "time": 226.26586832836364
   },
-  "maintainabilityIndex": 87.2560919463352
+  "maintainabilityIndex": 94.87276647548408
 }

@@ -1,70 +1,18 @@
 {
   "model": "jwt",
   "sample": "sample22",
-  "characters": 2701,
+  "characters": 2871,
   "lines": 119,
-  "functions": 7,
+  "functions": 0,
   "classes": 0,
-  "cyclomaticComplexity": 1,
+  "cyclomaticComplexity": null,
   "halstead": {
-    "operators": {
-      "distinct": 8,
-      "total": 57,
-      "identifiers": [
-        "()",
-        "{}",
-        ":",
-        ".",
-        "=",
-        "void (prefix)",
-        "const",
-        "new"
-      ]
-    },
-    "operands": {
-      "distinct": 31,
-      "total": 66,
-      "identifiers": [
-        "\"use strict\"",
-        "exports",
-        "\"__esModule\"",
-        "<anonymous>",
-        "value",
-        true,
-        "Object",
-        "defineProperty",
-        "startServer",
-        "createAuthToken",
-        "verifyTokenMiddleware",
-        0,
-        "sdk_1",
-        "\"@anthropic-ai/sdk\"",
-        "require",
-        "express_1",
-        "\"express\"",
-        "jsonwebtoken_1",
-        "\"jsonwebtoken\"",
-        "client",
-        "default",
-        "app",
-        "json",
-        "use",
-        "JWT_SECRET",
-        "\"your-secret-key-change-this\"",
-        "\"/auth/login\"",
-        "post",
-        "\"/protected\"",
-        "get",
-        "\"/ai/analyze\""
-      ]
-    },
-    "length": 123,
-    "vocabulary": 39,
-    "difficulty": 8.516129032258064,
-    "volume": 650.1044729200565,
-    "effort": 5536.37357583532,
-    "bugs": 0.21670149097335217,
-    "time": 307.57630976862885
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
   },
-  "maintainabilityIndex": 92.20143169025985
+  "maintainabilityIndex": null,
+  "analysisError": "Line 120: Unexpected token ILLEGAL"
 }

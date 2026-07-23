@@ -1,107 +1,104 @@
 ```typescript
-import express, { Request, Response, NextFunction } from 'express';
-import crypto from 'crypto';
+import Anthropic from "@anthropic-ai/sdk";
+import express, { Request, Response, NextFunction } from "express";
+import { randomBytes } from "crypto";
+import { createServer } from "http";
+
+const app = express();
+const client = new Anthropic();
+
+// Configuration
+const VALID_CLIENT_IDS = new Set(["test-client-123", "mobile-app-456"]);
+const ALLOWED_SCOPES = new Set([
+  "read:profile",
+  "write:data",
+  "email",
+  "offline_access",
+]);
+const VALID_REDIRECT_DOMAINS = new Set([
+  "localhost:3000",
+  "localhost:3001",
+  "app.example.com",
+  "mobile.example.com",
+]);
+const STATE_STORE = new Map<string, StateData>();
+
+interface StateData {
+  timestamp: number;
+  clientId: string;
+  requestedScopes: string[];
+}
 
 interface AuthorizationRequest {
   clientId: string;
   redirectUri: string;
-  scope: string;
+  scopes: string[];
   state: string;
-  responseType: string;
 }
 
-interface StoredClient {
-  clientId: string;
-  clientSecret: string;
-  redirectUris: string[];
-  allowedScopes: string[];
+// Validate redirect URI against whitelist
+function validateRedirectUri(uri: string): boolean {
+  try {
+    const url = new URL(uri);
+    const domain = `${url.hostname}${url.port ? `:${url.port}` : ""}`;
+    return VALID_REDIRECT_DOMAINS.has(domain) && url.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
-interface PendingAuthorization {
-  code: string;
-  clientId: string;
-  redirectUri: string;
-  scope: string;
-  expiresAt: number;
-  userId?: string;
+// Validate scopes
+function validateScopes(scopes: string[]): boolean {
+  if (!scopes || scopes.length === 0) return false;
+  return scopes.every((scope) => ALLOWED_SCOPES.has(scope));
 }
 
-const registeredClients: Map<string, StoredClient> = new Map([
-  [
-    'app-123',
-    {
-      clientId: 'app-123',
-      clientSecret: 'secret-xyz-789',
-      redirectUris: ['http://localhost:3001/callback'],
-      allowedScopes: ['read', 'write', 'profile']
-    }
-  ]
-]);
+// Validate state parameter format
+function validateStateFormat(state: string): boolean {
+  return state.length >= 32 && state.length <= 500 && /^[a-zA-Z0-9_-]+$/.test(state);
+}
 
-const pendingAuthorizations: Map<string, PendingAuthorization> = new Map();
-const issuedTokens: Map<string, { accessToken: string; scope: string; userId: string; expiresAt: number }> = new Map();
+// Generate authorization code
+function generateAuthCode(): string {
+  return randomBytes(32).toString("hex");
+}
 
-export const generateRandomCode = (length: number = 32): string => {
-  return crypto.randomBytes(length).toString('hex');
-};
+// Middleware for request validation
+async function validateAuthRequest(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  const { client_id, redirect_uri, scope, state } = req.query;
 
-export const validateClientId = (clientId: string): StoredClient | null => {
-  return registeredClients.get(clientId) || null;
-};
-
-export const validateRedirectUri = (client: StoredClient, redirectUri: string): boolean => {
-  return client.redirectUris.includes(redirectUri);
-};
-
-export const validateScope = (client: StoredClient, scope: string): boolean => {
-  const requestedScopes = scope.split(' ');
-  return requestedScopes.every(s => client.allowedScopes.includes(s));
-};
-
-export const storeAuthorizationCode = (clientId: string, redirectUri: string, scope: string): string => {
-  const code = generateRandomCode();
-  const expiresAt = Date.now() + 10 * 60 * 1000;
-
-  pendingAuthorizations.set(code, {
-    code,
-    clientId,
-    redirectUri,
-    scope,
-    expiresAt
-  });
-
-  setTimeout(() => pendingAuthorizations.delete(code), 10 * 60 * 1000);
-
-  return code;
-};
-
-export const getAuthorizationCode = (code: string): PendingAuthorization | null => {
-  const auth = pendingAuthorizations.get(code);
-  if (!auth || auth.expiresAt < Date.now()) {
-    pendingAuthorizations.delete(code);
-    return null;
-  }
-  return auth;
-};
-
-export const authorizeRequest = (code: string, userId: string): void => {
-  const auth = pendingAuthorizations.get(code);
-  if (auth) {
-    auth.userId = userId;
-  }
-};
-
-export const exchangeCodeForToken = (code: string, clientId: string, clientSecret: string): { accessToken: string; tokenType: string; expiresIn: number } | null => {
-  const auth = getAuthorizationCode(code);
-  if (!auth || auth.clientId !== clientId) {
-    return null;
+  // Validate required parameters
+  if (!client_id || typeof client_id !== "string") {
+    res.status(400).json({ error: "invalid_request", error_description: "Missing client_id" });
+    return;
   }
 
-  const client = validateClientId(clientId);
-  if (!client || client.clientSecret !== clientSecret) {
-    return null;
+  if (!redirect_uri || typeof redirect_uri !== "string") {
+    res.status(400).json({ error: "invalid_request", error_description: "Missing redirect_uri" });
+    return;
   }
 
-  if (!auth.userId) {
-    return null;
+  if (!scope || typeof scope !== "string") {
+    res.status(400).json({ error: "invalid_scope", error_description: "Missing scope" });
+    return;
   }
+
+  if (!state || typeof state !== "string") {
+    res.status(400).json({ error: "invalid_request", error_description: "Missing state" });
+    return;
+  }
+
+  // Validate client_id
+  if (!VALID_CLIENT_IDS.has(client_id)) {
+    res.status(401).json({ error: "unauthorized_client", error_description: "Unknown client" });
+    return;
+  }
+
+  // Validate redirect URI
+  if (!validateRedirectUri(redirect_uri)) {
+    res.status(400).json({ error: "invalid_request", error_description: "Invalid redirect_uri" });
+    return;

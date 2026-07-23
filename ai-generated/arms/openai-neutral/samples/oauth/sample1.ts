@@ -1,44 +1,47 @@
 import express, { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import querystring from 'querystring';
+
+const app = express();
+app.use(express.json());
 
 interface AuthorizationRequest {
+  response_type: string;
   client_id: string;
   redirect_uri: string;
-  response_type: string;
-  scope?: string;
+  scope: string;
   state?: string;
 }
 
-const app = express();
+const clients = new Set<string>(['client123', 'client456']);
+const validScopes = new Set<string>(['read', 'write', 'delete']);
 
-const registeredClients = new Map<string, { redirectUris: string[] }>([
-  ['client123', { redirectUris: ['http://localhost:3000/callback'] }]
-]);
+export function authEndpoint(req: Request, res: Response) {
+  const { response_type, client_id, redirect_uri, scope, state }: AuthorizationRequest = req.query as any;
 
-app.get('/authorize', (req: Request, res: Response) => {
-  const { client_id, redirect_uri, response_type, scope, state } = req.query as AuthorizationRequest;
-
-  if (!client_id || !redirect_uri || response_type !== 'code') {
-    return res.status(400).send('Invalid request parameters');
+  if (response_type !== 'code') {
+    return res.status(400).json({ error: 'unsupported_response_type' });
   }
 
-  const client = registeredClients.get(client_id);
-  if (!client || !client.redirectUris.includes(redirect_uri)) {
-    return res.status(400).send('Invalid client or redirect URI');
+  if (!clients.has(client_id)) {
+    return res.status(400).json({ error: 'invalid_client' });
   }
 
-  const authorizationCode = uuidv4();
-  // Assuming the codeStore is a place where we store the authorization codes temporarily
-  const codeStore = new Map<string, string>();
-  codeStore.set(authorizationCode, client_id);
+  const requestedScopes = scope.split(' ');
+  if (!requestedScopes.every(s => validScopes.has(s))) {
+    return res.status(400).json({ error: 'invalid_scope' });
+  }
 
-  const redirectParams = {
-    code: authorizationCode,
-    state: state || ''
-  };
+  const authCode = uuidv4();
+  const redirectUrl = new URL(redirect_uri);
 
-  res.redirect(`${redirect_uri}?${querystring.stringify(redirectParams)}`);
-});
+  redirectUrl.searchParams.append('code', authCode);
+  if (state) {
+    redirectUrl.searchParams.append('state', state);
+  }
 
-export { app as authApp };
+  res.redirect(redirectUrl.toString());
+}
+
+app.get('/authorize', authEndpoint);
+
+export default app;

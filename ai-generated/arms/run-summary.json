@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-23T00:52:24.159Z",
-  "sampleCount": 30,
+  "generatedAt": "2026-07-23T04:23:15.750Z",
+  "sampleCount": 5,
   "allowPartial": false,
   "requiredArms": [
     "openai-neutral",
@@ -16,8 +16,8 @@
       "status": "completed",
       "providerModelIdentifier": "gpt-4o",
       "promptFingerprint": "f1d5d4b3de59ea1e3b3e17f5f66e04f11027d683ce1073ea8508f453171c7ff6",
-      "overallFailureRatePct": 100,
-      "overallFailedSamples": 90,
+      "overallFailureRatePct": 48.9,
+      "overallFailedSamples": 44,
       "overallTotalSamples": 90
     },
     {
@@ -27,8 +27,8 @@
       "status": "completed",
       "providerModelIdentifier": "gpt-4o",
       "promptFingerprint": "1251c7b05f55c2d7fc51e0d0fabd2dabea788caa9951abb861a439fe9764e269",
-      "overallFailureRatePct": 35.6,
-      "overallFailedSamples": 32,
+      "overallFailureRatePct": 37.8,
+      "overallFailedSamples": 34,
       "overallTotalSamples": 90
     },
     {
@@ -38,8 +38,8 @@
       "status": "completed",
       "providerModelIdentifier": "claude-haiku-4-5-20251001",
       "promptFingerprint": "f1d5d4b3de59ea1e3b3e17f5f66e04f11027d683ce1073ea8508f453171c7ff6",
-      "overallFailureRatePct": 85.6,
-      "overallFailedSamples": 77,
+      "overallFailureRatePct": 48.9,
+      "overallFailedSamples": 44,
       "overallTotalSamples": 90
     },
     {
@@ -49,8 +49,8 @@
       "status": "completed",
       "providerModelIdentifier": "claude-haiku-4-5-20251001",
       "promptFingerprint": "1251c7b05f55c2d7fc51e0d0fabd2dabea788caa9951abb861a439fe9764e269",
-      "overallFailureRatePct": 40,
-      "overallFailedSamples": 36,
+      "overallFailureRatePct": 38.9,
+      "overallFailedSamples": 35,
       "overallTotalSamples": 90
     }
   ]

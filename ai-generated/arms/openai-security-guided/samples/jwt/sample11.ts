@@ -1,50 +1,106 @@
-import express, { Request, Response, NextFunction } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-import dotenv from 'dotenv';
+```typescript
+import Anthropic from "@anthropic-ai/sdk";
+import express, { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 
-dotenv.config();
+const client = new Anthropic();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'defaultSecretKey';
-const JWT_ISSUER = process.env.JWT_ISSUER || 'yourIssuer';
-const JWT_AUDIENCE = process.env.JWT_AUDIENCE || 'yourAudience';
-const JWT_ALGORITHM: jwt.Algorithm = 'RS256'; 
-const JWT_EXPIRATION = '1h';
+interface AuthRequest extends Request {
+  user?: jwt.JwtPayload;
+}
 
-export const createJwtToken = (payload: object) => {
-  return jwt.sign(payload, JWT_SECRET, {
-    algorithm: JWT_ALGORITHM,
-    expiresIn: JWT_EXPIRATION,
-    issuer: JWT_ISSUER,
-    audience: JWT_AUDIENCE,
-  });
+interface JWTConfig {
+  issuer: string;
+  audience: string;
+  algorithm: "HS256" | "HS384" | "HS512" | "RS256" | "RS384" | "RS512";
+  expirySeconds: number;
+  secret: string;
+}
+
+interface TokenPayload {
+  sub: string;
+  iss: string;
+  aud: string;
+  iat: number;
+  exp: number;
+}
+
+const DEFAULT_CONFIG: JWTConfig = {
+  issuer: "secure-app",
+  audience: "api-consumers",
+  algorithm: "HS256",
+  expirySeconds: 3600,
+  secret: process.env.JWT_SECRET || "your-super-secret-key-change-this",
 };
 
-export const validateJwt = (req: Request, res: Response, next: NextFunction): void => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Invalid authorization header' });
+export function createSecureJWTMiddleware(config: Partial<JWTConfig> = {}) {
+  const finalConfig: JWTConfig = { ...DEFAULT_CONFIG, ...config };
+
+  // Validate configuration at middleware creation time
+  if (!finalConfig.secret || finalConfig.secret.length < 32) {
+    throw new Error(
+      "JWT secret must be at least 32 characters long for security"
+    );
   }
 
-  const token = authHeader.split(' ')[1];
-
-  jwt.verify(token, JWT_SECRET, { algorithms: [JWT_ALGORITHM], issuer: JWT_ISSUER, audience: JWT_AUDIENCE }, (err, decoded: JwtPayload | undefined) => {
-    if (err) {
-      return res.status(403).json({ message: 'Failed to authenticate token' });
-    }
-    req.user = decoded;
-    next();
-  });
-};
-
-export const authRouter = express.Router();
-
-authRouter.post('/login', (req: Request, res: Response) => {
-  const { username, password } = req.body;
-
-  if (username === 'user' && password === 'password') {
-    const token = createJwtToken({ sub: username });
-    return res.json({ token });
+  if (!finalConfig.issuer || finalConfig.issuer.length === 0) {
+    throw new Error("JWT issuer must be specified");
   }
 
-  return res.status(401).json({ message: 'Invalid credentials' });
-});
+  if (!finalConfig.audience || finalConfig.audience.length === 0) {
+    throw new Error("JWT audience must be specified");
+  }
+
+  if (finalConfig.expirySeconds < 60) {
+    throw new Error("JWT expiry must be at least 60 seconds");
+  }
+
+  return async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const authHeader = req.headers.authorization;
+
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        res.status(401).json({
+          error: "Missing or invalid authorization header",
+          details: "Expected format: Authorization: Bearer <token>",
+        });
+        return;
+      }
+
+      const token = authHeader.substring(7);
+
+      // Verify token with strict options
+      const decoded = jwt.verify(token, finalConfig.secret, {
+        algorithms: [finalConfig.algorithm],
+        issuer: finalConfig.issuer,
+        audience: finalConfig.audience,
+        clockTolerance: 5, // 5 second tolerance for clock skew
+      }) as jwt.JwtPayload;
+
+      // Additional validation checks
+      if (!decoded.sub) {
+        res.status(401).json({ error: "Invalid token: missing subject claim" });
+        return;
+      }
+
+      // Ensure token hasn't expired (jwt.verify should handle this, but explicit check)
+      if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
+        res.status(401).json({ error: "Token has expired" });
+        return;
+      }
+
+      req.user = decoded;
+      next();
+    } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError) {
+        res.status(401).json({
+          error: "Invalid token",
+          details: error.message,
+        });
+      } else if (error instanceof jwt.TokenExpiredError) {
+        res.status(401).json({
+          error:

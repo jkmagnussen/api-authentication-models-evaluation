@@ -1,55 +1,40 @@
-import express, { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import { URL } from 'url';
 import crypto from 'crypto';
-import { query, validationResult } from 'express-validator';
 
-const app = express();
+const validRedirectURIs = ['https://trustedclient.com/callback'];
+const validScopes = new Set(['read', 'write', 'profile']);
 
-export const authorize = [
-  query('response_type').equals('code'),
-  query('client_id').isString().notEmpty(),
-  query('redirect_uri').isURL(),
-  query('scope').isString().notEmpty(),
-  query('state').isString(),
+function secureRandomString(length: number): string {
+  return crypto.randomBytes(length).toString('hex');
+}
 
-  (req: Request, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ error: 'Invalid request parameters', details: errors.array() });
-    }
+export function handleOAuth2Authorize(req: Request, res: Response, next: NextFunction): void {
+  const { redirect_uri, state, scope } = req.query as { redirect_uri?: string, state?: string, scope?: string };
 
-    const { client_id, redirect_uri, scope, state } = req.query;
-    const allowedScopes = ['read', 'write', 'admin'];
-    const scopeArray = (scope as string).split(' ');
-
-    if (!scopeArray.every(s => allowedScopes.includes(s))) {
-      return res.status(400).json({ error: 'Invalid scope' });
-    }
-
-    const clientRedirectUri = getClientRedirectUri(client_id as string);
-    if (clientRedirectUri !== redirect_uri) {
-      return res.status(400).json({ error: 'Invalid redirect URI' });
-    }
-
-    const code = generateAuthorizationCode();
-    storeAuthorizationCode(code, client_id as string, scopeArray);
-
-    res.redirect(`${redirect_uri}?code=${code}&state=${state || ''}`);
+  if (!redirect_uri) {
+    return res.status(400).json({ error: 'invalid_request', error_description: 'Missing redirect_uri' });
   }
-];
 
-function getClientRedirectUri(clientId: string): string {
-  // Mock function to fetch stored redirect URIs for clients
-  const storedUris = {
-    'client123': 'https://client.example.com/callback',
-  };
-  return storedUris[clientId] || '';
-}
+  try {
+    const uri = new URL(redirect_uri);
+    if (!validRedirectURIs.includes(uri.origin)) {
+      return res.status(400).json({ error: 'invalid_request', error_description: 'Untrusted redirect_uri' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: 'invalid_request', error_description: 'Invalid redirect_uri format' });
+  }
 
-function generateAuthorizationCode(): string {
-  return crypto.randomBytes(20).toString('hex');
-}
+  if (!scope || !scope.split(' ').every(s => validScopes.has(s))) {
+    return res.status(400).json({ error: 'invalid_scope', error_description: 'Invalid or missing scope' });
+  }
 
-function storeAuthorizationCode(code: string, clientId: string, scopes: string[]): void {
-  // Mock function to store authorization codes securely
-  console.log(`Storing code: ${code}, clientId: ${clientId}, scopes: ${scopes.join(', ')}`);
+  const code = secureRandomString(32);
+
+  const responseParams = new URLSearchParams({ code });
+  if (state) {
+    responseParams.append('state', state);
+  }
+
+  res.redirect(`${redirect_uri}?${responseParams.toString()}`);
 }

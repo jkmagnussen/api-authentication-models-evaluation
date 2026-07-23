@@ -1,38 +1,35 @@
 import express, { Request, Response, NextFunction } from 'express';
-import jwt, { VerifyErrors, JwtPayload } from 'jsonwebtoken';
+import jwt, { Secret, VerifyErrors } from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
-const publicKey = process.env.JWT_PUBLIC_KEY || 'your-secure-public-key';
-const jwtIssuer = 'your-app-issuer';
-const jwtAudience = 'your-app-audience';
+dotenv.config();
 
-const authenticateJWT = (req: Request, res: Response, next: NextFunction): void => {
-  const authHeader = req.headers.authorization;
+const JWT_SECRET: Secret = process.env.JWT_SECRET || 'defaultSecret';
+const JWT_AUDIENCE = process.env.JWT_AUDIENCE || 'yourAudience';
+const JWT_ISSUER = process.env.JWT_ISSUER || 'yourIssuer';
+const JWT_ALGORITHM = 'HS256';
 
-  if (!authHeader) {
-    res.status(401).json({ message: 'Authorization header missing' });
-    return;
+export const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
+  const token = req.header('Authorization')?.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized access: No token provided' });
   }
 
-  const token = authHeader.split(' ')[1];
-
-  jwt.verify(
-    token,
-    publicKey,
-    {
-      algorithms: ['RS256'],
-      issuer: jwtIssuer,
-      audience: jwtAudience,
-    },
-    (err: VerifyErrors | null, decoded: JwtPayload | undefined) => {
-      if (err) {
-        res.status(403).json({ message: 'Token verification failed', error: err.message });
-        return;
-      }
-
-      req.user = decoded;
-      next();
+  jwt.verify(token, JWT_SECRET, {
+    audience: JWT_AUDIENCE,
+    issuer: JWT_ISSUER,
+    algorithms: [JWT_ALGORITHM]
+  }, (err: VerifyErrors | null, decoded: object | undefined) => {
+    if (err) {
+      return res.status(403).json({ error: 'Forbidden: Invalid token' });
     }
-  );
+
+    req.user = decoded;
+    next();
+  });
 };
 
-export { authenticateJWT };
+const app = express();
+app.use(authenticateJWT);
+app.listen(3000, () => console.log('Server running on port 3000'));

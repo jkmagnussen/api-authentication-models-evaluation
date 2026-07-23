@@ -11,7 +11,7 @@
     },
     {
       "name": "state handling present",
-      "passed": false,
+      "passed": true,
       "details": "Checks that the state parameter is referenced."
     },
     {
@@ -27,17 +27,14 @@
   ],
   "correctnessFailures": [
     "redirect validation present",
-    "state handling present",
     "scope validation present"
   ],
   "securityFailures": [
     "redirect validation present",
-    "state handling present",
     "scope validation present"
   ],
   "misconfigurationDetections": [
     "redirect validation present",
-    "state handling present",
     "scope validation present"
   ]
 }

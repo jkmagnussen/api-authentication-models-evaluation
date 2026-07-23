@@ -1,107 +1,120 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import express, { Express, Request, Response } from "express";
-import crypto from "crypto";
+import express, { Request, Response } from 'express';
+import crypto from 'crypto';
 
-const client = new Anthropic();
-let conversationHistory: { role: string; content: string }[] = [];
+const app = express();
+app.use(express.urlencoded({ extended: true }));
 
-export const createOAuth2AuthorizationEndpoint = (): Express => {
-  const app = express();
+interface AuthorizationRequest {
+  client_id: string;
+  redirect_uri: string;
+  response_type: string;
+  scope: string;
+  state: string;
+}
 
-  // Configuration
-  const VALID_REDIRECT_URIS = new Set([
-    "https://example.com/callback",
-    "https://app.example.com/auth/return",
-    "http://localhost:3000/callback",
-  ]);
+interface RegisteredClient {
+  id: string;
+  secret: string;
+  redirectUris: string[];
+  allowedScopes: string[];
+}
 
-  const VALID_SCOPES = new Set([
-    "openid",
-    "profile",
-    "email",
-    "offline_access",
-    "user:read",
-    "user:write",
-  ]);
+const registeredClients: Map<string, RegisteredClient> = new Map([
+  [
+    'app_mobile_client',
+    {
+      id: 'app_mobile_client',
+      secret: 'secret_mobile_key_12345',
+      redirectUris: ['https://app.example.com/oauth/callback'],
+      allowedScopes: ['profile', 'email', 'openid'],
+    },
+  ],
+]);
 
-  const STATE_STORE = new Map<string, { expiresAt: number; used: boolean }>();
+const authorizationGrants: Map<
+  string,
+  {
+    code: string;
+    clientId: string;
+    userId: string;
+    redirectUri: string;
+    scopes: string[];
+    expiresAt: number;
+  }
+> = new Map();
 
-  // Middleware
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: false }));
+export function validateClientRegistration(clientId: string): RegisteredClient | null {
+  return registeredClients.get(clientId) || null;
+}
 
-  // Helper functions
-  const validateRedirectUri = (uri: string): boolean => {
-    try {
-      const url = new URL(uri);
-      // Reject localhost without explicit allowlist
-      if (
-        url.hostname === "localhost" &&
-        !VALID_REDIRECT_URIS.has(uri.split("?")[0])
-      ) {
-        return false;
-      }
-      return VALID_REDIRECT_URIS.has(uri.split("?")[0]);
-    } catch {
-      return false;
-    }
+export function issueAuthorizationCode(
+  clientId: string,
+  userId: string,
+  redirectUri: string,
+  scopes: string[]
+): string {
+  const authCode = crypto.randomBytes(32).toString('hex');
+  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+  authorizationGrants.set(authCode, {
+    code: authCode,
+    clientId,
+    userId,
+    redirectUri,
+    scopes,
+    expiresAt,
+  });
+
+  return authCode;
+}
+
+export function parseAuthorizationRequest(query: Record<string, any>): AuthorizationRequest | null {
+  const { client_id, redirect_uri, response_type, scope, state } = query;
+
+  if (!client_id || !redirect_uri || !response_type || !state) {
+    return null;
+  }
+
+  if (response_type !== 'code') {
+    return null;
+  }
+
+  return {
+    client_id,
+    redirect_uri,
+    response_type,
+    scope: scope || '',
+    state,
   };
+}
 
-  const validateScopes = (scopes: string): boolean => {
-    if (!scopes || scopes.trim() === "") {
-      return false;
-    }
-    return scopes.split(" ").every((scope) => VALID_SCOPES.has(scope));
-  };
+export function getAuthorizationEndpoint() {
+  return (req: Request, res: Response) => {
+    const authReq = parseAuthorizationRequest(req.query);
 
-  const generateState = (): string => {
-    return crypto.randomBytes(32).toString("hex");
-  };
-
-  const validateStateParameter = (state: string): boolean => {
-    if (!state || state.length < 32) {
-      return false;
-    }
-    const entry = STATE_STORE.get(state);
-    if (!entry) {
-      return false;
-    }
-    if (entry.used) {
-      return false;
-    }
-    if (entry.expiresAt < Date.now()) {
-      STATE_STORE.delete(state);
-      return false;
-    }
-    return true;
-  };
-
-  const storeState = (state: string): void => {
-    STATE_STORE.set(state, {
-      expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
-      used: false,
-    });
-  };
-
-  const markStateAsUsed = (state: string): void => {
-    const entry = STATE_STORE.get(state);
-    if (entry) {
-      entry.used = true;
-    }
-  };
-
-  // Routes
-  app.get("/authorize", async (req: Request, res: Response) => {
-    const clientId = req.query.client_id as string;
-    const redirectUri = req.query.redirect_uri as string;
-    const scopes = req.query.scope as string;
-    const state = req.query.state as string;
-    const responseType = req.query.response_type as string;
-
-    // Validate required parameters
-    if (!clientId || !redirectUri || !scopes || !state) {
+    if (!authReq) {
       return res.status(400).json({
-        error: "invalid_request",
-        error_description: "Missing required parameters",
+        error: 'invalid_request',
+        error_description: 'Missing or invalid parameters',
       });
+    }
+
+    const client = validateClientRegistration(authReq.client_id);
+    if (!client) {
+      return res.status(400).json({
+        error: 'invalid_client',
+        error_description: 'Client not registered',
+      });
+    }
+
+    const parsedRedirectUri = new URL(authReq.redirect_uri);
+    const clientRedirectUri = new URL(client.redirectUris[0]);
+
+    if (
+      parsedRedirectUri.protocol !== clientRedirectUri.protocol ||
+      parsedRedirectUri.hostname !== clientRedirectUri.hostname ||
+      parsedRedirectUri.port !== clientRedirectUri.port
+    ) {
+      return res.status(400).json({
+        error: 'invalid_redirect_uri',

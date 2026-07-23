@@ -1,44 +1,63 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
+import { URL } from 'url';
 import crypto from 'crypto';
-import { check, validationResult } from 'express-validator';
 
-const router = express.Router();
+const app = express();
 
-const VALID_REDIRECT_URIS = ['https://example.com/callback'];
-const VALID_SCOPES = ['read', 'write'];
+const validRedirectUris = new Set(['https://example.com/callback']);
+const validScopes = new Set(['read', 'write', 'delete']);
 
-export const authorize = router.post(
-  '/authorize',
-  [
-    check('client_id').isString(),
-    check('redirect_uri').isURL(),
-    check('state').isString().optional(),
-    check('scope').isString().custom((value) => {
-      const requestedScopes = value.split(' ');
-      return requestedScopes.every(scope => VALID_SCOPES.includes(scope));
-    })
-  ],
-  (req: Request, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    
-    const { client_id, redirect_uri, state, scope } = req.body;
-
-    if (!VALID_REDIRECT_URIS.includes(redirect_uri)) {
-      return res.status(400).send('Invalid redirect URI');
-    }
-
-    const code = crypto.randomBytes(20).toString('hex');
-
-    let redirectTo = `${redirect_uri}?code=${code}`;
-    if (state) {
-      redirectTo += `&state=${state}`;
-    }
-
-    res.status(302).redirect(redirectTo);
+function validateRedirectUri(uri: string): boolean {
+  try {
+    const parsedUri = new URL(uri);
+    return validRedirectUris.has(parsedUri.origin);
+  } catch {
+    return false;
   }
-);
+}
 
-export default router;
+function validateScope(scope: string): boolean {
+  const requestedScopes = scope.split(' ');
+  return requestedScopes.every(sc => validScopes.has(sc));
+}
+
+function generateStateParameter(): string {
+  return crypto.randomBytes(16).toString('hex');
+}
+
+export function oauthRouter() {
+  const router = express.Router();
+
+  router.get('/authorize', (req: Request, res: Response, next: NextFunction) => {
+    const { response_type, client_id, redirect_uri, scope, state } = req.query;
+
+    if (!client_id || typeof client_id !== 'string') {
+      return res.status(400).send('Invalid client_id');
+    }
+
+    if (!response_type || response_type !== 'code') {
+      return res.status(400).send('Invalid or missing response_type');
+    }
+
+    if (!redirect_uri || typeof redirect_uri !== 'string' || !validateRedirectUri(redirect_uri)) {
+      return res.status(400).send('Invalid redirect_uri');
+    }
+
+    if (scope && !validateScope(scope as string)) {
+      return res.status(400).send('Invalid scope');
+    }
+
+    const authCode = crypto.randomBytes(16).toString('hex');
+    const newState = state || generateStateParameter();
+
+    const redirectUrl = new URL(redirect_uri);
+    redirectUrl.searchParams.append('code', authCode);
+    if (newState) redirectUrl.searchParams.append('state', newState);
+
+    res.redirect(redirectUrl.toString());
+  });
+
+  return router;
+}
+
+app.use('/oauth', oauthRouter());

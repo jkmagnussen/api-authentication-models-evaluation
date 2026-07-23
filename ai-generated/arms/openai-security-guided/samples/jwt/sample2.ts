@@ -1,34 +1,38 @@
-import express, { Request, Response, NextFunction } from 'express';
-import jwt, { VerifyOptions, JwtPayload } from 'jsonwebtoken';
+import { Request, Response, NextFunction } from 'express';
+import jwt, { VerifyErrors } from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secure-secret';
-const JWT_ISSUER = 'your-app-issuer';
-const JWT_AUDIENCE = 'your-app-audience';
-const JWT_ALGORITHM = 'HS256';
-
-const verifyOptions: VerifyOptions = {
-  algorithms: [JWT_ALGORITHM],
-  issuer: JWT_ISSUER,
-  audience: JWT_AUDIENCE,
-  maxAge: '1h'
-};
-
-interface CustomRequest extends Request {
-  user?: string | JwtPayload;
+interface JwtPayload {
+  sub: string;
+  aud: string;
+  iss: string;
+  exp: number;
 }
 
-export const authenticateJWT = (req: CustomRequest, res: Response, next: NextFunction) => {
-  const token = req.header('Authorization')?.split(' ')[1];
+const secretKey = process.env.JWT_SECRET || 'defaultSecret';
+const validAudience = 'yourAppAudience';
+const validIssuer = 'yourAppIssuer';
 
-  if (!token) {
-    return res.status(401).send({ message: 'No token provided.' });
+export function authenticateJwt(req: Request, res: Response, next: NextFunction): void {
+  const authHeader = req.headers['authorization'];
+
+  if (!authHeader) {
+    res.status(401).json({ message: 'Authorization header missing' });
+    return;
   }
 
-  jwt.verify(token, JWT_SECRET, verifyOptions, (err, decoded) => {
-    if (err) {
-      return res.status(401).send({ message: 'Unauthorized access.' });
-    }
-    req.user = decoded;
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decodedToken = jwt.verify(token, secretKey, {
+      algorithms: ['HS256'],
+      audience: validAudience,
+      issuer: validIssuer
+    }) as JwtPayload;
+
+    req.user = { id: decodedToken.sub };
     next();
-  });
-};
+  } catch (error) {
+    const err = error as VerifyErrors;
+    res.status(401).json({ message: `Token verification failed: ${err.message}` });
+  }
+}

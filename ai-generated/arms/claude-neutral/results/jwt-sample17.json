@@ -1,8 +1,8 @@
 {
   "model": "jwt",
   "sample": "sample17",
-  "characters": 2848,
-  "lines": 117,
+  "characters": 3054,
+  "lines": 119,
   "functions": 0,
   "classes": 0,
   "cyclomaticComplexity": null,
@@ -14,5 +14,5 @@
     "time": null
   },
   "maintainabilityIndex": null,
-  "analysisError": "Line 129: Unexpected token ILLEGAL"
+  "analysisError": "Line 120: Unexpected token ILLEGAL"
 }

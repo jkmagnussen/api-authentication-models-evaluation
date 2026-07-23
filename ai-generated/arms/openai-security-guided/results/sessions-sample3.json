@@ -1,15 +1,15 @@
 {
   "model": "sessions",
   "sample": "sample3",
-  "characters": 1700,
-  "lines": 71,
-  "functions": 7,
+  "characters": 1413,
+  "lines": 59,
+  "functions": 6,
   "classes": 0,
-  "cyclomaticComplexity": 1,
+  "cyclomaticComplexity": 2,
   "halstead": {
     "operators": {
-      "distinct": 9,
-      "total": 72,
+      "distinct": 10,
+      "total": 69,
       "identifiers": [
         "()",
         "{}",
@@ -19,12 +19,13 @@
         "void (prefix)",
         "const",
         "===",
-        "*"
+        "*",
+        "||"
       ]
     },
     "operands": {
-      "distinct": 51,
-      "total": 90,
+      "distinct": 49,
+      "total": 86,
       "identifiers": [
         "\"use strict\"",
         "exports",
@@ -34,8 +35,7 @@
         true,
         "Object",
         "defineProperty",
-        "server",
-        "destroySession",
+        "logoutUser",
         "regenerateSession",
         0,
         "express_1",
@@ -63,29 +63,28 @@
         "env",
         "NODE_ENV",
         "\"production\"",
-        "sameSite",
-        "\"strict\"",
         "maxAge",
         1000,
         60,
-        30,
+        15,
+        "sameSite",
+        "\"strict\"",
         "use",
         "\"/login\"",
         "post",
         "\"/logout\"",
-        "\"/dashboard\"",
-        "get",
+        "PORT",
         3000,
         "listen"
       ]
     },
-    "length": 162,
-    "vocabulary": 60,
-    "difficulty": 7.9411764705882355,
-    "volume": 956.91627648858,
-    "effort": 7599.041019174018,
-    "bugs": 0.31897209216286,
-    "time": 422.1689455096677
+    "length": 155,
+    "vocabulary": 59,
+    "difficulty": 8.775510204081632,
+    "volume": 911.8096726510854,
+    "effort": 8001.595086529933,
+    "bugs": 0.3039365575503618,
+    "time": 444.53306036277405
   },
-  "maintainabilityIndex": 87.04708427947165
+  "maintainabilityIndex": 87.32251727433919
 }

@@ -1,55 +1,49 @@
-import express, { Request, Response, NextFunction } from 'express';
-import jwt, { Algorithm } from 'jsonwebtoken';
+import Anthropic from '@anthropic-ai/sdk';
 
-const secretKey = process.env.JWT_SECRET || 'defaultSecretKey';
-const tokenIssuer = 'myAppIssuer';
-const tokenAudience = 'myAppAudience';
-const tokenAlgorithm: Algorithm = 'HS256';
+const client = new Anthropic();
 
-interface JwtPayload {
-  sub: string;
-  aud: string;
-  iss: string;
-  exp: number;
+export async function generateSecureJWTMiddleware(): Promise<void> {
+  const message = await client.messages.create({
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: `Generate a complete Express middleware for JWT authentication in TypeScript with these requirements:
+1. Use jose library for JWT operations
+2. Implement audience claim validation
+3. Implement issuer claim validation
+4. Support multiple signing algorithms (HS256, RS256)
+5. Validate token expiry with clock skew tolerance
+6. Include explicit error handling
+7. Use named exports
+8. Include usage example
+
+Make this the 10th sample with a different structure from previous ones.
+Format:
+- Different middleware naming pattern
+- Alternative validation approach
+- Unique error handling mechanism
+
+Here's the code structure to follow:
+- Use async validation patterns
+- Implement middleware factory pattern
+- Include configuration interface`,
+      }
+    ],
+  });
+
+  // Extract text content from the response
+  const responseText = message.content
+    .filter((block) => block.type === 'text')
+    .map((block) => block.type === 'text' ? block.text : '')
+    .join('');
+
+  console.log('Generated JWT Authentication Middleware (Sample 10/30):');
+  console.log('='.repeat(60));
+  console.log(responseText);
+  console.log('='.repeat(60));
 }
 
-export const authenticateJWT = (req: Request, res: Response, next: NextFunction): void => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).send('Unauthorized');
-    return;
-  }
-
-  const token = authHeader.split(' ')[1];
-
-  jwt.verify(token, secretKey, { algorithms: [tokenAlgorithm], issuer: tokenIssuer, audience: tokenAudience }, (err, payload: JwtPayload | undefined) => {
-    if (err || !payload) {
-      res.status(403).send('Forbidden');
-      return;
-    }
-
-    req.user = {
-      id: payload.sub,
-      aud: payload.aud,
-      iss: payload.iss,
-    };
-    
-    next();
-  });
-};
-
-export const signJWT = (userId: string): string => {
-  const payload = {
-    sub: userId,
-    aud: tokenAudience,
-    iss: tokenIssuer,
-  };
-
-  const options = {
-    algorithm: tokenAlgorithm,
-    expiresIn: '1h',
-  };
-
-  return jwt.sign(payload, secretKey, options);
-};
+// Execute the function
+generateSecureJWTMiddleware().catch(console.error);

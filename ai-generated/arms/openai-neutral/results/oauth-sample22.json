@@ -1,57 +1,18 @@
 {
   "model": "oauth",
   "sample": "sample22",
-  "characters": 1009,
-  "lines": 28,
-  "functions": 1,
+  "characters": 3076,
+  "lines": 121,
+  "functions": 0,
   "classes": 0,
-  "cyclomaticComplexity": 1,
+  "cyclomaticComplexity": null,
   "halstead": {
-    "operators": {
-      "distinct": 7,
-      "total": 21,
-      "identifiers": [
-        "()",
-        "{}",
-        ":",
-        ".",
-        "=",
-        "void (prefix)",
-        "const"
-      ]
-    },
-    "operands": {
-      "distinct": 19,
-      "total": 26,
-      "identifiers": [
-        "\"use strict\"",
-        "exports",
-        "\"__esModule\"",
-        "<anonymous>",
-        "value",
-        true,
-        "Object",
-        "defineProperty",
-        "authorizationRouter",
-        0,
-        "express_1",
-        "\"express\"",
-        "require",
-        "authUtils_1",
-        "\"./authUtils\"",
-        "default",
-        "Router",
-        "\"/authorize\"",
-        "get"
-      ]
-    },
-    "length": 47,
-    "vocabulary": 26,
-    "difficulty": 4.7894736842105265,
-    "volume": 220.92066675263135,
-    "effort": 1058.0937197099713,
-    "bugs": 0.07364022225087712,
-    "time": 58.78298442833174
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
   },
-  "maintainabilityIndex": 113.49540029344223
+  "maintainabilityIndex": null,
+  "analysisError": "Line 127: Unexpected token ILLEGAL"
 }

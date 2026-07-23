@@ -1,126 +1,120 @@
 ```typescript
-import express, { Request, Response, NextFunction } from "express";
+import express, { Request, Response, NextFunction, Router } from "express";
 import session from "express-session";
-import { v4 as uuidv4 } from "uuid";
+import crypto from "crypto";
 
-// Session store implementation
-class InMemorySessionStore {
-  private sessions: Map<string, SessionData> = new Map();
+// Session configuration with secure defaults
+const configureSessionMiddleware = (app: express.Application): void => {
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex"),
+      name: "sid",
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+        sameSite: "strict",
+        maxAge: 15 * 60 * 1000, // 15 minutes
+        domain: process.env.SESSION_DOMAIN,
+        path: "/",
+      },
+      genid: (req: Request): string => {
+        return crypto.randomBytes(24).toString("hex");
+      },
+    })
+  );
+};
 
-  get(
-    sessionId: string,
-    callback: (err: Error | null, session?: SessionData) => void
-  ): void {
-    const session = this.sessions.get(sessionId);
-    callback(null, session);
-  }
-
-  set(
-    sessionId: string,
-    sessionData: SessionData,
-    callback: (err?: Error | null) => void
-  ): void {
-    this.sessions.set(sessionId, sessionData);
-    callback();
-  }
-
-  destroy(sessionId: string, callback: (err?: Error | null) => void): void {
-    this.sessions.delete(sessionId);
-    callback();
-  }
-
-  clear(callback: (err?: Error | null) => void): void {
-    this.sessions.clear();
-    callback();
-  }
-
-  length(callback: (err: Error | null, length?: number) => void): void {
-    callback(null, this.sessions.size);
-  }
-}
-
-interface SessionData {
-  userId?: string;
-  userName?: string;
-  loginTime?: number;
-  lastActivity?: number;
-  preferences?: {
-    theme: string;
-    language: string;
-  };
-}
-
-// Extend express session interface
-declare global {
-  namespace Express {
-    interface Session {
-      userId?: string;
-      userName?: string;
-      loginTime?: number;
-      lastActivity?: number;
-      preferences?: {
-        theme: string;
-        language: string;
-      };
-    }
-  }
-}
-
-export function initializeSessionMiddleware(): express.RequestHandler {
-  const store = new InMemorySessionStore();
-
-  return session({
-    genid: () => uuidv4(),
-    secret: process.env.SESSION_SECRET || "your-secret-key",
-    store: store as any,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
-      sameSite: "strict",
-    },
-  });
-}
-
-export function requireAuthenticationMiddleware(
+// Session validation middleware
+export const validateSessionIntegrity = (
   req: Request,
   res: Response,
   next: NextFunction
-): void {
-  if (req.session && req.session.userId) {
-    req.session.lastActivity = Date.now();
-    next();
-  } else {
-    res.status(401).json({ error: "Unauthorized: Session not found" });
-  }
-}
-
-export function createSessionHandler(req: Request, res: Response): void {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    res.status(400).json({ error: "Email and password are required" });
-    return;
-  }
-
-  // Simulate authentication
-  const userId = uuidv4();
-  const userName = email.split("@")[0];
-
-  req.session.userId = userId;
-  req.session.userName = userName;
-  req.session.loginTime = Date.now();
-  req.session.lastActivity = Date.now();
-  req.session.preferences = {
-    theme: "light",
-    language: "en",
-  };
-
-  req.session.save((err) => {
-    if (err) {
-      res.status(500).json({ error: "Failed to create session" });
+): void => {
+  if (req.session && req.sessionID) {
+    // Verify session exists and hasn't been tampered with
+    if (!req.session.userId && req.path !== "/login" && req.path !== "/register") {
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
-    res.status(200
+    next();
+  } else {
+    next();
+  }
+};
+
+// Session regeneration after authentication
+export const performAuthenticationRenewal = async (
+  req: Request,
+  userId: string
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => {
+      if (err) {
+        reject(new Error("Session regeneration failed"));
+        return;
+      }
+
+      req.session.userId = userId;
+      req.session.authenticatedAt = Date.now();
+      req.session.ipAddress = req.ip;
+      req.session.userAgent = req.get("user-agent") || "";
+
+      req.session.save((err) => {
+        if (err) {
+          reject(new Error("Session save failed"));
+          return;
+        }
+        resolve();
+      });
+    });
+  });
+};
+
+// Session termination with cleanup
+export const performCompleteLogout = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const sessionId = req.sessionID;
+
+    req.session.destroy((err) => {
+      if (err) {
+        reject(new Error("Session destruction failed"));
+        return;
+      }
+
+      // Clear session cookie
+      res.clearCookie("sid", {
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+        sameSite: "strict",
+        path: "/",
+      });
+
+      // Log session termination for audit purposes
+      console.log(`Session terminated: ${sessionId}`);
+
+      resolve();
+    });
+  });
+};
+
+// Validate session continuity
+export const verifySessionConsistency = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (req.session && req.session.userId) {
+    // Verify IP address hasn't changed (basic security check)
+    if (
+      req.session.ipAddress &&
+      req.session.ipAddress !== req.ip
+    ) {
+      console.warn(
+        `IP mismatch for session ${req.sessionID}: ${req.session.ipAddress} vs ${req.ip}`
+      );
+      //

@@ -1,40 +1,112 @@
-import express, { Request, Response } from 'express';
-import { generateAccessToken, validateClient, generateAuthCode } from './authUtils';
+```typescript
+import express, { Router, Request, Response } from "express";
+import crypto from "crypto";
 
-const app = express();
-const port = 3000;
+const authRouter = Router();
 
-app.use(express.json());
+interface OAuthConfig {
+  clientId: string;
+  clientSecret: string;
+  redirectUris: Set<string>;
+  allowedScopes: Set<string>;
+  tokenExpiryMs: number;
+}
 
-export const authorizationEndpoint = async (req: Request, res: Response) => {
-  const { response_type, client_id, redirect_uri, scope, state } = req.query;
+interface AuthorizationRequest {
+  clientId: string;
+  redirectUri: string;
+  scopes: string[];
+  state: string;
+  codeChallenge?: string;
+  codeChallengeMethod?: string;
+}
 
-  if (!response_type || !client_id || !redirect_uri) {
-    return res.status(400).json({ error: 'invalid_request' });
-  }
-  
-  if (response_type !== 'code') {
-    return res.status(400).json({ error: 'unsupported_response_type' });
-  }
-
-  const client = await validateClient(client_id as string, redirect_uri as string);
-  if (!client) {
-    return res.status(401).json({ error: 'unauthorized_client' });
-  }
-
-  const authorizationCode = generateAuthCode(client_id as string, scope as string);
-
-  const redirectUrl = new URL(redirect_uri as string);
-  redirectUrl.searchParams.append('code', authorizationCode);
-  if (state) {
-    redirectUrl.searchParams.append('state', state as string);
-  }
-
-  res.redirect(redirectUrl.toString());
+const stateStore = new Map<string, AuthorizationRequest>();
+const oauthConfig: OAuthConfig = {
+  clientId: process.env.OAUTH_CLIENT_ID || "default-client",
+  clientSecret: process.env.OAUTH_CLIENT_SECRET || "default-secret",
+  redirectUris: new Set([
+    "http://localhost:3001/callback",
+    "https://app.example.com/oauth/callback",
+  ]),
+  allowedScopes: new Set(["read", "write", "profile", "email"]),
+  tokenExpiryMs: 3600000,
 };
 
-app.get('/authorize', authorizationEndpoint);
+function validateRedirectUri(uri: string): boolean {
+  try {
+    const parsed = new URL(uri);
+    if (parsed.hash) return false;
+    return oauthConfig.redirectUris.has(uri);
+  } catch {
+    return false;
+  }
+}
 
-app.listen(port, () => {
-  console.log(`Authorization server running at http://localhost:${port}`);
-});
+function validateScopes(scopes: string[]): boolean {
+  if (!Array.isArray(scopes) || scopes.length === 0) return false;
+  return scopes.every((scope) => oauthConfig.allowedScopes.has(scope));
+}
+
+function generateAuthorizationCode(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function generateStateToken(): string {
+  return crypto.randomBytes(24).toString("hex");
+}
+
+function validateCodeChallenge(
+  challenge: string,
+  method: string
+): {
+  valid: boolean;
+  error?: string;
+} {
+  if (!challenge) {
+    return { valid: true };
+  }
+
+  const validMethods = ["S256", "plain"];
+  if (!validMethods.includes(method)) {
+    return { valid: false, error: "Invalid code_challenge_method" };
+  }
+
+  if (method === "S256" && challenge.length !== 43) {
+    return { valid: false, error: "Invalid S256 code_challenge length" };
+  }
+
+  if (method === "plain" && challenge.length > 128) {
+    return { valid: false, error: "Invalid plain code_challenge length" };
+  }
+
+  return { valid: true };
+}
+
+export const authorizeEndpoint = (req: Request, res: Response): void => {
+  const {
+    client_id,
+    redirect_uri,
+    scope,
+    state,
+    response_type,
+    code_challenge,
+    code_challenge_method,
+  } = req.query;
+
+  const errors: string[] = [];
+
+  if (!client_id || typeof client_id !== "string") {
+    errors.push("Missing or invalid client_id");
+  } else if (client_id !== oauthConfig.clientId) {
+    errors.push("Invalid client_id");
+  }
+
+  if (!response_type || response_type !== "code") {
+    errors.push("Invalid or missing response_type");
+  }
+
+  if (!redirect_uri || typeof redirect_uri !== "string") {
+    errors.push("Missing redirect_uri");
+  } else if (!validateRedirectUri(redirect_uri)) {
+    errors.push("Invalid redirect_

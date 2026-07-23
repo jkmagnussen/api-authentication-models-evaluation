@@ -1,114 +1,99 @@
 ```typescript
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import session from 'express-session';
-import RedisStore from 'connect-redis';
-import { createClient } from 'redis';
+import { v4 as uuidv4 } from 'uuid';
 
-const app = express();
+// Session store interface for validation
+interface ValidatedSession {
+  userId?: string;
+  userName?: string;
+  role?: string;
+  createdAt: number;
+  lastActivity: number;
+}
 
-const redisClient = createClient();
-redisClient.connect();
-
-const redisStore = new RedisStore({ client: redisClient });
-
-app.use(express.json());
-
-app.use(
-  session({
-    store: redisStore,
-    secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
+// Configuration object with secure defaults
+const buildSessionConfig = () => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  return {
+    secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
     resave: false,
     saveUninitialized: false,
+    name: 'sid_auth',
     cookie: {
-      secure: false,
+      secure: isProduction,
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24,
+      sameSite: 'strict' as const,
+      maxAge: 1800000, // 30 minutes
+      domain: process.env.COOKIE_DOMAIN,
+      path: '/',
     },
-  })
-);
+    genid: () => uuidv4(),
+  };
+};
 
-export const validateSessionMiddleware = (
+// Session validation middleware
+export const validateSessionIntegrity = (
   req: Request,
   res: Response,
   next: NextFunction
 ): void => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: 'Unauthorized' });
-    return;
+  if (!req.session.createdAt) {
+    req.session.createdAt = Date.now();
   }
+
+  req.session.lastActivity = Date.now();
+
+  // Check for session timeout (30 minutes of inactivity)
+  const inactivityLimit = 1800000;
+  if (req.session.lastActivity - (req.session.createdAt || 0) > inactivityLimit) {
+    req.session.destroy((err) => {
+      if (err) console.error('Session destruction error:', err);
+    });
+    res.clearCookie('sid_auth', { path: '/' });
+    return res.status(401).json({ error: 'Session expired due to inactivity' });
+  }
+
   next();
 };
 
-export const createUserSession = (req: Request, res: Response): void => {
-  const { userId, email, role } = req.body;
+// Authenticate user and create secure session
+export const authenticateAndCreateSession = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { username, password } = req.body;
 
-  if (!userId || !email) {
-    res.status(400).json({ error: 'Missing required fields' });
-    return;
+  // Validate input
+  if (!username || !password || typeof username !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ error: 'Invalid credentials format' });
   }
 
-  req.session.userId = userId;
-  req.session.email = email;
-  req.session.role = role || 'user';
-  req.session.createdAt = new Date();
+  if (username.length > 50 || password.length > 128) {
+    return res.status(400).json({ error: 'Credentials exceed maximum length' });
+  }
 
-  res.status(200).json({
-    message: 'Session created successfully',
-    sessionId: req.sessionID,
-  });
-};
+  // Simulate credential verification (replace with actual auth logic)
+  if (username !== 'demo' || password !== 'demo123') {
+    return res.status(401).json({ error: 'Authentication failed' });
+  }
 
-export const destroyUserSession = (req: Request, res: Response): void => {
-  req.session.destroy((err) => {
+  // Regenerate session ID to prevent fixation attacks
+  req.session.regenerate((err) => {
     if (err) {
-      res.status(500).json({ error: 'Failed to destroy session' });
-      return;
+      console.error('Session regeneration error:', err);
+      return res.status(500).json({ error: 'Session creation failed' });
     }
-    res.clearCookie('connect.sid');
-    res.status(200).json({ message: 'Session destroyed' });
-  });
-};
 
-export const retrieveSessionData = (req: Request, res: Response): void => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: 'No active session' });
-    return;
-  }
+    // Set session data with secure defaults
+    req.session.userId = `user_${uuidv4()}`;
+    req.session.userName = username;
+    req.session.role = 'user';
+    req.session.createdAt = Date.now();
+    req.session.lastActivity = Date.now();
 
-  res.status(200).json({
-    userId: req.session.userId,
-    email: req.session.email,
-    role: req.session.role,
-    createdAt: req.session.createdAt,
-    sessionId: req.sessionID,
-  });
-};
-
-export const updateSessionAttribute = (req: Request, res: Response): void => {
-  const { attributeName, attributeValue } = req.body;
-
-  if (!attributeName) {
-    res.status(400).json({ error: 'Attribute name is required' });
-    return;
-  }
-
-  (req.session as any)[attributeName] = attributeValue;
-
-  res.status(200).json({
-    message: `Session attribute '${attributeName}' updated`,
-  });
-};
-
-export const checkSessionStatus = (req: Request, res: Response): void => {
-  const isAuthenticated = !!req.session.userId;
-
-  res.status(200).json({
-    authenticated: isAuthenticated,
-    sessionId: req.sessionID,
-    userId: req.session.userId || null,
-  });
-};
-
-app.post('/auth/login', createUserSession);
-app.get('/auth/logout', destroyUserSession);
-app.get('/session/data', validateSessionMiddleware, retriev
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).json({ error: 'Failed to save

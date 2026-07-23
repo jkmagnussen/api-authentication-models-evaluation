@@ -1,6 +1,6 @@
 # Variant Differential Report
 
-Generated: 2026-07-23T03:48:46.839Z
+Generated: 2026-07-23T04:51:25.750Z
 Regenerate: npm run variants:report
 
 This report maps each misconfiguration variant to the baseline security expectation and the focused exploit test that demonstrates the weakened behavior.

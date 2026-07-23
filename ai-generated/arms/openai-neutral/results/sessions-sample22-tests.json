@@ -6,12 +6,12 @@
   "checks": [
     {
       "name": "session regeneration present",
-      "passed": false,
+      "passed": true,
       "details": "Checks that the session is regenerated on login."
     },
     {
       "name": "httpOnly cookie flag present",
-      "passed": false,
+      "passed": true,
       "details": "Checks for HttpOnly cookie protection."
     },
     {
@@ -26,18 +26,12 @@
     }
   ],
   "correctnessFailures": [
-    "session regeneration present",
-    "httpOnly cookie flag present",
     "logout invalidation present"
   ],
   "securityFailures": [
-    "session regeneration present",
-    "httpOnly cookie flag present",
     "logout invalidation present"
   ],
   "misconfigurationDetections": [
-    "session regeneration present",
-    "httpOnly cookie flag present",
     "logout invalidation present"
   ]
 }

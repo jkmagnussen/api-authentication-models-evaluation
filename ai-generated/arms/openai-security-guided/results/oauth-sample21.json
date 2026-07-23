@@ -1,70 +1,18 @@
 {
   "model": "oauth",
   "sample": "sample21",
-  "characters": 1826,
-  "lines": 59,
-  "functions": 1,
+  "characters": 2857,
+  "lines": 106,
+  "functions": 0,
   "classes": 0,
-  "cyclomaticComplexity": 1,
+  "cyclomaticComplexity": null,
   "halstead": {
-    "operators": {
-      "distinct": 9,
-      "total": 38,
-      "identifiers": [
-        "()",
-        "{}",
-        ":",
-        ".",
-        "=",
-        "void (prefix)",
-        "const",
-        "new",
-        "[]"
-      ]
-    },
-    "operands": {
-      "distinct": 30,
-      "total": 48,
-      "identifiers": [
-        "\"use strict\"",
-        "exports",
-        "\"__esModule\"",
-        "<anonymous>",
-        "value",
-        true,
-        "Object",
-        "defineProperty",
-        "authorize",
-        0,
-        "express_1",
-        "\"express\"",
-        "require",
-        "crypto_1",
-        "\"crypto\"",
-        "url_1",
-        "\"url\"",
-        "app",
-        "default",
-        "validClients",
-        "\"client123\"",
-        "\"http://localhost:3000/callback\"",
-        "Map",
-        "validScopes",
-        "\"read\"",
-        "\"write\"",
-        "\"delete\"",
-        "Set",
-        "\"/authorize\"",
-        "get"
-      ]
-    },
-    "length": 86,
-    "vocabulary": 39,
-    "difficulty": 7.2,
-    "volume": 454.5445908221534,
-    "effort": 3272.7210539195044,
-    "bugs": 0.15151486360738448,
-    "time": 181.81783632886135
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
   },
-  "maintainabilityIndex": 100.56792176822472
+  "maintainabilityIndex": null,
+  "analysisError": "Line 107: Unexpected token ILLEGAL"
 }

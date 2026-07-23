@@ -1,15 +1,15 @@
 {
   "model": "jwt",
   "sample": "sample2",
-  "characters": 1083,
-  "lines": 43,
-  "functions": 3,
+  "characters": 653,
+  "lines": 23,
+  "functions": 2,
   "classes": 0,
   "cyclomaticComplexity": 1,
   "halstead": {
     "operators": {
       "distinct": 7,
-      "total": 30,
+      "total": 16,
       "identifiers": [
         "()",
         "{}",
@@ -21,8 +21,8 @@
       ]
     },
     "operands": {
-      "distinct": 22,
-      "total": 37,
+      "distinct": 15,
+      "total": 20,
       "identifiers": [
         "\"use strict\"",
         "exports",
@@ -34,27 +34,20 @@
         "defineProperty",
         "jwtAuthMiddleware",
         0,
-        "express_1",
-        "\"express\"",
-        "require",
         "jsonwebtoken_1",
         "\"jsonwebtoken\"",
+        "require",
         "secretKey",
-        "\"your-secret-key\"",
-        "app",
-        "default",
-        "use",
-        "\"/secured-endpoint\"",
-        "get"
+        "\"your_super_secret_key\""
       ]
     },
-    "length": 67,
-    "vocabulary": 29,
-    "difficulty": 5.886363636363637,
-    "volume": 325.48472667354736,
-    "effort": 1915.9214592829267,
-    "bugs": 0.10849490889118245,
-    "time": 106.44008107127371
+    "length": 36,
+    "vocabulary": 22,
+    "difficulty": 4.666666666666666,
+    "volume": 160.5395382709427,
+    "effort": 749.1845119310658,
+    "bugs": 0.05351317942364757,
+    "time": 41.6213617739481
   },
-  "maintainabilityIndex": 103.59961784654166
+  "maintainabilityIndex": 114.67611730717704
 }

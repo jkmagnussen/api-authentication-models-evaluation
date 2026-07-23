@@ -1,31 +1,36 @@
 import express, { Request, Response } from 'express';
-import { generateAuthToken, validateClient, generateAuthorizationCode } from './authUtils';
+import { generateAuthCode, validateClient, storeAuthCode } from './authUtils';
 
-const app = express();
+const router = express.Router();
 
-export const authorizeUser = async (req: Request, res: Response): Promise<void> => {
-  const { response_type, client_id, redirect_uri, scope, state } = req.query;
+router.get('/oauth2/authorize', (req: Request, res: Response) => {
+  const { client_id, redirect_uri, response_type, state, scope } = req.query;
 
-  if (!response_type || !client_id || !redirect_uri) {
-    res.status(400).send('Missing required parameters');
-    return;
+  if (!client_id || !redirect_uri || !response_type || response_type !== 'code') {
+    return res.status(400).json({ error: 'invalid_request' });
   }
 
-  const clientValid = await validateClient(client_id as string, redirect_uri as string);
-  if (!clientValid) {
-    res.status(401).send('Invalid client or redirect URI');
-    return;
+  if (!validateClient(client_id as string, redirect_uri as string)) {
+    return res.status(401).json({ error: 'unauthorized_client' });
   }
 
-  if (response_type !== 'code') {
-    res.status(400).send('Unsupported response type');
-    return;
+  // Assuming user authentication is handled elsewhere
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ error: 'access_denied' });
   }
 
-  const authorizationCode = generateAuthorizationCode(client_id as string, redirect_uri as string, scope as string);
-  const redirectUrl = `${redirect_uri}?code=${authorizationCode}&state=${state}`;
+  const authCode = generateAuthCode(user.id, client_id as string, scope as string);
 
-  res.redirect(redirectUrl);
-};
+  storeAuthCode(authCode, user.id, client_id as string);
 
-app.get('/oauth2/authorize', authorizeUser);
+  const redirectUrl = new URL(redirect_uri as string);
+  redirectUrl.searchParams.append('code', authCode);
+  if (state) {
+    redirectUrl.searchParams.append('state', state as string);
+  }
+
+  return res.redirect(redirectUrl.toString());
+});
+
+export { router as authRouter };

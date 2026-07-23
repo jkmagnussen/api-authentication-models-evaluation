@@ -1,54 +1,120 @@
-import express, { Request, Response, NextFunction } from 'express';
+```typescript
+import express, { Express, Request, Response, NextFunction } from 'express';
 import session from 'express-session';
+import crypto from 'crypto';
 
-const app = express();
+const app: Express = express();
 
-declare module 'express-session' {
-  interface SessionData {
-    userId: string;
-    isAuthenticated: boolean;
-  }
+// Strict validation for session configuration
+interface SessionConfig {
+  cookieSecret: string;
+  sessionSecret: string;
+  cookieDomain?: string;
+  maxAge: number;
+  sameSite: 'strict' | 'lax' | 'none';
+  secure: boolean;
 }
 
-const sessionMiddleware = session({
-  secret: 'mySuperSecretKey',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: false, // true if using https
-    maxAge: 60000, // 1 minute
+export function initializeSecureSessionManagement(
+  config: SessionConfig
+): (req: Request, res: Response, next: NextFunction) => void {
+  if (!config.cookieSecret || config.cookieSecret.length < 32) {
+    throw new Error('Cookie secret must be at least 32 characters long');
   }
-});
-
-app.use(sessionMiddleware);
-
-const loginHandler = (req: Request, res: Response) => {
-  const { username } = req.body;
-  if (username) {
-    req.session.userId = username;
-    req.session.isAuthenticated = true;
-    res.send(`Logged in as ${username}`);
-  } else {
-    res.status(400).send('Username is required');
+  if (!config.sessionSecret || config.sessionSecret.length < 32) {
+    throw new Error('Session secret must be at least 32 characters long');
   }
-};
-
-const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  if (req.session.isAuthenticated) {
-    next();
-  } else {
-    res.status(401).send('Not authenticated');
+  if (config.secure && config.sameSite === 'none' && !config.secure) {
+    throw new Error('SameSite=none requires secure cookies');
   }
-};
 
-const protectedRoute = (req: Request, res: Response) => {
-  res.send(`Welcome, user ${req.session.userId}`);
-};
+  return session({
+    secret: config.sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    proxy: true,
+    cookie: {
+      secure: config.secure,
+      httpOnly: true,
+      sameSite: config.sameSite,
+      maxAge: config.maxAge,
+      domain: config.cookieDomain,
+      path: '/',
+      signed: true
+    },
+    genid: () => crypto.randomBytes(32).toString('hex'),
+    rolling: true
+  });
+}
 
-app.post('/login', loginHandler);
-app.get('/protected', authMiddleware, protectedRoute);
+export async function performSessionRegeneration(
+  req: Request
+): Promise<{ success: boolean; error?: string }> {
+  return new Promise((resolve) => {
+    const oldSessionId = req.sessionID;
 
-const PORT = 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    req.session.regenerate((err) => {
+      if (err) {
+        resolve({
+          success: false,
+          error: `Session regeneration failed: ${err.message}`
+        });
+        return;
+      }
 
-export { app, sessionMiddleware, loginHandler, authMiddleware, protectedRoute };
+      // Verify new session ID differs from old
+      if (req.sessionID === oldSessionId) {
+        resolve({
+          success: false,
+          error: 'Session ID did not change after regeneration'
+        });
+        return;
+      }
+
+      // Preserve essential user data through regeneration
+      req.session.regeneratedAt = Date.now();
+      req.session.save((err) => {
+        if (err) {
+          resolve({
+            success: false,
+            error: `Session save failed: ${err.message}`
+          });
+        } else {
+          resolve({ success: true });
+        }
+      });
+    });
+  });
+}
+
+export async function invalidateSessionOnLogout(
+  req: Request,
+  res: Response
+): Promise<{ success: boolean; error?: string }> {
+  return new Promise((resolve) => {
+    if (!req.session) {
+      resolve({
+        success: false,
+        error: 'No session found to invalidate'
+      });
+      return;
+    }
+
+    const sessionId = req.sessionID;
+
+    // Clear all session data explicitly
+    req.session.destroy((err) => {
+      if (err) {
+        resolve({
+          success: false,
+          error: `Session destruction failed: ${err.message}`
+        });
+        return;
+      }
+
+      // Clear session cookie
+      res.clearCookie('connect.sid', {
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'l

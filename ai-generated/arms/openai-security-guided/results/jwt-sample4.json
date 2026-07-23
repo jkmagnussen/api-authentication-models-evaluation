@@ -1,15 +1,15 @@
 {
   "model": "jwt",
   "sample": "sample4",
-  "characters": 1683,
-  "lines": 55,
-  "functions": 6,
+  "characters": 958,
+  "lines": 37,
+  "functions": 2,
   "classes": 0,
   "cyclomaticComplexity": 4,
   "halstead": {
     "operators": {
-      "distinct": 8,
-      "total": 45,
+      "distinct": 12,
+      "total": 31,
       "identifiers": [
         "()",
         "{}",
@@ -18,12 +18,16 @@
         "=",
         "void (prefix)",
         "const",
-        "||"
+        "if",
+        "||",
+        "! (prefix)",
+        "throw",
+        "new"
       ]
     },
     "operands": {
-      "distinct": 27,
-      "total": 49,
+      "distinct": 24,
+      "total": 31,
       "identifiers": [
         "\"use strict\"",
         "exports",
@@ -33,34 +37,31 @@
         true,
         "Object",
         "defineProperty",
-        "validateToken",
-        "generateToken",
-        "authenticateToken",
+        "authenticateJwt",
         0,
         "jsonwebtoken_1",
         "\"jsonwebtoken\"",
         "require",
-        "JWT_SECRET",
+        "dotenv_1",
+        "\"dotenv\"",
+        "default",
+        "config",
         "process",
         "env",
-        "\"your-secure-secret\"",
+        "JWT_SECRET_KEY",
         "JWT_ISSUER",
-        "\"issuer.example.com\"",
         "JWT_AUDIENCE",
-        "\"audience.example.com\"",
-        "JWT_ALGORITHM",
-        "\"HS256\"",
-        "TOKEN_EXPIRATION",
-        "\"1h\""
+        "\"Missing JWT configurations in environment variables\"",
+        "Error"
       ]
     },
-    "length": 94,
-    "vocabulary": 35,
-    "difficulty": 7.2592592592592595,
-    "volume": 482.15260359282684,
-    "effort": 3500.0707520071874,
-    "bugs": 0.16071753453094229,
-    "time": 194.44837511151042
+    "length": 62,
+    "vocabulary": 36,
+    "difficulty": 7.75,
+    "volume": 320.53535008942333,
+    "effort": 2484.148963193031,
+    "bugs": 0.10684511669647444,
+    "time": 138.00827573294615
   },
-  "maintainabilityIndex": 97.85617345616522
+  "maintainabilityIndex": 103.68918046703243
 }

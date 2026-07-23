@@ -1,123 +1,117 @@
 ```typescript
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import session from 'express-session';
-import path from 'path';
+import type { Session } from 'express-session';
 
 declare global {
   namespace Express {
-    interface User {
-      id: string;
-      username: string;
-      email: string;
-      role: string;
+    interface Request {
+      session: Session & { userId?: string; isAuthenticated?: boolean };
     }
   }
 }
 
-declare module 'express-session' {
-  interface SessionData {
-    user?: Express.User;
-    loginAttempts?: number;
-    lastActivity?: number;
-  }
-}
+const createSessionConfig = () => ({
+  secret: process.env.SESSION_SECRET || 'default-insecure-secret-change-me',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'strict' as const,
+    maxAge: 3600000,
+    domain: process.env.COOKIE_DOMAIN,
+  },
+  name: 'sid',
+});
 
-export const initializeSessionMiddleware = () => {
-  return session({
-    secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24,
-      sameSite: 'lax',
-    },
+export const initializeSessionMiddleware = (app: express.Application) => {
+  app.use(session(createSessionConfig()));
+};
+
+export const refreshSessionIdentifier = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const previousId = req.sessionID;
+  
+  req.session.regenerate((err) => {
+    if (err) {
+      console.error('Session regeneration failed:', err);
+      return res.status(500).json({ error: 'Session error' });
+    }
+
+    req.session.userId = req.body.userId;
+    req.session.isAuthenticated = true;
+
+    res.clearCookie('sid');
+    
+    next();
   });
 };
 
-export const validateSessionActivity = (
-  req: Request,
-  res: Response,
-  next: NextFunction
+export const validateActiveSession = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
 ) => {
-  if (req.session.user) {
-    const now = Date.now();
-    const lastActivity = req.session.lastActivity || now;
-    const inactivityTimeout = 1000 * 60 * 30;
+  if (!req.session) {
+    return res.status(401).json({ error: 'No session found' });
+  }
 
-    if (now - lastActivity > inactivityTimeout) {
-      req.session.destroy((err) => {
-        if (err) console.error('Session destruction error:', err);
-        res.status(401).json({ error: 'Session expired due to inactivity' });
-      });
-      return;
+  if (!req.session.isAuthenticated || !req.session.userId) {
+    return res.status(401).json({ error: 'Session not authenticated' });
+  }
+
+  const now = Date.now();
+  if (req.session.cookie.expires instanceof Date) {
+    if (now > req.session.cookie.expires.getTime()) {
+      return res.status(401).json({ error: 'Session expired' });
+    }
+  }
+
+  next();
+};
+
+export const terminateUserSession = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const sessionId = req.sessionID;
+
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Session destruction failed:', err);
+      return res.status(500).json({ error: 'Logout failed' });
     }
 
-    req.session.lastActivity = now;
-  }
-  next();
-};
-
-export const requireActiveSession = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-  next();
-};
-
-export const restrictToAdmins = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  if (!req.session.user || req.session.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-  next();
-};
-
-export const handleLoginAttempts = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const MAX_ATTEMPTS = 5;
-  const RESET_TIME = 1000 * 60 * 15;
-
-  if (!req.session.loginAttempts) {
-    req.session.loginAttempts = 0;
-  }
-
-  if (req.session.loginAttempts >= MAX_ATTEMPTS) {
-    return res.status(429).json({
-      error: 'Too many login attempts. Please try again later.',
+    res.clearCookie('sid', {
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'strict',
     });
-  }
 
-  next();
+    next();
+  });
 };
 
-export const trackLoginAttempt = (
-  req: Request,
-  failed: boolean = false
-): void => {
-  if (failed) {
-    req.session.loginAttempts = (req.session.loginAttempts || 0) + 1;
-  } else {
-    req.session.loginAttempts = 0;
-  }
-  req.session.save();
-};
+export const getProtectedRouter = () => {
+  const router = express.Router();
 
-export const createUserSession = (
-  req: Request,
-  user: Express.User
-): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    req.session.user = user;
-    req.session.loginAttempts =
+  router.post('/auth/login', async (req: express.Request, res: express.Response) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Invalid password format' });
+    }
+
+    refreshSessionIdentifier(req, res, () => {
+      res.json({ message: 'Login successful', sessionId: req.sessionID });
+    });

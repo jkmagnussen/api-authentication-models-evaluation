@@ -1,124 +1,125 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response } from "express";
+import express, { Router, Request, Response, NextFunction } from "express";
 import crypto from "crypto";
+import { URL } from "url";
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+interface AuthorizationRequest {
+  clientId: string;
+  redirectUri: string;
+  responseType: string;
+  scope: string[];
+  state: string;
+  codeChallenge?: string;
+  codeChallengeMethod?: string;
+}
 
-// In-memory storage for demo purposes
+interface StoredAuthState {
+  clientId: string;
+  redirectUri: string;
+  scope: string[];
+  timestamp: number;
+  codeChallenge?: string;
+  codeChallengeMethod?: string;
+}
+
+const VALID_SCOPES = new Set([
+  "openid",
+  "profile",
+  "email",
+  "offline_access",
+  "api",
+]);
+const STATE_EXPIRY_MS = 600000; // 10 minutes
+const ALLOWED_RESPONSE_TYPES = new Set(["code", "token"]);
+const ALLOWED_CODE_CHALLENGE_METHODS = new Set(["S256", "plain"]);
+
+const registeredClients = new Map<
+  string,
+  { redirectUris: string[]; secret: string }
+>([
+  [
+    "client_123",
+    {
+      redirectUris: ["https://app.example.com/callback"],
+      secret: "super_secret_key_123",
+    },
+  ],
+  [
+    "client_456",
+    {
+      redirectUris: ["http://localhost:3001/auth/callback"],
+      secret: "another_secret_key_456",
+    },
+  ],
+]);
+
+const authStateStore = new Map<string, StoredAuthState>();
 const authorizationCodes = new Map<
   string,
-  {
-    clientId: string;
-    redirectUri: string;
-    scope: string;
-    userId: string;
-    expiresAt: number;
-  }
->();
-const accessTokens = new Map<
-  string,
-  {
-    clientId: string;
-    userId: string;
-    scope: string;
-    expiresAt: number;
-  }
->();
-const refreshTokens = new Map<
-  string,
-  {
-    clientId: string;
-    userId: string;
-    scope: string;
-  }
+  { clientId: string; redirectUri: string; scope: string[]; expiresAt: number }
 >();
 
-const client = new Anthropic();
-
-// Helper to generate random tokens
-function generateToken(): string {
+function generateSecureState(): string {
   return crypto.randomBytes(32).toString("hex");
 }
 
-// Claude-powered OAuth request analyzer
-async function analyzeAuthRequest(
+function generateAuthorizationCode(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function validateRedirectUri(
   clientId: string,
-  scope: string,
   redirectUri: string
-): Promise<{ approved: boolean; reason: string }> {
-  const prompt = `You are an OAuth2 authorization server validator. Analyze this authorization request:
-- Client ID: ${clientId}
-- Requested Scope: ${scope}
-- Redirect URI: ${redirectUri}
+): boolean {
+  const client = registeredClients.get(clientId);
+  if (!client) {
+    return false;
+  }
 
-Based on common OAuth2 security practices, should this request be approved? Reply with JSON: {"approved": boolean, "reason": "explanation"}`;
-
-  const message = await client.messages.create({
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 200,
-    messages: [
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-  });
-
-  const responseText =
-    message.content[0].type === "text" ? message.content[0].text : "{}";
   try {
-    return JSON.parse(responseText);
+    const requestedUrl = new URL(redirectUri);
+    const isHttps = requestedUrl.protocol === "https:";
+    const isLocalhost = requestedUrl.hostname === "localhost";
+
+    if (!isHttps && !isLocalhost) {
+      return false;
+    }
+
+    return client.redirectUris.some(
+      (uri) =>
+        uri === redirectUri || uri.startsWith(requestedUrl.origin + "/")
+    );
   } catch {
-    return { approved: true, reason: "Default approval" };
+    return false;
   }
 }
 
-// Authorization endpoint
-export async function handleAuthorizationRequest(
-  req: Request,
-  res: Response
-): Promise<void> {
-  const { client_id, redirect_uri, scope, state, response_type } = req.query;
-
-  // Validate required parameters
-  if (!client_id || !redirect_uri || !scope) {
-    res.status(400).json({
-      error: "invalid_request",
-      error_description:
-        "Missing required parameters: client_id, redirect_uri, scope",
-    });
-    return;
+function validateScopes(requestedScopes: string[]): boolean {
+  if (!Array.isArray(requestedScopes) || requestedScopes.length === 0) {
+    return false;
   }
 
-  if (response_type !== "code") {
-    res.status(400).json({
-      error: "unsupported_response_type",
-      error_description: "Only response_type=code is supported",
-    });
-    return;
+  if (requestedScopes.length > 10) {
+    return false;
   }
 
-  try {
-    // Use Claude to analyze the authorization request
-    const analysis = await analyzeAuthRequest(
-      client_id as string,
-      scope as string,
-      redirect_uri as string
-    );
+  return requestedScopes.every((scope) => VALID_SCOPES.has(scope));
+}
 
-    if (!analysis.approved) {
-      const errorParams = new URLSearchParams({
-        error: "access_denied",
-        error_description: analysis.reason,
-        ...(state && { state: state as string }),
-      });
-      res.redirect(`${redirect_uri}?${errorParams.toString()}`);
-      return;
-    }
+function validateState(state: string): boolean {
+  if (!state || typeof state !== "string" || state.length < 32) {
+    return false;
+  }
 
-    // Generate authorization code
-    const code = generateToken();
-    const expiresAt = Date.now() + 10 * 60 * 1000;
+  if (!/^[a-zA-Z0-9]+$/.test(state)) {
+    return false;
+  }
+
+  return true;
+}
+
+function validateCodeChallenge(
+  codeChallenge: string | undefined,
+  method: string | undefined
+): boolean {
+  if (!codeChall

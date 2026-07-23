@@ -1,111 +1,110 @@
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
 import express, { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-
-interface AuthenticatedRequest extends Request {
-  user?: { id: string; email: string; role: string };
-}
+import * as jwt from "jsonwebtoken";
 
 const client = new Anthropic();
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-me";
-const JWT_EXPIRY = "24h";
+interface JWTConfig {
+  secret: string;
+  expectedAudience: string;
+  expectedIssuer: string;
+  allowedAlgorithms: string[];
+  maxExpirySeconds: number;
+}
 
-export async function generateAuthTokenWithAI(
-  userId: string,
-  userEmail: string,
-  userRole: string
-): Promise<string> {
-  const message = await client.messages.create({
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 1024,
-    messages: [
-      {
-        role: "user",
-        content: `Generate a JWT payload for a user authentication token. Return ONLY valid JSON with these fields: userId: "${userId}", email: "${userEmail}", role: "${userRole}", iat: ${Math.floor(Date.now() / 1000)}, issuedBy: "auth-service".`,
-      },
-    ],
+interface TokenPayload {
+  sub: string;
+  aud: string;
+  iss: string;
+  exp: number;
+  iat: number;
+}
+
+interface ConversationMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const conversationHistory: ConversationMessage[] = [];
+
+async function validateWithClaude(tokenInfo: string): Promise<boolean> {
+  conversationHistory.push({
+    role: "user",
+    content: `Analyze this JWT token information and determine if it appears secure: ${tokenInfo}. 
+    Consider: valid exp claim, audience match, issuer match, algorithm safety. 
+    Respond with only 'VALID' or 'INVALID'.`,
   });
 
-  const content = message.content[0];
-  if (content.type !== "text") {
-    throw new Error("Unexpected response type from Claude");
-  }
+  const response = await client.messages.create({
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: 50,
+    system:
+      "You are a JWT security validator. Analyze token claims and respond with only VALID or INVALID.",
+    messages: conversationHistory,
+  });
 
-  const payloadText = content.text.trim();
-  const jsonMatch = payloadText.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error("Could not extract JSON from Claude response");
-  }
+  const responseText =
+    response.content[0].type === "text" ? response.content[0].text : "";
+  conversationHistory.push({
+    role: "assistant",
+    content: responseText,
+  });
 
-  const payload = JSON.parse(jsonMatch[0]);
-
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
-  return token;
+  return responseText.includes("VALID");
 }
 
-export function verifyTokenMiddleware(
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): void {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid authorization header" });
-    return;
+export function createJWTMiddleware(config: JWTConfig) {
+  // Validate configuration
+  if (!config.secret || config.secret.length < 32) {
+    throw new Error("JWT secret must be at least 32 characters long");
   }
 
-  const token = authHeader.substring(7);
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as {
-      userId: string;
-      email: string;
-      role: string;
-    };
-    req.user = {
-      id: decoded.userId,
-      email: decoded.email,
-      role: decoded.role,
-    };
-    next();
-  } catch (err) {
-    res.status(401).json({ error: "Invalid or expired token" });
+  if (!config.expectedAudience || !config.expectedIssuer) {
+    throw new Error("Expected audience and issuer must be specified");
   }
-}
 
-export function requireRoleMiddleware(requiredRole: string) {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    if (!req.user) {
-      res.status(401).json({ error: "User not authenticated" });
+  if (config.allowedAlgorithms.length === 0) {
+    throw new Error("At least one algorithm must be allowed");
+  }
+
+  if (config.maxExpirySeconds < 60) {
+    throw new Error("Max expiry must be at least 60 seconds");
+  }
+
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      res.status(401).json({ error: "Missing or invalid authorization header" });
       return;
     }
 
-    if (req.user.role !== requiredRole) {
-      res.status(403).json({
-        error: `Insufficient permissions. Required role: ${requiredRole}`,
-      });
-      return;
-    }
+    const token = authHeader.substring(7);
 
-    next();
-  };
-}
-
-export function createAuthRouter() {
-  const router = express.Router();
-
-  router.post("/login", async (req: Request, res: Response) => {
     try {
-      const { userId, email, role } = req.body;
+      // Decode without verification to inspect headers
+      const decoded = jwt.decode(token, { complete: true });
 
-      if (!userId || !email || !role) {
-        res.status(400).json({
-          error: "Missing required fields: userId, email, role",
+      if (!decoded) {
+        res.status(401).json({ error: "Invalid token format" });
+        return;
+      }
+
+      // Validate algorithm before verification
+      const tokenAlgorithm = decoded.header.alg;
+      if (!config.allowedAlgorithms.includes(tokenAlgorithm)) {
+        res.status(401).json({
+          error: `Algorithm ${tokenAlgorithm} not allowed`,
         });
         return;
       }
 
-      const token = await generateAuthTokenWithAI
+      // Verify with strict options
+      const verified = jwt.verify(token, config.secret, {
+        algorithms: config.allowedAlgorithms as jwt.VerifyOptions["algorithms"],
+        audience

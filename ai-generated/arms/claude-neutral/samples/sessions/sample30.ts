@@ -1,118 +1,118 @@
 ```typescript
 import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
-import { v4 as uuidv4 } from 'uuid';
+import { randomBytes } from 'crypto';
 
 const app = express();
 
-interface UserSession {
-  userId?: string;
-  username?: string;
-  loginTime?: Date;
-  permissions?: string[];
-  metadata?: Record<string, unknown>;
+export interface AuthenticatedRequest extends Request {
+  session: session.Session & {
+    userId?: string;
+    regenerate?: (callback: (err?: Error) => void) => void;
+    destroy?: (callback: (err?: Error) => void) => void;
+  };
 }
 
-declare global {
-  namespace Express {
-    interface Session {
-      user?: UserSession;
-      sessionId?: string;
-      createdAt?: Date;
-    }
-  }
+export function initializeSessionEngine(
+  app: express.Application,
+  sessionSecret: string
+): express.Application {
+  const sessionConfig: session.SessionOptions = {
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    name: 'sid_secure',
+    cookie: {
+      secure: true,
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 1800000,
+      domain: process.env.COOKIE_DOMAIN || 'localhost',
+      path: '/',
+    },
+    genid: (req) => randomBytes(32).toString('hex'),
+  };
+
+  app.use(session(sessionConfig));
+  return app;
 }
 
-export const configureSessionMiddleware = (app: express.Application): void => {
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
-      resave: false,
-      saveUninitialized: true,
-      cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24,
-        sameSite: 'strict',
-      },
-      name: 'sessionId',
-      genid: (req: Request) => uuidv4(),
-    }),
-  );
-};
-
-export const requireAuthentication = (
-  req: Request,
+export async function validateSessionIntegrity(
+  req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction,
-): void => {
-  if (!req.session.user) {
-    res.status(401).json({ error: 'Unauthorized access' });
+  next: NextFunction
+): Promise<void> {
+  if (!req.session || !req.session.userId) {
+    res.status(401).json({ error: 'Session invalid or expired' });
     return;
   }
-  next();
-};
 
-export const requirePermission = (permission: string) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.session.user?.permissions?.includes(permission)) {
-      res.status(403).json({ error: 'Insufficient permissions' });
-      return;
-    }
+  const userAgent = req.get('user-agent') || '';
+  const ipAddress = req.ip || '';
+
+  if (!req.session.userAgent) {
+    req.session.userAgent = userAgent;
+    req.session.ipAddress = ipAddress;
     next();
-  };
-};
-
-export const handleLogin = (req: Request, res: Response): void => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    res.status(400).json({ error: 'Missing credentials' });
     return;
   }
 
-  if (password !== 'demo-password') {
-    res.status(401).json({ error: 'Invalid credentials' });
+  if (
+    req.session.userAgent !== userAgent ||
+    req.session.ipAddress !== ipAddress
+  ) {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destruction failed:', err);
+      }
+    });
+    res.status(401).json({ error: 'Session validation failed' });
     return;
   }
 
-  req.session.user = {
-    userId: uuidv4(),
-    username: username,
-    loginTime: new Date(),
-    permissions: ['read', 'write'],
-    metadata: { loginAttempts: 0 },
-  };
+  next();
+}
 
-  req.session.createdAt = new Date();
+export async function performSecureLogin(
+  req: AuthenticatedRequest,
+  userId: string
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => {
+      if (err) {
+        reject(new Error('Session regeneration failed: ' + err.message));
+        return;
+      }
 
-  res.json({
-    success: true,
-    message: `Welcome ${username}`,
-    sessionId: req.sessionID,
+      req.session.userId = userId;
+      req.session.loginTimestamp = Date.now();
+      req.session.userAgent = req.get('user-agent') || '';
+      req.session.ipAddress = req.ip || '';
+      req.session.csrfToken = randomBytes(32).toString('hex');
+
+      req.session.save((err) => {
+        if (err) {
+          reject(new Error('Session save failed: ' + err.message));
+        } else {
+          resolve();
+        }
+      });
+    });
   });
-};
+}
 
-export const handleLogout = (req: Request, res: Response): void => {
-  const username = req.session.user?.username || 'Unknown';
+export async function executeSecureLogout(
+  req: AuthenticatedRequest
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const sessionId = req.sessionID;
 
-  req.session.destroy((err: Error | null) => {
-    if (err) {
-      res.status(500).json({ error: 'Logout failed' });
-      return;
-    }
-    res.clearCookie('sessionId');
-    res.json({ success: true, message: `Goodbye ${username}` });
-  });
-};
+    req.session.destroy((err) => {
+      if (err) {
+        reject(new Error('Session destruction failed: ' + err.message));
+        return;
+      }
 
-export const getSessionInfo = (req: Request, res: Response): void => {
-  if (!req.session.user) {
-    res.status(401).json({ error: 'No active session' });
-    return;
-  }
-
-  const sessionDuration = new Date().getTime() - (req.session.createdAt?.getTime() || 0);
-
-  res.json({
-    sessionId:
+      req.res?.clearCookie('sid_secure', {
+        path: '/',
+        domain: process.env.COOKIE_DOMAIN || 'localhost',

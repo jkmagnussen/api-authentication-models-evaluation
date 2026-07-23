@@ -1,6 +1,6 @@
 # AI Provider and Prompt Condition Comparison
 
-Generated: 2026-07-23T00:52:24.787Z
+Generated: 2026-07-23T04:23:16.398Z
 Regenerate: npm run ai:matrix
 
 This report keeps the top-level framing as Baseline vs Misconfigured vs AI-Generated and decomposes the AI-generated layer into provider and prompt-condition arms.
@@ -27,17 +27,17 @@ For bias control, interpret the blinded arm report first (AI_PROVIDER_PROMPT_COM
 
 | Provider | Prompt Condition | OAUTH Failure % | JWT Failure % | SESSIONS Failure % | Overall Failure % | Overall Samples |
 |---|---|---:|---:|---:|---:|---:|
-| OPENAI | neutral | 100.00 | 100.00 | 100.00 | 100.00 | 90 |
-| OPENAI | security-guided | 93.30 | 13.30 | 0.00 | 35.60 | 90 |
-| CLAUDE | neutral | 96.70 | 66.70 | 93.30 | 85.60 | 90 |
-| CLAUDE | security-guided | 90.00 | 10.00 | 20.00 | 40.00 | 90 |
+| OPENAI | neutral | 90.00 | 26.70 | 30.00 | 48.90 | 90 |
+| OPENAI | security-guided | 90.00 | 10.00 | 13.30 | 37.80 | 90 |
+| CLAUDE | neutral | 90.00 | 26.70 | 30.00 | 48.90 | 90 |
+| CLAUDE | security-guided | 90.00 | 10.00 | 16.70 | 38.90 | 90 |
 
 ## AI Aggregate (Use This For Baseline/Misconfigured Comparison)
 
 | Metric | Value | Interpretation |
 |---|---:|---|
-| Macro Average Failure Rate | 65.30% | Equal-weight average across available provider arms. |
-| Pooled Failure Rate | 65.28% | Sample-weighted rate across all available provider samples. |
+| Macro Average Failure Rate | 43.63% | Equal-weight average across available provider arms. |
+| Pooled Failure Rate | 43.61% | Sample-weighted rate across all available provider samples. |
 
 ## How To Interpret In Dissertation Narrative
 

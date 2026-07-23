@@ -1,8 +1,8 @@
 ```typescript
-import { Router, Request, Response, NextFunction } from 'express';
-import jwt, { JwtPayload, VerifyOptions } from 'jsonwebtoken';
+import { Request, Response, NextFunction } from 'express';
+import * as jwt from 'jsonwebtoken';
 
-interface TokenPayload extends JwtPayload {
+interface JWTPayload {
   sub: string;
   aud: string;
   iss: string;
@@ -10,100 +10,107 @@ interface TokenPayload extends JwtPayload {
   exp: number;
 }
 
-interface JwtConfig {
+interface AuthConfig {
   publicKey: string;
   expectedAudience: string;
   expectedIssuer: string;
   allowedAlgorithms: string[];
-  maxExpirySeconds: number;
+  maxTokenAge: number;
 }
 
-interface AuthRequest extends Request {
-  tokenPayload?: TokenPayload;
-}
-
-const defaultConfig: JwtConfig = {
+const defaultConfig: AuthConfig = {
   publicKey: process.env.JWT_PUBLIC_KEY || '',
-  expectedAudience: process.env.JWT_AUDIENCE || 'default-app',
-  expectedIssuer: process.env.JWT_ISSUER || 'default-issuer',
+  expectedAudience: process.env.JWT_AUDIENCE || '',
+  expectedIssuer: process.env.JWT_ISSUER || '',
   allowedAlgorithms: ['RS256'],
-  maxExpirySeconds: 3600,
+  maxTokenAge: 3600,
 };
 
-export function createTokenValidator(config: Partial<JwtConfig> = {}) {
-  const finalConfig = { ...defaultConfig, ...config };
-
-  if (!finalConfig.publicKey) {
-    throw new Error('JWT_PUBLIC_KEY is required for token validation');
+class AuthenticationError extends Error {
+  constructor(
+    public statusCode: number,
+    message: string
+  ) {
+    super(message);
+    this.name = 'AuthenticationError';
   }
-
-  return (token: string): TokenPayload => {
-    const verifyOptions: VerifyOptions = {
-      algorithms: finalConfig.allowedAlgorithms as jwt.Algorithm[],
-      audience: finalConfig.expectedAudience,
-      issuer: finalConfig.expectedIssuer,
-    };
-
-    let decoded: TokenPayload;
-
-    try {
-      decoded = jwt.verify(token, finalConfig.publicKey, verifyOptions) as TokenPayload;
-    } catch (error) {
-      if (error instanceof jwt.JsonWebTokenError) {
-        throw new Error(`Token verification failed: ${error.message}`);
-      }
-      throw error;
-    }
-
-    if (!decoded.sub) {
-      throw new Error('Token missing required subject claim');
-    }
-
-    const issuedAt = decoded.iat || 0;
-    const expiresAt = decoded.exp || 0;
-    const tokenLifetime = expiresAt - issuedAt;
-
-    if (tokenLifetime > finalConfig.maxExpirySeconds) {
-      throw new Error(
-        `Token lifetime ${tokenLifetime}s exceeds maximum ${finalConfig.maxExpirySeconds}s`,
-      );
-    }
-
-    return decoded;
-  };
 }
 
-export function buildAuthMiddleware(config: Partial<JwtConfig> = {}) {
-  const validator = createTokenValidator(config);
+export function createAuthMiddleware(overrides?: Partial<AuthConfig>) {
+  const config = { ...defaultConfig, ...overrides };
 
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!config.publicKey) {
+    throw new Error('JWT_PUBLIC_KEY is required');
+  }
+
+  if (!config.expectedAudience) {
+    throw new Error('JWT_AUDIENCE is required');
+  }
+
+  if (!config.expectedIssuer) {
+    throw new Error('JWT_ISSUER is required');
+  }
+
+  return (req: Request, res: Response, next: NextFunction): void => {
     try {
-      const authHeader = req.get('Authorization');
+      const authHeader = req.headers.authorization;
 
       if (!authHeader) {
-        return res.status(401).json({ error: 'Missing Authorization header' });
+        throw new AuthenticationError(401, 'Missing authorization header');
       }
 
-      const parts = authHeader.split(' ');
-      if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
-        return res.status(401).json({ error: 'Invalid Authorization header format' });
+      const tokenMatch = authHeader.match(/^Bearer\s+(\S+)$/);
+      if (!tokenMatch) {
+        throw new AuthenticationError(401, 'Invalid authorization header format');
       }
 
-      const token = parts[1];
+      const token = tokenMatch[1];
 
-      if (!token || token.trim() === '') {
-        return res.status(401).json({ error: 'Empty token' });
-      }
+      const decoded = jwt.verify(token, config.publicKey, {
+        algorithms: config.allowedAlgorithms as jwt.Algorithm[],
+        audience: config.expectedAudience,
+        issuer: config.expectedIssuer,
+        maxAge: `${config.maxTokenAge}s`,
+      }) as JWTPayload;
 
-      const payload = validator(token);
-      req.tokenPayload = payload;
+      (req as any).user = {
+        id: decoded.sub,
+        audience: decoded.aud,
+        issuer: decoded.iss,
+        issuedAt: new Date(decoded.iat * 1000),
+        expiresAt: new Date(decoded.exp * 1000),
+      };
 
       next();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Authentication failed';
-      res.status(403).json({ error: message });
+      if (error instanceof AuthenticationError) {
+        res.status(error.statusCode).json({ error: error.message });
+        return;
+      }
+
+      if (error instanceof jwt.JsonWebTokenError) {
+        res.status(401).json({ error: 'Invalid token' });
+        return;
+      }
+
+      if (error instanceof jwt.TokenExpiredError) {
+        res.status(401).json({ error: 'Token expired' });
+        return;
+      }
+
+      res.status(500).json({ error: 'Authentication failed' });
     }
   };
 }
 
-export function
+export function generateTestToken(
+  userId: string,
+  privateKey: string,
+  config: Partial<AuthConfig> = {}
+): string {
+  const finalConfig = { ...defaultConfig, ...config };
+
+  const payload: JWTPayload = {
+    sub: userId,
+    aud: finalConfig.expectedAudience,
+    iss: final

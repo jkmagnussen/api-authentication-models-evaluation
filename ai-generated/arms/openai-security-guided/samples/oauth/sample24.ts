@@ -1,50 +1,112 @@
-import { Request, Response, Router } from 'express';
-import { query, validationResult } from 'express-validator';
+```typescript
+import express, { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 
-const authRouter = Router();
+const app = express();
 
-export const generateState = (): string => {
-  return crypto.randomBytes(24).toString('hex');
-};
+interface ClientConfig {
+  clientId: string;
+  redirectUris: string[];
+  allowedScopes: string[];
+}
 
-const isValidRedirectUri = (redirectUri: string): boolean => {
-  const allowedRedirects = ['https://example.com/callback', 'https://example.org/return'];
-  return allowedRedirects.includes(redirectUri);
-};
+interface AuthorizationRequest {
+  clientId: string;
+  redirectUri: string;
+  scopes: string[];
+  state: string;
+  codeChallenge?: string;
+  codeChallengeMethod?: string;
+}
 
-const validateScopes = (scopes: string[]): boolean => {
-  const acceptedScopes = ['read', 'write', 'delete'];
-  return scopes.every(scope => acceptedScopes.includes(scope));
-};
+const registeredClients: Map<string, ClientConfig> = new Map([
+  [
+    'secure-client-123',
+    {
+      clientId: 'secure-client-123',
+      redirectUris: ['https://client.example.com/callback', 'https://client.example.com/auth/callback'],
+      allowedScopes: ['read:profile', 'write:data', 'openid', 'email'],
+    },
+  ],
+]);
 
-authRouter.get('/authorize', [
-  query('client_id').isString().notEmpty(),
-  query('redirect_uri').isString().notEmpty(),
-  query('response_type').equals('code'),
-  query('state').isString().notEmpty(),
-  query('scope').isString().notEmpty().custom(value => {
-    const scopes = value.split(' ');
-    return validateScopes(scopes);
-  })
-], (req: Request, res: Response) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+const authorizationSessions: Map<string, AuthorizationRequest> = new Map();
+
+function validateRedirectUri(clientId: string, redirectUri: string): boolean {
+  const client = registeredClients.get(clientId);
+  if (!client) return false;
+
+  try {
+    const parsedUri = new URL(redirectUri);
+
+    if (!parsedUri.protocol.startsWith('https://') && parsedUri.hostname !== 'localhost') {
+      return false;
+    }
+
+    return client.redirectUris.some((allowedUri) => {
+      const allowedUrl = new URL(allowedUri);
+      return (
+        allowedUrl.protocol === parsedUri.protocol &&
+        allowedUrl.hostname === parsedUri.hostname &&
+        allowedUrl.pathname === parsedUri.pathname
+      );
+    });
+  } catch {
+    return false;
+  }
+}
+
+function validateScopes(clientId: string, requestedScopes: string[]): boolean {
+  const client = registeredClients.get(clientId);
+  if (!client) return false;
+
+  const normalizedScopes = requestedScopes.map((s) => s.trim()).filter((s) => s.length > 0);
+
+  if (normalizedScopes.length === 0) {
+    return false;
   }
 
-  const { client_id, redirect_uri, response_type, state, scope } = req.query;
+  return normalizedScopes.every((scope) => client.allowedScopes.includes(scope));
+}
 
-  if (!isValidRedirectUri(redirect_uri as string)) {
-    return res.status(400).send('Invalid redirect URI');
+function generateState(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function validateStateParameter(state: string): boolean {
+  if (!state || typeof state !== 'string') {
+    return false;
   }
 
-  const generatedState = generateState();
-  // Here, you would typically store the state and client_id in the session or database
-  // For this example, we're assuming a successful authorization process
-  const authorizationCode = crypto.randomBytes(12).toString('hex');
+  if (state.length < 32 || state.length > 500) {
+    return false;
+  }
 
-  res.redirect(`${redirect_uri}?code=${authorizationCode}&state=${generatedState}`);
-});
+  return /^[a-zA-Z0-9\-._~]*$/.test(state);
+}
 
-export { authRouter };
+function validateCodeChallenge(codeChallenge: string | undefined, method: string | undefined): boolean {
+  if (!codeChallenge) {
+    return true;
+  }
+
+  if (codeChallenge.length < 43 || codeChallenge.length > 128) {
+    return false;
+  }
+
+  if (!/^[A-Za-z0-9\-._~]*$/.test(codeChallenge)) {
+    return false;
+  }
+
+  const validMethods = ['S256', 'plain'];
+  return !method || validMethods.includes(method);
+}
+
+function buildAuthorizationError(
+  redirectUri: string,
+  error: string,
+  description: string,
+  state?: string,
+): string {
+  const url = new URL(redirectUri);
+  url.searchParams.append('error', error);

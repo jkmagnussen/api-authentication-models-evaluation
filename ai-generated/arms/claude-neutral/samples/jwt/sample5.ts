@@ -1,115 +1,114 @@
 ```typescript
-import express, { Request, Response, NextFunction, RequestHandler } from 'express';
-import jwt from 'jsonwebtoken';
+import Anthropic from "@anthropic-ai/sdk";
+import express, { Request, Response, NextFunction } from "express";
 
-const app = express();
-app.use(express.json());
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const client = new Anthropic();
 
 interface TokenPayload {
   userId: string;
   email: string;
   role: string;
+  iat: number;
+  exp: number;
 }
 
 declare global {
   namespace Express {
     interface Request {
-      authenticatedUser?: TokenPayload;
+      tokenData?: TokenPayload;
     }
   }
 }
 
-export const generateAuthToken = (payload: TokenPayload): string => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
+export const generateAuthMiddleware = async (): Promise<string> => {
+  const message = await client.messages.create({
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: `Generate a complete JWT authentication middleware implementation in TypeScript for Express. The middleware should:
+1. Extract JWT from Authorization header (Bearer token)
+2. Verify and decode the token using a secret key
+3. Attach decoded payload to request object
+4. Handle token expiration and invalid tokens
+5. Return appropriate error responses
+
+Return only the TypeScript code without explanations.`,
+      },
+    ],
+  });
+
+  const content = message.content[0];
+  if (content.type === "text") {
+    return content.text;
+  }
+  return "";
 };
 
-export const validateJWTMiddleware: RequestHandler = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
+export const createTokenMiddleware = (secret: string) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const authHeader = req.headers.authorization;
 
-  if (!authHeader) {
-    res.status(401).json({ error: 'Authorization header missing' });
-    return;
-  }
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Missing or invalid token" });
+      }
 
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+      const token = authHeader.slice(7);
+      const parts = token.split(".");
 
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
-    req.authenticatedUser = decoded;
-    next();
-  } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
-      res.status(401).json({ error: 'Token has expired' });
-    } else if (error instanceof jwt.JsonWebTokenError) {
-      res.status(403).json({ error: 'Invalid token' });
-    } else {
-      res.status(500).json({ error: 'Token verification failed' });
+      if (parts.length !== 3) {
+        return res.status(401).json({ error: "Malformed token" });
+      }
+
+      const headerStr = Buffer.from(parts[0], "base64").toString();
+      const payloadStr = Buffer.from(parts[1], "base64").toString();
+
+      const header = JSON.parse(headerStr);
+      const payload = JSON.parse(payloadStr);
+
+      if (header.alg !== "HS256") {
+        return res.status(401).json({ error: "Unsupported algorithm" });
+      }
+
+      if (payload.exp && Date.now() > payload.exp * 1000) {
+        return res.status(401).json({ error: "Token expired" });
+      }
+
+      const hmac = require("crypto")
+        .createHmac("sha256", secret)
+        .update(`${parts[0]}.${parts[1]}`)
+        .digest("base64")
+        .replace(/=/g, "")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_");
+
+      if (hmac !== parts[2]) {
+        return res.status(401).json({ error: "Invalid token signature" });
+      }
+
+      req.tokenData = payload;
+      next();
+    } catch (error) {
+      res.status(401).json({ error: "Token validation failed" });
     }
-  }
-};
-
-export const requireRoleMiddleware =
-  (allowedRoles: string[]): RequestHandler =>
-  (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.authenticatedUser) {
-      res.status(401).json({ error: 'User not authenticated' });
-      return;
-    }
-
-    if (!allowedRoles.includes(req.authenticatedUser.role)) {
-      res.status(403).json({ error: 'Insufficient permissions' });
-      return;
-    }
-
-    next();
   };
-
-export const loginController = (req: Request, res: Response): void => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    res.status(400).json({ error: 'Email and password required' });
-    return;
-  }
-
-  // Mock validation - in production use bcrypt and database lookup
-  if (password !== 'demo-password') {
-    res.status(401).json({ error: 'Invalid credentials' });
-    return;
-  }
-
-  const user: TokenPayload = {
-    userId: 'user-123',
-    email: email,
-    role: 'user',
-  };
-
-  const token = generateAuthToken(user);
-  res.json({ token, user });
 };
 
-export const protectedDataController = (req: Request, res: Response): void => {
-  res.json({
-    message: 'This is protected data',
-    user: req.authenticatedUser,
+export const createProtectedRoute = (
+  app: express.Application,
+  secret: string
+) => {
+  app.get("/protected", createTokenMiddleware(secret), (req, res) => {
+    res.json({
+      message: "Access granted",
+      user: req.tokenData,
+    });
   });
 };
 
-export const adminOnlyController = (req: Request, res: Response): void => {
-  res.json({
-    message: 'Admin-only resource accessed',
-    user: req.authenticatedUser,
-  });
-};
+export const setupAuthRoutes = (app: express.Application, secret: string) => {
+  const crypto = require("crypto");
 
-app.post('/auth/login', loginController);
-app.get('/api/protected', validateJWTMiddleware, protectedDataController);
-app.get(
-  '/api/admin',
-  validateJWTMidd
+  app.post("/auth/login", (req:

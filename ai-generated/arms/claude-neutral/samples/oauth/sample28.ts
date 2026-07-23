@@ -1,103 +1,112 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
 import express, { Request, Response } from "express";
+import crypto from "crypto";
 
-const app = express();
-const client = new Anthropic();
+const authRouter = express.Router();
 
-// Store for authorization codes and tokens (in-memory for demo)
-const authorizationCodes = new Map<
-  string,
-  { clientId: string; redirectUri: string; scopes: string[]; expiresAt: number }
->();
-const accessTokens = new Map<
-  string,
-  {
-    clientId: string;
-    scopes: string[];
-    createdAt: number;
-    expiresIn: number;
+// Validate configuration
+const REQUIRED_CONFIG = {
+  OAUTH_CLIENT_ID: process.env.OAUTH_CLIENT_ID,
+  OAUTH_CLIENT_SECRET: process.env.OAUTH_CLIENT_SECRET,
+  OAUTH_REDIRECT_DOMAIN: process.env.OAUTH_REDIRECT_DOMAIN || "localhost",
+};
+
+Object.entries(REQUIRED_CONFIG).forEach(([key, value]) => {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
   }
->();
+});
 
-const registeredClients = new Map<
+const ALLOWED_SCOPES = new Set([
+  "openid",
+  "profile",
+  "email",
+  "offline_access",
+]);
+const STATE_VALIDITY_MS = 10 * 60 * 1000; // 10 minutes
+const stateStore = new Map<
   string,
-  { clientSecret: string; redirectUris: string[] }
+  { timestamp: number; codeChallenge?: string }
 >();
 
-// Register some sample clients
-registeredClients.set("client_001", {
-  clientSecret: "secret_001",
-  redirectUris: ["http://localhost:3001/callback"],
-});
-registeredClients.set("client_002", {
-  clientSecret: "secret_002",
-  redirectUris: ["http://localhost:3002/callback", "https://example.com/auth"],
-});
-
-export async function initializeOAuthServer(): Promise<void> {
-  const conversationHistory: Array<{ role: string; content: string }> = [];
-
-  // Initial context about OAuth2
-  const systemPrompt = `You are an OAuth2 authorization server expert. Help explain OAuth2 flows, token generation, and security best practices. 
-Be concise and practical in your responses.`;
-
-  // Have a conversation about OAuth2 implementation
-  conversationHistory.push({
-    role: "user",
-    content:
-      "What are the key security considerations for implementing an OAuth2 authorization server?",
-  });
-
-  const response = await client.messages.create({
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 300,
-    system: systemPrompt,
-    messages: conversationHistory as Anthropic.Messages.MessageParam[],
-  });
-
-  const assistantMessage =
-    response.content[0].type === "text" ? response.content[0].text : "";
-  conversationHistory.push({
-    role: "assistant",
-    content: assistantMessage,
-  });
-
-  console.log("OAuth2 Server initialized with security context:");
-  console.log(assistantMessage);
-  console.log("\n");
+interface AuthorizeRequest extends Request {
+  query: {
+    client_id?: string;
+    redirect_uri?: string;
+    response_type?: string;
+    scope?: string;
+    state?: string;
+    code_challenge?: string;
+    code_challenge_method?: string;
+  };
 }
 
-export function setupAuthorizationEndpoint(app: express.Application): void {
-  // Authorization endpoint - step 1 of OAuth2 flow
-  app.get("/oauth/authorize", (req: Request, res: Response) => {
-    const { client_id, redirect_uri, response_type, scope, state } = req.query;
+function validateClientId(clientId: string | undefined): boolean {
+  return clientId === REQUIRED_CONFIG.OAUTH_CLIENT_ID;
+}
 
-    // Validate request
-    if (!client_id || !redirect_uri || response_type !== "code") {
-      return res.status(400).json({
-        error: "invalid_request",
-        error_description: "Missing required parameters",
-      });
+function validateResponseType(type: string | undefined): boolean {
+  return type === "code";
+}
+
+function parseScopes(scopeString: string | undefined): string[] {
+  if (!scopeString) return [];
+  return scopeString.split(" ").filter((scope) => scope.length > 0);
+}
+
+function validateScopes(requestedScopes: string[]): boolean {
+  if (requestedScopes.length === 0) return false;
+  return requestedScopes.every((scope) => ALLOWED_SCOPES.has(scope));
+}
+
+function validateRedirectUri(redirectUri: string | undefined): boolean {
+  if (!redirectUri) return false;
+
+  try {
+    const url = new URL(redirectUri);
+
+    // Allow localhost for development
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+      return url.protocol === "http:" || url.protocol === "https:";
     }
 
-    // Check if client is registered
-    const clientConfig = registeredClients.get(client_id as string);
-    if (!clientConfig) {
-      return res.status(401).json({
-        error: "unauthorized_client",
-        error_description: "Client not registered",
-      });
-    }
+    // For production, validate against allowed domain
+    return (
+      (url.protocol === "https:" &&
+        url.hostname === REQUIRED_CONFIG.OAUTH_REDIRECT_DOMAIN) ||
+      url.hostname.endsWith("." + REQUIRED_CONFIG.OAUTH_REDIRECT_DOMAIN)
+    );
+  } catch {
+    return false;
+  }
+}
 
-    // Verify redirect URI
-    if (!clientConfig.redirectUris.includes(redirect_uri as string)) {
-      return res.status(400).json({
-        error: "invalid_request",
-        error_description: "Redirect URI not registered for this client",
-      });
-    }
+function generateState(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
 
-    // Generate authorization code
-    const authCode = generateAuthCode();
-    const scopeList = (scope as string)?.split("
+function validateStateParameter(state: string | undefined): boolean {
+  if (!state) return false;
+  const entry = stateStore.get(state);
+  if (!entry) return false;
+
+  const age = Date.now() - entry.timestamp;
+  if (age > STATE_VALIDITY_MS) {
+    stateStore.delete(state);
+    return false;
+  }
+
+  return true;
+}
+
+function storeState(state: string, codeChallenge?: string): void {
+  stateStore.set(state, {
+    timestamp: Date.now(),
+    codeChallenge,
+  });
+}
+
+function cleanupExpiredStates(): void {
+  const now = Date.now();
+  for (const [state, entry] of stateStore.entries()) {
+    if (now - entry.

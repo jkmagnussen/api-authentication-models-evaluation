@@ -1,46 +1,104 @@
-import express, { Request, Response } from 'express';
-import { body, validationResult } from 'express-validator';
-import crypto from 'crypto';
+```typescript
+import Anthropic from "@anthropic-ai/sdk";
+import express, { Request, Response, NextFunction } from "express";
+import { randomBytes } from "crypto";
+import { createServer } from "http";
 
-const router = express.Router();
+const app = express();
+const client = new Anthropic();
 
-const validRedirectUris = new Set(['https://trustedclient.com/callback']);
-const allowedScopes = new Set(['read', 'write', 'admin']);
+// Configuration
+const VALID_CLIENT_IDS = new Set(["test-client-123", "mobile-app-456"]);
+const ALLOWED_SCOPES = new Set([
+  "read:profile",
+  "write:data",
+  "email",
+  "offline_access",
+]);
+const VALID_REDIRECT_DOMAINS = new Set([
+  "localhost:3000",
+  "localhost:3001",
+  "app.example.com",
+  "mobile.example.com",
+]);
+const STATE_STORE = new Map<string, StateData>();
 
-export const authorizationEndpoint = router.post(
-  '/authorize',
-  [
-    body('response_type').equals('code'),
-    body('client_id').isString().notEmpty(),
-    body('redirect_uri').isURL(),
-    body('scope').isString().notEmpty(),
-    body('state').isString().optional(),
-  ],
-  (req: Request, res: Response): void => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+interface StateData {
+  timestamp: number;
+  clientId: string;
+  requestedScopes: string[];
+}
 
-    const { client_id, redirect_uri, scope, state } = req.body;
+interface AuthorizationRequest {
+  clientId: string;
+  redirectUri: string;
+  scopes: string[];
+  state: string;
+}
 
-    if (!validRedirectUris.has(redirect_uri)) {
-      return res.status(400).json({ error: 'Invalid redirect URI' });
-    }
-
-    const requestedScopes = scope.split(' ');
-    const invalidScopes = requestedScopes.filter(scope => !allowedScopes.has(scope));
-    if (invalidScopes.length > 0) {
-      return res.status(400).json({ error: 'Invalid scopes requested' });
-    }
-
-    const code = crypto.randomBytes(20).toString('hex');
-
-    const responseParams = new URLSearchParams({ code });
-    if (state) {
-      responseParams.append('state', state);
-    }
-
-    res.redirect(`${redirect_uri}?${responseParams.toString()}`);
+// Validate redirect URI against whitelist
+function validateRedirectUri(uri: string): boolean {
+  try {
+    const url = new URL(uri);
+    const domain = `${url.hostname}${url.port ? `:${url.port}` : ""}`;
+    return VALID_REDIRECT_DOMAINS.has(domain) && url.protocol === "https:";
+  } catch {
+    return false;
   }
-);
+}
+
+// Validate scopes
+function validateScopes(scopes: string[]): boolean {
+  if (!scopes || scopes.length === 0) return false;
+  return scopes.every((scope) => ALLOWED_SCOPES.has(scope));
+}
+
+// Validate state parameter format
+function validateStateFormat(state: string): boolean {
+  return state.length >= 32 && state.length <= 500 && /^[a-zA-Z0-9_-]+$/.test(state);
+}
+
+// Generate authorization code
+function generateAuthCode(): string {
+  return randomBytes(32).toString("hex");
+}
+
+// Middleware for request validation
+async function validateAuthRequest(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  const { client_id, redirect_uri, scope, state } = req.query;
+
+  // Validate required parameters
+  if (!client_id || typeof client_id !== "string") {
+    res.status(400).json({ error: "invalid_request", error_description: "Missing client_id" });
+    return;
+  }
+
+  if (!redirect_uri || typeof redirect_uri !== "string") {
+    res.status(400).json({ error: "invalid_request", error_description: "Missing redirect_uri" });
+    return;
+  }
+
+  if (!scope || typeof scope !== "string") {
+    res.status(400).json({ error: "invalid_scope", error_description: "Missing scope" });
+    return;
+  }
+
+  if (!state || typeof state !== "string") {
+    res.status(400).json({ error: "invalid_request", error_description: "Missing state" });
+    return;
+  }
+
+  // Validate client_id
+  if (!VALID_CLIENT_IDS.has(client_id)) {
+    res.status(401).json({ error: "unauthorized_client", error_description: "Unknown client" });
+    return;
+  }
+
+  // Validate redirect URI
+  if (!validateRedirectUri(redirect_uri)) {
+    res.status(400).json({ error: "invalid_request", error_description: "Invalid redirect_uri" });
+    return;

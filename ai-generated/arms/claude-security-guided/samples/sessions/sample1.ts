@@ -1,118 +1,107 @@
 ```typescript
-import express, { Request, Response, NextFunction } from "express";
-import session from "express-session";
+import express, { Express, Request, Response, NextFunction } from "express";
+import session, { SessionOptions } from "express-session";
 import crypto from "crypto";
 
-const app = express();
-
-interface SessionRequest extends Request {
-  sessionID?: string;
-  sessionRegenerateTime?: number;
+// Initialize Store
+interface SessionStore {
+  sessions: Map<string, { data: Record<string, unknown>; expiresAt: number }>;
+  get(
+    sid: string,
+    callback: (err: Error | null, session?: Record<string, unknown>) => void
+  ): void;
+  set(
+    sid: string,
+    sess: Record<string, unknown>,
+    callback?: (err?: Error | null) => void
+  ): void;
+  destroy(sid: string, callback?: (err?: Error | null) => void): void;
 }
 
-const SESSION_REGENERATION_INTERVAL = 15 * 60 * 1000; // 15 minutes
-const SESSION_MAX_AGE = 60 * 60 * 1000; // 1 hour
-const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex");
+const createMemorySessionStore = (): SessionStore => {
+  const sessions = new Map<
+    string,
+    { data: Record<string, unknown>; expiresAt: number }
+  >();
 
-export function initializeSecureSessionMiddleware(
-  expressApp: express.Application
-): void {
-  expressApp.use(
-    session({
-      secret: SESSION_SECRET,
-      resave: false,
-      saveUninitialized: false,
-      name: "sid",
-      cookie: {
-        secure: process.env.NODE_ENV === "production",
-        httpOnly: true,
-        sameSite: "strict",
-        maxAge: SESSION_MAX_AGE,
-        path: "/",
-      },
-      genid: () => crypto.randomUUID(),
-    })
-  );
-}
-
-export async function regenerateSessionIfNeeded(
-  req: SessionRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  const now = Date.now();
-  const lastRegen = req.sessionRegenerateTime || 0;
-
-  if (now - lastRegen > SESSION_REGENERATION_INTERVAL) {
-    req.session.regenerate((err) => {
-      if (err) {
-        console.error("Session regeneration error:", err);
-        return res.status(500).json({ error: "Session error" });
+  return {
+    sessions,
+    get(sid: string, callback) {
+      const session = sessions.get(sid);
+      if (!session) {
+        callback(null);
+        return;
       }
-      req.sessionRegenerateTime = now;
-      next();
-    });
-  } else {
-    next();
+
+      if (Date.now() > session.expiresAt) {
+        sessions.delete(sid);
+        callback(null);
+        return;
+      }
+
+      callback(null, session.data);
+    },
+    set(sid: string, sess: Record<string, unknown>, callback) {
+      const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+      sessions.set(sid, { data: sess, expiresAt });
+      callback?.();
+    },
+    destroy(sid: string, callback) {
+      sessions.delete(sid);
+      callback?.();
+    },
+  };
+};
+
+// Validation utilities
+export const validateSessionConfig = (config: SessionOptions): boolean => {
+  if (!config.secret || config.secret.length < 32) {
+    throw new Error("Session secret must be at least 32 characters");
   }
-}
+  if (config.cookie?.secure !== true && process.env.NODE_ENV === "production") {
+    throw new Error("Secure cookies required in production");
+  }
+  if (config.cookie?.httpOnly !== true) {
+    throw new Error("HttpOnly flag must be enabled");
+  }
+  return true;
+};
 
-export function handleAuthenticationLogin(
-  req: SessionRequest,
-  res: Response
-): void {
-  const userId = req.body?.userId;
-  const userEmail = req.body?.userEmail;
+export const generateSecureSessionId = (): string => {
+  return crypto.randomBytes(32).toString("hex");
+};
 
-  if (!userId || !userEmail) {
-    return res.status(400).json({ error: "Missing credentials" });
+// Session middleware setup
+export const configureSecureSession = (app: Express): void => {
+  const sessionSecret =
+    process.env.SESSION_SECRET ||
+    crypto.randomBytes(32).toString("hex").substring(0, 32);
+  if (sessionSecret.length < 32) {
+    throw new Error("SESSION_SECRET must be at least 32 characters");
   }
 
-  req.session.regenerate((err) => {
-    if (err) {
-      console.error("Session creation error:", err);
-      return res.status(500).json({ error: "Authentication failed" });
-    }
-
-    req.session.userId = userId;
-    req.session.userEmail = userEmail;
-    req.session.authenticatedAt = Date.now();
-    req.sessionRegenerateTime = Date.now();
-
-    res.json({
-      message: "Login successful",
-      sessionId: req.sessionID,
-    });
-  });
-}
-
-export function handleLogoutInvalidation(
-  req: SessionRequest,
-  res: Response
-): void {
-  const sessionToDestroy = req.session;
-
-  sessionToDestroy.destroy((err) => {
-    if (err) {
-      console.error("Session destruction error:", err);
-      return res.status(500).json({ error: "Logout failed" });
-    }
-
-    res.clearCookie("sid", {
-      path: "/",
+  const sessionConfig: SessionOptions = {
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    name: "session_id",
+    genid: () => generateSecureSessionId(),
+    store: createMemorySessionStore() as any,
+    cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       sameSite: "strict",
-    });
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      path: "/",
+      domain:
+        process.env.NODE_ENV === "production"
+          ? process.env.SESSION_DOMAIN
+          : undefined,
+    },
+  };
 
-    res.json({ message: "Logout successful" });
-  });
-}
+  validateSessionConfig(sessionConfig);
+  app.use(session(sessionConfig));
+};
 
-export function validateActiveSession(
-  req: SessionRequest,
-  res: Response,
-  next: NextFunction
-): void {
-  if (!req.session || !req.session.userId) {
-    return res.status(401).json({ error: "Session not
+// Session regeneration

@@ -1,10 +1,10 @@
 {
   "model": "oauth",
   "sample": "sample5",
-  "characters": 3132,
-  "lines": 102,
+  "characters": 2878,
+  "lines": 97,
   "functions": 0,
-  "classes": 0,
+  "classes": 1,
   "cyclomaticComplexity": null,
   "halstead": {
     "difficulty": null,
@@ -14,5 +14,5 @@
     "time": null
   },
   "maintainabilityIndex": null,
-  "analysisError": "Line 80: Unexpected token ;"
+  "analysisError": "Line 81: Invalid regular expression: missing /"
 }

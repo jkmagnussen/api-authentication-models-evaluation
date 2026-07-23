@@ -1,117 +1,134 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import express from "express";
-import crypto from "crypto";
+import express, { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
+import { URL } from 'url';
 
 const app = express();
-const client = new Anthropic();
 
-// In-memory storage for demo purposes
-const authorizationCodes = new Map<
-  string,
-  {
-    clientId: string;
-    redirectUri: string;
-    scope: string;
-    userId: string;
-    expiresAt: number;
-  }
->();
-const accessTokens = new Map<
-  string,
-  {
-    clientId: string;
-    userId: string;
-    scope: string;
-    expiresAt: number;
-  }
->();
-
-const CLIENTS = {
-  "demo-client-123": {
-    secret: "demo-secret-abc",
-    redirectUris: ["http://localhost:3001/callback"],
-  },
-};
-
-const USERS = {
-  "user-001": { email: "user@example.com", name: "Demo User" },
-};
-
-export function generateAuthorizationCode(): string {
-  return crypto.randomBytes(32).toString("hex");
+interface OAuthConfig {
+  clientId: string;
+  clientSecret: string;
+  redirectUris: Set<string>;
+  allowedScopes: Set<string>;
+  stateExpiry: number;
 }
 
-export function generateAccessToken(): string {
-  return crypto.randomBytes(32).toString("hex");
+interface StateRecord {
+  timestamp: number;
+  clientId: string;
+  requestedScopes: string[];
+  nonce?: string;
 }
 
-export function createAuthorizationEndpoint() {
-  return (req: express.Request, res: express.Response) => {
-    const { client_id, redirect_uri, scope, state, response_type } = req.query;
+const oauthConfig: OAuthConfig = {
+  clientId: 'sample-client-id',
+  clientSecret: 'sample-client-secret',
+  redirectUris: new Set([
+    'https://app.example.com/callback',
+    'https://app.example.com/oauth/return',
+  ]),
+  allowedScopes: new Set(['openid', 'profile', 'email', 'offline_access']),
+  stateExpiry: 600000,
+};
+
+const stateStore = new Map<string, StateRecord>();
+
+function generateSecureState(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function validateRedirectUri(
+  redirectUri: string,
+  allowedUris: Set<string>
+): boolean {
+  if (!redirectUri) {
+    return false;
+  }
+
+  try {
+    const parsedUrl = new URL(redirectUri);
+
+    if (!parsedUrl.protocol.startsWith('https')) {
+      return false;
+    }
 
     if (
-      !client_id ||
-      !redirect_uri ||
-      !scope ||
-      !state ||
-      response_type !== "code"
+      parsedUrl.hostname === 'localhost' ||
+      parsedUrl.hostname === '127.0.0.1'
     ) {
-      return res.status(400).json({
-        error: "invalid_request",
-        error_description:
-          "Missing or invalid parameters for authorization request",
-      });
+      return allowedUris.has(redirectUri);
     }
 
-    const clientConfig = CLIENTS[client_id as string];
-    if (!clientConfig) {
-      return res.status(400).json({
-        error: "invalid_client",
-        error_description: "Client not recognized",
-      });
-    }
-
-    if (!clientConfig.redirectUris.includes(redirect_uri as string)) {
-      return res.status(400).json({
-        error: "invalid_redirect_uri",
-        error_description: "Redirect URI not registered for this client",
-      });
-    }
-
-    // For demo purposes, assume user is authenticated
-    const userId = "user-001";
-
-    const authCode = generateAuthorizationCode();
-    authorizationCodes.set(authCode, {
-      clientId: client_id as string,
-      redirectUri: redirect_uri as string,
-      scope: scope as string,
-      userId,
-      expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
-    });
-
-    const redirectUrl = new URL(redirect_uri as string);
-    redirectUrl.searchParams.append("code", authCode);
-    redirectUrl.searchParams.append("state", state as string);
-
-    res.redirect(redirectUrl.toString());
-  };
+    return allowedUris.has(redirectUri);
+  } catch {
+    return false;
+  }
 }
 
-export function createTokenEndpoint() {
-  return (req: express.Request, res: express.Response) => {
-    const { code, client_id, client_secret, grant_type, redirect_uri } =
-      req.body;
+function validateScopes(
+  requestedScopes: string[],
+  allowedScopes: Set<string>
+): boolean {
+  if (!Array.isArray(requestedScopes) || requestedScopes.length === 0) {
+    return false;
+  }
 
-    if (grant_type !== "authorization_code") {
-      return res.status(400).json({
-        error: "unsupported_grant_type",
-        error_description: "Only authorization_code grant type is supported",
-      });
-    }
+  return requestedScopes.every((scope) => allowedScopes.has(scope));
+}
 
-    if (!code || !client_id || !client_secret || !redirect_uri) {
-      return res.status(400).json({
-        error: "invalid_request",
-        error_description: "Missing required parameters
+function validateClientId(clientId: string): boolean {
+  return clientId === oauthConfig.clientId;
+}
+
+function storeAuthorizationState(
+  state: string,
+  clientId: string,
+  scopes: string[],
+  nonce?: string
+): void {
+  stateStore.set(state, {
+    timestamp: Date.now(),
+    clientId,
+    requestedScopes: scopes,
+    nonce,
+  });
+}
+
+function retrieveAndValidateState(state: string): StateRecord | null {
+  const record = stateStore.get(state);
+
+  if (!record) {
+    return null;
+  }
+
+  const now = Date.now();
+  if (now - record.timestamp > oauthConfig.stateExpiry) {
+    stateStore.delete(state);
+    return null;
+  }
+
+  return record;
+}
+
+function clearState(state: string): void {
+  stateStore.delete(state);
+}
+
+async function authorizationEndpoint(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const {
+    client_id,
+    redirect_uri,
+    scope,
+    state,
+    response_type,
+    nonce,
+  } = req.query;
+
+  const errors: string[] = [];
+
+  if (!client_id || typeof client_id !== 'string') {
+    errors.push('missing_client_id');
+  } else if (!

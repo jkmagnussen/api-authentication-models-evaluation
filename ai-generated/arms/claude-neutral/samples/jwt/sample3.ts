@@ -1,83 +1,108 @@
+```typescript
 import express, { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-
-const jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-
-declare global {
-  namespace Express {
-    interface Request {
-      authenticatedUser?: { userId: string; email: string };
-    }
-  }
-}
-
-export const validateBearerToken = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'Missing or invalid authorization header' });
-    return;
-  }
-
-  const token = authHeader.slice(7);
-
-  try {
-    const decoded = jwt.verify(token, jwtSecret) as { userId: string; email: string };
-    req.authenticatedUser = decoded;
-    next();
-  } catch (err) {
-    res.status(403).json({ error: 'Invalid or expired token' });
-  }
-};
-
-export const generateAccessToken = (userId: string, email: string): string => {
-  return jwt.sign({ userId, email }, jwtSecret, { expiresIn: '1h' });
-};
-
-export const decodeTokenPayload = (token: string): { userId: string; email: string } | null => {
-  try {
-    const decoded = jwt.verify(token, jwtSecret) as { userId: string; email: string };
-    return decoded;
-  } catch {
-    return null;
-  }
-};
-
-export const setupAuthRoutes = (app: express.Application): void => {
-  app.post('/auth/login', (req: Request, res: Response) => {
-    const userId = 'user123';
-    const email = 'user@example.com';
-    const token = generateAccessToken(userId, email);
-    res.json({ token, userId, email });
-  });
-
-  app.get('/auth/profile', validateBearerToken, (req: Request, res: Response) => {
-    res.json({ user: req.authenticatedUser });
-  });
-
-  app.post('/auth/verify', (req: Request, res: Response) => {
-    const { token } = req.body;
-    const payload = decodeTokenPayload(token);
-    if (payload) {
-      res.json({ valid: true, payload });
-    } else {
-      res.status(401).json({ valid: false, error: 'Invalid token' });
-    }
-  });
-};
+import crypto from 'crypto';
 
 const app = express();
 app.use(express.json());
 
-setupAuthRoutes(app);
+// JWT secret key
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+// Type definitions
+interface TokenPayload {
+  userId: string;
+  email: string;
+  role: string;
+  iat?: number;
+  exp?: number;
+}
+
+interface AuthenticatedRequest extends Request {
+  user?: TokenPayload;
+}
+
+// Generate JWT token
+export const generateAccessToken = (payload: Omit<TokenPayload, 'iat' | 'exp'>): string => {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+};
+
+// Verify JWT token middleware
+export const validateAuthToken = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    res.status(401).json({ error: 'Access token is missing' });
+    return;
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      res.status(403).json({ error: 'Invalid or expired token' });
+      return;
+    }
+
+    req.user = decoded as TokenPayload;
+    next();
+  });
+};
+
+// Role-based access control middleware
+export const checkUserRole = (requiredRoles: string[]) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    if (!requiredRoles.includes(req.user.role)) {
+      res.status(403).json({ error: 'Insufficient permissions' });
+      return;
+    }
+
+    next();
+  };
+};
+
+// Login endpoint
+app.post('/auth/login', (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  // Mock user validation (in production, validate against database)
+  if (!email || !password) {
+    res.status(400).json({ error: 'Email and password are required' });
+    return;
+  }
+
+  // Simulate user lookup
+  const userId = crypto.randomUUID();
+  const userRole = password === 'admin-pass' ? 'admin' : 'user';
+
+  const token = generateAccessToken({
+    userId,
+    email,
+    role: userRole,
+  });
+
+  res.json({ token, user: { userId, email, role: userRole } });
 });
 
-export default app;
+// Protected endpoint - requires authentication
+app.get('/protected/profile', validateAuthToken, (req: AuthenticatedRequest, res: Response) => {
+  res.json({ message: 'This is protected data', user: req.user });
+});
+
+// Admin-only endpoint
+app.get('/admin/dashboard', validateAuthToken, checkUserRole(['admin']), (req: AuthenticatedRequest, res: Response) => {
+  res.json({ message: 'Admin dashboard data', admin: req.user });
+});
+
+// Refresh token endpoint (simplified)
+app.post('/auth/refresh', validateAuthToken, (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) {
+    res.status(401).json({ error: 'User not authenticated' });
+    return;
+  }
+
+  const { userId,

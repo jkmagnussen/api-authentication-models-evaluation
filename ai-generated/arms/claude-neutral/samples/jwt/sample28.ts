@@ -1,106 +1,95 @@
-import { Router, Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+```typescript
+import { Request, Response, NextFunction } from "express";
+import jwt, { VerifyOptions, JwtPayload } from "jsonwebtoken";
 
-const SECRET_KEY = "your-secret-key-change-this";
-
-interface JWTPayload {
-  userId: string;
-  email: string;
-  iat: number;
-  exp: number;
+interface AuthConfig {
+  secret: string;
+  expectedAudience: string;
+  expectedIssuer: string;
+  allowedAlgorithms: string[];
+  maxTokenAgeSeconds: number;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      authenticatedUser?: JWTPayload;
-    }
-  }
+interface TokenPayload extends JwtPayload {
+  aud?: string;
+  iss?: string;
+  exp?: number;
 }
 
-export const validateJWT = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
+interface AuthenticatedRequest extends Request {
+  tokenPayload?: TokenPayload;
+}
 
-  if (!authHeader?.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid token format" });
-    return;
-  }
-
-  const token = authHeader.slice(7);
-
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY) as JWTPayload;
-    req.authenticatedUser = decoded;
-    next();
-  } catch (err) {
-    if (err instanceof jwt.TokenExpiredError) {
-      res.status(401).json({ error: "Token has expired" });
-    } else if (err instanceof jwt.JsonWebTokenError) {
-      res.status(403).json({ error: "Invalid token signature" });
-    } else {
-      res.status(403).json({ error: "Token validation failed" });
-    }
-  }
+const defaultConfig: AuthConfig = {
+  secret: process.env.JWT_SECRET || "change-me-in-production",
+  expectedAudience: process.env.JWT_AUDIENCE || "api-service",
+  expectedIssuer: process.env.JWT_ISSUER || "auth-service",
+  allowedAlgorithms: ["HS256", "HS384"],
+  maxTokenAgeSeconds: 3600,
 };
 
-export const issueAuthToken = (
-  userId: string,
-  email: string,
-  expiresIn: string = "24h"
-): string => {
-  return jwt.sign({ userId, email }, SECRET_KEY, { expiresIn });
-};
+export function createJwtMiddleware(customConfig?: Partial<AuthConfig>) {
+  const config = { ...defaultConfig, ...customConfig };
 
-export const createAuthRouter = (): Router => {
-  const router = Router();
+  // Validate configuration
+  if (!config.secret || config.secret.length < 32) {
+    throw new Error("JWT secret must be at least 32 characters long");
+  }
 
-  router.post("/login", (req: Request, res: Response): void => {
-    const { userId, email } = req.body;
+  if (!Array.isArray(config.allowedAlgorithms) || config.allowedAlgorithms.length === 0) {
+    throw new Error("At least one algorithm must be specified");
+  }
 
-    if (!userId || !email) {
-      res.status(400).json({ error: "userId and email are required" });
+  if (config.maxTokenAgeSeconds <= 0) {
+    throw new Error("Token age must be positive");
+  }
+
+  return function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      res.status(401).json({ error: "Missing or invalid authorization header" });
       return;
     }
 
-    const token = issueAuthToken(userId, email);
-    res.json({ token, expiresIn: "24h" });
-  });
+    const token = authHeader.slice(7);
 
-  router.post("/refresh", validateJWT, (req: Request, res: Response): void => {
-    if (!req.authenticatedUser) {
-      res.status(401).json({ error: "User not authenticated" });
+    if (!token || token.length === 0) {
+      res.status(401).json({ error: "Token is empty" });
       return;
     }
 
-    const newToken = issueAuthToken(
-      req.authenticatedUser.userId,
-      req.authenticatedUser.email
-    );
-    res.json({ token: newToken, expiresIn: "24h" });
-  });
+    const verifyOptions: VerifyOptions = {
+      audience: config.expectedAudience,
+      issuer: config.expectedIssuer,
+      algorithms: config.allowedAlgorithms as jwt.Algorithm[],
+      maxAge: `${config.maxTokenAgeSeconds}s`,
+    };
 
-  router.get(
-    "/protected",
-    validateJWT,
-    (req: Request, res: Response): void => {
-      res.json({
-        message: "Access granted to protected resource",
-        user: req.authenticatedUser,
-      });
-    }
-  );
+    try {
+      const decoded = jwt.verify(token, config.secret, verifyOptions) as TokenPayload;
 
-  router.get("/verify", validateJWT, (req: Request, res: Response): void => {
-    res.json({ valid: true, user: req.authenticatedUser });
-  });
+      // Additional validation checks
+      if (!decoded.aud || decoded.aud !== config.expectedAudience) {
+        res.status(403).json({ error: "Invalid token audience" });
+        return;
+      }
 
-  return router;
-};
+      if (!decoded.iss || decoded.iss !== config.expectedIssuer) {
+        res.status(403).json({ error: "Invalid token issuer" });
+        return;
+      }
 
-export const decodeTokenWithoutVerification = (token: string): JWTPayload => {
-  return jwt.decode(token) as JWTPayload;
-};
+      if (!decoded.exp || decoded.exp < Math.floor(Date.now() / 1000)) {
+        res.status(403).json({ error: "Token has expired" });
+        return;
+      }
+
+      req.tokenPayload = decoded;
+      next();
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        res.status(403).json({ error: "Token has expired" });
+      } else if (error instanceof jwt.JsonWebTokenError) {
+        res.status(403).json({ error: "Invalid token" });
+      } else if (error instanceof jwt.NotBeforeError) {

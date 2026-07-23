@@ -1,33 +1,125 @@
-import express, { Request, Response } from 'express';
-import { generateAuthCode, validateClient, redirectUser } from './authUtils';
+```typescript
+import express, { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
+import { URL } from 'url';
 
-const authRoute = express.Router();
+const app = express();
+const port = 3000;
 
-authRoute.get('/authorize', async (req: Request, res: Response) => {
-    const { response_type, client_id, redirect_uri, scope, state } = req.query;
+interface AuthorizationRequest {
+  client_id: string;
+  redirect_uri: string;
+  response_type: string;
+  scope: string;
+  state: string;
+  nonce?: string;
+}
 
-    if (response_type !== 'code') {
-        return res.status(400).send('Invalid response type');
+interface ClientConfig {
+  clientId: string;
+  allowedRedirectUris: string[];
+  allowedScopes: string[];
+}
+
+const registeredClients: Map<string, ClientConfig> = new Map([
+  [
+    'client_app_123',
+    {
+      clientId: 'client_app_123',
+      allowedRedirectUris: [
+        'http://localhost:3001/callback',
+        'https://trusted-app.example.com/auth/callback',
+      ],
+      allowedScopes: ['openid', 'profile', 'email', 'offline_access'],
+    },
+  ],
+  [
+    'another_client',
+    {
+      clientId: 'another_client',
+      allowedRedirectUris: ['https://another-app.example.com/callback'],
+      allowedScopes: ['openid', 'profile'],
+    },
+  ],
+]);
+
+const stateStore: Map<string, { timestamp: number; verified: boolean }> = new Map();
+const STATE_EXPIRY_MS = 10 * 60 * 1000;
+
+interface ValidationResult {
+  isValid: boolean;
+  error?: string;
+  errorDescription?: string;
+}
+
+export const validateRedirectUri = (
+  clientId: string,
+  redirectUri: string
+): ValidationResult => {
+  const client = registeredClients.get(clientId);
+
+  if (!client) {
+    return {
+      isValid: false,
+      error: 'invalid_client',
+      errorDescription: 'Client not registered',
+    };
+  }
+
+  if (!redirectUri) {
+    return {
+      isValid: false,
+      error: 'invalid_request',
+      errorDescription: 'Redirect URI is required',
+    };
+  }
+
+  try {
+    const parsedUri = new URL(redirectUri);
+
+    const isAllowed = client.allowedRedirectUris.some((allowed) => {
+      try {
+        const allowedUrl = new URL(allowed);
+        return (
+          parsedUri.protocol === allowedUrl.protocol &&
+          parsedUri.hostname === allowedUrl.hostname &&
+          parsedUri.port === allowedUrl.port &&
+          parsedUri.pathname === allowedUrl.pathname
+        );
+      } catch {
+        return false;
+      }
+    });
+
+    if (!isAllowed) {
+      return {
+        isValid: false,
+        error: 'invalid_request',
+        errorDescription: 'Redirect URI mismatch',
+      };
     }
 
-    const clientValid = await validateClient(client_id as string, redirect_uri as string);
-    if (!clientValid) {
-        return res.status(400).send('Invalid client or redirect URI');
+    if (parsedUri.protocol !== 'https:' && parsedUri.hostname !== 'localhost') {
+      return {
+        isValid: false,
+        error: 'invalid_request',
+        errorDescription: 'Redirect URI must use HTTPS',
+      };
     }
 
-    const user = req.user; // Assuming user is attached to the request
-    if (!user) {
-        return redirectUser(req, res, redirect_uri as string, state as string, 'login_required');
-    }
+    return { isValid: true };
+  } catch {
+    return {
+      isValid: false,
+      error: 'invalid_request',
+      errorDescription: 'Invalid redirect URI format',
+    };
+  }
+};
 
-    const authorizationCode = await generateAuthCode(client_id as string, user.id, scope as string);
-    const redirectUrl = new URL(redirect_uri as string);
-    redirectUrl.searchParams.set('code', authorizationCode);
-    if (state) {
-        redirectUrl.searchParams.set('state', state as string);
-    }
+export const validateScopes = (clientId: string, requestedScopes: string): ValidationResult => {
+  const client = registeredClients.get(clientId);
 
-    return res.redirect(redirectUrl.toString());
-});
-
-export { authRoute };
+  if (!client) {
+    return {
+      isValid: false,

@@ -1,115 +1,114 @@
 ```typescript
-import express, { Request, Response } from 'express';
-import session from 'express-session';
-import { v4 as uuidv4 } from 'uuid';
+import express, { Request, Response, NextFunction } from "express";
+import session from "express-session";
+import { randomBytes } from "crypto";
 
+const app = express();
+
+// Custom session store implementation
+class InMemoryStore extends session.Store {
+  private sessions: Map<string, any> = new Map();
+
+  get(
+    sid: string,
+    callback: (err: Error | null, session?: any) => void
+  ): void {
+    const sessionData = this.sessions.get(sid);
+    if (sessionData && sessionData.expiresAt > Date.now()) {
+      callback(null, sessionData.data);
+    } else {
+      this.sessions.delete(sid);
+      callback(null, undefined);
+    }
+  }
+
+  set(
+    sid: string,
+    session: any,
+    callback?: (err?: Error | null) => void
+  ): void {
+    const expiresAt = Date.now() + 1000 * 60 * 60 * 24; // 24 hours
+    this.sessions.set(sid, { data: session, expiresAt });
+    if (callback) callback(null);
+  }
+
+  destroy(sid: string, callback?: (err?: Error | null) => void): void {
+    this.sessions.delete(sid);
+    if (callback) callback(null);
+  }
+
+  clear(callback?: (err?: Error | null) => void): void {
+    this.sessions.clear();
+    if (callback) callback(null);
+  }
+
+  length(callback: (err: Error | null, length?: number) => void): void {
+    callback(null, this.sessions.size);
+  }
+}
+
+// Initialize session middleware
+const sessionStore = new InMemoryStore();
+
+app.use(express.json());
+app.use(
+  session({
+    store: sessionStore,
+    secret: process.env.SESSION_SECRET || "your-secret-key-change-in-prod",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24, // 24 hours
+      sameSite: "lax",
+    },
+    genid: () => randomBytes(16).toString("hex"),
+  })
+);
+
+// Session type augmentation
 declare global {
   namespace Express {
-    interface Request {
-      session: session.Session & {
-        userId?: string;
-        email?: string;
-        roles?: string[];
-        loginTimestamp?: number;
+    interface Session {
+      userId?: string;
+      username?: string;
+      loginCount?: number;
+      lastActivity?: Date;
+      preferences?: {
+        theme?: string;
+        notifications?: boolean;
       };
     }
   }
 }
 
-const app = express();
-
-export const configureSessionStore = () => {
-  const sessionConfig: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      sameSite: 'strict',
-      maxAge: 1000 * 60 * 60 * 24,
-    },
-    name: 'auth_sid',
-  };
-
-  app.use(session(sessionConfig));
-};
-
-export const authenticateUser = async (
-  email: string,
-  password: string
-): Promise<{ userId: string; email: string; roles: string[] } | null> => {
-  if (email && password.length >= 6) {
-    return {
-      userId: uuidv4(),
-      email,
-      roles: ['user'],
-    };
-  }
-  return null;
-};
-
-export const loginEndpoint = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Missing credentials' });
-  }
-
-  const user = await authenticateUser(email, password);
-
-  if (!user) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-
-  req.session.userId = user.userId;
-  req.session.email = user.email;
-  req.session.roles = user.roles;
-  req.session.loginTimestamp = Date.now();
-
-  req.session.save((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Session creation failed' });
-    }
-    res.json({ message: 'Login successful', user });
-  });
-};
-
-export const logoutEndpoint = (req: Request, res: Response) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Logout failed' });
-    }
-    res.clearCookie('auth_sid');
-    res.json({ message: 'Logout successful' });
-  });
-};
-
-export const protectedRouteMiddleware = (
+// Middleware to track session activity
+export const trackActivityMiddleware = (
   req: Request,
   res: Response,
-  next: Function
+  next: NextFunction
 ) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  if (req.session) {
+    req.session.lastActivity = new Date();
   }
   next();
 };
 
-export const getSessionInfoEndpoint = (req: Request, res: Response) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'No active session' });
+// Session initialization endpoint
+export const initializeSession = (req: Request, res: Response) => {
+  if (!req.session) {
+    return res.status(500).json({ error: "Session not available" });
   }
 
-  res.json({
-    userId: req.session.userId,
-    email: req.session.email,
-    roles: req.session.roles,
-    loginTimestamp: req.session.loginTimestamp,
-    sessionId: req.sessionID,
-  });
-};
+  req.session.userId = `user_${randomBytes(8).toString("hex")}`;
+  req.session.username = `guest_${Math.random().toString(36).substring(7)}`;
+  req.session.loginCount = (req.session.loginCount || 0) + 1;
+  req.session.lastActivity = new Date();
+  req.session.preferences = {
+    theme: "light",
+    notifications: true,
+  };
 
-export const refreshSessionEndpoint = (req: Request, res: Response) => {
-  if (!req.session.userId) {
-    return res.status(401).
+  req.session.save((err) => {
+    if

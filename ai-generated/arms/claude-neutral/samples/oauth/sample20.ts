@@ -1,115 +1,117 @@
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
 import express, { Request, Response, NextFunction } from "express";
+import crypto from "crypto";
+import url from "url";
 
-const client = new Anthropic();
 const app = express();
+const client = new Anthropic();
 
-// In-memory storage for authorization codes and tokens
-const authorizationCodes: Map<string, AuthCodeData> = new Map();
-const accessTokens: Map<string, TokenData> = new Map();
-const refreshTokens: Map<string, RefreshTokenData> = new Map();
+app.use(express.json());
 
-interface AuthCodeData {
-  clientId: string;
-  userId: string;
-  scopes: string[];
-  redirectUri: string;
-  expiresAt: number;
-  codeChallenge?: string;
-}
+// In-memory state store - use Redis in production
+const activeStateTokens = new Map<
+  string,
+  { expires: number; clientId: string; redirectUri: string }
+>();
 
-interface TokenData {
-  clientId: string;
-  userId: string;
-  scopes: string[];
-  expiresAt: number;
-  issuedAt: number;
-}
+// Allowed scopes for OAuth2
+const ALLOWED_SCOPES = new Set(["read", "write", "delete", "admin"]);
 
-interface RefreshTokenData {
-  clientId: string;
-  userId: string;
-  scopes: string[];
-  expiresAt: number;
-}
-
-interface ClientConfig {
-  secret: string;
-  redirectUris: string[];
-  allowedScopes: string[];
-  tokenLifetime: number;
-}
-
-const registeredClients: Map<string, ClientConfig> = new Map([
+// Registered OAuth2 clients
+const REGISTERED_CLIENTS = new Map([
   [
-    "sample_client_1",
+    "client_abc123",
     {
-      secret: "client_secret_1",
-      redirectUris: ["http://localhost:3000/callback"],
-      allowedScopes: ["read", "write", "profile"],
-      tokenLifetime: 3600,
+      secret: "secret_xyz789",
+      redirectUris: [
+        "http://localhost:3001/callback",
+        "https://app.example.com/auth/callback",
+      ],
     },
   ],
   [
-    "sample_client_2",
+    "client_def456",
     {
-      secret: "client_secret_2",
-      redirectUris: ["http://localhost:8080/auth/callback"],
-      allowedScopes: ["read", "admin"],
-      tokenLifetime: 7200,
+      secret: "secret_uvw456",
+      redirectUris: ["https://mobile.example.com/oauth/return"],
     },
   ],
 ]);
 
-// Helper function to generate random strings
-function generateRandomString(length: number = 32): string {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
-
-// Middleware to parse JSON bodies
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Helper to verify PKCE code challenge
-function verifyPKCEChallenge(codeVerifier: string, codeChallenge: string): boolean {
-  const crypto = require("crypto");
-  const hash = crypto
-    .createHash("sha256")
-    .update(codeVerifier)
-    .digest("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
-  return hash === codeChallenge;
-}
-
-// Authorization endpoint - initiates OAuth2 flow
-export const handleAuthorizationRequest = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const {
-    client_id,
-    redirect_uri,
-    response_type,
-    scope,
-    state,
-    code_challenge,
-    code_challenge_method,
-  } = req.query;
-
-  // Validate client
-  if (!registeredClients.has(client_id as string)) {
-    res.status(400).json({ error: "invalid_client" });
-    return;
+// Validate and normalize redirect URI
+function validateRedirectUri(
+  redirectUri: string,
+  clientId: string
+): { valid: boolean; error?: string } {
+  if (!redirectUri || typeof redirectUri !== "string") {
+    return { valid: false, error: "redirect_uri is required and must be a string" };
   }
 
-  const client = registeredClients
+  try {
+    const parsed = new url.URL(redirectUri);
+    if (!parsed.protocol.match(/^https?:$/)) {
+      return {
+        valid: false,
+        error: "redirect_uri must use http or https protocol",
+      };
+    }
+  } catch {
+    return { valid: false, error: "redirect_uri must be a valid URL" };
+  }
+
+  const client = REGISTERED_CLIENTS.get(clientId);
+  if (!client) {
+    return { valid: false, error: "Unknown client_id" };
+  }
+
+  if (!client.redirectUris.includes(redirectUri)) {
+    return {
+      valid: false,
+      error: "redirect_uri not registered for this client",
+    };
+  }
+
+  return { valid: true };
+}
+
+// Validate scope parameter
+function validateScopes(requestedScopes: string): {
+  valid: boolean;
+  scopes?: string[];
+  error?: string;
+} {
+  if (!requestedScopes || typeof requestedScopes !== "string") {
+    return { valid: false, error: "scope is required and must be a string" };
+  }
+
+  const scopes = requestedScopes.split(" ").filter((s) => s.length > 0);
+
+  if (scopes.length === 0) {
+    return { valid: false, error: "scope cannot be empty" };
+  }
+
+  const invalidScopes = scopes.filter((s) => !ALLOWED_SCOPES.has(s));
+  if (invalidScopes.length > 0) {
+    return {
+      valid: false,
+      error: `Invalid scopes: ${invalidScopes.join(", ")}`,
+    };
+  }
+
+  return { valid: true, scopes };
+}
+
+// Generate secure state token
+function generateStateToken(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+// Store state token
+function storeStateToken(
+  state: string,
+  clientId: string,
+  redirectUri: string
+): void {
+  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minute expiry
+  activeStateToken

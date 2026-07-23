@@ -1,51 +1,114 @@
-import express, { Request, Response } from 'express';
-import { authorizeClient, validateScopes, generateState, verifyRedirectUri } from './authUtils';
-import { authConfig } from './config';
+```typescript
+import Anthropic from "@anthropic-ai/sdk";
+import express, { Request, Response } from "express";
+import crypto from "crypto";
 
-export const oauth2Router = express.Router();
+const client = new Anthropic();
+const app = express();
 
-oauth2Router.get('/authorize', (req: Request, res: Response) => {
-  const { client_id, redirect_uri, response_type, scope, state } = req.query;
-
-  if (!client_id || !response_type || !scope) {
-    return res.status(400).json({ error: 'invalid_request' });
-  }
-
-  const scopes = (scope as string).split(' ');
-  if (!validateScopes(scopes)) {
-    return res.status(400).json({ error: 'invalid_scope' });
-  }
-
-  if (!authorizeClient(client_id as string, response_type as string)) {
-    return res.status(400).json({ error: 'unauthorized_client' });
-  }
-
-  if (!verifyRedirectUri(client_id as string, redirect_uri as string)) {
-    return res.status(400).json({ error: 'invalid_redirect_uri' });
-  }
-
-  const generatedState = state || generateState();
-
-  const redirectUrl = new URL(redirect_uri as string);
-  redirectUrl.searchParams.append('code', 'authCode12345');
-  redirectUrl.searchParams.append('state', generatedState);
-
-  return res.redirect(redirectUrl.toString());
-});
-
-// authUtils.ts - Utilities for authorization
-export function authorizeClient(clientId: string, responseType: string): boolean {
-  return authConfig.clients.includes(clientId) && responseType === 'code';
+interface AuthorizationSession {
+  state: string;
+  codeChallenge: string;
+  requestedScopes: string[];
+  timestamp: number;
 }
 
-export function validateScopes(scopes: string[]): boolean {
-  return scopes.every(scope => authConfig.supportedScopes.includes(scope));
+const sessions = new Map<string, AuthorizationSession>();
+const VALID_SCOPES = new Set([
+  "openid",
+  "profile",
+  "email",
+  "offline_access",
+]);
+const SESSION_TIMEOUT = 10 * 60 * 1000;
+const VALID_REDIRECT_HOSTS = new Set([
+  "localhost:3000",
+  "localhost:8080",
+  "app.example.com",
+]);
+
+function validateRedirectUri(redirectUri: string): boolean {
+  try {
+    const url = new URL(redirectUri);
+    if (
+      url.protocol !== "https:" &&
+      !url.hostname.startsWith("localhost") &&
+      !url.hostname === "127.0.0.1"
+    ) {
+      return false;
+    }
+
+    const host = url.host;
+    return VALID_REDIRECT_HOSTS.has(host);
+  } catch {
+    return false;
+  }
 }
 
-export function generateState(): string {
-  return 'state' + Math.random().toString(36).substring(2, 15);
+function validateScopes(requestedScopes: string[]): {
+  valid: boolean;
+  validated: string[];
+  invalid: string[];
+} {
+  const validated: string[] = [];
+  const invalid: string[] = [];
+
+  for (const scope of requestedScopes) {
+    if (VALID_SCOPES.has(scope)) {
+      validated.push(scope);
+    } else {
+      invalid.push(scope);
+    }
+  }
+
+  return {
+    valid: invalid.length === 0 && validated.length > 0,
+    validated,
+    invalid,
+  };
 }
 
-export function verifyRedirectUri(clientId: string, redirectUri: string): boolean {
-  return authConfig.redirectUris[clientId]?.includes(redirectUri) ?? false;
+function generateState(): string {
+  return crypto.randomBytes(32).toString("hex");
 }
+
+function generateCodeChallenge(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+export async function authorizeHandler(req: Request, res: Response) {
+  const { client_id, redirect_uri, scope, state, response_type } = req.query;
+
+  try {
+    if (!client_id || typeof client_id !== "string") {
+      return res.status(400).json({ error: "invalid_request" });
+    }
+
+    if (!redirect_uri || typeof redirect_uri !== "string") {
+      return res.status(400).json({ error: "invalid_request" });
+    }
+
+    if (!validateRedirectUri(redirect_uri)) {
+      return res.status(400).json({ error: "invalid_redirect_uri" });
+    }
+
+    if (response_type !== "code") {
+      return res.status(400).json({ error: "unsupported_response_type" });
+    }
+
+    if (!state || typeof state !== "string" || state.length < 20) {
+      return res.status(400).json({ error: "invalid_state" });
+    }
+
+    const scopeString = (scope as string) || "openid profile email";
+    const requestedScopes = scopeString.split(" ").filter((s) => s.length > 0);
+
+    const scopeValidation = validateScopes(requestedScopes);
+    if (!scopeValidation.valid) {
+      return res
+        .status(400)
+        .json({ error: "invalid_scope", invalid: scopeValidation.invalid });
+    }
+
+    const conversationHistory: { role: string; content: string }[] = [];
+    let session

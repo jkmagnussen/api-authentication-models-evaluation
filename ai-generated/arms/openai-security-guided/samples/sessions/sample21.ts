@@ -1,65 +1,112 @@
-import express, { Request, Response } from 'express';
-import session from 'express-session';
-import crypto from 'crypto';
+```typescript
+import express, { Express, Request, Response, NextFunction } from "express";
+import session from "express-session";
+import crypto from "crypto";
 
-const app = express();
-
-const sessionConfig: session.SessionOptions = {
-  secret: crypto.randomBytes(64).toString('hex'),
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 1000 * 60 * 60, // 1 hour
+declare global {
+  namespace Express {
+    interface Request {
+      sessionID: string;
+      session: session.Session & {
+        userId?: string;
+        loginTimestamp?: number;
+        ipAddress?: string;
+      };
+    }
   }
-};
+}
 
-app.use(session(sessionConfig));
+export function initializeSecureSessionMiddleware(): express.RequestHandler {
+  return session({
+    secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex"),
+    name: "sid",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "strict",
+      maxAge: 1000 * 60 * 30,
+      domain: process.env.COOKIE_DOMAIN,
+    },
+    genid: (req: Request): string => {
+      return crypto.randomBytes(16).toString("hex");
+    },
+  });
+}
 
-export const loginHandler = (req: Request, res: Response): void => {
-  const { username, password } = req.body;
-  if (isValidUser(username, password)) {
-    req.session.regenerate(err => {
+export async function performSessionRegeneration(req: Request): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const previousSessionId = req.sessionID;
+    req.session.regenerate((err: Error | null) => {
       if (err) {
-        res.status(500).send('Session error');
+        reject(new Error(`Session regeneration failed: ${err.message}`));
         return;
       }
-      req.session.userId = getUserId(username);
-      res.send('Login successful');
+      req.session.loginTimestamp = Date.now();
+      req.session.ipAddress = extractClientIpAddress(req);
+      resolve();
     });
-  } else {
-    res.status(401).send('Unauthorized');
-  }
-};
-
-export const logoutHandler = (req: Request, res: Response): void => {
-  req.session.destroy(err => {
-    if (err) {
-      res.status(500).send('Logout error');
-      return;
-    }
-    res.clearCookie('connect.sid', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
-    });
-    res.send('Logout successful');
   });
-};
-
-function isValidUser(username: string, password: string): boolean {
-  // Implement user validation logic
-  return true; // Placeholder
 }
 
-function getUserId(username: string): number {
-  // Implement logic to get user ID
-  return 1; // Placeholder
+export async function validateSessionIntegrity(
+  req: Request
+): Promise<{ isValid: boolean; reason?: string }> {
+  if (!req.session || !req.session.userId) {
+    return { isValid: false, reason: "No active session" };
+  }
+
+  const sessionIpAddress = req.session.ipAddress;
+  const currentIpAddress = extractClientIpAddress(req);
+
+  if (sessionIpAddress && sessionIpAddress !== currentIpAddress) {
+    return {
+      isValid: false,
+      reason: "IP address mismatch detected",
+    };
+  }
+
+  const sessionAge = Date.now() - (req.session.loginTimestamp || 0);
+  const maxSessionAge = 1000 * 60 * 30;
+
+  if (sessionAge > maxSessionAge) {
+    return { isValid: false, reason: "Session expired" };
+  }
+
+  return { isValid: true };
 }
 
-app.post('/login', loginHandler);
-app.post('/logout', logoutHandler);
+export async function executeSessionLogout(req: Request): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const sessionIdToInvalidate = req.sessionID;
 
-export default app;
+    req.session.destroy((err: Error | null) => {
+      if (err) {
+        reject(new Error(`Session destruction failed: ${err.message}`));
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+export function protectedRouteMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
+  if (!req.session || !req.session.userId) {
+    res.status(401).json({ error: "Unauthorized: No active session" });
+    return;
+  }
+
+  next();
+}
+
+export async function enforceSessionRefresh(
+  req: Request,
+  thresholdMs: number = 1000 * 60 * 15
+): Promise<void> {
+  const lastLoginTime = req.session.loginTimestamp || 0;
+  const timeSinceLogin = Date.now() - last

@@ -11,7 +11,7 @@
     },
     {
       "name": "httpOnly cookie flag present",
-      "passed": false,
+      "passed": true,
       "details": "Checks for HttpOnly cookie protection."
     },
     {
@@ -26,15 +26,12 @@
     }
   ],
   "correctnessFailures": [
-    "session regeneration present",
-    "httpOnly cookie flag present"
+    "session regeneration present"
   ],
   "securityFailures": [
-    "session regeneration present",
-    "httpOnly cookie flag present"
+    "session regeneration present"
   ],
   "misconfigurationDetections": [
-    "session regeneration present",
-    "httpOnly cookie flag present"
+    "session regeneration present"
   ]
 }

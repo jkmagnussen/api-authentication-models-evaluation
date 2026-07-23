@@ -1,7 +1,10 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response, NextFunction } from "express";
-import crypto from "crypto";
+import express, { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
+import { URL } from 'url';
+
+const app = express();
+const port = 3000;
 
 interface AuthorizationRequest {
   client_id: string;
@@ -9,102 +12,114 @@ interface AuthorizationRequest {
   response_type: string;
   scope: string;
   state: string;
+  nonce?: string;
 }
 
-interface ConversationMessage {
-  role: "user" | "assistant";
-  content: string;
+interface ClientConfig {
+  clientId: string;
+  allowedRedirectUris: string[];
+  allowedScopes: string[];
 }
 
-let conversationHistory: ConversationMessage[] = [];
-let pendingAuthRequests: Map<string, AuthorizationRequest> = new Map();
+const registeredClients: Map<string, ClientConfig> = new Map([
+  [
+    'client_app_123',
+    {
+      clientId: 'client_app_123',
+      allowedRedirectUris: [
+        'http://localhost:3001/callback',
+        'https://trusted-app.example.com/auth/callback',
+      ],
+      allowedScopes: ['openid', 'profile', 'email', 'offline_access'],
+    },
+  ],
+  [
+    'another_client',
+    {
+      clientId: 'another_client',
+      allowedRedirectUris: ['https://another-app.example.com/callback'],
+      allowedScopes: ['openid', 'profile'],
+    },
+  ],
+]);
 
-async function processAuthorizationWithAI(
-  authRequest: AuthorizationRequest
-): Promise<string> {
-  const client = new Anthropic();
+const stateStore: Map<string, { timestamp: number; verified: boolean }> = new Map();
+const STATE_EXPIRY_MS = 10 * 60 * 1000;
 
-  const userMessage = `
-    Process this OAuth2 authorization request:
-    - Client ID: ${authRequest.client_id}
-    - Redirect URI: ${authRequest.redirect_uri}
-    - Response Type: ${authRequest.response_type}
-    - Scope: ${authRequest.scope}
-    - State: ${authRequest.state}
-    
-    Analyze if this request appears legitimate and provide a yes/no recommendation to authorize.
-    Also suggest what authorization code format would be appropriate.
-  `;
-
-  conversationHistory.push({
-    role: "user",
-    content: userMessage,
-  });
-
-  const response = await client.messages.create({
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 500,
-    system:
-      "You are an OAuth2 authorization assistant. Analyze authorization requests and provide recommendations. Be concise and technical.",
-    messages: conversationHistory.map((msg) => ({
-      role: msg.role,
-      content: msg.content,
-    })),
-  });
-
-  const assistantResponse =
-    response.content[0].type === "text" ? response.content[0].text : "";
-
-  conversationHistory.push({
-    role: "assistant",
-    content: assistantResponse,
-  });
-
-  return assistantResponse;
+interface ValidationResult {
+  isValid: boolean;
+  error?: string;
+  errorDescription?: string;
 }
 
-export const handleAuthorizationRequest = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  try {
-    const authRequest: AuthorizationRequest = {
-      client_id: req.query.client_id as string,
-      redirect_uri: req.query.redirect_uri as string,
-      response_type: req.query.response_type as string,
-      scope: req.query.scope as string,
-      state: req.query.state as string,
+export const validateRedirectUri = (
+  clientId: string,
+  redirectUri: string
+): ValidationResult => {
+  const client = registeredClients.get(clientId);
+
+  if (!client) {
+    return {
+      isValid: false,
+      error: 'invalid_client',
+      errorDescription: 'Client not registered',
     };
+  }
 
-    // Validate required parameters
-    if (
-      !authRequest.client_id ||
-      !authRequest.redirect_uri ||
-      !authRequest.response_type ||
-      !authRequest.state
-    ) {
-      res.status(400).json({
-        error: "invalid_request",
-        error_description: "Missing required parameters",
-      });
-      return;
+  if (!redirectUri) {
+    return {
+      isValid: false,
+      error: 'invalid_request',
+      errorDescription: 'Redirect URI is required',
+    };
+  }
+
+  try {
+    const parsedUri = new URL(redirectUri);
+
+    const isAllowed = client.allowedRedirectUris.some((allowed) => {
+      try {
+        const allowedUrl = new URL(allowed);
+        return (
+          parsedUri.protocol === allowedUrl.protocol &&
+          parsedUri.hostname === allowedUrl.hostname &&
+          parsedUri.port === allowedUrl.port &&
+          parsedUri.pathname === allowedUrl.pathname
+        );
+      } catch {
+        return false;
+      }
+    });
+
+    if (!isAllowed) {
+      return {
+        isValid: false,
+        error: 'invalid_request',
+        errorDescription: 'Redirect URI mismatch',
+      };
     }
 
-    // Process with AI
-    const aiAnalysis = await processAuthorizationWithAI(authRequest);
+    if (parsedUri.protocol !== 'https:' && parsedUri.hostname !== 'localhost') {
+      return {
+        isValid: false,
+        error: 'invalid_request',
+        errorDescription: 'Redirect URI must use HTTPS',
+      };
+    }
 
-    // Generate authorization code
-    const authCode = `auth_${crypto.randomBytes(16).toString("hex")}`;
-    const requestId = crypto.randomUUID();
-
-    // Store pending request
-    pendingAuthRequests.set(requestId, authRequest);
-
-    // Redirect to consent screen
-    const consentUrl = new URL("http://localhost:3000/consent");
-    consentUrl.searchParams.append("request_id", requestId);
-    consentUrl.searchParams.append("client_id", authRequest.client_id);
-    consentUrl.searchParams.append("scope", authRequest.scope);
-
-    res.redirect(consentUrl.toString());
+    return { isValid: true };
+  } catch {
+    return {
+      isValid: false,
+      error: 'invalid_request',
+      errorDescription: 'Invalid redirect URI format',
+    };
   }
+};
+
+export const validateScopes = (clientId: string, requestedScopes: string): ValidationResult => {
+  const client = registeredClients.get(clientId);
+
+  if (!client) {
+    return {
+      isValid: false,

@@ -1,106 +1,113 @@
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import crypto from "crypto";
-import { URL } from "url";
 
-const client = new Anthropic();
 const app = express();
+const client = new Anthropic();
 
-// Configuration
-const VALID_SCOPES = ["read", "write", "delete"];
-const VALID_REDIRECT_DOMAINS = ["localhost:3001", "app.example.com"];
-const STATE_CACHE = new Map<string, { createdAt: number; used: boolean }>();
-const STATE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+// Configuration with secure defaults
+const OAUTH_CONFIG = {
+  authorizedRedirectUris: [
+    "https://app.example.com/callback",
+    "http://localhost:3000/oauth/callback",
+  ],
+  supportedScopes: ["openid", "profile", "email", "offline_access"],
+  stateTokenTtl: 600000, // 10 minutes
+  tokenLength: 32,
+};
 
-// Utility functions
+// In-memory state store (use Redis in production)
+const stateTokenStore = new Map<
+  string,
+  { expiresAt: number; clientId: string; redirectUri: string }
+>();
+
+// Validate redirect URI against whitelist
 function validateRedirectUri(redirectUri: string): boolean {
+  if (!redirectUri) return false;
+
   try {
     const url = new URL(redirectUri);
-    const host = url.hostname + (url.port ? `:${url.port}` : "");
-
-    if (url.protocol !== "https:" && url.hostname !== "localhost") {
+    // Only allow https in production
+    if (
+      process.env.NODE_ENV === "production" &&
+      url.protocol !== "https:"
+    ) {
       return false;
     }
-
-    return VALID_REDIRECT_DOMAINS.some((domain) => host === domain);
+    return OAUTH_CONFIG.authorizedRedirectUris.includes(redirectUri);
   } catch {
     return false;
   }
 }
 
-function validateScopes(requestedScopes: string[]): boolean {
-  if (requestedScopes.length === 0) return false;
-  return requestedScopes.every((scope) => VALID_SCOPES.includes(scope));
-}
-
-function generateState(): string {
-  const state = crypto.randomBytes(32).toString("hex");
-  STATE_CACHE.set(state, { createdAt: Date.now(), used: false });
-  return state;
-}
-
-function validateState(state: string): boolean {
-  const entry = STATE_CACHE.get(state);
-
-  if (!entry) return false;
-  if (entry.used) return false;
-
-  const age = Date.now() - entry.createdAt;
-  if (age > STATE_EXPIRY_MS) {
-    STATE_CACHE.delete(state);
-    return false;
+// Validate scopes against approved list
+function validateScopes(requestedScopes: string[]): {
+  valid: boolean;
+  approved: string[];
+} {
+  if (!Array.isArray(requestedScopes) || requestedScopes.length === 0) {
+    return { valid: false, approved: [] };
   }
 
-  return true;
+  const approved = requestedScopes.filter((scope) =>
+    OAUTH_CONFIG.supportedScopes.includes(scope)
+  );
+
+  return {
+    valid: approved.length > 0,
+    approved,
+  };
 }
 
-function markStateUsed(state: string): void {
-  const entry = STATE_CACHE.get(state);
-  if (entry) {
-    entry.used = true;
+// Generate cryptographically secure state token
+function generateStateToken(): string {
+  return crypto.randomBytes(OAUTH_CONFIG.tokenLength).toString("hex");
+}
+
+// Validate state token and check expiration
+function validateStateToken(
+  state: string,
+  clientId: string
+): { valid: boolean; redirectUri?: string } {
+  const tokenData = stateTokenStore.get(state);
+
+  if (!tokenData) {
+    return { valid: false };
   }
-}
 
-function cleanupExpiredStates(): void {
-  const now = Date.now();
-  for (const [state, entry] of STATE_CACHE.entries()) {
-    if (now - entry.createdAt > STATE_EXPIRY_MS) {
-      STATE_CACHE.delete(state);
-    }
+  if (Date.now() > tokenData.expiresAt) {
+    stateTokenStore.delete(state);
+    return { valid: false };
   }
+
+  if (tokenData.clientId !== clientId) {
+    return { valid: false };
+  }
+
+  return { valid: true, redirectUri: tokenData.redirectUri };
 }
 
-// Express routes
+// Express route handler for authorization endpoint
 export async function handleAuthorizationRequest(
   req: Request,
-  res: Response
+  res: Response,
+  next: NextFunction
 ): Promise<void> {
-  const { client_id, redirect_uri, scope, response_type } = req.query;
+  try {
+    const { client_id, redirect_uri, scope, response_type, state } = req.query;
 
-  // Validate required parameters
-  if (!client_id || !redirect_uri || !scope || !response_type) {
-    return res.status(400).json({
-      error: "invalid_request",
-      error_description: "Missing required parameters",
-    });
-  }
+    // Validate required parameters
+    if (!client_id || typeof client_id !== "string") {
+      res.status(400).json({ error: "invalid_request", error_description: "Missing client_id" });
+      return;
+    }
 
-  // Validate response_type
-  if (response_type !== "code") {
-    return res.status(400).json({
-      error: "unsupported_response_type",
-      error_description: "Only authorization code flow is supported",
-    });
-  }
+    if (!redirect_uri || typeof redirect_uri !== "string") {
+      res.status(400).json({ error: "invalid_request", error_description: "Missing redirect_uri" });
+      return;
+    }
 
-  // Validate client_id format
-  if (typeof client_id !== "string" || client_id.length === 0) {
-    return res.status(400).json({
-      error: "invalid_request",
-      error_description: "Invalid client_id",
-    });
-  }
-
-  // Validate redirect_uri
-  if (typeof redirect_uri !== "string" || !validate
+    if (!state || typeof state !== "string") {
+      res.status(400).json({ error: "invalid_request", error_description: "Missing state parameter" });

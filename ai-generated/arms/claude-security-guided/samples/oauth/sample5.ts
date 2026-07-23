@@ -1,107 +1,117 @@
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
-import express, { Express, Request, Response } from "express";
+import express, {
+  Request,
+  Response,
+  Router,
+  NextFunction,
+  RequestHandler,
+} from "express";
 import crypto from "crypto";
 
 const client = new Anthropic();
-let conversationHistory: { role: string; content: string }[] = [];
 
-export const createOAuth2AuthorizationEndpoint = (): Express => {
-  const app = express();
+interface AuthorizationRequest {
+  client_id: string;
+  redirect_uri: string;
+  response_type: string;
+  scope: string;
+  state: string;
+  code_challenge?: string;
+  code_challenge_method?: string;
+}
 
-  // Configuration
-  const VALID_REDIRECT_URIS = new Set([
-    "https://example.com/callback",
-    "https://app.example.com/auth/return",
-    "http://localhost:3000/callback",
-  ]);
+interface ConversationMessage {
+  role: "user" | "assistant";
+  content: string;
+}
 
-  const VALID_SCOPES = new Set([
-    "openid",
-    "profile",
-    "email",
-    "offline_access",
-    "user:read",
-    "user:write",
-  ]);
+const authorizationRequests = new Map<
+  string,
+  AuthorizationRequest & { timestamp: number }
+>();
+const conversationHistories = new Map<string, ConversationMessage[]>();
 
-  const STATE_STORE = new Map<string, { expiresAt: number; used: boolean }>();
+const REGISTERED_CLIENTS = new Set([
+  "mobile-app-client",
+  "web-spa-client",
+  "desktop-app-client",
+]);
 
-  // Middleware
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: false }));
+const VALID_SCOPES = new Set([
+  "openid",
+  "profile",
+  "email",
+  "offline_access",
+  "calendar:read",
+  "documents:write",
+]);
 
-  // Helper functions
-  const validateRedirectUri = (uri: string): boolean => {
-    try {
-      const url = new URL(uri);
-      // Reject localhost without explicit allowlist
-      if (
-        url.hostname === "localhost" &&
-        !VALID_REDIRECT_URIS.has(uri.split("?")[0])
-      ) {
-        return false;
-      }
-      return VALID_REDIRECT_URIS.has(uri.split("?")[0]);
-    } catch {
-      return false;
-    }
-  };
+const ALLOWED_REDIRECT_PATTERNS = [
+  /^https:\/\/.*\.example\.com\/callback$/,
+  /^https:\/\/localhost:3000\/auth\/callback$/,
+  /^https:\/\/127\.0\.0\.1:3000\/auth\/callback$/,
+];
 
-  const validateScopes = (scopes: string): boolean => {
-    if (!scopes || scopes.trim() === "") {
-      return false;
-    }
-    return scopes.split(" ").every((scope) => VALID_SCOPES.has(scope));
-  };
+function validateRedirectUri(uri: string): boolean {
+  try {
+    new URL(uri);
+  } catch {
+    return false;
+  }
 
-  const generateState = (): string => {
-    return crypto.randomBytes(32).toString("hex");
-  };
+  if (!uri.startsWith("https://") && !uri.startsWith("http://localhost")) {
+    return false;
+  }
 
-  const validateStateParameter = (state: string): boolean => {
-    if (!state || state.length < 32) {
-      return false;
-    }
-    const entry = STATE_STORE.get(state);
-    if (!entry) {
-      return false;
-    }
-    if (entry.used) {
-      return false;
-    }
-    if (entry.expiresAt < Date.now()) {
-      STATE_STORE.delete(state);
-      return false;
-    }
-    return true;
-  };
+  return ALLOWED_REDIRECT_PATTERNS.some((pattern) => pattern.test(uri));
+}
 
-  const storeState = (state: string): void => {
-    STATE_STORE.set(state, {
-      expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
-      used: false,
-    });
-  };
+function validateScopes(scopes: string): boolean {
+  const requestedScopes = scopes.split(" ");
+  return requestedScopes.every((scope) => VALID_SCOPES.has(scope));
+}
 
-  const markStateAsUsed = (state: string): void => {
-    const entry = STATE_STORE.get(state);
-    if (entry) {
-      entry.used = true;
-    }
-  };
+function generateSecureState(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
 
-  // Routes
-  app.get("/authorize", async (req: Request, res: Response) => {
-    const clientId = req.query.client_id as string;
-    const redirectUri = req.query.redirect_uri as string;
-    const scopes = req.query.scope as string;
-    const state = req.query.state as string;
-    const responseType = req.query.response_type as string;
+function validateStateParameter(state: string): boolean {
+  return /^[a-f0-9]{64}$/.test(state);
+}
 
-    // Validate required parameters
-    if (!clientId || !redirectUri || !scopes || !state) {
-      return res.status(400).json({
-        error: "invalid_request",
-        error_description: "Missing required parameters",
-      });
+async function getOAuthGuidance(
+  sessionId: string,
+  userQuery: string
+): Promise<string> {
+  if (!conversationHistories.has(sessionId)) {
+    conversationHistories.set(sessionId, []);
+  }
+
+  const history = conversationHistories.get(sessionId) || [];
+  history.push({ role: "user", content: userQuery });
+
+  const response = await client.messages.create({
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: 500,
+    system: `You are an OAuth2 authorization server assistant. Help users understand 
+    and complete secure OAuth2 authorization flows. Always prioritize security and 
+    validate all inputs. Explain the purpose of state parameters, scope restrictions, 
+    and redirect URI validation. Keep responses concise and focused on OAuth2 security.`,
+    messages: history,
+  });
+
+  const assistantMessage =
+    response.content[0].type === "text" ? response.content[0].text : "";
+  history.push({ role: "assistant", content: assistantMessage });
+
+  if (history.length > 10) {
+    history.splice(0, 2);
+  }
+
+  return assistantMessage;
+}
+
+const validateAuthorizationRequest: RequestHandler = async (
+  req: Request,
+  res: Response,

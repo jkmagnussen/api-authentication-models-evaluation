@@ -1,31 +1,104 @@
-import express, { Request, Response, NextFunction } from 'express';
-import { generateAuthorizationCode, validateClientCredentials, buildAuthResponseUri } from './authUtils';
+```typescript
+import express, { Request, Response } from 'express';
+import crypto from 'crypto';
+import { URL } from 'url';
 
-const router = express.Router();
+const app = express();
 
-export const oauthAuthorize = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { client_id, redirect_uri, response_type, scope, state } = req.query;
-    if (!client_id || !redirect_uri || !response_type) {
-      return res.status(400).json({ error: 'invalid_request' });
-    }
-
-    if (!validateClientCredentials(client_id as string, redirect_uri as string)) {
-      return res.status(401).json({ error: 'unauthorized_client' });
-    }
-
-    if (response_type !== 'code') {
-      return res.status(400).json({ error: 'unsupported_response_type' });
-    }
-
-    const code = generateAuthorizationCode(client_id as string, scope as string);
-    const redirectUrl = buildAuthResponseUri(redirect_uri as string, code, state as string);
-
-    res.redirect(redirectUrl);
-  } catch (err) {
-    next(err);
-  }
+// Configuration
+const OAUTH_CONFIG = {
+  clientId: process.env.OAUTH_CLIENT_ID || 'test-client-id',
+  clientSecret: process.env.OAUTH_CLIENT_SECRET || 'test-client-secret',
+  redirectUris: (process.env.OAUTH_REDIRECT_URIS || 'http://localhost:3000/callback').split(','),
+  validScopes: ['read', 'write', 'delete', 'profile'],
+  stateExpiryMs: 10 * 60 * 1000, // 10 minutes
 };
 
-router.get('/oauth2/authorize', oauthAuthorize);
-export default router;
+// In-memory store for state parameters (use Redis/database in production)
+const stateStore = new Map<string, { expiresAt: number; scope: string }>();
+
+// Validate redirect URI against whitelist
+export function validateRedirectUri(redirectUri: string): boolean {
+  try {
+    const url = new URL(redirectUri);
+    
+    // Must be https in production
+    if (process.env.NODE_ENV === 'production' && url.protocol !== 'https:') {
+      return false;
+    }
+    
+    // Check against whitelist
+    return OAUTH_CONFIG.redirectUris.some(whitelistedUri => {
+      try {
+        const whitelistUrl = new URL(whitelistedUri);
+        return url.origin === whitelistUrl.origin && url.pathname === whitelistUrl.pathname;
+      } catch {
+        return false;
+      }
+    });
+  } catch {
+    return false;
+  }
+}
+
+// Validate and parse requested scopes
+export function validateRequestedScopes(scopeString: string | undefined): string[] {
+  if (!scopeString) {
+    return [];
+  }
+  
+  const requestedScopes = scopeString.split(' ').filter(scope => scope.length > 0);
+  
+  // Validate each scope
+  const validScopes = requestedScopes.filter(scope => {
+    const isValid = OAUTH_CONFIG.validScopes.includes(scope);
+    if (!isValid) {
+      console.warn(`Invalid scope requested: ${scope}`);
+    }
+    return isValid;
+  });
+  
+  if (validScopes.length === 0) {
+    return [];
+  }
+  
+  return validScopes;
+}
+
+// Generate secure state parameter
+export function generateStateParameter(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+// Store state parameter with expiration
+export function storeStateParameter(state: string, scope: string): boolean {
+  try {
+    stateStore.set(state, {
+      expiresAt: Date.now() + OAUTH_CONFIG.stateExpiryMs,
+      scope,
+    });
+    return true;
+  } catch (error) {
+    console.error('Failed to store state parameter:', error);
+    return false;
+  }
+}
+
+// Verify and retrieve state parameter
+export function verifyStateParameter(state: string): { valid: boolean; scope: string } {
+  const stored = stateStore.get(state);
+  
+  if (!stored) {
+    return { valid: false, scope: '' };
+  }
+  
+  // Check expiration
+  if (Date.now() > stored.expiresAt) {
+    stateStore.delete(state);
+    return { valid: false, scope: '' };
+  }
+  
+  // Consume state (one-time use)
+  stateStore.delete(state);
+  
+  return { valid: true, scope: stored.scope };

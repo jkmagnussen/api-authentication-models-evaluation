@@ -1,113 +1,105 @@
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response, NextFunction, Express } from "express";
+import jwt from "jsonwebtoken";
+import { Request, Response, NextFunction } from "express";
 
 const client = new Anthropic();
 
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-  };
+export interface VerifyOptions {
+  requiredAudience: string;
+  requiredIssuer: string;
+  allowedAlgorithms: string[];
 }
 
-export async function generateJWTAuthMiddleware(): Promise<string> {
+export interface JwtPayload {
+  sub: string;
+  aud: string;
+  iss: string;
+  exp: number;
+  iat: number;
+  role?: string;
+}
+
+export async function generateJwtDocumentation(
+  options: VerifyOptions
+): Promise<string> {
   const message = await client.messages.create({
     model: "claude-3-5-sonnet-20241022",
     max_tokens: 1024,
     messages: [
       {
         role: "user",
-        content: `Generate a complete TypeScript JWT authentication middleware implementation for Express.js. 
-Requirements:
-1. Use jsonwebtoken library for JWT operations
-2. Include middleware function that validates JWT tokens
-3. Include secret key management
-4. Include error handling for invalid/expired tokens
-5. Return only the TypeScript code, no explanations
-6. Make it production-ready with proper typing
-7. Include middleware to attach user info to request
+        content: `Generate TypeScript documentation for JWT middleware that validates:
+- Audience: ${options.requiredAudience}
+- Issuer: ${options.requiredIssuer}
+- Allowed algorithms: ${options.allowedAlgorithms.join(", ")}
 
-Structure:
-- Use named exports
-- Create verifyTokenMiddleware function
-- Create generateTokenMiddleware function  
-- Use interfaces for type safety
-- Handle edge cases
-
-Keep it concise but complete.`,
+Include security best practices.`,
       },
     ],
   });
 
-  const content = message.content[0];
-  if (content.type === "text") {
-    return content.text;
-  }
-  throw new Error("Unexpected response type from Claude");
+  return message.content[0].type === "text" ? message.content[0].text : "";
 }
 
-export function createAuthMiddleware(secret: string) {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader?.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Missing or invalid token" });
-    }
-
-    const token = authHeader.substring(7);
-
+export function createAuthMiddleware(options: VerifyOptions) {
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const decoded = JSON.parse(
-        Buffer.from(token.split(".")[1], "base64").toString()
-      );
-      req.user = decoded;
+      const authHeader = req.headers.authorization;
+
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Missing or invalid token" });
+      }
+
+      const token = authHeader.substring(7);
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || "", {
+        algorithms: options.allowedAlgorithms,
+        audience: options.requiredAudience,
+        issuer: options.requiredIssuer,
+        complete: true,
+      }) as { payload: JwtPayload };
+
+      if (!decoded.payload) {
+        return res.status(401).json({ error: "Invalid token structure" });
+      }
+
+      // Validate expiry
+      const now = Math.floor(Date.now() / 1000);
+      if (decoded.payload.exp <= now) {
+        return res.status(401).json({ error: "Token expired" });
+      }
+
+      // Attach verified payload to request
+      (req as any).user = decoded.payload;
       next();
-    } catch {
-      return res.status(401).json({ error: "Invalid token" });
+    } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError) {
+        return res.status(401).json({ error: "Invalid token" });
+      }
+      return res.status(500).json({ error: "Authentication failed" });
     }
   };
 }
 
-export function setupExampleApp(app: Express, secret: string) {
-  app.use(express.json());
+export function createTokenSigner(
+  options: VerifyOptions
+): (payload: Omit<JwtPayload, "exp" | "iat">) => string {
+  return (payload) => {
+    const now = Math.floor(Date.now() / 1000);
+    const tokenPayload: JwtPayload = {
+      ...payload,
+      iat: now,
+      exp: now + 3600, // 1 hour expiry
+    };
 
-  app.post("/login", (req: Request, res: Response) => {
-    const user = { id: "user123", email: "test@example.com" };
-    const token = Buffer.from(
-      JSON.stringify({ aud: user.id, sub: user.email })
-    ).toString("base64");
-    res.json({ token });
-  });
-
-  app.get(
-    "/protected",
-    createAuthMiddleware(secret),
-    (req: AuthenticatedRequest, res: Response) => {
-      res.json({ message: "Protected route", user: req.user });
-    }
-  );
-
-  app.get("/health", (_req: Request, res: Response) => {
-    res.json({ status: "ok" });
-  });
+    return jwt.sign(tokenPayload, process.env.JWT_SECRET || "", {
+      algorithm: options.allowedAlgorithms[0] as jwt.Algorithm,
+      audience: options.requiredAudience,
+      issuer: options.requiredIssuer,
+    });
+  };
 }
 
-async function main() {
-  console.log("Generating JWT middleware implementation...");
-  const middleware = await generateJWTAuthMiddleware();
-  console.log("Generated middleware code:");
-  console.log("=".repeat(50));
-  console.log(middleware);
-  console.log("=".repeat(50));
-
-  const app = express();
-  const SECRET = "your-secret-key-change-in-production";
-
-  setupExampleApp(app, SECRET);
-
-  const PORT = 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log("Endpoints:");
-    console.log("  POST /login - Get
+export function validateTokenExpiry(token: string): boolean {
+  try {

@@ -1,38 +1,109 @@
-import express, { Request, Response } from 'express';
-import crypto from 'crypto';
-import { check, validationResult } from 'express-validator';
+```typescript
+import express, { Request, Response, Router } from "express";
+import crypto from "crypto";
+import { URL } from "url";
 
-const authRouter = express.Router();
+const router = Router();
 
-const validRedirectUris = ['https://example.com/callback'];
-const validScopes = ['read', 'write', 'admin'];
+// Configuration
+const OAUTH_CONFIG = {
+  allowedScopes: ["read", "write", "delete", "profile"],
+  maxScopeLength: 200,
+  stateLength: 32,
+  maxRedirectUrlLength: 2048,
+  allowedRedirectHosts: [
+    "localhost:3000",
+    "localhost:3001",
+    "app.example.com",
+    "staging.example.com",
+  ],
+};
 
-authRouter.get('/authorize', [
-  check('redirect_uri').isURL(),
-  check('state').isString().isLength({ min: 10, max: 128 }),
-  check('scope').isString().custom(scope => {
-    return scope.split(' ').every(s => validScopes.includes(s));
-  }),
-  check('response_type').equals('code')
-], async (req: Request, res: Response) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+interface AuthorizationRequest {
+  clientId: string;
+  redirectUri: string;
+  scope: string;
+  state: string;
+  responseType: string;
+  codeChallengeMethod?: string;
+  codeChallenge?: string;
+}
+
+// In-memory state storage (use Redis in production)
+const stateStore = new Map<string, AuthorizationRequest>();
+const stateTimeout = 10 * 60 * 1000; // 10 minutes
+
+export function validateRedirectUri(redirectUri: string): boolean {
+  if (!redirectUri) return false;
+  if (redirectUri.length > OAUTH_CONFIG.maxRedirectUrlLength) return false;
+
+  try {
+    const url = new URL(redirectUri);
+
+    // Reject non-HTTPS in production
+    if (
+      process.env.NODE_ENV === "production" &&
+      url.protocol !== "https:" &&
+      !url.hostname.includes("localhost")
+    ) {
+      return false;
+    }
+
+    // Validate against allowlist
+    const hostWithPort = url.hostname + (url.port ? `:${url.port}` : "");
+    const isAllowed = OAUTH_CONFIG.allowedRedirectHosts.some(
+      (host) => host === hostWithPort || hostWithPort === host
+    );
+
+    return isAllowed;
+  } catch {
+    return false;
   }
+}
 
-  const { redirect_uri, state, scope } = req.query;
+export function validateScopes(scope: string): boolean {
+  if (!scope) return false;
+  if (scope.length > OAUTH_CONFIG.maxScopeLength) return false;
 
-  if (!validRedirectUris.includes(redirect_uri as string)) {
-    return res.status(400).json({ error: 'Invalid redirect_uri' });
-  }
+  const requestedScopes = scope.split(" ").filter((s) => s.length > 0);
 
-  const authCode = crypto.randomBytes(20).toString('hex');
+  if (requestedScopes.length === 0) return false;
 
-  const redirectUrl = new URL(redirect_uri as string);
-  redirectUrl.searchParams.append('code', authCode);
-  redirectUrl.searchParams.append('state', state as string);
+  return requestedScopes.every((requestedScope) =>
+    OAUTH_CONFIG.allowedScopes.includes(requestedScope)
+  );
+}
 
-  return res.redirect(redirectUrl.toString());
-});
+export function generateStateParameter(): string {
+  return crypto.randomBytes(OAUTH_CONFIG.stateLength / 2).toString("hex");
+}
 
-export { authRouter };
+export function validateStateParameter(state: string): boolean {
+  if (!state) return false;
+  if (state.length !== OAUTH_CONFIG.stateLength) return false;
+  return /^[a-f0-9]+$/.test(state);
+}
+
+export function validateCodeChallenge(
+  codeChallenge: string,
+  method?: string
+): boolean {
+  if (!codeChallenge) return true; // PKCE is optional
+
+  if (codeChallenge.length < 43 || codeChallenge.length > 128) return false;
+
+  // Unreserved characters per RFC 3986
+  if (!/^[A-Za-z0-9\-._~]+$/.test(codeChallenge)) return false;
+
+  if (method && !["S256", "plain"].includes(method)) return false;
+
+  return true;
+}
+
+export const handleAuthorizationRequest = (
+  req: Request,
+  res: Response
+): void => {
+  try {
+    const {
+      client

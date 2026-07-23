@@ -1,18 +1,68 @@
 {
   "model": "jwt",
   "sample": "sample10",
-  "characters": 2829,
-  "lines": 116,
-  "functions": 8,
+  "characters": 1528,
+  "lines": 49,
+  "functions": 3,
   "classes": 0,
-  "cyclomaticComplexity": null,
+  "cyclomaticComplexity": 1,
   "halstead": {
-    "difficulty": null,
-    "volume": null,
-    "effort": null,
-    "bugs": null,
-    "time": null
+    "operators": {
+      "distinct": 8,
+      "total": 41,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "const",
+        "new",
+        "function"
+      ]
+    },
+    "operands": {
+      "distinct": 29,
+      "total": 46,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "generateSecureJWTMiddleware",
+        "sdk_1",
+        "\"@anthropic-ai/sdk\"",
+        "require",
+        "client",
+        "default",
+        "message",
+        "responseText",
+        "\"\"",
+        "content",
+        "filter",
+        "map",
+        "join",
+        "\"Generated JWT Authentication Middleware (Sample 10/30):\"",
+        "console",
+        "log",
+        60,
+        "\"=\"",
+        "repeat",
+        "error",
+        "catch"
+      ]
+    },
+    "length": 87,
+    "vocabulary": 37,
+    "difficulty": 6.344827586206897,
+    "volume": 453.22244280971864,
+    "effort": 2875.6182578271805,
+    "bugs": 0.15107414760323956,
+    "time": 159.7565698792878
   },
-  "maintainabilityIndex": null,
-  "analysisError": "Line 80: Unexpected token )"
+  "maintainabilityIndex": 119.52350954275153
 }

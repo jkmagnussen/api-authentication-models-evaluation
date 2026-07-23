@@ -1,29 +1,29 @@
 {
   "model": "jwt",
   "sample": "sample10",
-  "characters": 1321,
-  "lines": 55,
+  "characters": 1528,
+  "lines": 49,
   "functions": 3,
   "classes": 0,
-  "cyclomaticComplexity": 2,
+  "cyclomaticComplexity": 1,
   "halstead": {
     "operators": {
       "distinct": 8,
-      "total": 31,
+      "total": 41,
       "identifiers": [
         "()",
         "{}",
         ":",
         ".",
         "=",
-        "void (prefix)",
         "const",
-        "||"
+        "new",
+        "function"
       ]
     },
     "operands": {
-      "distinct": 25,
-      "total": 35,
+      "distinct": 29,
+      "total": 46,
       "identifiers": [
         "\"use strict\"",
         "exports",
@@ -33,32 +33,36 @@
         true,
         "Object",
         "defineProperty",
-        "signJWT",
-        "authenticateJWT",
-        0,
-        "jsonwebtoken_1",
-        "\"jsonwebtoken\"",
+        "generateSecureJWTMiddleware",
+        "sdk_1",
+        "\"@anthropic-ai/sdk\"",
         "require",
-        "secretKey",
-        "process",
-        "env",
-        "JWT_SECRET",
-        "\"defaultSecretKey\"",
-        "tokenIssuer",
-        "\"myAppIssuer\"",
-        "tokenAudience",
-        "\"myAppAudience\"",
-        "tokenAlgorithm",
-        "\"HS256\""
+        "client",
+        "default",
+        "message",
+        "responseText",
+        "\"\"",
+        "content",
+        "filter",
+        "map",
+        "join",
+        "\"Generated JWT Authentication Middleware (Sample 10/30):\"",
+        "console",
+        "log",
+        60,
+        "\"=\"",
+        "repeat",
+        "error",
+        "catch"
       ]
     },
-    "length": 66,
-    "vocabulary": 33,
-    "difficulty": 5.6,
-    "volume": 332.93001187765793,
-    "effort": 1864.4080665148842,
-    "bugs": 0.11097667062588598,
-    "time": 103.57822591749357
+    "length": 87,
+    "vocabulary": 37,
+    "difficulty": 6.344827586206897,
+    "volume": 453.22244280971864,
+    "effort": 2875.6182578271805,
+    "bugs": 0.15107414760323956,
+    "time": 159.7565698792878
   },
-  "maintainabilityIndex": 103.53340635006577
+  "maintainabilityIndex": 119.52350954275153
 }

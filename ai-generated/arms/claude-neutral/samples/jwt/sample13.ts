@@ -1,117 +1,110 @@
 ```typescript
-import express, { Request, Response, NextFunction } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import express from 'express';
+import jwt from 'jsonwebtoken';
 
-const app = express();
-app.use(express.json());
-
-const SECRET_KEY = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-
-interface AuthPayload extends JwtPayload {
-  userId: string;
-  email: string;
-  role: string;
+interface JwtPayload {
+  sub: string;
+  aud: string;
+  iss: string;
+  iat: number;
+  exp: number;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: AuthPayload;
+interface AuthConfig {
+  publicKey: string;
+  expectedAudience: string;
+  expectedIssuer: string;
+  allowedAlgorithms: jwt.Algorithm[];
+  maxTokenAgeSeconds: number;
+}
+
+interface DecodeResult {
+  success: boolean;
+  payload?: JwtPayload;
+  error?: string;
+}
+
+export const createTokenValidator = (config: AuthConfig) => {
+  const validateTokenStructure = (token: string): boolean => {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return false;
     }
-  }
-}
+    return true;
+  };
 
-export const generateAccessToken = (userId: string, email: string, role: string): string => {
-  return jwt.sign(
-    { userId, email, role },
-    SECRET_KEY,
-    { expiresIn: '1h' }
-  );
+  const decodeAndVerifyToken = (token: string): DecodeResult => {
+    if (!validateTokenStructure(token)) {
+      return { success: false, error: 'Invalid token format' };
+    }
+
+    try {
+      const decoded = jwt.verify(token, config.publicKey, {
+        algorithms: config.allowedAlgorithms,
+        audience: config.expectedAudience,
+        issuer: config.expectedIssuer,
+      }) as JwtPayload;
+
+      const currentTime = Math.floor(Date.now() / 1000);
+      const tokenAge = currentTime - decoded.iat;
+
+      if (tokenAge > config.maxTokenAgeSeconds) {
+        return { success: false, error: 'Token exceeds maximum age' };
+      }
+
+      if (decoded.exp <= currentTime) {
+        return { success: false, error: 'Token has expired' };
+      }
+
+      return { success: true, payload: decoded };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Token verification failed';
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  return { decodeAndVerifyToken, validateTokenStructure };
 };
 
-export const generateRefreshToken = (userId: string): string => {
-  return jwt.sign(
-    { userId },
-    SECRET_KEY,
-    { expiresIn: '7d' }
-  );
+export const authorizationMiddleware = (config: AuthConfig) => {
+  const validator = createTokenValidator(config);
+
+  return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || typeof authHeader !== 'string') {
+      res.status(401).json({ error: 'Missing authorization header' });
+      return;
+    }
+
+    const bearerMatch = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (!bearerMatch) {
+      res.status(401).json({ error: 'Invalid authorization header format' });
+      return;
+    }
+
+    const token = bearerMatch[1];
+    const result = validator.decodeAndVerifyToken(token);
+
+    if (!result.success) {
+      res.status(403).json({ error: result.error });
+      return;
+    }
+
+    (req as any).user = result.payload;
+    next();
+  };
 };
 
-export const validateToken = (token: string): AuthPayload | null => {
-  try {
-    return jwt.verify(token, SECRET_KEY) as AuthPayload;
-  } catch {
-    return null;
-  }
-};
+export const generateTestToken = (
+  payload: Partial<JwtPayload>,
+  privateKey: string,
+  algorithm: jwt.Algorithm = 'RS256',
+  expiresInSeconds: number = 3600
+): string => {
+  const now = Math.floor(Date.now() / 1000);
 
-export const authenticateRequest = (req: Request, res: Response, next: NextFunction): void => {
-  const authorizationHeader = req.headers.authorization;
-  
-  if (!authorizationHeader) {
-    res.status(401).json({ error: 'Missing authorization header' });
-    return;
-  }
-
-  const parts = authorizationHeader.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    res.status(401).json({ error: 'Invalid authorization format' });
-    return;
-  }
-
-  const token = parts[1];
-  const payload = validateToken(token);
-
-  if (!payload) {
-    res.status(401).json({ error: 'Invalid or expired token' });
-    return;
-  }
-
-  req.user = payload;
-  next();
-};
-
-export const checkAdminRole = (req: Request, res: Response, next: NextFunction): void => {
-  if (!req.user || req.user.role !== 'admin') {
-    res.status(403).json({ error: 'Admin access required' });
-    return;
-  }
-  next();
-};
-
-export const checkUserRole = (req: Request, res: Response, next: NextFunction): void => {
-  if (!req.user || (req.user.role !== 'user' && req.user.role !== 'admin')) {
-    res.status(403).json({ error: 'User access required' });
-    return;
-  }
-  next();
-};
-
-app.post('/auth/login', (req: Request, res: Response): void => {
-  const { userId, email, role } = req.body;
-
-  if (!userId || !email || !role) {
-    res.status(400).json({ error: 'Missing required fields' });
-    return;
-  }
-
-  const accessToken = generateAccessToken(userId, email, role);
-  const refreshToken = generateRefreshToken(userId);
-
-  res.json({
-    accessToken,
-    refreshToken,
-    expiresIn: 3600
-  });
-});
-
-app.post('/auth/refresh', (req: Request, res: Response): void => {
-  const { refreshToken } = req.body;
-
-  if (!refreshToken) {
-    res.status(400).json({ error: 'Refresh token required' });
-    return;
-  }
-
-  const payload = validateToken(refreshToken);
-  if (!payload) {
+  const tokenPayload: JwtPayload = {
+    sub: payload.sub || 'test-user',
+    aud: payload.aud || 'test-audience',
+    iss: payload.iss || 'test-issuer',

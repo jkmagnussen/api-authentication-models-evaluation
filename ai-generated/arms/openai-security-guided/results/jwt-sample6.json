@@ -1,70 +1,18 @@
 {
   "model": "jwt",
   "sample": "sample6",
-  "characters": 1128,
-  "lines": 41,
-  "functions": 1,
+  "characters": 2961,
+  "lines": 103,
+  "functions": 0,
   "classes": 0,
-  "cyclomaticComplexity": 4,
+  "cyclomaticComplexity": null,
   "halstead": {
-    "operators": {
-      "distinct": 13,
-      "total": 34,
-      "identifiers": [
-        "()",
-        "{}",
-        ":",
-        ".",
-        "=",
-        "void (prefix)",
-        "const",
-        "[]",
-        "if",
-        "||",
-        "! (prefix)",
-        "throw",
-        "new"
-      ]
-    },
-    "operands": {
-      "distinct": 26,
-      "total": 34,
-      "identifiers": [
-        "\"use strict\"",
-        "exports",
-        "\"__esModule\"",
-        "<anonymous>",
-        "value",
-        true,
-        "Object",
-        "defineProperty",
-        "jwtAuthMiddleware",
-        0,
-        "jsonwebtoken_1",
-        "\"jsonwebtoken\"",
-        "require",
-        "dotenv_1",
-        "\"dotenv\"",
-        "default",
-        "config",
-        "process",
-        "env",
-        "allowedAlgorithms",
-        "\"HS256\"",
-        "JWT_SECRET_KEY",
-        "JWT_ISSUER",
-        "JWT_AUDIENCE",
-        "\"Environment variables for JWT are not properly set\"",
-        "Error"
-      ]
-    },
-    "length": 68,
-    "vocabulary": 39,
-    "difficulty": 8.5,
-    "volume": 359.4073508826329,
-    "effort": 3054.9624825023798,
-    "bugs": 0.11980245029421097,
-    "time": 169.72013791679888
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
   },
-  "maintainabilityIndex": 101.68510544538017
+  "maintainabilityIndex": null,
+  "analysisError": "Line 104: Unexpected token ILLEGAL"
 }

@@ -1,57 +1,43 @@
-import express, { Request, Response, NextFunction } from 'express';
-import { body, validationResult } from 'express-validator';
+import express, { Request, Response } from 'express';
+import { query, validationResult } from 'express-validator';
 import crypto from 'crypto';
 
-const router = express.Router();
+const app = express();
 
-interface OAuth2Request extends Request {
-  query: {
-    response_type?: string;
-    client_id?: string;
-    redirect_uri?: string;
-    scope?: string;
-    state?: string;
-  };
-}
+export const oauth2AuthEndpoint = async (req: Request, res: Response) => {
+  await Promise.all([
+    query('client_id').exists().isString().run(req),
+    query('redirect_uri').exists().isURL().run(req),
+    query('scope').exists().isString().run(req),
+    query('state').exists().isString().run(req),
+  ]);
 
-const VALID_SCOPES = ['read', 'write', 'admin'];
-const VALID_CLIENT_IDS = ['client_123', 'client_456'];
-const REDIRECT_URI_WHITELIST = ['https://client.example.com/callback'];
-
-router.get('/authorize', [
-  body('response_type').equals('code').withMessage('Invalid response type. Expected "code".'),
-  body('client_id').isIn(VALID_CLIENT_IDS).withMessage('Invalid client ID.'),
-  body('redirect_uri').custom((value) => {
-    if (!REDIRECT_URI_WHITELIST.includes(value)) {
-      throw new Error('Invalid redirect URI.');
-    }
-    return true;
-  }),
-  body('scope').custom((value) => {
-    const scopes = value.split(' ');
-    for (const scope of scopes) {
-      if (!VALID_SCOPES.includes(scope)) {
-        throw new Error(`Invalid scope: ${scope}`);
-      }
-    }
-    return true;
-  }),
-  body('state').optional().isString().withMessage('State must be a string.'),
-], (req: OAuth2Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({ error: 'Invalid request', details: errors.array() });
   }
 
-  const { client_id, redirect_uri, state } = req.query;
-  const authorizationCode = crypto.randomBytes(32).toString('hex');
+  const { client_id, redirect_uri, scope, state } = req.query;
 
-  let redirectUrl = `${redirect_uri}?code=${authorizationCode}`;
-  if (state) {
-    redirectUrl += `&state=${encodeURIComponent(state)}`;
+  const validRedirectUris = ['https://trustedapp.com/callback'];
+  if (!validRedirectUris.includes(redirect_uri as string)) {
+    return res.status(400).json({ error: 'Invalid redirect URI' });
   }
 
-  res.redirect(redirectUrl);
-});
+  const availableScopes = ['read', 'write'];
+  const requestedScopes = (scope as string).split(' ');
+  if (!requestedScopes.every(s => availableScopes.includes(s))) {
+    return res.status(400).json({ error: 'Invalid scope' });
+  }
 
-export { router as authRouter };
+  const stateToken = req.session ? req.session.stateToken : undefined;
+  if (!crypto.timingSafeEqual(Buffer.from(state as string), Buffer.from(stateToken || ''))) {
+    return res.status(400).json({ error: 'Invalid state parameter' });
+  }
+
+  res.redirect(`${redirect_uri}?code=AUTH_CODE&state=${state}`);
+};
+
+app.get('/authorize', oauth2AuthEndpoint);
+
+export default app;

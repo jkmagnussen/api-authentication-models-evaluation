@@ -1,49 +1,118 @@
-import express, { Request, Response, NextFunction } from 'express';
-import jwt, { VerifyErrors } from 'jsonwebtoken';
+```typescript
+import Anthropic from "@anthropic-ai/sdk";
+import express from "express";
+import jwt from "jsonwebtoken";
 
-export interface UserPayload {
-  id: string;
-  email: string;
+const client = new Anthropic();
+
+// JWT Configuration with secure defaults
+interface JWTConfig {
+  secret: string;
+  algorithm: "HS256" | "HS384" | "HS512";
+  expiresIn: string | number;
+  issuer: string;
+  audience: string;
 }
 
-const jwtSecret = process.env.JWT_SECRET || 'default_secret';
-const tokenIssuer = 'your-app';
-const tokenAudience = 'your-app-users';
-const tokenAlgorithms: jwt.Algorithm[] = ['RS256'];
+// Token payload structure
+interface TokenPayload {
+  sub: string;
+  aud: string;
+  iss: string;
+  exp?: number;
+  iat?: number;
+  role?: string;
+}
 
-export function authenticateJWT(req: Request, res: Response, next: NextFunction): void {
-  const authHeader = req.headers.authorization;
+// Default configuration with secure settings
+const defaultConfig: JWTConfig = {
+  secret: process.env.JWT_SECRET || "your-super-secret-key-change-this",
+  algorithm: "HS256",
+  expiresIn: "1h",
+  issuer: "auth-service",
+  audience: "api-service",
+};
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Authentication token missing or malformed' });
+// Validate JWT configuration
+function validateJWTConfig(config: JWTConfig): void {
+  if (!config.secret || config.secret.length < 32) {
+    throw new Error("JWT secret must be at least 32 characters long");
   }
 
-  const token = authHeader.split(' ')[1];
+  const validAlgorithms = ["HS256", "HS384", "HS512"];
+  if (!validAlgorithms.includes(config.algorithm)) {
+    throw new Error(
+      `Invalid algorithm. Must be one of: ${validAlgorithms.join(", ")}`
+    );
+  }
 
-  jwt.verify(token, jwtSecret, {
-    issuer: tokenIssuer,
-    audience: tokenAudience,
-    algorithms: tokenAlgorithms,
-  }, (err: VerifyErrors | null, decoded: object | undefined) => {
-    if (err) {
-      return res.status(401).json({ message: 'Token verification failed', error: err.message });
+  if (!config.issuer || config.issuer.trim() === "") {
+    throw new Error("Issuer must be specified");
+  }
+
+  if (!config.audience || config.audience.trim() === "") {
+    throw new Error("Audience must be specified");
+  }
+}
+
+// Create JWT with validation
+export function createToken(
+  payload: Omit<TokenPayload, "aud" | "iss">,
+  config: JWTConfig = defaultConfig
+): string {
+  validateJWTConfig(config);
+
+  const fullPayload: TokenPayload = {
+    ...payload,
+    aud: config.audience,
+    iss: config.issuer,
+  };
+
+  return jwt.sign(fullPayload, config.secret, {
+    algorithm: config.algorithm,
+    expiresIn: config.expiresIn,
+    issuer: config.issuer,
+    audience: config.audience,
+  });
+}
+
+// Verify and validate JWT with all checks
+export function verifyToken(
+  token: string,
+  config: JWTConfig = defaultConfig
+): TokenPayload {
+  validateJWTConfig(config);
+
+  try {
+    const decoded = jwt.verify(token, config.secret, {
+      algorithms: [config.algorithm],
+      issuer: config.issuer,
+      audience: config.audience,
+    });
+
+    if (!decoded || typeof decoded === "string") {
+      throw new Error("Invalid token structure");
     }
 
-    req.user = decoded as UserPayload;
-    next();
-  });
+    return decoded as TokenPayload;
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      throw new Error("Token has expired");
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      throw new Error(`Token verification failed: ${error.message}`);
+    }
+    throw error;
+  }
 }
 
-export function generateToken(user: UserPayload): string {
-  const token = jwt.sign({
-    id: user.id,
-    email: user.email,
-  }, jwtSecret, {
-    issuer: tokenIssuer,
-    audience: tokenAudience,
-    algorithm: tokenAlgorithms[0],
-    expiresIn: '1h',
-  });
+// Express middleware for JWT authentication
+export function createAuthMiddleware(config: JWTConfig = defaultConfig) {
+  validateJWTConfig(config);
 
-  return token;
-}
+  return (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const authHeader =

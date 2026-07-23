@@ -1,60 +1,18 @@
 {
   "model": "oauth",
   "sample": "sample15",
-  "characters": 1529,
-  "lines": 52,
-  "functions": 1,
+  "characters": 2823,
+  "lines": 103,
+  "functions": 0,
   "classes": 0,
-  "cyclomaticComplexity": 1,
+  "cyclomaticComplexity": null,
   "halstead": {
-    "operators": {
-      "distinct": 7,
-      "total": 30,
-      "identifiers": [
-        "()",
-        "{}",
-        ":",
-        ".",
-        "=",
-        "void (prefix)",
-        "const"
-      ]
-    },
-    "operands": {
-      "distinct": 22,
-      "total": 36,
-      "identifiers": [
-        "\"use strict\"",
-        "exports",
-        "\"__esModule\"",
-        "<anonymous>",
-        "value",
-        true,
-        "Object",
-        "defineProperty",
-        "getOAuth2Authorize",
-        0,
-        "express_1",
-        "\"express\"",
-        "require",
-        "crypto_1",
-        "\"crypto\"",
-        "url_1",
-        "\"url\"",
-        "router",
-        "default",
-        "Router",
-        "\"/authorize\"",
-        "get"
-      ]
-    },
-    "length": 66,
-    "vocabulary": 29,
-    "difficulty": 5.7272727272727275,
-    "volume": 320.6267456784198,
-    "effort": 1836.3168161582225,
-    "bugs": 0.1068755818928066,
-    "time": 102.01760089767903
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
   },
-  "maintainabilityIndex": 105.04144374316306
+  "maintainabilityIndex": null,
+  "analysisError": "Line 113: Unexpected token ILLEGAL"
 }

@@ -1,122 +1,104 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response } from "express";
-import crypto from "crypto";
-import { parseStringPromise } from "xml2js";
+import express, { Request, Response } from 'express';
+import crypto from 'crypto';
+import { URL } from 'url';
 
-const client = new Anthropic();
 const app = express();
-app.use(express.json());
 
-interface AuthorizationRequest {
-  client_id: string;
-  redirect_uri: string;
-  response_type: string;
-  scope: string;
-  state: string;
-  code_challenge?: string;
-  code_challenge_method?: string;
-}
+// Configuration
+const OAUTH_CONFIG = {
+  clientId: process.env.OAUTH_CLIENT_ID || 'test-client-id',
+  clientSecret: process.env.OAUTH_CLIENT_SECRET || 'test-client-secret',
+  redirectUris: (process.env.OAUTH_REDIRECT_URIS || 'http://localhost:3000/callback').split(','),
+  validScopes: ['read', 'write', 'delete', 'profile'],
+  stateExpiryMs: 10 * 60 * 1000, // 10 minutes
+};
 
-interface ClientConfig {
-  client_id: string;
-  client_secret: string;
-  redirect_uris: string[];
-  allowed_scopes: string[];
-}
+// In-memory store for state parameters (use Redis/database in production)
+const stateStore = new Map<string, { expiresAt: number; scope: string }>();
 
-interface UserSession {
-  user_id: string;
-  approved_scopes: string[];
-  timestamp: number;
-}
-
-const authorizedClients: Map<string, ClientConfig> = new Map([
-  [
-    "mobile_app_001",
-    {
-      client_id: "mobile_app_001",
-      client_secret: "secret_mobile_001",
-      redirect_uris: [
-        "myapp://oauth/callback",
-        "http://localhost:3000/callback",
-      ],
-      allowed_scopes: ["profile", "email", "openid"],
-    },
-  ],
-  [
-    "web_service_002",
-    {
-      client_id: "web_service_002",
-      client_secret: "secret_web_002",
-      redirect_uris: ["https://example.com/auth/callback"],
-      allowed_scopes: ["profile", "email", "data:read", "data:write"],
-    },
-  ],
-]);
-
-const authorizationCodes: Map<
-  string,
-  {
-    client_id: string;
-    user_id: string;
-    scopes: string[];
-    expires: number;
-    redirect_uri: string;
-    code_challenge?: string;
+// Validate redirect URI against whitelist
+export function validateRedirectUri(redirectUri: string): boolean {
+  try {
+    const url = new URL(redirectUri);
+    
+    // Must be https in production
+    if (process.env.NODE_ENV === 'production' && url.protocol !== 'https:') {
+      return false;
+    }
+    
+    // Check against whitelist
+    return OAUTH_CONFIG.redirectUris.some(whitelistedUri => {
+      try {
+        const whitelistUrl = new URL(whitelistedUri);
+        return url.origin === whitelistUrl.origin && url.pathname === whitelistUrl.pathname;
+      } catch {
+        return false;
+      }
+    });
+  } catch {
+    return false;
   }
-> = new Map();
-
-const conversationHistory: Anthropic.Messages.MessageParam[] = [];
-
-async function initiateOAuthFlow(
-  clientId: string,
-  requestedScopes: string
-): Promise<string> {
-  const conversationMessage: Anthropic.Messages.MessageParam = {
-    role: "user",
-    content: `A client with ID "${clientId}" is requesting OAuth2 authorization with scopes: ${requestedScopes}. 
-    Can you help me validate this request and suggest next steps? 
-    Known clients: ${Array.from(authorizedClients.keys()).join(", ")}`,
-  };
-
-  conversationHistory.push(conversationMessage);
-
-  const response = await client.messages.create({
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 1024,
-    messages: conversationHistory,
-  });
-
-  const assistantResponse =
-    response.content[0].type === "text" ? response.content[0].text : "";
-
-  const assistantMessage: Anthropic.Messages.MessageParam = {
-    role: "assistant",
-    content: assistantResponse,
-  };
-  conversationHistory.push(assistantMessage);
-
-  return assistantResponse;
 }
 
-export const validateAuthorizationRequest = (
-  req: Request
-): AuthorizationRequest | null => {
-  const {
-    client_id,
-    redirect_uri,
-    response_type,
-    scope,
-    state,
-    code_challenge,
-    code_challenge_method,
-  } = req.query;
+// Validate and parse requested scopes
+export function validateRequestedScopes(scopeString: string | undefined): string[] {
+  if (!scopeString) {
+    return [];
+  }
+  
+  const requestedScopes = scopeString.split(' ').filter(scope => scope.length > 0);
+  
+  // Validate each scope
+  const validScopes = requestedScopes.filter(scope => {
+    const isValid = OAUTH_CONFIG.validScopes.includes(scope);
+    if (!isValid) {
+      console.warn(`Invalid scope requested: ${scope}`);
+    }
+    return isValid;
+  });
+  
+  if (validScopes.length === 0) {
+    return [];
+  }
+  
+  return validScopes;
+}
 
-  if (
-    !client_id ||
-    !redirect_uri ||
-    !response_type ||
-    !scope ||
-    !state ||
-    typeof client_id !== "string
+// Generate secure state parameter
+export function generateStateParameter(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+// Store state parameter with expiration
+export function storeStateParameter(state: string, scope: string): boolean {
+  try {
+    stateStore.set(state, {
+      expiresAt: Date.now() + OAUTH_CONFIG.stateExpiryMs,
+      scope,
+    });
+    return true;
+  } catch (error) {
+    console.error('Failed to store state parameter:', error);
+    return false;
+  }
+}
+
+// Verify and retrieve state parameter
+export function verifyStateParameter(state: string): { valid: boolean; scope: string } {
+  const stored = stateStore.get(state);
+  
+  if (!stored) {
+    return { valid: false, scope: '' };
+  }
+  
+  // Check expiration
+  if (Date.now() > stored.expiresAt) {
+    stateStore.delete(state);
+    return { valid: false, scope: '' };
+  }
+  
+  // Consume state (one-time use)
+  stateStore.delete(state);
+  
+  return { valid: true, scope: stored.scope };

@@ -1,6 +1,6 @@
 # Code Footprint Summary
 
-Generated: 2026-07-23T03:48:48.544Z
+Generated: 2026-07-23T04:51:27.454Z
 Regenerate: npm run code:footprint:tolerant
 
 ## Scope Rules
@@ -37,14 +37,17 @@ Regenerate: npm run code:footprint:tolerant
 
 | Model | Files | Chars | Lines | Functions | Classes | Constants | Cyclomatic | Avg Maintainability |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| OAUTH AI Samples (Aggregate) | 30 | 86061 | 3362 | 0 | 0 | 0 | 82 | 118.80 |
-| JWT AI Samples (Aggregate) | 30 | 86640 | 3217 | 5 | 0 | 10 | 141 | 118.17 |
-| SESSIONS AI Samples (Aggregate) | 30 | 89538 | 3501 | 0 | 0 | 0 | 84 | 118.80 |
+| OAUTH AI Samples (Aggregate) | 30 | 87109 | 3392 | 0 | 0 | 3 | 73 | 118.80 |
+| JWT AI Samples (Aggregate) | 30 | 77141 | 2897 | 18 | 0 | 45 | 155 | 117.68 |
+| SESSIONS AI Samples (Aggregate) | 30 | 81403 | 3176 | 29 | 0 | 23 | 93 | 121.40 |
 
 ## Complexity Parse Failures
 
 | Scope | File | Error |
 |---|---|---|
+| OAUTH AI Samples (Aggregate) | ai-generated/oauth/sample2.ts | Line 31: Unexpected token ; |
+| OAUTH AI Samples (Aggregate) | ai-generated/oauth/sample3.ts | Line 47: Unexpected token ( |
+| OAUTH AI Samples (Aggregate) | ai-generated/oauth/sample4.ts | Line 29: Unexpected token ; |
 | OAUTH AI Samples (Aggregate) | ai-generated/oauth/sample7.ts | Line 47: Unexpected token : |
 | OAUTH AI Samples (Aggregate) | ai-generated/oauth/sample19.ts | Line 13: Unexpected token : |
 | OAUTH AI Samples (Aggregate) | ai-generated/oauth/sample27.ts | Line 48: Unexpected token : |

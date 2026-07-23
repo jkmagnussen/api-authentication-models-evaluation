@@ -1,40 +1,104 @@
-import express, { Request, Response } from 'express';
-import crypto from 'crypto';
+```typescript
+import Anthropic from "@anthropic-ai/sdk";
+import express, { Request, Response, NextFunction } from "express";
+import { randomBytes } from "crypto";
+import { createServer } from "http";
 
-interface OAuthRequestQuery {
-  response_type: string;
-  client_id: string;
-  redirect_uri: string;
-  scope?: string;
-  state?: string;
+const app = express();
+const client = new Anthropic();
+
+// Configuration
+const VALID_CLIENT_IDS = new Set(["test-client-123", "mobile-app-456"]);
+const ALLOWED_SCOPES = new Set([
+  "read:profile",
+  "write:data",
+  "email",
+  "offline_access",
+]);
+const VALID_REDIRECT_DOMAINS = new Set([
+  "localhost:3000",
+  "localhost:3001",
+  "app.example.com",
+  "mobile.example.com",
+]);
+const STATE_STORE = new Map<string, StateData>();
+
+interface StateData {
+  timestamp: number;
+  clientId: string;
+  requestedScopes: string[];
 }
 
-interface TokenStore {
-  [key: string]: string;
+interface AuthorizationRequest {
+  clientId: string;
+  redirectUri: string;
+  scopes: string[];
+  state: string;
 }
 
-const authorizeRouter = express.Router();
-const tokenDatabase: TokenStore = {};
+// Validate redirect URI against whitelist
+function validateRedirectUri(uri: string): boolean {
+  try {
+    const url = new URL(uri);
+    const domain = `${url.hostname}${url.port ? `:${url.port}` : ""}`;
+    return VALID_REDIRECT_DOMAINS.has(domain) && url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
-authorizeRouter.get('/authorize', (req: Request<{}, {}, {}, OAuthRequestQuery>, res: Response) => {
-  const { response_type, client_id, redirect_uri, scope, state } = req.query;
+// Validate scopes
+function validateScopes(scopes: string[]): boolean {
+  if (!scopes || scopes.length === 0) return false;
+  return scopes.every((scope) => ALLOWED_SCOPES.has(scope));
+}
 
-  if (response_type !== 'code') {
-    return res.status(400).send('Unsupported response type');
+// Validate state parameter format
+function validateStateFormat(state: string): boolean {
+  return state.length >= 32 && state.length <= 500 && /^[a-zA-Z0-9_-]+$/.test(state);
+}
+
+// Generate authorization code
+function generateAuthCode(): string {
+  return randomBytes(32).toString("hex");
+}
+
+// Middleware for request validation
+async function validateAuthRequest(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  const { client_id, redirect_uri, scope, state } = req.query;
+
+  // Validate required parameters
+  if (!client_id || typeof client_id !== "string") {
+    res.status(400).json({ error: "invalid_request", error_description: "Missing client_id" });
+    return;
   }
 
-  if (!client_id || !redirect_uri) {
-    return res.status(400).send('Missing parameters');
+  if (!redirect_uri || typeof redirect_uri !== "string") {
+    res.status(400).json({ error: "invalid_request", error_description: "Missing redirect_uri" });
+    return;
   }
 
-  const authorizationCode = crypto.randomBytes(16).toString('hex');
-  tokenDatabase[authorizationCode] = client_id;
+  if (!scope || typeof scope !== "string") {
+    res.status(400).json({ error: "invalid_scope", error_description: "Missing scope" });
+    return;
+  }
 
-  const redirectUrl = new URL(redirect_uri);
-  redirectUrl.searchParams.append('code', authorizationCode);
-  if (state) redirectUrl.searchParams.append('state', state);
+  if (!state || typeof state !== "string") {
+    res.status(400).json({ error: "invalid_request", error_description: "Missing state" });
+    return;
+  }
 
-  return res.redirect(redirectUrl.toString());
-});
+  // Validate client_id
+  if (!VALID_CLIENT_IDS.has(client_id)) {
+    res.status(401).json({ error: "unauthorized_client", error_description: "Unknown client" });
+    return;
+  }
 
-export { authorizeRouter, tokenDatabase };
+  // Validate redirect URI
+  if (!validateRedirectUri(redirect_uri)) {
+    res.status(400).json({ error: "invalid_request", error_description: "Invalid redirect_uri" });
+    return;

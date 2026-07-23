@@ -2,16 +2,16 @@
   "model": "jwt",
   "sample": "sample20",
   "samplePath": "ai-generated\\jwt\\sample20.ts",
-  "passed": true,
+  "passed": false,
   "checks": [
     {
       "name": "audience validation present",
-      "passed": true,
+      "passed": false,
       "details": "Checks that audience validation is referenced in token verification."
     },
     {
       "name": "issuer validation present",
-      "passed": true,
+      "passed": false,
       "details": "Checks that issuer validation is referenced in token verification."
     },
     {
@@ -25,7 +25,16 @@
       "details": "Flags insecurely long JWT lifetime."
     }
   ],
-  "correctnessFailures": [],
-  "securityFailures": [],
-  "misconfigurationDetections": []
+  "correctnessFailures": [
+    "audience validation present",
+    "issuer validation present"
+  ],
+  "securityFailures": [
+    "audience validation present",
+    "issuer validation present"
+  ],
+  "misconfigurationDetections": [
+    "audience validation present",
+    "issuer validation present"
+  ]
 }

@@ -1,6 +1,6 @@
 # Model Risk Summary
 
-Generated: 2026-07-23T03:48:51.149Z
+Generated: 2026-07-23T04:51:30.034Z
 Regenerate: npm run compare:reports
 
 This summary aggregates misconfiguration impact and AI sample failure tendencies at the model level.
@@ -9,4 +9,4 @@ This summary aggregates misconfiguration impact and AI sample failure tendencies
 |---|---:|---:|---:|---:|---:|---|
 | OAUTH | 3 | 4.00 | 2 | 27 | 90.00% | Higher caution: concentrated severe misconfiguration impact and/or repeated AI control gaps. |
 | JWT | 3 | 4.33 | 3 | 3 | 10.00% | Higher caution: concentrated severe misconfiguration impact and/or repeated AI control gaps. |
-| SESSIONS | 3 | 4.33 | 3 | 6 | 20.00% | Higher caution: concentrated severe misconfiguration impact and/or repeated AI control gaps. |
+| SESSIONS | 3 | 4.33 | 3 | 4 | 13.33% | Higher caution: concentrated severe misconfiguration impact and/or repeated AI control gaps. |

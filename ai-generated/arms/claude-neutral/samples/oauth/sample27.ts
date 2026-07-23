@@ -1,104 +1,109 @@
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response } from "express";
 
 const client = new Anthropic();
 
-interface AuthRequest {
+interface AuthorizationRequest {
   clientId: string;
   redirectUri: string;
   state: string;
   scope: string;
+  responseType: string;
 }
 
-interface OAuthFlow {
-  authorizationCode: string;
-  expiresIn: number;
-  issuedAt: number;
+interface ValidationResult {
+  valid: boolean;
+  errors: string[];
 }
 
-const app = express();
-app.use(express.json());
+export async function validateOAuth2Request(
+  request: AuthorizationRequest
+): Promise<ValidationResult> {
+  const errors: string[] = [];
 
-const authorizationCodeStore = new Map<string, OAuthFlow>();
-const authorizationRequests = new Map<string, AuthRequest>();
-const tokenStore = new Map<string, { accessToken: string; expiresIn: number }>();
+  // Validate response_type
+  if (request.responseType !== "code") {
+    errors.push(`Invalid response_type: ${request.responseType}`);
+  }
 
-async function generateAuthorizationCode(
+  // Validate state parameter (should be present and non-empty)
+  if (!request.state || request.state.length < 10) {
+    errors.push("State parameter missing or too short");
+  }
+
+  // Validate scope
+  const allowedScopes = ["openid", "profile", "email", "offline_access"];
+  const requestedScopes = request.scope.split(" ");
+  const invalidScopes = requestedScopes.filter(
+    (s) => !allowedScopes.includes(s)
+  );
+  if (invalidScopes.length > 0) {
+    errors.push(`Invalid scopes: ${invalidScopes.join(", ")}`);
+  }
+
+  // Validate client_id format
+  if (!request.clientId || !/^[a-zA-Z0-9_-]{20,}$/.test(request.clientId)) {
+    errors.push("Invalid client_id format");
+  }
+
+  // Validate redirect_uri
+  if (!request.redirectUri) {
+    errors.push("Redirect URI is required");
+  } else {
+    try {
+      const url = new URL(request.redirectUri);
+      // Only allow https in production (http allowed for localhost)
+      if (url.protocol !== "https:" && !url.hostname.includes("localhost")) {
+        errors.push("Redirect URI must use HTTPS");
+      }
+      // Prevent open redirects
+      if (url.pathname.includes("//") || url.search.includes("//")) {
+        errors.push("Invalid redirect URI format");
+      }
+    } catch {
+      errors.push("Invalid redirect URI URL format");
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
+export function generateAuthorizationCode(
   clientId: string,
   userId: string
-): Promise<string> {
-  const message = await client.messages.create({
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 100,
-    messages: [
-      {
-        role: "user",
-        content: `Generate a cryptographically secure authorization code for OAuth2. Client: ${clientId}, User: ${userId}. Return only the code, no explanation.`,
-      },
-    ],
-  });
-
-  const codeText =
-    message.content[0].type === "text"
-      ? message.content[0].text
-      : "code_" + Date.now();
-  const sanitizedCode = codeText.replace(/[^a-zA-Z0-9_-]/g, "");
-
-  return sanitizedCode || `auth_code_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+): string {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 15);
+  return Buffer.from(
+    `${clientId}:${userId}:${timestamp}:${random}`
+  ).toString("base64");
 }
 
-async function generateAccessToken(
-  clientId: string,
-  scope: string
+export async function generateAuthorizationResponse(
+  request: AuthorizationRequest,
+  userId: string
 ): Promise<string> {
-  const message = await client.messages.create({
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 100,
-    messages: [
-      {
-        role: "user",
-        content: `Generate a secure OAuth2 access token. Client: ${clientId}, Scope: ${scope}. Return only the token, no explanation.`,
-      },
-    ],
-  });
-
-  const tokenText =
-    message.content[0].type === "text"
-      ? message.content[0].text
-      : "token_" + Date.now();
-  const sanitizedToken = tokenText.replace(/[^a-zA-Z0-9_-]/g, "");
-
-  return sanitizedToken || `access_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
-export const handleAuthorizationRequest = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { client_id, redirect_uri, state, scope, response_type } = req.query;
-
-  if (!client_id || !redirect_uri || !state) {
-    res.status(400).json({
-      error: "invalid_request",
-      error_description: "Missing required parameters",
-    });
-    return;
+  // Validate the request first
+  const validation = await validateOAuth2Request(request);
+  if (!validation.valid) {
+    throw new Error(`Authorization validation failed: ${validation.errors.join(", ")}`);
   }
 
-  if (response_type !== "code") {
-    res.status(400).json({
-      error: "unsupported_response_type",
-      error_description: "Only authorization_code flow is supported",
-    });
-    return;
-  }
+  // Use Claude to analyze the request for additional security checks
+  const conversation: Anthropic.MessageParam[] = [
+    {
+      role: "user",
+      content: `Analyze this OAuth2 authorization request for security issues:
+      - Client ID: ${request.clientId}
+      - Redirect URI: ${request.redirectUri}
+      - Requested Scopes: ${request.scope}
+      - State Parameter Length: ${request.state.length}
+      
+      List any security concerns or confirm if the request appears secure.`,
+    },
+  ];
 
-  const authRequest: AuthRequest = {
-    clientId: client_id as string,
-    redirectUri: redirect_uri as string,
-    state: state as string,
-    scope: (scope as string) || "openid profile email",
-  };
-
-  const requestId = `req_${Date.now()}_${Math.random
+  const analysis = await client

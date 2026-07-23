@@ -1,56 +1,109 @@
-import express, { Request, Response, NextFunction } from 'express';
-import { v4 as uuidv4 } from 'uuid';
-import querystring from 'querystring';
+```typescript
+import express, { Request, Response, Router } from "express";
+import crypto from "crypto";
+import { URL } from "url";
 
-const app = express();
+const router = Router();
 
-interface AuthRequest extends Request {
-  query: {
-    response_type: string;
-    client_id: string;
-    redirect_uri: string;
-    scope?: string;
-    state?: string;
-  };
+// Configuration
+const OAUTH_CONFIG = {
+  allowedScopes: ["read", "write", "delete", "profile"],
+  maxScopeLength: 200,
+  stateLength: 32,
+  maxRedirectUrlLength: 2048,
+  allowedRedirectHosts: [
+    "localhost:3000",
+    "localhost:3001",
+    "app.example.com",
+    "staging.example.com",
+  ],
+};
+
+interface AuthorizationRequest {
+  clientId: string;
+  redirectUri: string;
+  scope: string;
+  state: string;
+  responseType: string;
+  codeChallengeMethod?: string;
+  codeChallenge?: string;
 }
 
-const clients = new Map<string, { redirectUri: string }>([
-  ['client1', { redirectUri: 'http://localhost:3000/callback' }]
-]);
+// In-memory state storage (use Redis in production)
+const stateStore = new Map<string, AuthorizationRequest>();
+const stateTimeout = 10 * 60 * 1000; // 10 minutes
 
-function validateAuthRequest(req: AuthRequest, res: Response, next: NextFunction) {
-  const { response_type, client_id, redirect_uri } = req.query;
-  
-  if (!response_type || !client_id || !redirect_uri) {
-    return res.status(400).json({ error: 'Invalid request parameters' });
+export function validateRedirectUri(redirectUri: string): boolean {
+  if (!redirectUri) return false;
+  if (redirectUri.length > OAUTH_CONFIG.maxRedirectUrlLength) return false;
+
+  try {
+    const url = new URL(redirectUri);
+
+    // Reject non-HTTPS in production
+    if (
+      process.env.NODE_ENV === "production" &&
+      url.protocol !== "https:" &&
+      !url.hostname.includes("localhost")
+    ) {
+      return false;
+    }
+
+    // Validate against allowlist
+    const hostWithPort = url.hostname + (url.port ? `:${url.port}` : "");
+    const isAllowed = OAUTH_CONFIG.allowedRedirectHosts.some(
+      (host) => host === hostWithPort || hostWithPort === host
+    );
+
+    return isAllowed;
+  } catch {
+    return false;
   }
-  
-  const client = clients.get(client_id);
-  if (!client || client.redirectUri !== redirect_uri) {
-    return res.status(400).json({ error: 'Invalid client details' });
-  }
-  
-  if (response_type !== 'code') {
-    return res.status(400).json({ error: 'Unsupported response type' });
-  }
-  
-  next();
 }
 
-function handleAuthorization(req: AuthRequest, res: Response) {
-  const { client_id, redirect_uri, state } = req.query;
-  const authorizationCode = uuidv4();
+export function validateScopes(scope: string): boolean {
+  if (!scope) return false;
+  if (scope.length > OAUTH_CONFIG.maxScopeLength) return false;
 
-  const redirectParams = {
-    code: authorizationCode,
-    state: state || undefined
-  };
+  const requestedScopes = scope.split(" ").filter((s) => s.length > 0);
 
-  const redirectUrl = `${redirect_uri}?${querystring.stringify(redirectParams)}`;
+  if (requestedScopes.length === 0) return false;
 
-  res.redirect(302, redirectUrl);
+  return requestedScopes.every((requestedScope) =>
+    OAUTH_CONFIG.allowedScopes.includes(requestedScope)
+  );
 }
 
-app.get('/authorize', validateAuthRequest, handleAuthorization);
+export function generateStateParameter(): string {
+  return crypto.randomBytes(OAUTH_CONFIG.stateLength / 2).toString("hex");
+}
 
-export { app };
+export function validateStateParameter(state: string): boolean {
+  if (!state) return false;
+  if (state.length !== OAUTH_CONFIG.stateLength) return false;
+  return /^[a-f0-9]+$/.test(state);
+}
+
+export function validateCodeChallenge(
+  codeChallenge: string,
+  method?: string
+): boolean {
+  if (!codeChallenge) return true; // PKCE is optional
+
+  if (codeChallenge.length < 43 || codeChallenge.length > 128) return false;
+
+  // Unreserved characters per RFC 3986
+  if (!/^[A-Za-z0-9\-._~]+$/.test(codeChallenge)) return false;
+
+  if (method && !["S256", "plain"].includes(method)) return false;
+
+  return true;
+}
+
+export const handleAuthorizationRequest = (
+  req: Request,
+  res: Response
+): void => {
+  try {
+    const {
+      client

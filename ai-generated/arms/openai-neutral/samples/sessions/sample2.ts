@@ -1,49 +1,33 @@
 import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
-import connectRedis from 'connect-redis';
-import Redis from 'ioredis';
 
-const RedisStore = connectRedis(session);
+const app = express();
 
-const redisClient = new Redis({
-  host: 'localhost',
-  port: 6379
-});
-
-export const app = express();
-
-export const sessionMiddleware = session({
-  store: new RedisStore({ client: redisClient }),
-  secret: 'superSecretKey123',
+export const sessionConfig = session({
+  secret: 'mySuperSecretKey',
   resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 1000 * 60 * 60 // 1 hour
-  }
+  saveUninitialized: true,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
 });
 
-app.use(sessionMiddleware);
+app.use(sessionConfig);
+
+export const sessionLogger = (req: Request, res: Response, next: NextFunction): void => {
+  console.log('Session details:', req.session);
+  next();
+};
+
+app.use(sessionLogger);
 
 app.get('/', (req: Request, res: Response) => {
-  if (req.session.views) {
-    req.session.views++;
-  } else {
+  if (!req.session.views) {
     req.session.views = 1;
+  } else {
+    req.session.views++;
   }
-  res.send(`Number of views: ${req.session.views}`);
+  res.send(`Page views: ${req.session.views}`);
 });
 
-app.post('/login', (req: Request, res: Response) => {
-  req.session.userId = req.body.userId;
-  res.send('Logged in');
-});
-
-app.get('/logout', (req: Request, res: Response, next: NextFunction) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return next(err);
-    }
-    res.send('Logged out');
-  });
+app.listen(3000, () => {
+  console.log('Server is running on port 3000');
 });

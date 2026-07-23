@@ -1,47 +1,112 @@
-import express, { Request, Response } from 'express';
-import { generateAuthorizationCode, validateClient, redirectUriMatches } from './oauthUtils';
+```typescript
+import express, { Request, Response } from "express";
+import crypto from "crypto";
 
-const router = express.Router();
+const authRouter = express.Router();
 
-interface AuthRequest extends Request {
+// Validate configuration
+const REQUIRED_CONFIG = {
+  OAUTH_CLIENT_ID: process.env.OAUTH_CLIENT_ID,
+  OAUTH_CLIENT_SECRET: process.env.OAUTH_CLIENT_SECRET,
+  OAUTH_REDIRECT_DOMAIN: process.env.OAUTH_REDIRECT_DOMAIN || "localhost",
+};
+
+Object.entries(REQUIRED_CONFIG).forEach(([key, value]) => {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+});
+
+const ALLOWED_SCOPES = new Set([
+  "openid",
+  "profile",
+  "email",
+  "offline_access",
+]);
+const STATE_VALIDITY_MS = 10 * 60 * 1000; // 10 minutes
+const stateStore = new Map<
+  string,
+  { timestamp: number; codeChallenge?: string }
+>();
+
+interface AuthorizeRequest extends Request {
   query: {
-    response_type: string;
-    client_id: string;
-    redirect_uri: string;
-    state?: string;
+    client_id?: string;
+    redirect_uri?: string;
+    response_type?: string;
     scope?: string;
+    state?: string;
+    code_challenge?: string;
+    code_challenge_method?: string;
   };
 }
 
-export const authorizeHandler = async (req: AuthRequest, res: Response): Promise<void> => {
-  const { response_type, client_id, redirect_uri, state, scope } = req.query;
+function validateClientId(clientId: string | undefined): boolean {
+  return clientId === REQUIRED_CONFIG.OAUTH_CLIENT_ID;
+}
 
-  if (response_type !== 'code') {
-    return res.status(400).json({ error: 'unsupported_response_type' });
+function validateResponseType(type: string | undefined): boolean {
+  return type === "code";
+}
+
+function parseScopes(scopeString: string | undefined): string[] {
+  if (!scopeString) return [];
+  return scopeString.split(" ").filter((scope) => scope.length > 0);
+}
+
+function validateScopes(requestedScopes: string[]): boolean {
+  if (requestedScopes.length === 0) return false;
+  return requestedScopes.every((scope) => ALLOWED_SCOPES.has(scope));
+}
+
+function validateRedirectUri(redirectUri: string | undefined): boolean {
+  if (!redirectUri) return false;
+
+  try {
+    const url = new URL(redirectUri);
+
+    // Allow localhost for development
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+      return url.protocol === "http:" || url.protocol === "https:";
+    }
+
+    // For production, validate against allowed domain
+    return (
+      (url.protocol === "https:" &&
+        url.hostname === REQUIRED_CONFIG.OAUTH_REDIRECT_DOMAIN) ||
+      url.hostname.endsWith("." + REQUIRED_CONFIG.OAUTH_REDIRECT_DOMAIN)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function generateState(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function validateStateParameter(state: string | undefined): boolean {
+  if (!state) return false;
+  const entry = stateStore.get(state);
+  if (!entry) return false;
+
+  const age = Date.now() - entry.timestamp;
+  if (age > STATE_VALIDITY_MS) {
+    stateStore.delete(state);
+    return false;
   }
 
-  const client = await validateClient(client_id);
-  if (!client) {
-    return res.status(400).json({ error: 'invalid_client' });
-  }
+  return true;
+}
 
-  if (!redirectUriMatches(redirect_uri, client.redirectUris)) {
-    return res.status(400).json({ error: 'invalid_redirect_uri' });
-  }
+function storeState(state: string, codeChallenge?: string): void {
+  stateStore.set(state, {
+    timestamp: Date.now(),
+    codeChallenge,
+  });
+}
 
-  const authCode = generateAuthorizationCode(client_id, scope || '');
-
-  const queryParams: Record<string, string> = { code: authCode };
-  if (state) {
-    queryParams.state = state;
-  }
-
-  const redirectUrl = new URL(redirect_uri);
-  Object.entries(queryParams).forEach(([key, value]) => redirectUrl.searchParams.append(key, value));
-
-  res.redirect(redirectUrl.toString());
-};
-
-router.get('/authorize', authorizeHandler);
-
-export { router as authorizationRouter };
+function cleanupExpiredStates(): void {
+  const now = Date.now();
+  for (const [state, entry] of stateStore.entries()) {
+    if (now - entry.

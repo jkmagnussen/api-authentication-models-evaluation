@@ -1,70 +1,18 @@
 {
   "model": "jwt",
   "sample": "sample3",
-  "characters": 2253,
-  "lines": 83,
-  "functions": 8,
+  "characters": 2980,
+  "lines": 108,
+  "functions": 0,
   "classes": 0,
-  "cyclomaticComplexity": 3,
+  "cyclomaticComplexity": null,
   "halstead": {
-    "operators": {
-      "distinct": 8,
-      "total": 60,
-      "identifiers": [
-        "()",
-        "{}",
-        ":",
-        ".",
-        "=",
-        "void (prefix)",
-        "const",
-        "||"
-      ]
-    },
-    "operands": {
-      "distinct": 31,
-      "total": 68,
-      "identifiers": [
-        "\"use strict\"",
-        "exports",
-        "\"__esModule\"",
-        "<anonymous>",
-        "value",
-        true,
-        "Object",
-        "defineProperty",
-        "setupAuthRoutes",
-        "decodeTokenPayload",
-        "generateAccessToken",
-        "validateBearerToken",
-        0,
-        "express_1",
-        "\"express\"",
-        "require",
-        "jsonwebtoken_1",
-        "\"jsonwebtoken\"",
-        "jwtSecret",
-        "process",
-        "env",
-        "JWT_SECRET",
-        "\"your-secret-key-change-in-production\"",
-        "app",
-        "default",
-        "json",
-        "use",
-        "port",
-        "PORT",
-        3000,
-        "listen"
-      ]
-    },
-    "length": 128,
-    "vocabulary": 39,
-    "difficulty": 8.774193548387096,
-    "volume": 676.5314840143678,
-    "effort": 5936.018182319614,
-    "bugs": 0.22551049467145595,
-    "time": 329.7787879066452
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
   },
-  "maintainabilityIndex": 91.71038072266288
+  "maintainabilityIndex": null,
+  "analysisError": "Line 109: Unexpected token ILLEGAL"
 }

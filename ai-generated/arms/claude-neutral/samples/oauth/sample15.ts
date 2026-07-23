@@ -1,121 +1,103 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response, NextFunction } from "express";
+import express, { Request, Response } from 'express';
+import crypto from 'crypto';
+import { URL } from 'url';
 
-const client = new Anthropic();
 const app = express();
 
-interface OAuthState {
-  code: string;
-  clientId: string;
-  redirectUri: string;
-  userId: string;
-  expiresAt: number;
+// Configuration
+const ALLOWED_SCOPES = new Set(['read:profile', 'write:data', 'delete:account']);
+const ALLOWED_REDIRECT_DOMAINS = ['localhost:3000', 'localhost:3001', 'app.example.com'];
+const STATE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+const stateStore = new Map<string, { timestamp: number; client_id: string }>();
+
+// Validation functions
+function validateRedirectUri(redirectUri: string, clientId: string): boolean {
+  if (!redirectUri) return false;
+  
+  try {
+    const url = new URL(redirectUri);
+    
+    // Ensure HTTPS in production
+    if (process.env.NODE_ENV === 'production' && url.protocol !== 'https:') {
+      return false;
+    }
+    
+    // Check against whitelist
+    const host = url.hostname === 'localhost' ? `${url.hostname}:${url.port}` : url.hostname;
+    if (!ALLOWED_REDIRECT_DOMAINS.includes(host)) {
+      return false;
+    }
+    
+    // Only path segments, no query or fragments allowed
+    if (url.search || url.hash) {
+      return false;
+    }
+    
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-interface TokenRequest {
-  code: string;
-  clientId: string;
-  clientSecret: string;
-  redirectUri: string;
-  grantType: string;
+function validateScopes(requestedScopes: string): { valid: boolean; scopes: string[] } {
+  if (!requestedScopes || typeof requestedScopes !== 'string') {
+    return { valid: false, scopes: [] };
+  }
+  
+  const scopes = requestedScopes.split(' ').filter(s => s.length > 0);
+  
+  // Validate each scope
+  const validScopes = scopes.filter(scope => ALLOWED_SCOPES.has(scope));
+  
+  // All requested scopes must be valid
+  if (validScopes.length !== scopes.length) {
+    return { valid: false, scopes: [] };
+  }
+  
+  return { valid: true, scopes: validScopes };
 }
 
-const authorizationCodes: Map<string, OAuthState> = new Map();
-const registeredClients: Map<
-  string,
-  { secret: string; redirectUris: string[] }
-> = new Map();
+function generateSecureState(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
 
-// Pre-register test clients
-registeredClients.set("client123", {
-  secret: "secret456",
-  redirectUris: ["http://localhost:3001/callback"],
-});
-
-export const generateAuthorizationCode = (
-  clientId: string,
-  redirectUri: string,
-  userId: string
-): string => {
-  const code = Math.random().toString(36).substring(7) + Date.now();
-  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-  authorizationCodes.set(code, {
-    code,
-    clientId,
-    redirectUri,
-    userId,
-    expiresAt,
-  });
-
-  return code;
-};
-
-export const validateAuthorizationCode = (
-  code: string,
-  clientId: string,
-  redirectUri: string
-): boolean => {
-  const state = authorizationCodes.get(code);
-
-  if (!state) {
+function validateStateParameter(state: string, clientId: string): boolean {
+  if (!state || typeof state !== 'string') return false;
+  
+  const stateData = stateStore.get(state);
+  if (!stateData) return false;
+  
+  // Check expiry
+  if (Date.now() - stateData.timestamp > STATE_EXPIRY_MS) {
+    stateStore.delete(state);
     return false;
   }
-
-  if (state.expiresAt < Date.now()) {
-    authorizationCodes.delete(code);
+  
+  // Verify client_id matches
+  if (stateData.client_id !== clientId) {
     return false;
   }
-
-  if (state.clientId !== clientId || state.redirectUri !== redirectUri) {
-    return false;
-  }
-
+  
   return true;
-};
+}
 
-export const generateAccessToken = (userId: string): string => {
-  const token =
-    "access_" + Math.random().toString(36).substring(7) + Date.now();
-  return token;
-};
-
-export const handleAuthorizationRequest = (
-  req: Request,
-  res: Response
-): void => {
-  const clientId = req.query.client_id as string;
-  const redirectUri = req.query.redirect_uri as string;
-  const responseType = req.query.response_type as string;
-  const scope = req.query.scope as string;
-  const state = req.query.state as string;
-
-  if (!clientId || !redirectUri || !responseType) {
-    res.status(400).json({ error: "missing_required_parameters" });
-    return;
+function cleanupExpiredStates(): void {
+  const now = Date.now();
+  for (const [state, data] of stateStore.entries()) {
+    if (now - data.timestamp > STATE_EXPIRY_MS) {
+      stateStore.delete(state);
+    }
   }
+}
 
-  const client = registeredClients.get(clientId);
-  if (!client) {
-    res.status(401).json({ error: "invalid_client" });
-    return;
-  }
+// Middleware
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
-  if (!client.redirectUris.includes(redirectUri)) {
-    res.status(401).json({ error: "invalid_redirect_uri" });
-    return;
-  }
-
-  if (responseType !== "code") {
-    res.status(400).json({ error: "unsupported_response_type" });
-    return;
-  }
-
-  // Simulate user login and consent
-  const userId = "user_" + Math.random().toString(36).substring(7);
-  const authCode = generateAuthorizationCode(clientId, redirectUri, userId);
-
-  const params = new URLSearchParams({
-    code: authCode,
-    state: state ||
+// OAuth2 Authorization Endpoint
+export async function handleAuthorizationRequest(req: Request, res: Response): Promise<void> {
+  // Clean up expired states
+  cleanupExpiredStates();
+  
+  // Extract and validate

@@ -1,114 +1,106 @@
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
 import express, { Request, Response } from "express";
-import { randomBytes } from "crypto";
+import crypto from "crypto";
 
 const app = express();
-const client = new Anthropic();
+app.use(express.json());
 
-const authorizationCodes = new Map<string, AuthorizationRecord>();
-const clientRegistry = new Map<
-  string,
-  ClientApplication
->();
-const conversationHistory: Array<{
-  role: "user" | "assistant";
-  content: string;
-}> = [];
-
-interface AuthorizationRecord {
+interface OAuthState {
+  state: string;
   clientId: string;
-  userId: string;
-  scopes: string[];
   redirectUri: string;
+  scopes: string[];
   expiresAt: number;
+  codeChallenge?: string;
 }
 
-interface ClientApplication {
+interface ValidatedAuthRequest {
   clientId: string;
-  clientSecret: string;
-  redirectUris: string[];
-  clientName: string;
+  redirectUri: string;
+  requestedScopes: string[];
+  state: string;
+  codeChallenge?: string;
 }
 
-// Initialize some test clients
-function initializeClients() {
-  clientRegistry.set("test-client-1", {
-    clientId: "test-client-1",
-    clientSecret: "secret-key-123",
-    redirectUris: ["http://localhost:3001/callback"],
-    clientName: "Test OAuth Client",
-  });
+const ALLOWED_SCOPES = ["read:user", "write:posts", "delete:account"];
+const ALLOWED_CLIENTS = new Map([
+  ["client-123", "https://app.example.com"],
+  ["client-456", "https://trusted-service.example.com"],
+]);
 
-  clientRegistry.set("mobile-app", {
-    clientId: "mobile-app",
-    clientSecret: "mobile-secret-456",
-    redirectUris: ["myapp://oauth/callback"],
-    clientName: "Mobile Application",
-  });
+const STATE_STORE = new Map<string, OAuthState>();
+const STATE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+
+export function generateSecureState(): string {
+  return crypto.randomBytes(32).toString("hex");
 }
 
-async function analyzeAuthRequest(
+export function validateRedirectUri(
   clientId: string,
-  scope: string,
   redirectUri: string
-): Promise<string> {
-  conversationHistory.push({
-    role: "user",
-    content: `User is authorizing an OAuth2 application. Client: ${clientId}, Requesting scopes: ${scope}, Redirect URI: ${redirectUri}. Should this be allowed? Provide a brief yes/no recommendation.`,
-  });
+): boolean {
+  const registeredUri = ALLOWED_CLIENTS.get(clientId);
+  if (!registeredUri) return false;
 
-  const response = await client.messages.create({
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 150,
-    system:
-      "You are a security analyst evaluating OAuth2 authorization requests. Provide brief, clear recommendations.",
-    messages: conversationHistory,
-  });
+  try {
+    const urlObj = new URL(redirectUri);
+    const registeredObj = new URL(registeredUri);
 
-  const assistantMessage =
-    response.content[0].type === "text" ? response.content[0].text : "";
-
-  conversationHistory.push({
-    role: "assistant",
-    content: assistantMessage,
-  });
-
-  return assistantMessage;
+    return (
+      urlObj.protocol === registeredObj.protocol &&
+      urlObj.hostname === registeredObj.hostname &&
+      urlObj.port === registeredObj.port &&
+      urlObj.pathname === registeredObj.pathname
+    );
+  } catch {
+    return false;
+  }
 }
 
-export function createAuthorizationEndpoint() {
-  app.use(express.urlencoded({ extended: false }));
+export function validateRequestedScopes(scopes: string[]): boolean {
+  return (
+    scopes.length > 0 &&
+    scopes.every((scope) => ALLOWED_SCOPES.includes(scope))
+  );
+}
 
-  initializeClients();
+export function validateCodeChallenge(challenge: string): boolean {
+  // PKCE code_challenge must be 43-128 characters of unreserved characters
+  return /^[A-Za-z0-9._~-]{43,128}$/.test(challenge);
+}
 
-  app.get(
-    "/authorize",
-    async (req: Request, res: Response): Promise<void> => {
-      const { client_id, redirect_uri, scope, state, response_type } = req.query;
+export async function validateAuthorizationRequest(
+  req: Request
+): Promise<ValidatedAuthRequest | { error: string }> {
+  const { client_id, redirect_uri, scope, state, code_challenge } = req.query;
 
-      // Validate required parameters
-      if (!client_id || !redirect_uri || !scope) {
-        res.status(400).json({
-          error: "invalid_request",
-          error_description:
-            "Missing required parameters: client_id, redirect_uri, scope",
-        });
-        return;
-      }
+  if (!client_id || typeof client_id !== "string") {
+    return { error: "missing_client_id" };
+  }
 
-      // Verify client is registered
-      const client = clientRegistry.get(client_id as string);
-      if (!client) {
-        res.status(401).json({
-          error: "invalid_client",
-          error_description: "Client is not registered",
-        });
-        return;
-      }
+  if (!redirect_uri || typeof redirect_uri !== "string") {
+    return { error: "missing_redirect_uri" };
+  }
 
-      // Verify redirect_uri matches registered URIs
-      if (!client.redirectUris.includes(redirect_uri as string)) {
-        res.status(400).json({
-          error: "invalid_request",
-          error_description: "Redirect URI does not match registered URIs",
+  if (!validateRedirectUri(client_id, redirect_uri)) {
+    return { error: "invalid_redirect_uri" };
+  }
+
+  if (!scope || typeof scope !== "string") {
+    return { error: "missing_scope" };
+  }
+
+  const requestedScopes = scope.split(" ");
+  if (!validateRequestedScopes(requestedScopes)) {
+    return { error: "invalid_scope" };
+  }
+
+  if (!state || typeof state !== "string" || state.length < 20) {
+    return { error: "invalid_state" };
+  }
+
+  const codeChallenge =
+    typeof code_challenge === "string" ? code_challenge : undefined;
+  if (codeChallenge && !validateCodeChallenge(codeChallenge)) {
+    return { error:

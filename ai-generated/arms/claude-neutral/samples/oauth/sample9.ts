@@ -1,102 +1,109 @@
 ```typescript
-import express, { Request, Response, Router } from 'express';
-import crypto from 'crypto';
+import express, { Request, Response, Router } from "express";
+import crypto from "crypto";
+import { URL } from "url";
 
-const oauthRouter = Router();
+const router = Router();
 
-// In-memory stores (replace with database in production)
-const authorizationCodes = new Map<string, {
+// Configuration
+const OAUTH_CONFIG = {
+  allowedScopes: ["read", "write", "delete", "profile"],
+  maxScopeLength: 200,
+  stateLength: 32,
+  maxRedirectUrlLength: 2048,
+  allowedRedirectHosts: [
+    "localhost:3000",
+    "localhost:3001",
+    "app.example.com",
+    "staging.example.com",
+  ],
+};
+
+interface AuthorizationRequest {
   clientId: string;
   redirectUri: string;
   scope: string;
-  expiresAt: number;
-  userId: string;
-}>();
-
-const clientRegistry = new Map<string, {
-  clientSecret: string;
-  redirectUris: string[];
-  name: string;
-}>();
-
-const accessTokens = new Map<string, {
-  clientId: string;
-  userId: string;
-  scope: string;
-  expiresAt: number;
-}>();
-
-// Initialize with sample client
-clientRegistry.set('sample-client-xyz', {
-  clientSecret: 'super-secret-key-789',
-  redirectUris: ['http://localhost:3001/callback'],
-  name: 'Sample OAuth Client'
-});
-
-function generateAuthCode(): string {
-  return crypto.randomBytes(32).toString('hex');
+  state: string;
+  responseType: string;
+  codeChallengeMethod?: string;
+  codeChallenge?: string;
 }
 
-function generateAccessToken(): string {
-  return crypto.randomBytes(32).toString('hex');
+// In-memory state storage (use Redis in production)
+const stateStore = new Map<string, AuthorizationRequest>();
+const stateTimeout = 10 * 60 * 1000; // 10 minutes
+
+export function validateRedirectUri(redirectUri: string): boolean {
+  if (!redirectUri) return false;
+  if (redirectUri.length > OAUTH_CONFIG.maxRedirectUrlLength) return false;
+
+  try {
+    const url = new URL(redirectUri);
+
+    // Reject non-HTTPS in production
+    if (
+      process.env.NODE_ENV === "production" &&
+      url.protocol !== "https:" &&
+      !url.hostname.includes("localhost")
+    ) {
+      return false;
+    }
+
+    // Validate against allowlist
+    const hostWithPort = url.hostname + (url.port ? `:${url.port}` : "");
+    const isAllowed = OAUTH_CONFIG.allowedRedirectHosts.some(
+      (host) => host === hostWithPort || hostWithPort === host
+    );
+
+    return isAllowed;
+  } catch {
+    return false;
+  }
 }
 
-// Authorization endpoint - user grants permission
-oauthRouter.get('/authorize', (req: Request, res: Response) => {
-  const { client_id, redirect_uri, scope, state, response_type } = req.query;
+export function validateScopes(scope: string): boolean {
+  if (!scope) return false;
+  if (scope.length > OAUTH_CONFIG.maxScopeLength) return false;
 
-  // Validate client
-  if (!clientRegistry.has(client_id as string)) {
-    return res.status(400).json({ error: 'invalid_client' });
-  }
+  const requestedScopes = scope.split(" ").filter((s) => s.length > 0);
 
-  const client = clientRegistry.get(client_id as string)!;
+  if (requestedScopes.length === 0) return false;
 
-  // Validate redirect_uri
-  if (!client.redirectUris.includes(redirect_uri as string)) {
-    return res.status(400).json({ error: 'invalid_redirect_uri' });
-  }
+  return requestedScopes.every((requestedScope) =>
+    OAUTH_CONFIG.allowedScopes.includes(requestedScope)
+  );
+}
 
-  if (response_type !== 'code') {
-    return res.status(400).json({ error: 'unsupported_response_type' });
-  }
+export function generateStateParameter(): string {
+  return crypto.randomBytes(OAUTH_CONFIG.stateLength / 2).toString("hex");
+}
 
-  // In a real app, show a login/consent form here
-  // For this sample, we'll simulate user consent with a test user
-  const userId = 'user-test-123';
-  const authCode = generateAuthCode();
-  const expiryTime = Date.now() + 10 * 60 * 1000; // 10 minutes
+export function validateStateParameter(state: string): boolean {
+  if (!state) return false;
+  if (state.length !== OAUTH_CONFIG.stateLength) return false;
+  return /^[a-f0-9]+$/.test(state);
+}
 
-  authorizationCodes.set(authCode, {
-    clientId: client_id as string,
-    redirectUri: redirect_uri as string,
-    scope: (scope as string) || 'openid profile',
-    expiresAt: expiryTime,
-    userId
-  });
+export function validateCodeChallenge(
+  codeChallenge: string,
+  method?: string
+): boolean {
+  if (!codeChallenge) return true; // PKCE is optional
 
-  // Redirect back to client with authorization code
-  const redirectParams = new URLSearchParams({
-    code: authCode,
-    state: (state as string) || ''
-  });
+  if (codeChallenge.length < 43 || codeChallenge.length > 128) return false;
 
-  res.redirect(`${redirect_uri}?${redirectParams.toString()}`);
-});
+  // Unreserved characters per RFC 3986
+  if (!/^[A-Za-z0-9\-._~]+$/.test(codeChallenge)) return false;
 
-// Token endpoint - exchange authorization code for access token
-oauthRouter.post('/token', (req: Request, res: Response) => {
-  const { grant_type, code, client_id, client_secret, redirect_uri } = req.body;
+  if (method && !["S256", "plain"].includes(method)) return false;
 
-  if (grant_type !== 'authorization_code') {
-    return res.status(400).json({ error: 'unsupported_grant_type' });
-  }
+  return true;
+}
 
-  // Validate client credentials
-  if (!clientRegistry.has(client_id)) {
-    return res.status(401).json({ error: 'invalid_client' });
-  }
-
-  const client = clientRegistry.get(client_id)!;
-  if (client.clientSecret !== client_secret) {
-    return res.status(401
+export const handleAuthorizationRequest = (
+  req: Request,
+  res: Response
+): void => {
+  try {
+    const {
+      client

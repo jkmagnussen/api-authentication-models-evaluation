@@ -1,39 +1,121 @@
-import express, { Request, Response, NextFunction } from 'express';
-import { query, validationResult } from 'express-validator';
-import crypto from 'crypto';
+```typescript
+import Anthropic from "@anthropic-ai/sdk";
+import Express, { Request, Response } from "express";
+import crypto from "crypto";
+import { URLSearchParams } from "url";
 
-const router = express.Router();
+const client = new Anthropic();
+const app = Express();
 
-const validRedirectUris = ['https://example.com/callback'];
-const allowedScopes = ['read', 'write', 'delete'];
+const allowedRedirectUrls = new Set([
+  "https://app.example.com/callback",
+  "https://app.example.com/auth/callback",
+  "http://localhost:3000/oauth/callback",
+]);
 
-router.get('/authorize', [
-  query('response_type').equals('code').withMessage('Invalid response type'),
-  query('client_id').notEmpty().withMessage('Client ID is required'),
-  query('redirect_uri').isURL().withMessage('Invalid redirect URI')
-    .custom((value) => validRedirectUris.includes(value)).withMessage('Redirect URI not allowed'),
-  query('scope').custom((value) => {
-    const scopes = value.split(' ');
-    return scopes.every(scope => allowedScopes.includes(scope));
-  }).withMessage('Invalid scope requested'),
-  query('state').notEmpty().withMessage('State parameter is required')
-], (req: Request, res: Response, next: NextFunction) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+const validScopes = new Set(["read", "write", "delete", "admin"]);
 
-  const { client_id, redirect_uri, state } = req.query;
-  const authorizationCode = crypto.randomBytes(20).toString('hex');
+const stateCache = new Map<string, StateData>();
 
-  // Assume a function saveAuthorizationCode handles storing the code securely
-  saveAuthorizationCode(client_id as string, authorizationCode);
-
-  res.redirect(`${redirect_uri}?code=${authorizationCode}&state=${state}`);
-});
-
-function saveAuthorizationCode(clientId: string, code: string) {
-  // Store the authorization code securely with the client ID
+interface StateData {
+  timestamp: number;
+  clientId: string;
+  requestedScopes: string[];
 }
 
-export { router as authorizationRouter };
+function generateSecureState(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function validateRedirectLocation(
+  redirectUri: string
+): { valid: boolean; error?: string } {
+  if (!redirectUri) {
+    return { valid: false, error: "Redirect URI is required" };
+  }
+
+  try {
+    const parsedUrl = new URL(redirectUri);
+    if (parsedUrl.hash || parsedUrl.search.includes("code=")) {
+      return { valid: false, error: "Invalid redirect URI format" };
+    }
+  } catch {
+    return { valid: false, error: "Invalid redirect URI URL format" };
+  }
+
+  if (!allowedRedirectUrls.has(redirectUri)) {
+    return {
+      valid: false,
+      error: `Redirect URI not registered: ${redirectUri}`,
+    };
+  }
+
+  return { valid: true };
+}
+
+function validateRequestedScopes(scopes: string): {
+  valid: boolean;
+  parsedScopes?: string[];
+  error?: string;
+} {
+  if (!scopes) {
+    return { valid: false, error: "Scopes are required" };
+  }
+
+  const scopeArray = scopes.split(" ").filter((s) => s.length > 0);
+
+  if (scopeArray.length === 0) {
+    return { valid: false, error: "At least one scope must be requested" };
+  }
+
+  const invalidScopes = scopeArray.filter((scope) => !validScopes.has(scope));
+
+  if (invalidScopes.length > 0) {
+    return {
+      valid: false,
+      error: `Invalid scopes requested: ${invalidScopes.join(", ")}`,
+    };
+  }
+
+  return { valid: true, parsedScopes: scopeArray };
+}
+
+function validateClientId(clientId: string): {
+  valid: boolean;
+  error?: string;
+} {
+  if (!clientId) {
+    return { valid: false, error: "Client ID is required" };
+  }
+
+  if (!/^[a-zA-Z0-9_-]{20,}$/.test(clientId)) {
+    return {
+      valid: false,
+      error: "Client ID format is invalid",
+    };
+  }
+
+  return { valid: true };
+}
+
+function validateStateParameter(state: string): {
+  valid: boolean;
+  error?: string;
+} {
+  if (!state) {
+    return { valid: false, error: "State parameter is required" };
+  }
+
+  if (state.length < 32) {
+    return {
+      valid: false,
+      error: "State parameter is too short (minimum 32 characters)",
+    };
+  }
+
+  return { valid: true };
+}
+
+function cleanExpiredStates(): void {
+  const now = Date.now();
+  const maxAge = 10 * 60 * 1000;

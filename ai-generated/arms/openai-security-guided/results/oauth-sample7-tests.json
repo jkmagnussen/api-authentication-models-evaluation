@@ -6,7 +6,7 @@
   "checks": [
     {
       "name": "redirect validation present",
-      "passed": false,
+      "passed": true,
       "details": "Checks that redirect validation logic exists."
     },
     {
@@ -21,23 +21,17 @@
     },
     {
       "name": "no permissive admin default",
-      "passed": false,
+      "passed": true,
       "details": "Flags broad default admin scope grants."
     }
   ],
   "correctnessFailures": [
-    "redirect validation present",
-    "scope validation present",
-    "no permissive admin default"
+    "scope validation present"
   ],
   "securityFailures": [
-    "redirect validation present",
-    "scope validation present",
-    "no permissive admin default"
+    "scope validation present"
   ],
   "misconfigurationDetections": [
-    "redirect validation present",
-    "scope validation present",
-    "no permissive admin default"
+    "scope validation present"
   ]
 }

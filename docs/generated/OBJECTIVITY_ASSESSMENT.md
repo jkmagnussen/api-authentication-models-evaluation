@@ -1,6 +1,6 @@
 # Objectivity Assessment
 
-Generated: 2026-07-23T03:48:52.125Z
+Generated: 2026-07-23T04:51:30.998Z
 Regenerate: npm run objective:report
 
 This report documents fairness controls and measurable bias checks for examiner-facing methodological transparency.
@@ -33,21 +33,21 @@ This report documents fairness controls and measurable bias checks for examiner-
 
 | Provider | Prompt Condition | Failed / Total | Failure % | 95% CI |
 |---|---|---:|---:|---|
-| OPENAI | neutral | 90 / 90 | 100.00% | [95.91, 100.00]% |
-| OPENAI | security-guided | 32 / 90 | 35.60% | [26.44, 45.85]% |
-| CLAUDE | neutral | 77 / 90 | 85.60% | [76.84, 91.36]% |
-| CLAUDE | security-guided | 36 / 90 | 40.00% | [30.49, 50.33]% |
+| OPENAI | neutral | 44 / 90 | 48.90% | [38.82, 59.05]% |
+| OPENAI | security-guided | 34 / 90 | 37.80% | [28.46, 48.10]% |
+| CLAUDE | neutral | 44 / 90 | 48.90% | [38.82, 59.05]% |
+| CLAUDE | security-guided | 35 / 90 | 38.90% | [29.47, 49.22]% |
 
 ## AI Arm Pairwise Significance (Holm-Bonferroni Corrected)
 
 | Arm A | Arm B | Raw p-value | Holm-adjusted p | Significant @ 0.05 | Note |
 |---|---|---:|---:|---|---|
-| openai/neutral | openai/security-guided | 0.0000 | 0.0000 | Yes | Two-proportion z-test on failure rate |
-| openai/neutral | claude/neutral | 0.0002 | 0.0004 | Yes | Two-proportion z-test on failure rate |
-| openai/neutral | claude/security-guided | 0.0000 | 0.0000 | Yes | Two-proportion z-test on failure rate |
-| openai/security-guided | claude/neutral | 0.0000 | 0.0000 | Yes | Two-proportion z-test on failure rate |
-| openai/security-guided | claude/security-guided | 0.5386 | 0.5386 | No | Two-proportion z-test on failure rate |
-| claude/neutral | claude/security-guided | 0.0000 | 0.0000 | Yes | Two-proportion z-test on failure rate |
+| openai/neutral | openai/security-guided | 0.1325 | 0.7953 | No | Two-proportion z-test on failure rate |
+| openai/neutral | claude/neutral | 1.0000 | 1.0000 | No | Two-proportion z-test on failure rate |
+| openai/neutral | claude/security-guided | 0.1764 | 0.7953 | No | Two-proportion z-test on failure rate |
+| openai/security-guided | claude/neutral | 0.1325 | 0.7953 | No | Two-proportion z-test on failure rate |
+| openai/security-guided | claude/security-guided | 0.8782 | 1.0000 | No | Two-proportion z-test on failure rate |
+| claude/neutral | claude/security-guided | 0.1764 | 0.7953 | No | Two-proportion z-test on failure rate |
 
 ## Sample Balance Check
 

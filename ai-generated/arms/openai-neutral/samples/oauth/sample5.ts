@@ -1,36 +1,31 @@
-import express, { Request, Response, NextFunction } from 'express';
-import { generateAuthCode, validateClient, generateRedirectUri } from './authUtils';
-import { query, validationResult } from 'express-validator';
+import express, { Request, Response } from 'express';
+import { generateAuthCode, validateClient, saveAuthCode } from './authUtils';
 
-const oauthRouter = express.Router();
+const router = express.Router();
 
-oauthRouter.get('/authorize', [
-  query('response_type').isString().equals('code'),
-  query('client_id').isString(),
-  query('redirect_uri').isString(),
-  query('scope').isString(),
-  query('state').optional().isString()
-], async (req: Request, res: Response, next: NextFunction) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+router.get('/authorize', async (req: Request, res: Response) => {
+  const { client_id, redirect_uri, scope, response_type, state } = req.query;
+
+  if (!client_id || !redirect_uri || !scope || !response_type) {
+    return res.status(400).send('Invalid request');
   }
 
-  const { client_id, redirect_uri, scope, state } = req.query;
-  
-  try {
-    const client = await validateClient(client_id as string, redirect_uri as string);
-    if (!client) {
-      return res.status(400).json({ error: 'Invalid client or redirect_uri' });
-    }
-
-    const authCode = await generateAuthCode(client_id as string, scope as string);
-    const redirectUrl = generateRedirectUri(redirect_uri as string, authCode, state as string);
-
-    res.redirect(redirectUrl);
-  } catch (error) {
-    next(error);
+  if (!validateClient(client_id as string, redirect_uri as string)) {
+    return res.status(401).send('Unauthorized client');
   }
+
+  if (response_type !== 'code') {
+    return res.status(400).send('Unsupported response type');
+  }
+
+  // Here you would normally authenticate the user
+  // For this example, assume the user has been authenticated
+
+  const authCode = generateAuthCode(client_id as string, scope as string);
+  saveAuthCode(authCode, client_id as string);
+
+  const redirectUrl = `${redirect_uri}?code=${authCode}${state ? `&state=${state}` : ''}`;
+  res.redirect(redirectUrl);
 });
 
-export { oauthRouter };
+export { router as authRouter };

@@ -1,39 +1,30 @@
 import express, { Request, Response } from 'express';
-import crypto from 'crypto';
-import { URL } from 'url';
+import { generateAuthorizationCode, validateClient, redirectWithError } from './oauthHelpers';
 
-const app = express();
-const port = 3000;
+export const oauthRouter = express.Router();
 
-const clients = new Map<string, { redirectUri: string, clientSecret: string }>();
-const authorizationCodes = new Map<string, { clientId: string, redirectUri: string }>();
+oauthRouter.get('/auth', async (req: Request, res: Response) => {
+    const { response_type, client_id, redirect_uri, scope, state } = req.query;
 
-clients.set('client1', { redirectUri: 'http://localhost:4000/callback', clientSecret: 'secret1' });
+    if (response_type !== 'code') {
+        return redirectWithError(res, redirect_uri as string, 'unsupported_response_type', state as string);
+    }
 
-app.get('/authorize', (req: Request, res: Response) => {
-  const { response_type, client_id, redirect_uri, state } = req.query as Record<string, string>;
+    if (!client_id || !redirect_uri) {
+        return redirectWithError(res, redirect_uri as string, 'invalid_request', state as string);
+    }
 
-  const client = clients.get(client_id);
-  if (!client || client.redirectUri !== redirect_uri) {
-    return res.status(400).send('Invalid client or redirect URI');
-  }
+    const client = await validateClient(client_id as string, redirect_uri as string);
+    if (!client) {
+        return redirectWithError(res, redirect_uri as string, 'unauthorized_client', state as string);
+    }
 
-  if (response_type !== 'code') {
-    return res.status(400).send('Unsupported response type');
-  }
+    const authorizationCode = generateAuthorizationCode(client_id as string, scope as string);
+    const redirectURL = new URL(redirect_uri as string);
+    redirectURL.searchParams.set('code', authorizationCode);
+    if (state) {
+        redirectURL.searchParams.set('state', state as string);
+    }
 
-  const authCode = crypto.randomBytes(16).toString('hex');
-  authorizationCodes.set(authCode, { clientId: client_id, redirectUri: redirect_uri });
-
-  const redirectURL = new URL(redirect_uri);
-  redirectURL.searchParams.append('code', authCode);
-  if (state) redirectURL.searchParams.append('state', state);
-
-  res.redirect(redirectURL.toString());
+    res.redirect(redirectURL.toString());
 });
-
-app.listen(port, () => {
-  console.log(`Authorization server running on http://localhost:${port}`);
-});
-
-export { app, clients, authorizationCodes };

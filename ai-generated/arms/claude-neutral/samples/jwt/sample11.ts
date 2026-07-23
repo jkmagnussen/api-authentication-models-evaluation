@@ -1,135 +1,106 @@
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
+import express, { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { Request, Response, NextFunction } from "express";
 
 const client = new Anthropic();
 
+interface AuthRequest extends Request {
+  user?: jwt.JwtPayload;
+}
+
+interface JWTConfig {
+  issuer: string;
+  audience: string;
+  algorithm: "HS256" | "HS384" | "HS512" | "RS256" | "RS384" | "RS512";
+  expirySeconds: number;
+  secret: string;
+}
+
 interface TokenPayload {
-  userId: string;
-  email: string;
-  role: string;
+  sub: string;
+  iss: string;
+  aud: string;
   iat: number;
   exp: number;
 }
 
-interface AuthenticatedRequest extends Request {
-  user?: TokenPayload;
-  token?: string;
-}
+const DEFAULT_CONFIG: JWTConfig = {
+  issuer: "secure-app",
+  audience: "api-consumers",
+  algorithm: "HS256",
+  expirySeconds: 3600,
+  secret: process.env.JWT_SECRET || "your-super-secret-key-change-this",
+};
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
-const TOKEN_EXPIRY = "24h";
+export function createSecureJWTMiddleware(config: Partial<JWTConfig> = {}) {
+  const finalConfig: JWTConfig = { ...DEFAULT_CONFIG, ...config };
 
-export function generateAccessToken(
-  userId: string,
-  email: string,
-  role: string
-): string {
-  return jwt.sign(
-    {
-      userId,
-      email,
-      role,
-    },
-    JWT_SECRET,
-    { expiresIn: TOKEN_EXPIRY }
-  );
-}
-
-export function validateToken(token: string): TokenPayload | null {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    return decoded as TokenPayload;
-  } catch {
-    return null;
-  }
-}
-
-export function secureMiddleware(
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): void {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid authorization header" });
-    return;
+  // Validate configuration at middleware creation time
+  if (!finalConfig.secret || finalConfig.secret.length < 32) {
+    throw new Error(
+      "JWT secret must be at least 32 characters long for security"
+    );
   }
 
-  const token = authHeader.substring(7);
-  const payload = validateToken(token);
-
-  if (!payload) {
-    res.status(401).json({ error: "Invalid or expired token" });
-    return;
+  if (!finalConfig.issuer || finalConfig.issuer.length === 0) {
+    throw new Error("JWT issuer must be specified");
   }
 
-  req.user = payload;
-  req.token = token;
-  next();
-}
-
-export function requireRole(allowedRoles: string[]) {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    if (!req.user || !allowedRoles.includes(req.user.role)) {
-      res.status(403).json({ error: "Insufficient permissions" });
-      return;
-    }
-    next();
-  };
-}
-
-export async function analyzeAuthRequest(
-  userId: string,
-  requestType: string
-): Promise<string> {
-  const message = await client.messages.create({
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 1024,
-    messages: [
-      {
-        role: "user",
-        content: `Analyze this authentication request:
-User ID: ${userId}
-Request Type: ${requestType}
-
-Provide a brief security assessment and whether this request appears legitimate.`,
-      },
-    ],
-  });
-
-  if (message.content[0].type === "text") {
-    return message.content[0].text;
+  if (!finalConfig.audience || finalConfig.audience.length === 0) {
+    throw new Error("JWT audience must be specified");
   }
 
-  return "Unable to analyze request";
-}
-
-export function extractTokenFromRequest(req: Request): string | null {
-  const authHeader = req.headers.authorization;
-
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    return authHeader.substring(7);
+  if (finalConfig.expirySeconds < 60) {
+    throw new Error("JWT expiry must be at least 60 seconds");
   }
 
-  if (req.query.token && typeof req.query.token === "string") {
-    return req.query.token;
-  }
+  return async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const authHeader = req.headers.authorization;
 
-  return null;
-}
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        res.status(401).json({
+          error: "Missing or invalid authorization header",
+          details: "Expected format: Authorization: Bearer <token>",
+        });
+        return;
+      }
 
-export function createTokenRefreshHandler(
-  req: AuthenticatedRequest,
-  res: Response
-): void {
-  if (!req.user) {
-    res.status(401).json({ error: "No user context" });
-    return;
-  }
+      const token = authHeader.substring(7);
 
-  const newToken = generateAccessToken(
-    req.user.userId,
-    req.
+      // Verify token with strict options
+      const decoded = jwt.verify(token, finalConfig.secret, {
+        algorithms: [finalConfig.algorithm],
+        issuer: finalConfig.issuer,
+        audience: finalConfig.audience,
+        clockTolerance: 5, // 5 second tolerance for clock skew
+      }) as jwt.JwtPayload;
+
+      // Additional validation checks
+      if (!decoded.sub) {
+        res.status(401).json({ error: "Invalid token: missing subject claim" });
+        return;
+      }
+
+      // Ensure token hasn't expired (jwt.verify should handle this, but explicit check)
+      if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
+        res.status(401).json({ error: "Token has expired" });
+        return;
+      }
+
+      req.user = decoded;
+      next();
+    } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError) {
+        res.status(401).json({
+          error: "Invalid token",
+          details: error.message,
+        });
+      } else if (error instanceof jwt.TokenExpiredError) {
+        res.status(401).json({
+          error:

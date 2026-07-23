@@ -1,62 +1,117 @@
-import express, { Request, Response, NextFunction } from 'express';
-import session, { SessionOptions } from 'express-session';
+```typescript
+import express from 'express';
+import session from 'express-session';
+import type { Session } from 'express-session';
 
-const app = express();
+declare global {
+  namespace Express {
+    interface Request {
+      session: Session & { userId?: string; isAuthenticated?: boolean };
+    }
+  }
+}
 
-const sessionConfig: SessionOptions = {
-  secret: process.env.SESSION_SECRET || 'defaultsecret',
+const createSessionConfig = () => ({
+  secret: process.env.SESSION_SECRET || 'default-insecure-secret-change-me',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 1000 * 60 * 30 // 30 minutes
-  }
+    httpOnly: true,
+    sameSite: 'strict' as const,
+    maxAge: 3600000,
+    domain: process.env.COOKIE_DOMAIN,
+  },
+  name: 'sid',
+});
+
+export const initializeSessionMiddleware = (app: express.Application) => {
+  app.use(session(createSessionConfig()));
 };
 
-app.use(session(sessionConfig));
+export const refreshSessionIdentifier = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const previousId = req.sessionID;
+  
+  req.session.regenerate((err) => {
+    if (err) {
+      console.error('Session regeneration failed:', err);
+      return res.status(500).json({ error: 'Session error' });
+    }
 
-export function ensureAuthenticated(req: Request, res: Response, next: NextFunction): void {
-  if (req.session.userId) {
-    return next();
+    req.session.userId = req.body.userId;
+    req.session.isAuthenticated = true;
+
+    res.clearCookie('sid');
+    
+    next();
+  });
+};
+
+export const validateActiveSession = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  if (!req.session) {
+    return res.status(401).json({ error: 'No session found' });
   }
-  res.status(401).send('Unauthorized');
-}
 
-export function login(req: Request, res: Response): void {
-  const { userId } = req.body;
-  if (typeof userId === 'string' && userId.trim() !== '') {
-    req.session.regenerate((err) => {
-      if (err) {
-        return res.status(500).send('Server Error');
-      }
-      req.session.userId = userId;
-      res.send('Login successful');
-    });
-  } else {
-    res.status(400).send('Invalid user ID');
+  if (!req.session.isAuthenticated || !req.session.userId) {
+    return res.status(401).json({ error: 'Session not authenticated' });
   }
-}
 
-export function logout(req: Request, res: Response): void {
+  const now = Date.now();
+  if (req.session.cookie.expires instanceof Date) {
+    if (now > req.session.cookie.expires.getTime()) {
+      return res.status(401).json({ error: 'Session expired' });
+    }
+  }
+
+  next();
+};
+
+export const terminateUserSession = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const sessionId = req.sessionID;
+
   req.session.destroy((err) => {
     if (err) {
-      return res.status(500).send('Error logging out');
+      console.error('Session destruction failed:', err);
+      return res.status(500).json({ error: 'Logout failed' });
     }
-    res.clearCookie('connect.sid', {
+
+    res.clearCookie('sid', {
       path: '/',
-      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
+      httpOnly: true,
+      sameSite: 'strict',
     });
-    res.send('Logout successful');
+
+    next();
   });
-}
+};
 
-app.post('/login', login);
-app.post('/logout', ensureAuthenticated, logout);
+export const getProtectedRouter = () => {
+  const router = express.Router();
 
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
-});
+  router.post('/auth/login', async (req: express.Request, res: express.Response) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Invalid password format' });
+    }
+
+    refreshSessionIdentifier(req, res, () => {
+      res.json({ message: 'Login successful', sessionId: req.sessionID });
+    });

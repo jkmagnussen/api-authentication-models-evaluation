@@ -11,12 +11,12 @@
     },
     {
       "name": "httpOnly cookie flag present",
-      "passed": false,
+      "passed": true,
       "details": "Checks for HttpOnly cookie protection."
     },
     {
       "name": "logout invalidation present",
-      "passed": true,
+      "passed": false,
       "details": "Checks that logout invalidates the server-side session."
     },
     {
@@ -27,14 +27,14 @@
   ],
   "correctnessFailures": [
     "session regeneration present",
-    "httpOnly cookie flag present"
+    "logout invalidation present"
   ],
   "securityFailures": [
     "session regeneration present",
-    "httpOnly cookie flag present"
+    "logout invalidation present"
   ],
   "misconfigurationDetections": [
     "session regeneration present",
-    "httpOnly cookie flag present"
+    "logout invalidation present"
   ]
 }

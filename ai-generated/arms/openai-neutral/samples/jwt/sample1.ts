@@ -1,37 +1,37 @@
 import express, { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { Secret } from 'jsonwebtoken';
 
-const secretKey = 'yourSecretKey';
+const secretKey: Secret = process.env.JWT_SECRET || 'your_secret_key';
 
-export const jwtAuthenticationMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'Authorization token missing or malformed' });
+export const jwtAuthMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+  const authHeader = req.headers['authorization'];
+
+  if (!authHeader) {
+    res.status(401).json({ message: 'Authorization header missing' });
     return;
   }
 
   const token = authHeader.split(' ')[1];
 
-  jwt.verify(token, secretKey, (err, decoded) => {
+  if (!token) {
+    res.status(401).json({ message: 'Token not found' });
+    return;
+  }
+
+  jwt.verify(token, secretKey, (err, user) => {
     if (err) {
-      res.status(403).json({ error: 'Token verification failed' });
+      res.status(403).json({ message: 'Invalid token' });
       return;
     }
-    (req as any).user = decoded;
+    req.user = user;
     next();
   });
 };
 
-export const createJwtToken = (payload: object): string => {
-  return jwt.sign(payload, secretKey, { expiresIn: '1h' });
-};
-
 const app = express();
 
-app.use(jwtAuthenticationMiddleware);
+app.use(jwtAuthMiddleware);
 
-app.get('/secure', (req, res) => {
-  res.json({ message: 'Secure data accessed', user: (req as any).user });
+app.get('/protected', (req: Request, res: Response) => {
+  res.json({ message: 'You have accessed a protected route', user: req.user });
 });
-
-export default app;

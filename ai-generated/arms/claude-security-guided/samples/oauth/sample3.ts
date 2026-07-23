@@ -1,104 +1,128 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response, NextFunction } from "express";
-import crypto from "crypto";
-import url from "url";
+import express, { Request, Response, Router } from 'express';
+import crypto from 'crypto';
+import { URL } from 'url';
 
-const client = new Anthropic();
-const app = express();
+const authRouter = Router();
 
-interface OAuth2Request {
-  client_id: string;
-  redirect_uri: string;
-  response_type: string;
-  scope: string;
+interface AuthorizationRequest {
+  clientId: string;
+  redirectUri: string;
+  scope: string[];
   state: string;
+  responseType: string;
+}
+
+interface StoredAuthSession {
+  clientId: string;
+  redirectUri: string;
+  scope: string[];
+  state: string;
+  expiresAt: number;
   nonce?: string;
 }
 
-interface ValidatedOAuthParams {
-  isValid: boolean;
-  errors: string[];
-  sanitized?: {
-    client_id: string;
-    redirect_uri: string;
-    scopes: string[];
-    state: string;
-    nonce?: string;
-  };
+interface ClientConfig {
+  id: string;
+  secret: string;
+  redirectUris: string[];
+  allowedScopes: string[];
+  name: string;
 }
 
-const ALLOWED_CLIENTS = new Map([
-  ["client_abc123", { name: "Web App", redirects: ["https://app.example.com/callback"] }],
-  ["client_def456", { name: "Mobile App", redirects: ["https://mobile.example.com/auth/callback"] }],
+const VALID_RESPONSE_TYPES = ['code', 'token'];
+const VALID_SCOPES = ['openid', 'profile', 'email', 'offline_access'];
+const SESSION_TIMEOUT_MS = 10 * 60 * 1000;
+const STATE_LENGTH = 32;
+
+const registeredClients: Map<string, ClientConfig> = new Map([
+  [
+    'secure-client-001',
+    {
+      id: 'secure-client-001',
+      secret: 'client_secret_key_here',
+      redirectUris: [
+        'https://app.example.com/callback',
+        'https://app.example.com/auth/callback',
+      ],
+      allowedScopes: ['openid', 'profile', 'email'],
+      name: 'Example Application',
+    },
+  ],
 ]);
 
-const VALID_SCOPES = new Set([
-  "openid",
-  "profile",
-  "email",
-  "phone",
-  "address",
-  "offline_access",
-]);
+const authorizationSessions = new Map<string, StoredAuthSession>();
 
-const STATE_STORAGE = new Map<string, { timestamp: number; consumed: boolean }>();
-
-function validateRedirectUri(clientId: string, redirectUri: string): boolean {
-  const client = ALLOWED_CLIENTS.get(clientId);
-  if (!client) return false;
+export function validateRedirectUri(
+  clientId: string,
+  redirectUri: string
+): boolean {
+  const client = registeredClients.get(clientId);
+  if (!client) {
+    return false;
+  }
 
   try {
-    const parsedUrl = new url.URL(redirectUri);
-    if (parsedUrl.protocol !== "https:") return false;
-    return client.redirects.some((allowed) => allowed === redirectUri);
+    const parsedUri = new URL(redirectUri);
+
+    if (!parsedUri.protocol.startsWith('https')) {
+      return false;
+    }
+
+    return client.redirectUris.some((allowedUri) => allowedUri === redirectUri);
   } catch {
     return false;
   }
 }
 
-function validateStateParameter(state: string): boolean {
-  if (!state || state.length < 32 || state.length > 500) return false;
-  if (!/^[a-zA-Z0-9\-._~]{32,500}$/.test(state)) return false;
-  return true;
+export function validateScopes(
+  clientId: string,
+  requestedScopes: string[]
+): boolean {
+  const client = registeredClients.get(clientId);
+  if (!client || !Array.isArray(requestedScopes)) {
+    return false;
+  }
+
+  if (requestedScopes.length === 0) {
+    return false;
+  }
+
+  return requestedScopes.every((scope) => {
+    return (
+      VALID_SCOPES.includes(scope) && client.allowedScopes.includes(scope)
+    );
+  });
 }
 
-function validateScopes(requestedScopes: string): { valid: boolean; scopes: string[] } {
-  const scopes = requestedScopes.split(" ").filter((s) => s.length > 0);
-
-  if (scopes.length === 0) return { valid: false, scopes: [] };
-  if (scopes.length > 10) return { valid: false, scopes };
-
-  for (const scope of scopes) {
-    if (!VALID_SCOPES.has(scope)) {
-      return { valid: false, scopes };
-    }
-  }
-
-  return { valid: true, scopes };
+export function generateSecureState(): string {
+  return crypto.randomBytes(STATE_LENGTH).toString('hex');
 }
 
-export async function processAuthorizationRequest(
-  params: OAuth2Request
-): Promise<ValidatedOAuthParams> {
-  const errors: string[] = [];
+export function createAuthorizationSession(
+  clientId: string,
+  redirectUri: string,
+  scope: string[],
+  state: string
+): string {
+  const sessionId = crypto.randomBytes(16).toString('hex');
+  const session: StoredAuthSession = {
+    clientId,
+    redirectUri,
+    scope,
+    state,
+    expiresAt: Date.now() + SESSION_TIMEOUT_MS,
+  };
 
-  if (!params.client_id || typeof params.client_id !== "string") {
-    errors.push("Missing or invalid client_id parameter");
+  authorizationSessions.set(sessionId, session);
+  return sessionId;
+}
+
+export function retrieveAuthSession(sessionId: string): StoredAuthSession | null {
+  const session = authorizationSessions.get(sessionId);
+
+  if (!session) {
+    return null;
   }
 
-  if (!ALLOWED_CLIENTS.has(params.client_id)) {
-    errors.push("Client not registered");
-  }
-
-  if (!params.redirect_uri || typeof params.redirect_uri !== "string") {
-    errors.push("Missing or invalid redirect_uri parameter");
-  } else if (!validateRedirectUri(params.client_id, params.redirect_uri)) {
-    errors.push("Redirect URI not registered for this client");
-  }
-
-  if (params.response_type !== "code") {
-    errors.push("Invalid or missing response_type (only 'code' supported)");
-  }
-
-  if (!validateStateParameter(
+  if (Date.now() > session

@@ -1,117 +1,119 @@
 ```typescript
-import Anthropic from '@anthropic-ai/sdk';
-import express, { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { Request, Response, NextFunction } from "express";
+import * as jwt from "jsonwebtoken";
 
-interface JWTPayload {
-  userId: string;
-  username: string;
-  iat?: number;
-  exp?: number;
+interface TokenPayload {
+  sub: string;
+  aud: string;
+  iss: string;
+  iat: number;
+  exp: number;
+  [key: string]: unknown;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      authenticatedUser?: JWTPayload;
-    }
+interface JwtConfig {
+  publicKey: string;
+  expectedAudience: string;
+  expectedIssuer: string;
+  allowedAlgorithms: jwt.Algorithm[];
+  clockTolerance: number;
+}
+
+interface ValidatedRequest extends Request {
+  jwtPayload?: TokenPayload;
+}
+
+const defaultConfig: Partial<JwtConfig> = {
+  allowedAlgorithms: ["RS256"],
+  clockTolerance: 0,
+};
+
+function validateConfig(config: JwtConfig): void {
+  if (!config.publicKey) {
+    throw new Error("publicKey is required");
+  }
+  if (!config.expectedAudience) {
+    throw new Error("expectedAudience is required");
+  }
+  if (!config.expectedIssuer) {
+    throw new Error("expectedIssuer is required");
+  }
+  if (!Array.isArray(config.allowedAlgorithms)) {
+    throw new Error("allowedAlgorithms must be an array");
+  }
+  if (config.clockTolerance < 0) {
+    throw new Error("clockTolerance must be non-negative");
   }
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret-key-12345';
-const TOKEN_EXPIRY = '24h';
+function extractTokenFromRequest(request: Request): string | null {
+  const authHeader = request.headers.authorization;
 
-export function createJWTToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
-}
-
-export function verifyJWTToken(token: string): JWTPayload {
-  return jwt.verify(token, JWT_SECRET) as JWTPayload;
-}
-
-export function validateAuthorizationMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
-  try {
-    const bearerHeader = req.headers.authorization;
-
-    if (!bearerHeader || typeof bearerHeader !== 'string') {
-      res.status(401).json({ error: 'Missing authorization header' });
-      return;
-    }
-
-    const [scheme, credentials] = bearerHeader.split(' ');
-
-    if (scheme?.toLowerCase() !== 'bearer' || !credentials) {
-      res.status(401).json({ error: 'Invalid authorization header format' });
-      return;
-    }
-
-    const decoded = verifyJWTToken(credentials);
-    req.authenticatedUser = decoded;
-    next();
-  } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      res.status(403).json({ error: 'Invalid or expired token' });
-    } else {
-      res.status(500).json({ error: 'Authentication error' });
-    }
-  }
-}
-
-export function protectedRouteHandler(
-  req: Request,
-  res: Response
-): void {
-  if (!req.authenticatedUser) {
-    res.status(401).json({ error: 'User not authenticated' });
-    return;
+  if (!authHeader) {
+    return null;
   }
 
-  res.json({
-    message: 'Access granted',
-    user: req.authenticatedUser,
-  });
-}
-
-export async function generateAuthTokenWithAI(
-  username: string
-): Promise<string> {
-  const client = new Anthropic();
-
-  const message = await client.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
-    max_tokens: 100,
-    messages: [
-      {
-        role: 'user',
-        content: `Generate a unique numeric user ID for the username "${username}". Return only a 6-digit number.`,
-      },
-    ],
-  });
-
-  const content = message.content[0];
-  if (content.type !== 'text') {
-    throw new Error('Unexpected response type from Claude');
+  const parts = authHeader.split(" ");
+  if (parts.length !== 2 || parts[0].toLowerCase() !== "bearer") {
+    return null;
   }
 
-  const userId = content.text.trim().replace(/\D/g, '').slice(0, 6);
-
-  if (!userId || userId.length !== 6) {
-    throw new Error('Failed to generate valid user ID');
-  }
-
-  return createJWTToken({
-    userId,
-    username,
-  });
+  return parts[1];
 }
 
-const app = express();
-app.use(express.json());
+function createAuthenticator(config: JwtConfig) {
+  validateConfig(config);
 
-app.post('/login', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { username } = req.body as {
+  const finalConfig: JwtConfig = {
+    ...defaultConfig,
+    ...config,
+  } as JwtConfig;
+
+  return function protectRoute(
+    request: ValidatedRequest,
+    response: Response,
+    next: NextFunction
+  ): void {
+    try {
+      const token = extractTokenFromRequest(request);
+
+      if (!token) {
+        response.status(401).json({
+          error: "Unauthorized",
+          message: "Missing authentication token",
+        });
+        return;
+      }
+
+      const decoded = jwt.verify(token, finalConfig.publicKey, {
+        algorithms: finalConfig.allowedAlgorithms,
+        audience: finalConfig.expectedAudience,
+        issuer: finalConfig.expectedIssuer,
+        clockTolerance: finalConfig.clockTolerance,
+      }) as TokenPayload;
+
+      if (!decoded.sub) {
+        throw new Error("Token must contain a subject (sub) claim");
+      }
+
+      request.jwtPayload = decoded;
+      next();
+    } catch (error) {
+      let statusCode = 401;
+      let errorMessage = "Invalid token";
+
+      if (error instanceof jwt.TokenExpiredError) {
+        statusCode = 401;
+        errorMessage = "Token has expired";
+      } else if (error instanceof jwt.JsonWebTokenError) {
+        statusCode = 401;
+        errorMessage = "Malformed token";
+      } else if (
+        error instanceof Error &&
+        error.message.includes("audience")
+      ) {
+        statusCode = 403;
+        errorMessage = "Token audience mismatch";
+      } else if (error instanceof Error && error.message.includes("issuer")) {
+        statusCode = 403;
+        errorMessage = "Token issuer

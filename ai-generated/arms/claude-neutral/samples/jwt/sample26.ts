@@ -2,121 +2,112 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-export interface AuthenticatedRequest extends Request {
-  userId?: string;
-  userRole?: string;
+interface AuthTokenPayload {
+  sub: string;
+  aud: string;
+  iss: string;
+  exp: number;
+  iat: number;
 }
 
-export const generateAccessToken = (
-  userId: string,
-  userRole: string = "user"
-): string => {
-  const secret = process.env.JWT_SECRET || "your-secret-key";
-  return jwt.sign({ userId, userRole }, secret, { expiresIn: "1h" });
+interface JwtConfig {
+  secret: string;
+  expectedAudience: string;
+  expectedIssuer: string;
+  allowedAlgorithms: jwt.Algorithm[];
+  maxTokenAge: number;
+}
+
+const defaultConfig: JwtConfig = {
+  secret: process.env.JWT_SECRET || "",
+  expectedAudience: process.env.JWT_AUDIENCE || "api-client",
+  expectedIssuer: process.env.JWT_ISSUER || "auth-server",
+  allowedAlgorithms: ["HS256", "HS512"],
+  maxTokenAge: 3600,
 };
 
-export const generateRefreshToken = (userId: string): string => {
-  const secret = process.env.REFRESH_SECRET || "your-refresh-secret";
-  return jwt.sign({ userId }, secret, { expiresIn: "7d" });
-};
+export class JwtAuthenticator {
+  private config: JwtConfig;
 
-export const validateAccessToken = (token: string): { userId: string; userRole: string } | null => {
-  try {
-    const secret = process.env.JWT_SECRET || "your-secret-key";
-    const decoded = jwt.verify(token, secret) as {
-      userId: string;
-      userRole: string;
+  constructor(customConfig?: Partial<JwtConfig>) {
+    this.config = { ...defaultConfig, ...customConfig };
+    this.validateConfiguration();
+  }
+
+  private validateConfiguration(): void {
+    if (!this.config.secret || this.config.secret.length < 32) {
+      throw new Error("JWT secret must be at least 32 characters long");
+    }
+    if (!this.config.expectedAudience) {
+      throw new Error("Expected audience must be configured");
+    }
+    if (!this.config.expectedIssuer) {
+      throw new Error("Expected issuer must be configured");
+    }
+    if (this.config.allowedAlgorithms.length === 0) {
+      throw new Error("At least one algorithm must be allowed");
+    }
+  }
+
+  private extractTokenFromHeader(
+    authHeader: string | undefined
+  ): string | null {
+    if (!authHeader) {
+      return null;
+    }
+
+    const parts = authHeader.split(" ");
+    if (parts.length !== 2 || parts[0].toLowerCase() !== "bearer") {
+      return null;
+    }
+
+    return parts[1];
+  }
+
+  public verifyToken(token: string): AuthTokenPayload | null {
+    try {
+      const decoded = jwt.verify(token, this.config.secret, {
+        algorithms: this.config.allowedAlgorithms,
+        audience: this.config.expectedAudience,
+        issuer: this.config.expectedIssuer,
+        maxAge: `${this.config.maxTokenAge}s`,
+      }) as jwt.JwtPayload;
+
+      return {
+        sub: decoded.sub || "",
+        aud: decoded.aud as string,
+        iss: decoded.iss as string,
+        exp: decoded.exp || 0,
+        iat: decoded.iat || 0,
+      };
+    } catch (error) {
+      return null;
+    }
+  }
+
+  public middleware() {
+    return (req: Request, res: Response, next: NextFunction): void => {
+      const authHeader = req.headers.authorization;
+      const token = this.extractTokenFromHeader(authHeader);
+
+      if (!token) {
+        res.status(401).json({ error: "Missing authorization token" });
+        return;
+      }
+
+      const payload = this.verifyToken(token);
+
+      if (!payload) {
+        res.status(401).json({ error: "Invalid or expired token" });
+        return;
+      }
+
+      (req as any).user = payload;
+      next();
     };
-    return decoded;
-  } catch {
-    return null;
   }
-};
+}
 
-export const validateRefreshToken = (token: string): { userId: string } | null => {
-  try {
-    const secret = process.env.REFRESH_SECRET || "your-refresh-secret";
-    const decoded = jwt.verify(token, secret) as { userId: string };
-    return decoded;
-  } catch {
-    return null;
-  }
-};
-
-export const protectRoute = (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid authorization header" });
-    return;
-  }
-
-  const token = authHeader.substring(7);
-  const decoded = validateAccessToken(token);
-
-  if (!decoded) {
-    res.status(403).json({ error: "Invalid or expired token" });
-    return;
-  }
-
-  req.userId = decoded.userId;
-  req.userRole = decoded.userRole;
-  next();
-};
-
-export const requireAdmin = (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): void => {
-  if (req.userRole !== "admin") {
-    res.status(403).json({ error: "Admin access required" });
-    return;
-  }
-  next();
-};
-
-export const refreshAccessTokenHandler = (
-  req: Request,
-  res: Response
-): void => {
-  const { refreshToken } = req.body;
-
-  if (!refreshToken) {
-    res.status(400).json({ error: "Refresh token required" });
-    return;
-  }
-
-  const decoded = validateRefreshToken(refreshToken);
-
-  if (!decoded) {
-    res.status(403).json({ error: "Invalid or expired refresh token" });
-    return;
-  }
-
-  const newAccessToken = generateAccessToken(decoded.userId);
-  res.json({ accessToken: newAccessToken });
-};
-
-export const authenticateUser = (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    next();
-    return;
-  }
-
-  const token = authHeader.substring(7);
-  const decoded = validateAccessToken(token);
-
-  if (decoded) {
-    req.userId = decoded.userId;
-    req.userRole = decoded.user
+export function createJwtMiddleware(
+  config?: Partial<JwtConfig>
+): (req: Request, res: Response, next: Next

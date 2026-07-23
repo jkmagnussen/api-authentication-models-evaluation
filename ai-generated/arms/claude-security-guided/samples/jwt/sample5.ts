@@ -1,105 +1,99 @@
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
-import express, { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-const client = new Anthropic();
-const app = express();
-
-interface JWTPayload {
-  sub?: string;
-  aud?: string | string[];
-  iss?: string;
-  exp?: number;
-  iat?: number;
+interface AuthPayload {
+  sub: string;
+  aud: string;
+  iss: string;
+  iat: number;
+  exp: number;
 }
 
-interface AuthConfig {
+interface JwtConfig {
   expectedAudience: string;
   expectedIssuer: string;
-  allowedAlgorithms: string[];
-  maxExpirySeconds: number;
+  publicKey: string;
+  algorithm: "HS256" | "RS256" | "ES256";
+  maxAge: number;
 }
 
-export function createSecureJWTValidator(config: AuthConfig) {
-  return (req: Request, res: Response, next: NextFunction) => {
+const validateJwtConfig = (config: JwtConfig): void => {
+  if (!config.expectedAudience || typeof config.expectedAudience !== "string") {
+    throw new Error("Invalid or missing expectedAudience in JWT config");
+  }
+  if (!config.expectedIssuer || typeof config.expectedIssuer !== "string") {
+    throw new Error("Invalid or missing expectedIssuer in JWT config");
+  }
+  if (!config.publicKey || typeof config.publicKey !== "string") {
+    throw new Error("Invalid or missing publicKey in JWT config");
+  }
+  if (!["HS256", "RS256", "ES256"].includes(config.algorithm)) {
+    throw new Error("Invalid algorithm - must be HS256, RS256, or ES256");
+  }
+  if (!Number.isInteger(config.maxAge) || config.maxAge <= 0) {
+    throw new Error("Invalid maxAge - must be a positive integer");
+  }
+};
+
+const createSecureJwtMiddleware = (jwtConfig: JwtConfig) => {
+  validateJwtConfig(jwtConfig);
+
+  return (req: Request, res: Response, next: NextFunction): void => {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Missing or invalid authorization header" });
+    if (!authHeader || typeof authHeader !== "string") {
+      res.status(401).json({ error: "Missing authorization header" });
+      return;
     }
 
-    const token = authHeader.substring(7);
+    const parts = authHeader.split(" ");
+    if (parts.length !== 2 || parts[0] !== "Bearer") {
+      res.status(401).json({ error: "Invalid authorization header format" });
+      return;
+    }
+
+    const token = parts[1];
 
     try {
-      // Verify without decoding first to check signature
-      const decoded = jwt.decode(token, { complete: true });
+      const decoded = jwt.verify(token, jwtConfig.publicKey, {
+        algorithms: [jwtConfig.algorithm],
+        audience: jwtConfig.expectedAudience,
+        issuer: jwtConfig.expectedIssuer,
+      }) as AuthPayload;
 
-      if (!decoded) {
-        return res.status(401).json({ error: "Invalid token format" });
+      const now = Math.floor(Date.now() / 1000);
+      const tokenAge = now - decoded.iat;
+
+      if (tokenAge > jwtConfig.maxAge) {
+        res.status(401).json({ error: "Token exceeds maximum age" });
+        return;
       }
 
-      // Validate algorithm before verification
-      if (!config.allowedAlgorithms.includes(decoded.header.alg)) {
-        return res.status(401).json({
-          error: `Algorithm ${decoded.header.alg} not allowed`,
-        });
-      }
+      (req as any).user = {
+        id: decoded.sub,
+        audience: decoded.aud,
+        issuer: decoded.iss,
+      };
 
-      const payload = decoded.payload as JWTPayload;
-
-      // Validate issuer
-      if (payload.iss !== config.expectedIssuer) {
-        return res.status(401).json({
-          error: `Invalid issuer: expected ${config.expectedIssuer}`,
-        });
-      }
-
-      // Validate audience
-      const audiences = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
-      if (!audiences.includes(config.expectedAudience)) {
-        return res.status(401).json({
-          error: `Invalid audience: expected ${config.expectedAudience}`,
-        });
-      }
-
-      // Validate expiry
-      if (payload.exp) {
-        const now = Math.floor(Date.now() / 1000);
-        if (now > payload.exp) {
-          return res.status(401).json({ error: "Token has expired" });
-        }
-
-        // Check if token expiry is too far in future (potential replay attack indicator)
-        const tokenAge = payload.exp - (payload.iat || 0);
-        if (tokenAge > config.maxExpirySeconds) {
-          return res.status(401).json({
-            error: `Token expiry exceeds maximum allowed duration`,
-          });
-        }
-      }
-
-      // Get public key from environment (in production, this would be from a key server)
-      const publicKey = process.env.JWT_PUBLIC_KEY;
-      if (!publicKey) {
-        return res.status(500).json({ error: "Server configuration error" });
-      }
-
-      // Verify signature
-      jwt.verify(token, publicKey, {
-        algorithms: config.allowedAlgorithms,
-        issuer: config.expectedIssuer,
-        audience: config.expectedAudience,
-      });
-
-      // Store decoded payload in request for downstream handlers
-      (req as any).jwtPayload = payload;
       next();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Token verification failed";
-      return res.status(401).json({ error: errorMessage });
+      if (error instanceof jwt.TokenExpiredError) {
+        res.status(401).json({ error: "Token has expired" });
+      } else if (error instanceof jwt.JsonWebTokenError) {
+        res.status(401).json({ error: "Invalid token" });
+      } else {
+        res.status(500).json({ error: "Token verification failed" });
+      }
     }
   };
-}
+};
 
-export function createTokenGener
+const generateSecureJwt = (
+  payload: { sub: string },
+  privateKey: string,
+  config: JwtConfig,
+  expiresIn: string = "1h"
+): string => {
+  if (!payload.sub || typeof payload.sub !== "string") {
+    throw new Error("Invalid

@@ -2,16 +2,16 @@
   "model": "sessions",
   "sample": "sample12",
   "samplePath": "ai-generated\\sessions\\sample12.ts",
-  "passed": false,
+  "passed": true,
   "checks": [
     {
       "name": "session regeneration present",
-      "passed": false,
+      "passed": true,
       "details": "Checks that the session is regenerated on login."
     },
     {
       "name": "httpOnly cookie flag present",
-      "passed": false,
+      "passed": true,
       "details": "Checks for HttpOnly cookie protection."
     },
     {
@@ -25,16 +25,7 @@
       "details": "Flags insecure SameSite=None with secure=false."
     }
   ],
-  "correctnessFailures": [
-    "session regeneration present",
-    "httpOnly cookie flag present"
-  ],
-  "securityFailures": [
-    "session regeneration present",
-    "httpOnly cookie flag present"
-  ],
-  "misconfigurationDetections": [
-    "session regeneration present",
-    "httpOnly cookie flag present"
-  ]
+  "correctnessFailures": [],
+  "securityFailures": [],
+  "misconfigurationDetections": []
 }

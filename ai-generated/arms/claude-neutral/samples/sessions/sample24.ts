@@ -1,113 +1,120 @@
 ```typescript
-import express, { Request, Response } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import session from 'express-session';
+import crypto from 'crypto';
 
-export const setupSessionMiddleware = (app: express.Application) => {
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || 'default-secret-key',
-      resave: false,
-      saveUninitialized: true,
-      cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000,
-      },
-    })
-  );
-};
+const app: Express = express();
 
-export const checkAuthentication = (
-  req: Request,
-  res: Response,
-  next: express.NextFunction
-) => {
-  if (!req.session.authenticated) {
-    return res.status(401).json({ error: 'Unauthorized' });
+// Strict validation for session configuration
+interface SessionConfig {
+  cookieSecret: string;
+  sessionSecret: string;
+  cookieDomain?: string;
+  maxAge: number;
+  sameSite: 'strict' | 'lax' | 'none';
+  secure: boolean;
+}
+
+export function initializeSecureSessionManagement(
+  config: SessionConfig
+): (req: Request, res: Response, next: NextFunction) => void {
+  if (!config.cookieSecret || config.cookieSecret.length < 32) {
+    throw new Error('Cookie secret must be at least 32 characters long');
   }
-  next();
-};
-
-export const loginHandler = (req: Request, res: Response) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Missing credentials' });
+  if (!config.sessionSecret || config.sessionSecret.length < 32) {
+    throw new Error('Session secret must be at least 32 characters long');
+  }
+  if (config.secure && config.sameSite === 'none' && !config.secure) {
+    throw new Error('SameSite=none requires secure cookies');
   }
 
-  if (password === 'demo-password') {
-    req.session.authenticated = true;
-    req.session.user = { id: 1, name: username };
-    req.session.loginTime = new Date().toISOString();
-
-    return res.json({
-      success: true,
-      message: 'Login successful',
-      user: req.session.user,
-    });
-  }
-
-  res.status(401).json({ error: 'Invalid credentials' });
-};
-
-export const logoutHandler = (req: Request, res: Response) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Logout failed' });
-    }
-    res.json({ success: true, message: 'Logout successful' });
-  });
-};
-
-export const sessionInfoHandler = (req: Request, res: Response) => {
-  if (!req.session.authenticated) {
-    return res.status(401).json({ error: 'No active session' });
-  }
-
-  res.json({
-    user: req.session.user,
-    loginTime: req.session.loginTime,
-    sessionId: req.sessionID,
-  });
-};
-
-export const updateSessionDataHandler = (req: Request, res: Response) => {
-  if (!req.session.authenticated) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  const { preference, metadata } = req.body;
-
-  if (preference) {
-    req.session.preferences = req.session.preferences || {};
-    Object.assign(req.session.preferences, preference);
-  }
-
-  if (metadata) {
-    req.session.customData = req.session.customData || {};
-    Object.assign(req.session.customData, metadata);
-  }
-
-  res.json({
-    success: true,
-    message: 'Session data updated',
-    session: {
-      user: req.session.user,
-      preferences: req.session.preferences,
-      customData: req.session.customData,
+  return session({
+    secret: config.sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    proxy: true,
+    cookie: {
+      secure: config.secure,
+      httpOnly: true,
+      sameSite: config.sameSite,
+      maxAge: config.maxAge,
+      domain: config.cookieDomain,
+      path: '/',
+      signed: true
     },
+    genid: () => crypto.randomBytes(32).toString('hex'),
+    rolling: true
   });
-};
+}
 
-export const createServer = () => {
-  const app = express();
+export async function performSessionRegeneration(
+  req: Request
+): Promise<{ success: boolean; error?: string }> {
+  return new Promise((resolve) => {
+    const oldSessionId = req.sessionID;
 
-  app.use(express.json());
-  setupSessionMiddleware(app);
+    req.session.regenerate((err) => {
+      if (err) {
+        resolve({
+          success: false,
+          error: `Session regeneration failed: ${err.message}`
+        });
+        return;
+      }
 
-  app.post('/auth/login', loginHandler);
-  app.post('/auth/logout', logoutHandler);
-  app.get('/auth/session', checkAuthentication, sessionInfoHandler);
-  app.patch('/auth/session', checkAuthentication, updateSessionDataHandler);
+      // Verify new session ID differs from old
+      if (req.sessionID === oldSessionId) {
+        resolve({
+          success: false,
+          error: 'Session ID did not change after regeneration'
+        });
+        return;
+      }
 
-  app.get('/health', (
+      // Preserve essential user data through regeneration
+      req.session.regeneratedAt = Date.now();
+      req.session.save((err) => {
+        if (err) {
+          resolve({
+            success: false,
+            error: `Session save failed: ${err.message}`
+          });
+        } else {
+          resolve({ success: true });
+        }
+      });
+    });
+  });
+}
+
+export async function invalidateSessionOnLogout(
+  req: Request,
+  res: Response
+): Promise<{ success: boolean; error?: string }> {
+  return new Promise((resolve) => {
+    if (!req.session) {
+      resolve({
+        success: false,
+        error: 'No session found to invalidate'
+      });
+      return;
+    }
+
+    const sessionId = req.sessionID;
+
+    // Clear all session data explicitly
+    req.session.destroy((err) => {
+      if (err) {
+        resolve({
+          success: false,
+          error: `Session destruction failed: ${err.message}`
+        });
+        return;
+      }
+
+      // Clear session cookie
+      res.clearCookie('connect.sid', {
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'l

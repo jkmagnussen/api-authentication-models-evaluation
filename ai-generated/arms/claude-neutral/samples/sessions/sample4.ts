@@ -1,124 +1,117 @@
 ```typescript
-import express, { Request, Response, NextFunction } from "express";
-import session from "express-session";
-import { randomBytes } from "crypto";
+import express, { Request, Response } from 'express';
+import session from 'express-session';
+import crypto from 'crypto';
 
-declare global {
-  namespace Express {
-    interface Request {
-      session: session.Session & Partial<SessionData>;
-    }
-  }
-}
+const createSessionManager = () => {
+  const sessionStore = new Map<string, SessionData>();
 
-interface SessionData {
-  userId: string;
-  username: string;
-  loginTime: number;
-  lastActivity: number;
-  roles: string[];
-}
-
-const app = express();
-
-const generateSessionSecret = (): string => {
-  return randomBytes(32).toString("hex");
-};
-
-const sessionConfig = {
-  secret: generateSessionSecret(),
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: false,
-    httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24,
-    sameSite: "lax" as const,
-  },
-};
-
-app.use(session(sessionConfig));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-export const requireAuth = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "Unauthorized - please log in" });
-    return;
+  interface SessionData {
+    userId?: string;
+    username?: string;
+    loginTime?: number;
+    activityLog?: string[];
+    preferences?: {
+      theme?: string;
+      language?: string;
+    };
   }
 
-  req.session.lastActivity = Date.now();
-  next();
+  const generateSessionId = (): string => {
+    return crypto.randomBytes(32).toString('hex');
+  };
+
+  const initializeSession = (sessionId: string): SessionData => {
+    const sessionData: SessionData = {
+      activityLog: [],
+      preferences: {
+        theme: 'light',
+        language: 'en'
+      }
+    };
+    sessionStore.set(sessionId, sessionData);
+    return sessionData;
+  };
+
+  const getSession = (sessionId: string): SessionData | undefined => {
+    return sessionStore.get(sessionId);
+  };
+
+  const updateSession = (sessionId: string, updates: Partial<SessionData>): SessionData | undefined => {
+    const existing = sessionStore.get(sessionId);
+    if (!existing) return undefined;
+
+    const merged = { ...existing, ...updates };
+    sessionStore.set(sessionId, merged);
+    return merged;
+  };
+
+  const destroySession = (sessionId: string): boolean => {
+    return sessionStore.delete(sessionId);
+  };
+
+  const logActivity = (sessionId: string, action: string): void => {
+    const sess = sessionStore.get(sessionId);
+    if (sess && sess.activityLog) {
+      sess.activityLog.push(`${new Date().toISOString()}: ${action}`);
+      if (sess.activityLog.length > 100) {
+        sess.activityLog.shift();
+      }
+    }
+  };
+
+  const validateSession = (sessionId: string): boolean => {
+    return sessionStore.has(sessionId);
+  };
+
+  return {
+    generateSessionId,
+    initializeSession,
+    getSession,
+    updateSession,
+    destroySession,
+    logActivity,
+    validateSession
+  };
 };
 
-export const requireRole =
-  (requiredRoles: string[]) =>
-  (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.session.userId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
+export const setupAuthMiddleware = (app: express.Express) => {
+  const sessionManager = createSessionManager();
+
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'development-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: 'lax'
+    }
+  }));
+
+  app.use((req: Request, res: Response, next: express.NextFunction) => {
+    if (!req.sessionID) {
+      req.sessionID = sessionManager.generateSessionId();
     }
 
-    const userRoles = req.session.roles || [];
-    const hasRequiredRole = requiredRoles.some((role) =>
-      userRoles.includes(role)
-    );
-
-    if (!hasRequiredRole) {
-      res.status(403).json({ error: "Forbidden - insufficient permissions" });
-      return;
+    if (!sessionManager.validateSession(req.sessionID)) {
+      sessionManager.initializeSession(req.sessionID);
     }
 
     next();
-  };
-
-export const handleLogin = (req: Request, res: Response): void => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    res.status(400).json({ error: "Username and password required" });
-    return;
-  }
-
-  if (password === "correctPassword") {
-    req.session.userId = `user_${Date.now()}`;
-    req.session.username = username;
-    req.session.loginTime = Date.now();
-    req.session.lastActivity = Date.now();
-    req.session.roles = ["user"];
-
-    if (username === "admin") {
-      req.session.roles = ["admin", "user"];
-    }
-
-    res.json({
-      success: true,
-      message: "Login successful",
-      user: {
-        id: req.session.userId,
-        username: req.session.username,
-        roles: req.session.roles,
-      },
-    });
-  } else {
-    res.status(401).json({ error: "Invalid credentials" });
-  }
-};
-
-export const handleLogout = (req: Request, res: Response): void => {
-  req.session.destroy((err) => {
-    if (err) {
-      res.status(500).json({ error: "Logout failed" });
-      return;
-    }
-    res.json({ success: true, message: "Logged out successfully" });
   });
+
+  return sessionManager;
 };
 
-export const getSessionInfo = (req: Request, res: Response): void => {
-  if (!req.session.userId) {
-    res.status(401).json
+export const createLoginHandler = (sessionManager: ReturnType<typeof createSessionManager>) => {
+  return (req: Request, res: Response) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Missing credentials' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Invalid password' });

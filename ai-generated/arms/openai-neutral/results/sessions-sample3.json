@@ -1,15 +1,15 @@
 {
   "model": "sessions",
   "sample": "sample3",
-  "characters": 1065,
-  "lines": 43,
+  "characters": 996,
+  "lines": 42,
   "functions": 4,
   "classes": 0,
   "cyclomaticComplexity": 1,
   "halstead": {
     "operators": {
-      "distinct": 9,
-      "total": 45,
+      "distinct": 8,
+      "total": 41,
       "identifiers": [
         "()",
         "{}",
@@ -18,13 +18,12 @@
         "=",
         "void (prefix)",
         "const",
-        "*",
-        "==="
+        "*"
       ]
     },
     "operands": {
-      "distinct": 36,
-      "total": 60,
+      "distinct": 33,
+      "total": 55,
       "identifiers": [
         "\"use strict\"",
         "exports",
@@ -44,7 +43,7 @@
         "default",
         "sessionConfig",
         "secret",
-        "\"s3cureS3cretKey\"",
+        "\"mySuperSecureSecret\"",
         "resave",
         false,
         "saveUninitialized",
@@ -53,24 +52,21 @@
         1000,
         60,
         30,
-        "httpOnly",
         "secure",
-        "\"env\"",
-        "get",
-        "\"production\"",
         "use",
+        "\"/\"",
+        "get",
         "\"/login\"",
-        "\"/logout\"",
-        "\"/dashboard\""
+        "\"/logout\""
       ]
     },
-    "length": 105,
-    "vocabulary": 45,
-    "difficulty": 7.5,
-    "volume": 576.6445751146158,
-    "effort": 4324.834313359618,
-    "bugs": 0.1922148583715386,
-    "time": 240.26857296442324
+    "length": 96,
+    "vocabulary": 41,
+    "difficulty": 6.666666666666667,
+    "volume": 514.324992443336,
+    "effort": 3428.8332829555734,
+    "bugs": 0.17144166414777867,
+    "time": 190.4907379419763
   },
-  "maintainabilityIndex": 93.83645561365365
+  "maintainabilityIndex": 95.46137290358972
 }

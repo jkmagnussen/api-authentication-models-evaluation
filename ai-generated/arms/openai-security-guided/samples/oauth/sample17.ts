@@ -1,42 +1,112 @@
-import express, { Request, Response } from 'express';
-import { query, validationResult } from 'express-validator';
-import crypto from 'crypto';
+```typescript
+import express, { Router, Request, Response } from "express";
+import crypto from "crypto";
 
-export const oauthRouter = express.Router();
+const authRouter = Router();
 
-const VALID_REDIRECT_URIS = new Set([
-  'https://yourapp.com/callback',
-  'https://yourapp.com/another-callback'
-]);
+interface OAuthConfig {
+  clientId: string;
+  clientSecret: string;
+  redirectUris: Set<string>;
+  allowedScopes: Set<string>;
+  tokenExpiryMs: number;
+}
 
-const VALID_SCOPES = new Set(['read', 'write', 'admin']);
+interface AuthorizationRequest {
+  clientId: string;
+  redirectUri: string;
+  scopes: string[];
+  state: string;
+  codeChallenge?: string;
+  codeChallengeMethod?: string;
+}
 
-oauthRouter.get('/authorize',
-  query('response_type').equals('code'),
-  query('client_id').isString(),
-  query('redirect_uri').isString().custom((uri) => VALID_REDIRECT_URIS.has(uri)),
-  query('scope').isString().custom((scope) => {
-    const scopes = scope.split(' ');
-    return scopes.every(s => VALID_SCOPES.has(s));
-  }),
-  query('state').optional().isString(),
-  (req: Request, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+const stateStore = new Map<string, AuthorizationRequest>();
+const oauthConfig: OAuthConfig = {
+  clientId: process.env.OAUTH_CLIENT_ID || "default-client",
+  clientSecret: process.env.OAUTH_CLIENT_SECRET || "default-secret",
+  redirectUris: new Set([
+    "http://localhost:3001/callback",
+    "https://app.example.com/oauth/callback",
+  ]),
+  allowedScopes: new Set(["read", "write", "profile", "email"]),
+  tokenExpiryMs: 3600000,
+};
 
-    const { client_id, redirect_uri, scope, state } = req.query;
-    const code = crypto.randomBytes(20).toString('hex');
-
-    let redirectUrl = new URL(redirect_uri as string);
-    redirectUrl.searchParams.append('code', code);
-    if (state) {
-      redirectUrl.searchParams.append('state', state as string);
-    }
-
-    // Here you would save the authorization code and related data in your database
-
-    res.redirect(redirectUrl.toString());
+function validateRedirectUri(uri: string): boolean {
+  try {
+    const parsed = new URL(uri);
+    if (parsed.hash) return false;
+    return oauthConfig.redirectUris.has(uri);
+  } catch {
+    return false;
   }
-);
+}
+
+function validateScopes(scopes: string[]): boolean {
+  if (!Array.isArray(scopes) || scopes.length === 0) return false;
+  return scopes.every((scope) => oauthConfig.allowedScopes.has(scope));
+}
+
+function generateAuthorizationCode(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function generateStateToken(): string {
+  return crypto.randomBytes(24).toString("hex");
+}
+
+function validateCodeChallenge(
+  challenge: string,
+  method: string
+): {
+  valid: boolean;
+  error?: string;
+} {
+  if (!challenge) {
+    return { valid: true };
+  }
+
+  const validMethods = ["S256", "plain"];
+  if (!validMethods.includes(method)) {
+    return { valid: false, error: "Invalid code_challenge_method" };
+  }
+
+  if (method === "S256" && challenge.length !== 43) {
+    return { valid: false, error: "Invalid S256 code_challenge length" };
+  }
+
+  if (method === "plain" && challenge.length > 128) {
+    return { valid: false, error: "Invalid plain code_challenge length" };
+  }
+
+  return { valid: true };
+}
+
+export const authorizeEndpoint = (req: Request, res: Response): void => {
+  const {
+    client_id,
+    redirect_uri,
+    scope,
+    state,
+    response_type,
+    code_challenge,
+    code_challenge_method,
+  } = req.query;
+
+  const errors: string[] = [];
+
+  if (!client_id || typeof client_id !== "string") {
+    errors.push("Missing or invalid client_id");
+  } else if (client_id !== oauthConfig.clientId) {
+    errors.push("Invalid client_id");
+  }
+
+  if (!response_type || response_type !== "code") {
+    errors.push("Invalid or missing response_type");
+  }
+
+  if (!redirect_uri || typeof redirect_uri !== "string") {
+    errors.push("Missing redirect_uri");
+  } else if (!validateRedirectUri(redirect_uri)) {
+    errors.push("Invalid redirect_

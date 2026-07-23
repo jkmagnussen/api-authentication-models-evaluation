@@ -2,11 +2,11 @@
   "model": "sessions",
   "sample": "sample18",
   "samplePath": "ai-generated\\sessions\\sample18.ts",
-  "passed": false,
+  "passed": true,
   "checks": [
     {
       "name": "session regeneration present",
-      "passed": false,
+      "passed": true,
       "details": "Checks that the session is regenerated on login."
     },
     {
@@ -25,13 +25,7 @@
       "details": "Flags insecure SameSite=None with secure=false."
     }
   ],
-  "correctnessFailures": [
-    "session regeneration present"
-  ],
-  "securityFailures": [
-    "session regeneration present"
-  ],
-  "misconfigurationDetections": [
-    "session regeneration present"
-  ]
+  "correctnessFailures": [],
+  "securityFailures": [],
+  "misconfigurationDetections": []
 }

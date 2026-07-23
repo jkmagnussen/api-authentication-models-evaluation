@@ -1,105 +1,102 @@
 ```typescript
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Router, Request, Response } from 'express';
 import crypto from 'crypto';
+import { URL } from 'url';
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const ALLOWED_SCOPES = new Set(['read', 'write', 'delete', 'admin']);
+const ALLOWED_REDIRECT_DOMAINS = new Set([
+  'localhost:3001',
+  'localhost:3000',
+  'app.example.com',
+  'admin.example.com'
+]);
 
-interface OAuthClient {
-  clientId: string;
-  clientSecret: string;
-  redirectUris: string[];
-  allowedScopes: string[];
-  grantTypes: string[];
+const STATE_STORE = new Map<string, { expiresAt: number; nonce: string }>();
+const STATE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+
+function validateRedirectUri(redirectUri: string): boolean {
+  try {
+    const url = new URL(redirectUri);
+    
+    if (!url.protocol.match(/^https?:$/)) {
+      return false;
+    }
+
+    if (url.protocol === 'http:' && url.hostname !== 'localhost' && !url.hostname.startsWith('127.')) {
+      return false;
+    }
+
+    return ALLOWED_REDIRECT_DOMAINS.has(url.host);
+  } catch {
+    return false;
+  }
 }
 
-interface AuthorizationSession {
-  sessionId: string;
-  clientId: string;
-  requestedScopes: string[];
-  redirectUri: string;
-  userId: string | null;
-  approved: boolean;
-  expiresAt: number;
-  codeChallenge?: string;
-  codeChallengeMethod?: string;
+function parseScopeParam(scopeParam: string | undefined): Set<string> {
+  if (!scopeParam || typeof scopeParam !== 'string') {
+    return new Set();
+  }
+
+  return new Set(
+    scopeParam
+      .split(/\s+/)
+      .filter(scope => ALLOWED_SCOPES.has(scope))
+  );
 }
 
-const registeredClients: Map<string, OAuthClient> = new Map();
-const authorizationSessions: Map<string, AuthorizationSession> = new Map();
-const issuedAuthorizationCodes: Map<string, AuthorizationSession> = new Map();
-
-// Sample client registration
-registeredClients.set('sample_client_001', {
-  clientId: 'sample_client_001',
-  clientSecret: 'very_secure_secret_key_12345',
-  redirectUris: ['http://localhost:3001/callback', 'http://localhost:3001/oauth/callback'],
-  allowedScopes: ['profile', 'email', 'openid', 'offline_access'],
-  grantTypes: ['authorization_code', 'refresh_token'],
-});
-
-export function validateClientCredentials(
-  clientId: string,
-  clientSecret: string
-): boolean {
-  const client = registeredClients.get(clientId);
-  return client ? client.clientSecret === clientSecret : false;
-}
-
-export function verifyRedirectUri(clientId: string, redirectUri: string): boolean {
-  const client = registeredClients.get(clientId);
-  return client ? client.redirectUris.includes(redirectUri) : false;
-}
-
-export function validateRequestedScopes(clientId: string, scopes: string[]): boolean {
-  const client = registeredClients.get(clientId);
-  if (!client) return false;
-  return scopes.every((scope) => client.allowedScopes.includes(scope));
-}
-
-export function generateAuthorizationCode(): string {
-  return crypto.randomBytes(32).toString('hex');
-}
-
-export function generateSessionId(): string {
-  return 'session_' + crypto.randomBytes(16).toString('hex');
-}
-
-export function initializeAuthorizationFlow(
-  clientId: string,
-  redirectUri: string,
-  requestedScopes: string[],
-  codeChallenge?: string,
-  codeChallengeMethod?: string
-): string | null {
-  if (!verifyRedirectUri(clientId, redirectUri)) {
+function sanitizeState(state: string | undefined): string | null {
+  if (!state || typeof state !== 'string') {
     return null;
   }
 
-  if (!validateRequestedScopes(clientId, requestedScopes)) {
+  if (state.length > 128 || !/^[a-zA-Z0-9_\-]+$/.test(state)) {
     return null;
   }
 
-  const sessionId = generateSessionId();
-  const session: AuthorizationSession = {
-    sessionId,
+  return state;
+}
+
+function generateAuthorizationCode(clientId: string, userId: string, requestedScopes: Set<string>): string {
+  const payload = {
     clientId,
-    requestedScopes,
-    redirectUri,
-    userId: null,
-    approved: false,
-    expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
-    codeChallenge,
-    codeChallengeMethod,
+    userId,
+    scopes: Array.from(requestedScopes),
+    issuedAt: Date.now(),
+    expiresAt: Date.now() + 10 * 60 * 1000 // 10 minutes
   };
 
-  authorizationSessions.set(sessionId, session);
-  return sessionId;
+  return Buffer.from(JSON.stringify(payload)).toString('base64url');
 }
 
-export function approveAuthorizationSession(
-  sessionId: string,
-  userId: string
-): string | null {
-  const session = authorizationSessions.get(session
+export function createOAuth2AuthorizationRouter(): Router {
+  const router = Router();
+
+  router.get('/oauth2/authorize', (req: Request, res: Response) => {
+    const { client_id, redirect_uri, response_type, scope, state, prompt } = req.query;
+
+    // Validate response_type
+    if (response_type !== 'code') {
+      return res.status(400).json({
+        error: 'unsupported_response_type',
+        error_description: 'Only authorization code flow is supported'
+      });
+    }
+
+    // Validate client_id
+    if (!client_id || typeof client_id !== 'string' || client_id.length === 0) {
+      return res.status(400).json({
+        error: 'invalid_request',
+        error_description: 'Missing or invalid client_id parameter'
+      });
+    }
+
+    // Validate redirect_uri
+    if (!redirect_uri || typeof redirect_uri !== 'string') {
+      return res.status(400).json({
+        error: 'invalid_request',
+        error_description: 'Missing redirect_uri parameter'
+      });
+    }
+
+    if (!validateRedirectUri(redirect_uri)) {
+      return res

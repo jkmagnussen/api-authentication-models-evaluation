@@ -5,112 +5,127 @@ import jwt from "jsonwebtoken";
 
 const client = new Anthropic();
 
-interface AuthTokenPayload {
+// Types for JWT payload
+interface JWTPayload {
   userId: string;
   email: string;
   role: string;
+  iat: number;
+  exp: number;
 }
 
+// Extend Express Request to include decoded token
 declare global {
   namespace Express {
     interface Request {
-      authUser?: AuthTokenPayload;
+      user?: JWTPayload;
+      rawToken?: string;
     }
   }
 }
 
-const SECRET_KEY = process.env.JWT_SECRET || "your-secret-key-change-me";
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
+const TOKEN_EXPIRY = "24h";
 
-export const tokenValidator = (
+export function createTokenizer(userId: string, email: string, role: string) {
+  const payload = {
+    userId,
+    email,
+    role,
+  };
+
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+}
+
+export function validateJWTToken(token: string): JWTPayload | null {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded as JWTPayload;
+  } catch {
+    return null;
+  }
+}
+
+export function extractBearerToken(
+  authHeader: string | undefined
+): string | null {
+  if (!authHeader) return null;
+
+  const parts = authHeader.split(" ");
+  if (parts.length === 2 && parts[0].toLowerCase() === "bearer") {
+    return parts[1];
+  }
+
+  return null;
+}
+
+export function requireAuthMiddleware(
   req: Request,
   res: Response,
   next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
+): void {
+  const token = extractBearerToken(req.get("authorization"));
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid authorization header" });
+  if (!token) {
+    res.status(401).json({ error: "No token provided" });
     return;
   }
 
-  const token = authHeader.substring(7);
+  const decoded = validateJWTToken(token);
 
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY) as AuthTokenPayload;
-    req.authUser = decoded;
-    next();
-  } catch (error) {
-    res.status(403).json({ error: "Invalid or expired token" });
+  if (!decoded) {
+    res.status(401).json({ error: "Invalid or expired token" });
+    return;
   }
-};
 
-export const roleChecker =
-  (allowedRoles: string[]) =>
-  (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.authUser) {
-      res.status(401).json({ error: "Unauthorized" });
+  req.user = decoded;
+  req.rawToken = token;
+  next();
+}
+
+export function roleBasedAccessControl(requiredRoles: string[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({ error: "User not authenticated" });
       return;
     }
 
-    if (!allowedRoles.includes(req.authUser.role)) {
-      res.status(403).json({ error: "Insufficient permissions" });
+    if (!requiredRoles.includes(req.user.role)) {
+      res.status(403).json({
+        error: `Access denied. Required roles: ${requiredRoles.join(", ")}`,
+      });
       return;
     }
 
     next();
   };
+}
 
-export const generateAccessToken = (payload: AuthTokenPayload): string => {
-  return jwt.sign(payload, SECRET_KEY, { expiresIn: "1h" });
-};
-
-export const generateRefreshToken = (payload: AuthTokenPayload): string => {
-  return jwt.sign(payload, SECRET_KEY, { expiresIn: "7d" });
-};
-
-export const authenticateWithClaude = async (
-  username: string,
-  password: string
-): Promise<AuthTokenPayload | null> => {
+async function analyzeWithClaude(userPrompt: string): Promise<string> {
   const message = await client.messages.create({
     model: "claude-3-5-sonnet-20241022",
     max_tokens: 1024,
     messages: [
       {
         role: "user",
-        content: `Validate these credentials for a demo application. Username: ${username}, Password: ${password}. 
-        
-        Respond with JSON only (no markdown). If valid, return:
-        {"valid": true, "userId": "user123", "email": "${username}@example.com", "role": "user"}
-        
-        If invalid, return: {"valid": false}
-        
-        For demo purposes, accept username "demo" with password "demo123" or "admin" with password "admin456".`,
+        content: userPrompt,
       },
     ],
   });
 
   const content = message.content[0];
-  if (content.type !== "text") {
-    return null;
+  if (content.type === "text") {
+    return content.text;
   }
+  return "";
+}
 
-  try {
-    const response = JSON.parse(content.text);
-    if (response.valid) {
-      return {
-        userId: response.userId,
-        email: response.email,
-        role: response.role,
-      };
-    }
-  } catch {
-    return null;
-  }
+async function setupAuthenticationServer() {
+  const app = express();
+  app.use(express.json());
 
-  return null;
-};
-
-export const setupAuthRoutes = (app: express.Application): void => {
+  // Public endpoint to get a token
   app.post("/auth/login", async (req: Request, res: Response) => {
-    const { username, password } = req.body;
+    const { userId, email, role } = req.body;
+
+    if

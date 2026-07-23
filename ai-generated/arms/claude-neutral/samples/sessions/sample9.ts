@@ -3,115 +3,113 @@ import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
 import crypto from 'crypto';
 
+const app = express();
+
+// Strict type definitions for session data
+interface AuthenticatedUser {
+  userId: string;
+  email: string;
+  roles: string[];
+  loginTime: number;
+}
+
 declare global {
   namespace Express {
-    interface SessionData {
-      userId?: string;
-      username?: string;
-      loginTime?: number;
-      permissions?: string[];
-      isAuthenticated?: boolean;
+    interface Request {
+      session: session.Session & Partial<{ user: AuthenticatedUser }>;
     }
   }
 }
 
-const sessionStore = new Map<string, any>();
+// Session store configuration (in production use Redis/MongoDB)
+class InMemorySessionStore extends session.Store {
+  private sessions = new Map<string, any>();
 
-export const initializeSessionMiddleware = (app: express.Application): void => {
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || 'dev-secret-key-12345',
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24,
-        sameSite: 'strict'
-      }
-    })
-  );
-};
-
-export const createUserSession = (
-  req: Request,
-  userId: string,
-  username: string,
-  permissions: string[] = []
-): void => {
-  req.session.userId = userId;
-  req.session.username = username;
-  req.session.loginTime = Date.now();
-  req.session.permissions = permissions;
-  req.session.isAuthenticated = true;
-};
-
-export const validateSession = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  if (!req.session.isAuthenticated) {
-    res.status(401).json({ error: 'Session not authenticated' });
-    return;
-  }
-  next();
-};
-
-export const requirePermission = (requiredPermission: string) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.session.permissions?.includes(requiredPermission)) {
-      res.status(403).json({ error: 'Insufficient permissions' });
-      return;
+  get(sid: string, callback: (err: Error | null, session?: Express.Session | null) => void): void {
+    try {
+      const session = this.sessions.get(sid);
+      callback(null, session || null);
+    } catch (err) {
+      callback(err as Error);
     }
+  }
+
+  set(sid: string, sess: Express.Session, callback?: (err?: Error | null) => void): void {
+    try {
+      this.sessions.set(sid, sess);
+      callback?.();
+    } catch (err) {
+      callback?.(err as Error);
+    }
+  }
+
+  destroy(sid: string, callback?: (err?: Error | null) => void): void {
+    try {
+      this.sessions.delete(sid);
+      callback?.();
+    } catch (err) {
+      callback?.(err as Error);
+    }
+  }
+
+  clear(callback?: (err?: Error | null) => void): void {
+    try {
+      this.sessions.clear();
+      callback?.();
+    } catch (err) {
+      callback?.(err as Error);
+    }
+  }
+}
+
+// Configure secure session middleware
+export const initializeSecureSession = (): express.RequestHandler => {
+  const sessionStore = new InMemorySessionStore();
+
+  return session({
+    store: sessionStore,
+    secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
+    resave: false,
+    saveUninitialized: false,
+    name: 'ssid',
+    genid: (req: Request) => {
+      return crypto.randomUUID();
+    },
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'strict' as const,
+      maxAge: 30 * 60 * 1000, // 30 minutes
+      domain: process.env.COOKIE_DOMAIN,
+      path: '/',
+    },
+  });
+};
+
+// Validate session freshness
+export const validateSessionFreshness = (
+  maxAgeMs: number = 30 * 60 * 1000
+): express.RequestHandler => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.session.user) {
+      return next();
+    }
+
+    const sessionAge = Date.now() - req.session.user.loginTime;
+    if (sessionAge > maxAgeMs) {
+      return req.session.destroy((err) => {
+        if (err) {
+          return res.status(500).json({ error: 'Session validation failed' });
+        }
+        res.clearCookie('ssid', { path: '/', httpOnly: true });
+        res.status(401).json({ error: 'Session expired' });
+      });
+    }
+
     next();
   };
 };
 
-export const destroyUserSession = (req: Request, res: Response): void => {
-  req.session.destroy((err) => {
-    if (err) {
-      res.status(500).json({ error: 'Failed to destroy session' });
-      return;
-    }
-    res.clearCookie('connect.sid');
-    res.json({ message: 'Session terminated successfully' });
-  });
-};
-
-export const getSessionInfo = (req: Request): {
-  userId: string | undefined;
-  username: string | undefined;
-  loginTime: number | undefined;
-  sessionDuration: number;
-} => {
-  return {
-    userId: req.session.userId,
-    username: req.session.username,
-    loginTime: req.session.loginTime,
-    sessionDuration: req.session.loginTime ? Date.now() - req.session.loginTime : 0
-  };
-};
-
-export const refreshSessionTimeout = (req: Request): void => {
-  if (req.session) {
-    req.session.touch();
-  }
-};
-
-export const revokeSessionPermission = (req: Request, permission: string): void => {
-  if (req.session.permissions) {
-    req.session.permissions = req.session.permissions.filter(p => p !== permission);
-  }
-};
-
-export const grantSessionPermission = (req: Request, permission: string): void => {
-  if (!req.session.permissions) {
-    req.session.permissions = [];
-  }
-  if (!req.session.permissions.includes(permission)) {
-    req.session.permissions.push(permission);
-  }
-};
-
-export const setupAuth
+// Regenerate session ID after authentication
+export const regenerateSessionId = (req: Request): Promise<void> => {
+  return new Promise((

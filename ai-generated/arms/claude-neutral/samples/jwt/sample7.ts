@@ -1,122 +1,109 @@
 ```typescript
-import express, { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-
-interface AuthenticatedRequest extends Request {
-  userId?: string;
-  tokenPayload?: jwt.JwtPayload;
-}
+import { Request, Response, NextFunction } from 'express';
+import * as jwt from 'jsonwebtoken';
 
 interface TokenPayload {
-  userId: string;
-  email: string;
-  role: string;
+  sub: string;
+  aud: string;
+  iss: string;
+  iat: number;
+  exp: number;
 }
 
-const SECRET_KEY = process.env.JWT_SECRET || "your-secret-key-change-me";
-const TOKEN_EXPIRY = "24h";
-
-export function generateAccessToken(payload: TokenPayload): string {
-  return jwt.sign(payload, SECRET_KEY, { expiresIn: TOKEN_EXPIRY });
+interface AuthConfig {
+  publicKey: string;
+  expectedAudience: string;
+  expectedIssuer: string;
+  maxAgeSecs: number;
+  allowedAlgorithms: jwt.Algorithm[];
 }
 
-export function decodeToken(token: string): TokenPayload | null {
-  try {
-    return jwt.verify(token, SECRET_KEY) as TokenPayload;
-  } catch (error) {
-    return null;
-  }
+interface AuthenticatedRequest extends Request {
+  user?: TokenPayload;
 }
 
-export function protectRoute(
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): void {
-  const authHeader = req.headers.authorization;
+export function buildAuthGuard(config: AuthConfig) {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    const authHeader = req.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid authorization header" });
-    return;
-  }
-
-  const token = authHeader.substring(7);
-  const decoded = decodeToken(token);
-
-  if (!decoded) {
-    res.status(403).json({ error: "Invalid or expired token" });
-    return;
-  }
-
-  req.userId = decoded.userId;
-  req.tokenPayload = decoded;
-  next();
-}
-
-export function validateUserRole(allowedRoles: string[]) {
-  return (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction
-  ): void => {
-    if (!req.tokenPayload) {
-      res.status(401).json({ error: "No token payload found" });
+    if (!authHeader) {
+      res.status(401).json({ error: 'Missing authorization header' });
       return;
     }
 
-    if (!allowedRoles.includes(req.tokenPayload.role)) {
-      res.status(403).json({
-        error: "Insufficient permissions for this resource",
-      });
+    const parts = authHeader.split(' ');
+    if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
+      res.status(401).json({ error: 'Invalid authorization header format' });
       return;
     }
 
-    next();
-  };
-}
+    const token = parts[1];
 
-export function setupAuthRoutes(app: express.Application): void {
-  app.post("/auth/login", (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    try {
+      const decoded = jwt.verify(token, config.publicKey, {
+        algorithms: config.allowedAlgorithms,
+        audience: config.expectedAudience,
+        issuer: config.expectedIssuer,
+        maxAge: `${config.maxAgeSecs}s`,
+      }) as TokenPayload;
 
-    if (!email || !password) {
-      res.status(400).json({ error: "Email and password are required" });
-      return;
-    }
-
-    // Mock authentication logic
-    if (email === "user@example.com" && password === "password123") {
-      const token = generateAccessToken({
-        userId: "user-123",
-        email: "user@example.com",
-        role: "user",
-      });
-
-      res.json({ token, expiresIn: TOKEN_EXPIRY });
-      return;
-    }
-
-    if (email === "admin@example.com" && password === "admin123") {
-      const token = generateAccessToken({
-        userId: "admin-456",
-        email: "admin@example.com",
-        role: "admin",
-      });
-
-      res.json({ token, expiresIn: TOKEN_EXPIRY });
-      return;
-    }
-
-    res.status(401).json({ error: "Invalid credentials" });
-  });
-
-  app.post(
-    "/auth/refresh",
-    protectRoute,
-    (req: AuthenticatedRequest, res: Response) => {
-      if (!req.tokenPayload) {
-        res.status(401).json({ error: "No token found" });
+      // Additional validation for expiry
+      const nowSecs = Math.floor(Date.now() / 1000);
+      if (decoded.exp <= nowSecs) {
+        res.status(401).json({ error: 'Token has expired' });
         return;
       }
 
-      const newToken = generate
+      req.user = decoded;
+      next();
+    } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError) {
+        res.status(401).json({ error: 'Invalid token' });
+      } else if (error instanceof jwt.TokenExpiredError) {
+        res.status(401).json({ error: 'Token expired' });
+      } else {
+        res.status(401).json({ error: 'Authentication failed' });
+      }
+    }
+  };
+}
+
+export function signToken(
+  payload: Omit<TokenPayload, 'iat' | 'exp'>,
+  privateKey: string,
+  expiresInSecs: number,
+  algorithm: jwt.Algorithm = 'RS256'
+): string {
+  const now = Math.floor(Date.now() / 1000);
+  const tokenPayload: TokenPayload = {
+    ...payload,
+    iat: now,
+    exp: now + expiresInSecs,
+  };
+
+  return jwt.sign(tokenPayload, privateKey, {
+    algorithm,
+    expiresIn: expiresInSecs,
+  });
+}
+
+export function validateTokenStructure(token: string): { valid: boolean; error?: string } {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return { valid: false, error: 'Invalid token structure' };
+    }
+    return { valid: true };
+  } catch {
+    return { valid: false, error: 'Token validation failed' };
+  }
+}
+
+export function createAuthConfig(
+  publicKeyPem: string,
+  audience: string,
+  issuer: string,
+  maxAgeSeconds: number = 3600,
+  algorithms: jwt.Algorithm[] = ['RS256', 'RS512']
+): AuthConfig {
+  if (!public

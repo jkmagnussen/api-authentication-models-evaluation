@@ -1,115 +1,111 @@
 ```typescript
-import express, { Request, Response, NextFunction, Router } from 'express';
-import jwt from 'jsonwebtoken';
+import Anthropic from "@anthropic-ai/sdk";
+import * as jwt from "jsonwebtoken";
 
-interface AuthenticatedRequest extends Request {
-  userId?: string;
-  user?: { id: string; email: string };
-}
+const client = new Anthropic();
 
 interface TokenPayload {
-  userId: string;
-  email: string;
-  iat: number;
+  sub: string;
+  aud: string;
+  iss: string;
   exp: number;
+  iat: number;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const TOKEN_EXPIRY = '24h';
+interface MiddlewareConfig {
+  expectedAudience: string;
+  expectedIssuer: string;
+  allowedAlgorithms: jwt.Algorithm[];
+  maxAgeSeconds: number;
+  secretKey: string;
+}
 
-export const generateAccessToken = (userId: string, email: string): string => {
-  return jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+interface VerificationResult {
+  valid: boolean;
+  payload?: TokenPayload;
+  error?: string;
+}
+
+const validateTokenStructure = (token: string): boolean => {
+  const parts = token.split(".");
+  return parts.length === 3;
 };
 
-export const verifyAccessToken = (token: string): TokenPayload | null => {
+const verifyTokenSignature = (
+  token: string,
+  config: MiddlewareConfig
+): VerificationResult => {
+  if (!validateTokenStructure(token)) {
+    return {
+      valid: false,
+      error: "Invalid token structure",
+    };
+  }
+
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
-    return decoded;
-  } catch {
-    return null;
-  }
-};
+    const decoded = jwt.verify(token, config.secretKey, {
+      algorithms: config.allowedAlgorithms,
+      audience: config.expectedAudience,
+      issuer: config.expectedIssuer,
+      maxAge: `${config.maxAgeSeconds}s`,
+    }) as TokenPayload;
 
-export const extractBearerToken = (authHeader: string | undefined): string | null => {
-  if (!authHeader) return null;
-  const parts = authHeader.split(' ');
-  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
-    return null;
-  }
-  return parts[1];
-};
-
-export const protectRoute = (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
-  const token = extractBearerToken(authHeader);
-
-  if (!token) {
-    res.status(401).json({ error: 'Missing authorization token' });
-    return;
-  }
-
-  const payload = verifyAccessToken(token);
-  if (!payload) {
-    res.status(403).json({ error: 'Invalid or expired token' });
-    return;
-  }
-
-  req.userId = payload.userId;
-  req.user = { id: payload.userId, email: payload.email };
-  next();
-};
-
-export const createSecureRouter = (): Router => {
-  const router = express.Router();
-
-  router.post('/register', (req: Request, res: Response) => {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      res.status(400).json({ error: 'Email and password are required' });
-      return;
+    if (!decoded.sub || !decoded.aud || !decoded.iss) {
+      return {
+        valid: false,
+        error: "Missing required claims",
+      };
     }
 
-    const userId = 'user_' + Math.random().toString(36).substr(2, 9);
-    const token = generateAccessToken(userId, email);
+    return {
+      valid: true,
+      payload: decoded,
+    };
+  } catch (err) {
+    const errorMessage =
+      err instanceof Error ? err.message : "Token verification failed";
+    return {
+      valid: false,
+      error: errorMessage,
+    };
+  }
+};
 
-    res.json({
-      userId,
-      email,
-      token,
-      expiresIn: TOKEN_EXPIRY,
-    });
+const generateSecureToken = (
+  subject: string,
+  config: MiddlewareConfig
+): string => {
+  const payload: TokenPayload = {
+    sub: subject,
+    aud: config.expectedAudience,
+    iss: config.expectedIssuer,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + config.maxAgeSeconds,
+  };
+
+  return jwt.sign(payload, config.secretKey, {
+    algorithm: config.allowedAlgorithms[0],
+    expiresIn: `${config.maxAgeSeconds}s`,
   });
+};
 
-  router.post('/login', (req: Request, res: Response) => {
-    const { email, password } = req.body;
+export async function analyzeTokenSecurity(
+  token: string,
+  config: MiddlewareConfig
+): Promise<string> {
+  const result = verifyTokenSignature(token, config);
 
-    if (!email || !password) {
-      res.status(400).json({ error: 'Email and password are required' });
-      return;
-    }
+  const prompt = `Analyze the security of this JWT authentication result:
+    
+Token Valid: ${result.valid}
+Error (if any): ${result.error}
+Subject: ${result.payload?.sub || "N/A"}
+Audience: ${result.payload?.aud || "N/A"}
+Issuer: ${result.payload?.iss || "N/A"}
+Issued At: ${result.payload?.iat ? new Date(result.payload.iat * 1000).toISOString() : "N/A"}
+Expires At: ${result.payload?.exp ? new Date(result.payload.exp * 1000).toISOString() : "N/A"}
 
-    const userId = 'user_' + Math.random().toString(36).substr(2, 9);
-    const token = generateAccessToken(userId, email);
-
-    res.json({
-      userId,
-      email,
-      token,
-      expiresIn: TOKEN_EXPIRY,
-    });
-  });
-
-  router.get('/profile', protectRoute, (req: AuthenticatedRequest, res: Response) => {
-    res.json({
-      userId: req.userId,
-      user: req.user,
-      message: 'Protected route accessed successfully',
-    });
-  });
-
-  router.post('/refresh', (req: Request, res
+Configuration:
+- Allowed Algorithms: ${config.allowedAlgorithms.join(", ")}
+- Max Age: ${config.maxAgeSeconds} seconds
+- Expected Audience: ${config.expectedAudience}

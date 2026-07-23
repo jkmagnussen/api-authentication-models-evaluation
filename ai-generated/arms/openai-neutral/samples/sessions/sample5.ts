@@ -1,56 +1,50 @@
 import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
-import { v4 as uuidv4 } from 'uuid';
+import connectRedis from 'connect-redis';
+import redis from 'redis';
 
-const app = express();
+const RedisStore = connectRedis(session);
+const redisClient = redis.createClient();
 
-app.use(express.json());
-
-const sessionOptions: session.SessionOptions = {
-  secret: 'yourSecretKeyHere',
+const sessionConfig = {
+  store: new RedisStore({ client: redisClient }),
+  secret: 'superSecretKey',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 1000 * 60 * 60, // 1 hour
-    secure: false // set true in production
-  },
-  genid: (req: Request): string => {
-    return uuidv4(); // use UUIDs for session IDs
+    maxAge: 3600000,
+    secure: process.env.NODE_ENV === 'production'
   }
 };
 
-app.use(session(sessionOptions));
+const app = express();
 
-export const createSession = (req: Request, res: Response, next: NextFunction): void => {
-  if (!req.session.userId) {
-    req.session.userId = uuidv4();
-    console.log('New session created:', req.session.userId);
-  }
-  next();
-};
+app.use(session(sessionConfig));
 
-export const getSessionInfo = (req: Request, res: Response): void => {
-  if (req.session.userId) {
-    res.status(200).json({ sessionId: req.session.userId });
+export const checkSession = (req: Request, res: Response, next: NextFunction) => {
+  if (req.session && req.session.userId) {
+    next();
   } else {
-    res.status(404).json({ message: 'No session found' });
+    res.status(401).send('Unauthorized');
   }
 };
 
-export const destroySession = (req: Request, res: Response): void => {
+app.get('/login', (req: Request, res: Response) => {
+  req.session.userId = 'user123';
+  res.send('Logged in');
+});
+
+app.get('/logout', (req: Request, res: Response) => {
   req.session.destroy(err => {
     if (err) {
-      res.status(500).json({ message: 'Failed to destroy session' });
-    } else {
-      res.status(200).json({ message: 'Session destroyed successfully' });
+      return res.status(500).send('Error logging out');
     }
+    res.send('Logged out');
   });
-};
+});
 
-app.use(createSession);
+app.get('/dashboard', checkSession, (req: Request, res: Response) => {
+  res.send('Welcome to the dashboard');
+});
 
-app.get('/session', getSessionInfo);
-
-app.delete('/session', destroySession);
-
-export default app;
+export const server = app;

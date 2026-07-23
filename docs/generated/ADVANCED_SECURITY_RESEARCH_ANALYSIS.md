@@ -1,6 +1,6 @@
 # Advanced Security Research Analysis
 
-Generated: 2026-07-23T03:49:03.824Z
+Generated: 2026-07-23T04:51:42.616Z
 Regenerate: npm run research:advanced
 
 This report operationalizes advanced dissertation analyses over the existing baseline, controlled misconfiguration, and AI-generated evidence layers.
@@ -39,12 +39,11 @@ Interpretation: propagation chains model how a single configuration weakness can
 | AI Signature Pattern | Frequency | Models Affected |
 |---|---:|---|
 | redirect validation | 52 | OAUTH |
-| scope control | 34 | OAUTH |
+| scope control | 30 | OAUTH |
 | audience/issuer validation | 12 | JWT |
 | other security control | 8 | OAUTH |
-| session invalidation | 6 | SESSIONS |
 | session fixation resistance | 6 | SESSIONS |
-| cookie hardening | 2 | SESSIONS |
+| session invalidation | 4 | SESSIONS |
 
 Finding: recurring tags form an AI misconfiguration fingerprint, showing repeated control omissions rather than uniformly random errors.
 
@@ -54,7 +53,7 @@ Finding: recurring tags form an AI misconfiguration fingerprint, showing repeate
 |---|---:|---:|
 | Baseline | 60.69 | 0.00 |
 | Misconfigured | 47.29 | 100.00 |
-| AI-generated | n/a | 40.00 |
+| AI-generated | n/a | 37.78 |
 
 Regression line estimate: y = n/ax + n/a.
 
@@ -74,7 +73,7 @@ AMDI is an original composite index in this repository and can be used to compar
 |---|---:|---:|---:|---:|
 | OAUTH | 10.00% | n/a | n/a | 3 |
 | JWT | 90.00% | n/a | n/a | 1 |
-| SESSIONS | 80.00% | n/a | n/a | 3 |
+| SESSIONS | 86.67% | n/a | n/a | 2 |
 
 Interpretation: non-zero variance in complexity and security outcomes demonstrates instability of generated security quality across nominally similar samples.
 
@@ -82,10 +81,10 @@ Interpretation: non-zero variance in complexity and security outcomes demonstrat
 
 | Outcome Type | Sample Count | Meaning |
 |---|---:|---|
-| Functional PASS + Security PASS | 54 | Correct and secure under current local checks. |
+| Functional PASS + Security PASS | 56 | Correct and secure under current local checks. |
 | Functional PASS + Security FAIL | 0 | Correctness-security gap (appears correct but insecure). |
 | Functional FAIL + Security PASS | 0 | Functionality failure without flagged security omission. |
-| Functional FAIL + Security FAIL | 36 | Broad quality failure affecting correctness and security. |
+| Functional FAIL + Security FAIL | 34 | Broad quality failure affecting correctness and security. |
 
 ## 8) Exploit Simulation Evidence
 
@@ -107,13 +106,13 @@ Interpretation: non-zero variance in complexity and security outcomes demonstrat
 |---|---|---:|---:|---:|---:|---|
 | OAUTH | Baseline | 15273.00 | 542.00 | 16.00 | 195.00 | Secure baseline reference |
 | OAUTH | Misconfigured | 17330.33 | 621.00 | 20.00 | 207.00 | Intentional exploit proofs: 3 / 3 |
-| OAUTH | AI-generated | 2868.70 | 112.07 | 0.00 | n/a | Security failure rate: 90.00% |
+| OAUTH | AI-generated | 2648.87 | 101.50 | 0.67 | n/a | Security failure rate: 90.00% |
 | JWT | Baseline | 4847.00 | 155.00 | 14.00 | 106.00 | Secure baseline reference |
 | JWT | Misconfigured | 6878.67 | 234.00 | 18.00 | 118.00 | Intentional exploit proofs: 3 / 3 |
-| JWT | AI-generated | 2888.00 | 107.23 | 0.17 | n/a | Security failure rate: 10.00% |
+| JWT | AI-generated | 2571.37 | 96.57 | 0.60 | n/a | Security failure rate: 10.00% |
 | SESSIONS | Baseline | 5491.00 | 175.00 | 12.00 | 136.00 | Secure baseline reference |
 | SESSIONS | Misconfigured | 7539.00 | 254.67 | 16.00 | 148.00 | Intentional exploit proofs: 3 / 3 |
-| SESSIONS | AI-generated | 2984.60 | 116.70 | 0.00 | n/a | Security failure rate: 20.00% |
+| SESSIONS | AI-generated | 2713.43 | 105.87 | 0.97 | n/a | Security failure rate: 13.33% |
 
 ## Notes and Caveats
 

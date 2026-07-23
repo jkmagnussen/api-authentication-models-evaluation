@@ -1,8 +1,8 @@
 {
   "model": "sessions",
   "sample": "sample16",
-  "characters": 2816,
-  "lines": 130,
+  "characters": 2959,
+  "lines": 120,
   "functions": 0,
   "classes": 0,
   "cyclomaticComplexity": null,
@@ -14,5 +14,5 @@
     "time": null
   },
   "maintainabilityIndex": null,
-  "analysisError": "Line 131: Unexpected token ILLEGAL"
+  "analysisError": "Line 149: Unexpected token ILLEGAL"
 }

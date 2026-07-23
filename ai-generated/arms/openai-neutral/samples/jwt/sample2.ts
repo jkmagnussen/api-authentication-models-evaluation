@@ -1,43 +1,23 @@
 import express, { Request, Response, NextFunction } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt, { Secret } from 'jsonwebtoken';
 
-const secretKey: string = 'your-secret-key';
+const secretKey: Secret = 'your_super_secret_key';
 
-export interface AuthenticatedRequest extends Request {
-  user?: string | JwtPayload;
-}
+export const jwtAuthMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
-export const jwtAuthMiddleware = (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ message: 'Authorization header missing or malformed' });
+  if (!token) {
+    res.status(401).json({ message: 'Access denied, token missing' });
     return;
   }
 
-  const token = authHeader.split(' ')[1];
-
-  jwt.verify(token, secretKey, (err, decoded) => {
+  jwt.verify(token, secretKey, (err, user) => {
     if (err) {
-      res.status(403).json({ message: 'Invalid or expired token' });
+      res.status(403).json({ message: 'Invalid token' });
       return;
     }
-    req.user = decoded;
+    req.user = user;
     next();
   });
 };
-
-// Sample usage in an Express application
-const app = express();
-
-app.use(jwtAuthMiddleware);
-
-app.get('/secured-endpoint', (req: AuthenticatedRequest, res: Response) => {
-  res.json({ message: 'Secure content accessed', user: req.user });
-});
-
-export default app;
