@@ -700,12 +700,15 @@ def chart_ai_determinism_variance(arm_df: pd.DataFrame) -> float:
 
     fig, ax = plt.subplots(figsize=(9.6, 5.4))
     sns.barplot(data=grouped, x="arm", y="failure_rate_pct", hue="model", order=x_order, hue_order=hue_order, ax=ax)
-    ax.set_title("AI Determinism and Variance by Provider Arm")
-    ax.set_xlabel("Provider Arm")
-    ax.set_ylabel("Failure Rate (%)")
-    ax.set_ylim(0, 105)
+    ax.set_title("AI Determinism and Variance by Provider Arm", fontsize=12, fontweight="bold")
+    ax.set_xlabel("Provider Arm", fontsize=10)
+    ax.set_ylabel("Failure Rate (%)", fontsize=10)
+    ax.set_ylim(0, 115)
+    ax.yaxis.grid(True, linestyle="--", alpha=0.4)
+    ax.set_axisbelow(True)
 
     # Draw per-bar standard deviation whiskers in percentage points, aligned by arm/model.
+    whisker_labelled = False
     grouped_idx = grouped.set_index(["arm", "model"])
     bar_containers = [c for c in ax.containers if hasattr(c, "patches")]
     for model_idx, model_name in enumerate(hue_order):
@@ -723,9 +726,23 @@ def chart_ai_determinism_variance(arm_df: pd.DataFrame) -> float:
             x_center = bar.get_x() + bar.get_width() / 2
             y = float(bar.get_height())
             sd_pct = float(row["failure_std"]) * 100.0
-            ax.vlines(x_center, max(0.0, y - sd_pct), min(105.0, y + sd_pct), color="black", linewidth=1)
+            if sd_pct > 0:
+                label = "±1 std dev" if not whisker_labelled else None
+                ax.vlines(x_center, max(0.0, y - sd_pct), min(110.0, y + sd_pct),
+                          color="black", linewidth=1.2, label=label)
+                ax.hlines([max(0.0, y - sd_pct), min(110.0, y + sd_pct)],
+                          x_center - 0.06, x_center + 0.06, color="black", linewidth=1.2)
+                whisker_labelled = True
 
-    ax.legend(title="Model", bbox_to_anchor=(1.02, 1), loc="upper left")
+    # Build legend with model entries + the whisker entry.
+    handles, labels = ax.get_legend_handles_labels()
+    from matplotlib.lines import Line2D
+    if whisker_labelled:
+        handles.append(Line2D([0], [0], color="black", linewidth=1.2, label="±1 std dev"))
+        labels.append("±1 std dev")
+    ax.legend(handles=handles, labels=labels, title="Model", fontsize=9,
+              title_fontsize=9, loc="upper right", framealpha=1.0)
+
     save_chart(fig, CHARTS_SYNTH_DIR, "ai-determinism-variance.svg")
     return float(grouped["failure_std"].mean())
 
