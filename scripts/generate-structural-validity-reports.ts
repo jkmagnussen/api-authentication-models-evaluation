@@ -1047,7 +1047,7 @@ function writeCrossReferenceSynthesis(variants: VariantSummary[]): void {
   lines.push("## Formula Notes");
   lines.push("");
   lines.push("- Weighted Exploit Burden (WEB) uses $0.45 \\times severity + 0.25 \\times exploitability + 0.30 \\times propagation$.");
-  lines.push("- Lifecycle Error Likelihood Proxy (LELP) uses $(1.4 \\times lifecycleSteps + 1.3 \\times mustRemember + 1.2 \\times boundaryCrossings) \\times (1 + WEB/20)$. ");
+  lines.push("- Lifecycle Error Likelihood Proxy (LELP) uses $(1.4 \\times lifecycleSteps + 1.3 \\times mustRemember + 1.2 \\times boundaryCrossings) \\times (1 + WEB/20)$.");
   lines.push("- These are exploratory structural proxies derived from repository evidence, not direct estimates of field prevalence.");
   lines.push("");
   lines.push("## 1) STRIDE vs Misconfiguration Variants");
@@ -1238,7 +1238,7 @@ function writeCognitiveSecurityAnalysis(variants: VariantSummary[]): void {
   lines.push("- CMS combines severity, propagation, detectability, and repair effort as an exploratory proxy for cognitively fragile mistakes.");
   lines.push("- CBS uses trust-boundary crossings, must-remember behaviors, and security flags to approximate boundary reasoning stress.");
   lines.push("- CLB uses lifecycle steps, validation rules, and must-remember behaviors to estimate sequencing burden.");
-  lines.push("- CSPS blends CLI, CMS, CBS, CLB, and CEP with default weights $(0.18, 0.24, 0.18, 0.18, 0.22)$. ");
+  lines.push("- CSPS blends CLI, CMS, CBS, CLB, and CEP with default weights $(0.18, 0.24, 0.18, 0.18, 0.22)$.");
   lines.push("");
   lines.push("## Weight Rationale");
   lines.push("");

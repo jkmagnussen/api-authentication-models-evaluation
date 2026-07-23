@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T20:50:15.216Z",
+  "generatedAt": "2026-07-23T20:53:27.547Z",
   "formulas": {
     "weightedExploitBurden": "WEB = 0.45*severity + 0.25*exploitability + 0.30*propagation",
     "lifecycleErrorLikelihood": "LELP = (1.4*lifecycle + 1.3*mustRemember + 1.2*boundary) * (1 + WEB/20)"

@@ -1,6 +1,6 @@
 # Unified Attack Surface Compression
 
-Generated: 2026-07-23T20:50:15.218Z
+Generated: 2026-07-23T20:53:27.549Z
 Regenerate: npm run analysis:structural
 
 This report compresses per-model STRIDE breadth, severity, exploitability, and trust-boundary breadth into a single exploratory attack-surface score for cross-model comparison.

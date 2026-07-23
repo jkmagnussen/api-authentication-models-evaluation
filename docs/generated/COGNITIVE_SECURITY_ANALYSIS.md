@@ -1,6 +1,6 @@
 # Cognitive Security Analysis
 
-Generated: 2026-07-23T20:50:15.217Z
+Generated: 2026-07-23T20:53:27.548Z
 Regenerate: npm run analysis:structural
 
 This report frames authentication security as a cognitive engineering problem by cross-referencing developer load, boundary stress, lifecycle burden, and cognitive error propagation.
@@ -10,7 +10,7 @@ This report frames authentication security as a cognitive engineering problem by
 - CMS combines severity, propagation, detectability, and repair effort as an exploratory proxy for cognitively fragile mistakes.
 - CBS uses trust-boundary crossings, must-remember behaviors, and security flags to approximate boundary reasoning stress.
 - CLB uses lifecycle steps, validation rules, and must-remember behaviors to estimate sequencing burden.
-- CSPS blends CLI, CMS, CBS, CLB, and CEP with default weights $(0.18, 0.24, 0.18, 0.18, 0.22)$. 
+- CSPS blends CLI, CMS, CBS, CLB, and CEP with default weights $(0.18, 0.24, 0.18, 0.18, 0.22)$.
 
 ## Weight Rationale
 

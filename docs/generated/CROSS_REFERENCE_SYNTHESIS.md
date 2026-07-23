@@ -1,6 +1,6 @@
 # Cross-Reference Synthesis
 
-Generated: 2026-07-23T20:50:15.215Z
+Generated: 2026-07-23T20:53:27.546Z
 Regenerate: npm run analysis:structural
 
 This report cross-references STRIDE, trust boundaries, lifecycle complexity, performance, empirical attack evidence, and code footprint to expose model-specific structural trade-offs.
@@ -8,7 +8,7 @@ This report cross-references STRIDE, trust boundaries, lifecycle complexity, per
 ## Formula Notes
 
 - Weighted Exploit Burden (WEB) uses $0.45 \times severity + 0.25 \times exploitability + 0.30 \times propagation$.
-- Lifecycle Error Likelihood Proxy (LELP) uses $(1.4 \times lifecycleSteps + 1.3 \times mustRemember + 1.2 \times boundaryCrossings) \times (1 + WEB/20)$. 
+- Lifecycle Error Likelihood Proxy (LELP) uses $(1.4 \times lifecycleSteps + 1.3 \times mustRemember + 1.2 \times boundaryCrossings) \times (1 + WEB/20)$.
 - These are exploratory structural proxies derived from repository evidence, not direct estimates of field prevalence.
 
 ## 1) STRIDE vs Misconfiguration Variants

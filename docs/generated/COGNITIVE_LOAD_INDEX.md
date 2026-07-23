@@ -1,6 +1,6 @@
 # Cognitive Load Index
 
-Generated: 2026-07-23T20:50:15.214Z
+Generated: 2026-07-23T20:53:27.545Z
 Regenerate: npm run analysis:structural
 
 This report estimates model-specific developer cognitive load from configuration points, lifecycle steps, trust-boundary crossings, validation rules, and must-remember security behaviors.

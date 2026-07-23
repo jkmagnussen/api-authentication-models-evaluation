@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T20:50:15.212Z",
+  "generatedAt": "2026-07-23T20:53:27.543Z",
   "formula": {
     "default": "CFPA = 10 * (0.25C + 0.25F + 0.20S + 0.15X + 0.15B)",
     "terms": {

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T20:50:15.218Z",
+  "generatedAt": "2026-07-23T20:53:27.549Z",
   "formula": {
     "default": "UASC = 10 * (0.35S + 0.30E + 0.20T + 0.15B)",
     "terms": {
