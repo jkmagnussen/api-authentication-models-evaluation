@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-07-23T04:54:50.323Z",
-  "signedAt": "2026-07-23T04:54:50.323Z",
-  "signatureSha256": "229e6e58a369cd37983a0342b9c52efc642fc828be244b1e43e2b2addd7d6882",
+  "generatedAt": "2026-07-23T04:56:34.979Z",
+  "signedAt": "2026-07-23T04:56:34.979Z",
+  "signatureSha256": "f7b8b1a360491070907376d5cc428aaa2758bd0681628157bbd92fc75b565bb0",
   "entries": [
     {
       "label": "protocol-seal",
@@ -16,7 +16,7 @@
     {
       "label": "blind-interpretation",
       "path": "docs/generated/AI_BLIND_INTERPRETATION.md",
-      "sha256": "0a4119d69ba9a716df619de04d673c3c09f20ee86e0c7f0c8cad2e8d64dabd44"
+      "sha256": "e2223096f695c4ff5c72baa74c18a87f92acccf9f3791072874a7f9c0eb27ebf"
     },
     {
       "label": "analysis-window",
@@ -31,7 +31,7 @@
     {
       "label": "preregistered-compliance",
       "path": "docs/generated/PREREGISTERED_COMPLIANCE.md",
-      "sha256": "c3afc7a10b568054bb69cc4b01fbc4fef3b3b8bce913bdd8f04f9bdfb0f5283c"
+      "sha256": "2ce0e126f48edb915730ff41ce22e9815a55c322fbe8612662c674975e853c8c"
     }
   ]
 }
