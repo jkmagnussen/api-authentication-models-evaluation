@@ -1092,8 +1092,8 @@ def chart_ai_sample_syntax_issues() -> None:
     ax_right.set_ylabel("File Count", fontsize=9)
     ax_right.legend(fontsize=9, loc="upper right")
 
-    fig.suptitle("AI-Generated Sample Syntax and Compile Issues", fontsize=12, fontweight="bold", y=1.01)
-    plt.tight_layout()
+    fig.suptitle("AI-Generated Sample Syntax and Compile Issues", fontsize=12, fontweight="bold")
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
 
     save_chart(fig, CHARTS_MAINT_DIR, "ai-sample-syntax-issues-by-model-stage.svg", tight=False)
 
