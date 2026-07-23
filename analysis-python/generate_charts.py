@@ -1013,13 +1013,16 @@ def chart_failure_points_vs_chars() -> None:
             label=f"{model} (AI)",
             zorder=3,
         )
-        # Annotate AI points with model name.
+        # Annotate AI points — flip offset left when near the right edge.
+        x_max = float(rows_agg["characters"].max()) if not rows_agg.empty else 1.0
         for _, row in sub.iterrows():
+            x_val = float(row["characters"])
+            near_right = x_val > 0.75 * x_max
             ax_left.annotate(
                 model,
-                (float(row["characters"]), float(row["failuresPer10kChars"])),
+                (x_val, float(row["failuresPer10kChars"])),
                 textcoords="offset points",
-                xytext=(6, 4),
+                xytext=(-38, 4) if near_right else (6, 4),
                 fontsize=7.5,
                 color=MODEL_COLORS[model],
             )
@@ -1047,16 +1050,25 @@ def chart_failure_points_vs_chars() -> None:
     ax_left.set_title("Failure Density vs Code Size", fontsize=11, fontweight="bold")
     ax_left.set_xlabel("Character Footprint (chars)", fontsize=9)
     ax_left.set_ylabel("Failure Events per 10k Characters", fontsize=9)
-    ax_left.legend(fontsize=7.5, ncol=2, loc="upper left")
 
-    # Annotations for markers.
+    # Build a single clean legend: one entry per model×source using actual colours
+    # and marker shapes so every entry matches a visible point in the chart.
     from matplotlib.lines import Line2D
-    extra_handles = [
-        Line2D([0], [0], marker="o", color="gray", linestyle="None", markersize=7, label="Misconfiguration variants"),
-        Line2D([0], [0], marker="^", color="gray", linestyle="None", markersize=7, label="AI-generated (aggregate)"),
-    ]
-    ax_left.legend(handles=ax_left.get_legend_handles_labels()[0] + extra_handles,
-                   labels=ax_left.get_legend_handles_labels()[1] + [h.get_label() for h in extra_handles],
+    legend_handles = []
+    for model in ["JWT", "OAuth2", "Session"]:
+        legend_handles.append(Line2D([0], [0], marker="o", color=MODEL_COLORS[model],
+                                     linestyle="None", markersize=7,
+                                     label=f"{model} — misconfig variant"))
+        legend_handles.append(Line2D([0], [0], marker="^", color=MODEL_COLORS[model],
+                                     linestyle="None", markersize=8,
+                                     label=f"{model} — AI aggregate"))
+    # Add the regression entry from the axes.
+    handles_ax, labels_ax = ax_left.get_legend_handles_labels()
+    trend_entries = [(h, l) for h, l in zip(handles_ax, labels_ax) if "trend" in l.lower()]
+    for h, l in trend_entries:
+        legend_handles.append(h)
+    ax_left.legend(handles=legend_handles,
+                   labels=[h.get_label() for h in legend_handles],
                    fontsize=7, ncol=2, loc="upper left")
 
     # ── Right panel: grouped bar ─────────────────────────────────────────────

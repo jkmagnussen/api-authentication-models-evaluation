@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T21:44:32.858Z",
+  "generatedAt": "2026-07-23T21:47:25.674Z",
   "mode": "offline-freeze",
   "notes": "Live provider generation is blocked while this lock file exists. Remove it intentionally or set ALLOW_LIVE_AI_GENERATION=true to override.",
   "lockVersion": 1,
@@ -13,7 +13,7 @@
     "ai-generated/arms"
   ],
   "fileCount": 1468,
-  "totalBytes": 3741992,
+  "totalBytes": 3742963,
   "files": [
     {
       "path": "ai-generated/arms/claude-neutral/metadata.json",
@@ -6777,22 +6777,22 @@
     },
     {
       "path": "docs/charts/maintainability/complexity-to-misconfig-regression.svg",
-      "sha256": "eb438e3d26fccb7add6a5c639374587fc3aae772a59b333492279326caf96cfd",
+      "sha256": "d9ae34da5f392718816dcda2423eb2a94d38426c0cfacf0141b6127020c3aea4",
       "bytes": 43214
     },
     {
       "path": "docs/charts/maintainability/complexity-vs-misconfig-frequency-regression.svg",
-      "sha256": "3e3053fdfb943bd081475aab15b23652f732ae16889ac78ffef0234b68515ce7",
+      "sha256": "bf369845167270ca7a30866d822ba28d3f2fa61da23bb7f7ee9809d676657fa4",
       "bytes": 46604
     },
     {
       "path": "docs/charts/maintainability/failure-points-vs-chars.svg",
-      "sha256": "98f954fc22be794abc3a409dc03f73924a99d9f79fe9f19825407f5b032fbebc",
-      "bytes": 102244
+      "sha256": "235bb35ead649783ae0830d6075ee1a8469342e2a8a487165d633c3caf6642d1",
+      "bytes": 103215
     },
     {
       "path": "docs/charts/maintainability/maintainability-difficulty-index.svg",
-      "sha256": "be6b19a7704f21e656c735e683dc53faa12bac1d983b48ab1e57d3484a724502",
+      "sha256": "c6c8312f8d201d8f73a1a648a92fcbb091f673be05e9de56d3948fad02f96e3c",
       "bytes": 38495
     },
     {
@@ -6802,12 +6802,12 @@
     },
     {
       "path": "docs/charts/performance/authentication-overhead-breakdown.svg",
-      "sha256": "76ada812aea3d70a73c5e4c029dc5908df7b7932ea9298510d78d09093bb0c06",
+      "sha256": "eb9ac3e37afee7d7f5959172dbb558418f8e63d41e1701952f9d34d7c0aa9a45",
       "bytes": 44118
     },
     {
       "path": "docs/charts/performance/performance-comparison.svg",
-      "sha256": "cf78ecedec3ff238ca19eb2080e217aa597c37cf88e53eeb7f32683a281d260c",
+      "sha256": "b72b60405edc543447b21f2e212880330fe4e01fb20051e9b92c25658e22efa4",
       "bytes": 34857
     },
     {
@@ -6817,7 +6817,7 @@
     },
     {
       "path": "docs/charts/performance/variance-under-load.svg",
-      "sha256": "c596e1c915df73cb115dbfdf9482f44beb5d7599cb96e612df7cb3f0a05d96c0",
+      "sha256": "3bb5385e686157ea82b1eda079fd1b866b2751d18da3131789cd7dfda7e5bfa0",
       "bytes": 33400
     },
     {
@@ -6827,7 +6827,7 @@
     },
     {
       "path": "docs/charts/security/ai-failure-rates.svg",
-      "sha256": "e821c35e60082a87af81d8222fe48c0d1a0276662a5a746872f6f0a26aa8ecb6",
+      "sha256": "0668dcb40fc60fe7f32611d68da431b38210ae9d8db11d69807ab9784076c8ba",
       "bytes": 29980
     },
     {
@@ -6847,12 +6847,12 @@
     },
     {
       "path": "docs/charts/security/misconfiguration-frequency-comparison.svg",
-      "sha256": "67147743cd2005a4aa11cafd79cfc8843c7a4c26ce8f07db5d16b7c989367e97",
+      "sha256": "81fc2232aae40aef5c04ce5488862b2dbe62cd66b4b638938076b0620d59a687",
       "bytes": 47641
     },
     {
       "path": "docs/charts/security/misconfiguration-severity-heatmap.svg",
-      "sha256": "638c9eb6089797f0df49bca736ed0742ac370b81e1901987e3f06341ad32a6ca",
+      "sha256": "148d74bc0c74e46bf4028e0c1d89f074dfbe6b5fc4176d204d97542fd4659799",
       "bytes": 71259
     },
     {
@@ -6867,17 +6867,17 @@
     },
     {
       "path": "docs/charts/security/stride-severity-scoring.svg",
-      "sha256": "088db4cefd041b1e5e7d57ffc263c152629a42f5d5ca80cb1ec78dbfaa93a788",
+      "sha256": "d8c4cc2ede2bc3fbd9210b06a558fd3e3a228e7080eac84234f74e967f17417e",
       "bytes": 41075
     },
     {
       "path": "docs/charts/security/token-lifecycle-fragility.svg",
-      "sha256": "4223fc0b57c3ebb9a6755deed54ba60053a1bb95660e030be7ee1764d08b5ee7",
+      "sha256": "de135eb63a9bb6a6d36bd28cc89291dcb99645d0230b01e9ac0589437385ee85",
       "bytes": 38964
     },
     {
       "path": "docs/charts/synthesis/ai-determinism-variance.svg",
-      "sha256": "0fe6cc2e7f8343caab6504288f809a644f1062da4fc21daefead772dbf150c2c",
+      "sha256": "456a4c7b12b187fd4c1547893e6b65cde1721fdce214b4081c46408b07b6a9cc",
       "bytes": 45835
     },
     {
@@ -6887,32 +6887,32 @@
     },
     {
       "path": "docs/charts/synthesis/correctness-security-tradeoff.svg",
-      "sha256": "6c4a6cad64bfc755a48b42f6e786c513a1dfd18ab88e2a014a1e6c228af7da73",
+      "sha256": "63addfc261264c0d41e97893e48d0ae85696c5958c513b825742f935fa354627",
       "bytes": 50871
     },
     {
       "path": "docs/charts/synthesis/correctness-vs-security-provider-scatter.svg",
-      "sha256": "6c3a70364d730bb064ef9d4e703f9c9df68d3d09e011390c658e75ae3c199a6c",
+      "sha256": "dfe61ef0c3d00f14bb80b3b65be2dd4c62a77f24e27b9b825505f0fa6babb877",
       "bytes": 48440
     },
     {
       "path": "docs/charts/synthesis/cross-provider-overlap-venn.svg",
-      "sha256": "f2e226adead4e49d9f5f2fb752507bcca3a662ac51c8fc0632a4654facce2a93",
+      "sha256": "7fb1ace0b37346cbe34a575b1036d71ef920240f71eccfff9a98f53eb0a3efde",
       "bytes": 67414
     },
     {
       "path": "docs/charts/synthesis/error-diversity-entropy.svg",
-      "sha256": "f3604e8db28e104bce03d82f238804ddefdc6f61635fec0fd1bd2e5ce7a403d0",
+      "sha256": "2f42e6641b881b7e0d24a6e38da89c81115d58bacf746796651e6e8b32cef0e8",
       "bytes": 50562
     },
     {
       "path": "docs/charts/synthesis/misconfiguration-clustering-kmeans.svg",
-      "sha256": "4a310de3977da47417eb6628ce733f64295ee7b778a9fac93d65df91ae8195d3",
+      "sha256": "e8cd9191c5aeb12a0f3c830d3d63c3686a200ee2f15fcb9bbc90a87959d06b4e",
       "bytes": 88809
     },
     {
       "path": "docs/charts/synthesis/provider-bias-analysis.svg",
-      "sha256": "cde4fd3132b2a0dde8c47b342707cb88bd02f0bb37c12cc1502e48e8f3f34e02",
+      "sha256": "0341999ef462f15c2930e67fd279211d2c77670cd7f6108c56d4dca5b3681743",
       "bytes": 75671
     },
     {
