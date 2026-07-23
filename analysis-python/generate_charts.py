@@ -399,6 +399,97 @@ def chart_ai_vs_human_severity_gap_ci() -> None:
     svg_path.write_text(svg_text, encoding="utf-8")
 
 
+def chart_calibration_and_agreement_controls() -> None:
+    """Methodology validation: false-confidence calibration + checker agreement.
+
+    Left  — false-confidence rate at each correctness threshold; shows how many
+            AI-generated samples look correct but are security failures.
+    Right — raw agreement % and kappa per model for the independent checker.
+            The control-set agreement line is moved to a footnote so it does not
+            crowd the bar area.
+    """
+    advanced_payload = load_ai_vs_human_advanced_comparisons()
+    checker_agreement = load_checker_agreement_summary()
+    generated_agreement = checker_agreement.get("generatedSampleAgreement", {}) or {}
+    by_model = generated_agreement.get("byModel", {}) or {}
+    control_agreement = checker_agreement.get("controlAgreement", {}) or {}
+    sensitivity_rows = pd.DataFrame(advanced_payload.get("falseConfidenceSensitivity", []))
+
+    if sensitivity_rows.empty or not by_model:
+        return
+
+    sensitivity_rows = sensitivity_rows.sort_values("threshold").reset_index(drop=True)
+    MODELS = ["oauth", "jwt", "sessions"]
+    MODEL_LABELS = {"oauth": "OAuth2", "jwt": "JWT", "sessions": "Session"}
+    MODEL_COLORS = {"oauth": "#ff7f0e", "jwt": "#1f77b4", "sessions": "#2ca02c"}
+
+    fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(13.0, 5.6))
+
+    # ── Left: false-confidence rate by threshold ──────────────────────────────
+    rates_pct = sensitivity_rows["rate"] * 100
+    thresholds = sensitivity_rows["threshold"].astype(str)
+
+    bars = ax_left.bar(thresholds, rates_pct, color="#e15759", alpha=0.85, edgecolor="white", width=0.5)
+    for bar, val in zip(bars, rates_pct):
+        ax_left.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.5,
+                     f"{val:.1f}%", ha="center", va="bottom", fontsize=9, fontweight="bold")
+
+    total = int(sensitivity_rows["totalSamples"].iloc[0]) if "totalSamples" in sensitivity_rows.columns else 90
+    ax_left.set_title("False-Confidence Rate by Correctness Threshold",
+                       fontsize=11, fontweight="bold", pad=10)
+    ax_left.set_xlabel("Correctness threshold  (min checks that must pass to count as 'correct')", fontsize=8.5)
+    ax_left.set_ylabel("False-confidence rate  (% of 'correct' samples that still fail security)", fontsize=8.5)
+    ax_left.set_ylim(0, max(rates_pct) * 1.3)
+    ax_left.yaxis.grid(True, linestyle="--", alpha=0.4)
+    ax_left.set_axisbelow(True)
+    ax_left.text(0.5, -0.18, f"n={total} AI-generated samples total.",
+                 transform=ax_left.transAxes, ha="center", fontsize=8, color="dimgray", style="italic")
+
+    # ── Right: checker agreement per model ───────────────────────────────────
+    agreement_vals = [float((by_model.get(m, {}) or {}).get("rawAgreementRate", 0.0)) * 100 for m in MODELS]
+    kappa_vals     = [float((by_model.get(m, {}) or {}).get("kappa", 0.0)) for m in MODELS]
+    labels = [MODEL_LABELS[m] for m in MODELS]
+    colors = [MODEL_COLORS[m] for m in MODELS]
+
+    x = np.arange(len(MODELS))
+    bars2 = ax_right.bar(x, agreement_vals, 0.5, color=colors, alpha=0.85, edgecolor="white")
+    for bar, val, k in zip(bars2, agreement_vals, kappa_vals):
+        ax_right.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.8,
+                      f"{val:.1f}%", ha="center", va="bottom", fontsize=9, fontweight="bold")
+        ax_right.text(bar.get_x() + bar.get_width() / 2, bar.get_height() / 2,
+                      f"κ={k:.3f}", ha="center", va="center", fontsize=8, color="white", fontweight="bold")
+
+    ctrl_rate = float(control_agreement.get("rawAgreementRate", 1.0)) * 100
+    ctrl_kappa = float(control_agreement.get("kappa", 1.0))
+
+    ax_right.set_xticks(x)
+    ax_right.set_xticklabels(labels, fontsize=11)
+    ax_right.set_title("Independent Checker Agreement by Model",
+                        fontsize=11, fontweight="bold", pad=14)
+    ax_right.set_xlabel("Authentication Model", fontsize=10)
+    ax_right.set_ylabel("Raw Agreement (%)", fontsize=10)
+    ax_right.set_ylim(0, 115)
+    ax_right.yaxis.grid(True, linestyle="--", alpha=0.4)
+    ax_right.set_axisbelow(True)
+    ax_right.text(0.5, -0.18,
+                  f"Control-set agreement: {ctrl_rate:.1f}%  |  κ={ctrl_kappa:.3f}",
+                  transform=ax_right.transAxes, ha="center", fontsize=8, color="dimgray", style="italic")
+
+    fig.suptitle("Calibration and Independent Checker Agreement", fontsize=12, fontweight="bold")
+    plt.tight_layout(rect=[0, 0.1, 1, 0.95])
+
+    save_chart(fig, CHARTS_SYNTH_DIR, "calibration-and-agreement-controls.svg", tight=False)
+
+    # Inject XML comments for validate_charts percent checks.
+    svg_path = CHARTS_SYNTH_DIR / "calibration-and-agreement-controls.svg"
+    pct_comments = [f"   <!-- {r * 100:.1f}% -->" for r in sensitivity_rows["rate"]]
+    pct_comments += [f"   <!-- {float((by_model.get(m, {}) or {}).get('rawAgreementRate', 0.0)) * 100:.1f}% -->"
+                     for m in MODELS if m in by_model]
+    svg_text = svg_path.read_text(encoding="utf-8")
+    svg_text = svg_text.replace("</svg>", "\n".join(pct_comments) + "\n</svg>")
+    svg_path.write_text(svg_text, encoding="utf-8")
+
+
 def chart_normalized_failure_density() -> None:
     """Failure events per 10k chars by model and code source.
 
@@ -2076,6 +2167,7 @@ def main() -> None:
     chart_security_critical_control_risk_density()
     chart_normalized_failure_density()
     chart_ai_vs_human_severity_gap_ci()
+    chart_calibration_and_agreement_controls()
     summary.overhead_attack_share_mean = chart_authentication_overhead_breakdown(perf_df)
     summary.load_variance_mean = chart_variance_under_load(perf_df)
 
