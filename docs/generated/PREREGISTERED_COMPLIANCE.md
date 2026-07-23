@@ -1,6 +1,6 @@
 # Pre-Registered Compliance Summary
 
-Generated: 2026-07-23T20:15:35.157Z
+Generated: 2026-07-23T20:33:33.656Z
 Regenerate: npm run objective:preregistered:report
 
 Governance mode: EXPLORATORY

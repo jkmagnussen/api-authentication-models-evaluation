@@ -1,6 +1,6 @@
 # AI Stability Report
 
-Generated: 2026-07-23T19:41:26.623Z
+Generated: 2026-07-23T20:33:25.059Z
 Regenerate: npm run objective:stability
 
 This report quantifies run-to-run stability for AI provider/prompt arms to reduce stochastic bias in interpretation.

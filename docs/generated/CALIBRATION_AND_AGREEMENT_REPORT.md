@@ -1,6 +1,6 @@
 # Calibration and Independent Agreement Report
 
-Generated: 2026-07-23T19:41:25.616Z
+Generated: 2026-07-23T20:33:24.097Z
 Regenerate: npm run objective:calibration:agreement
 
 This report combines a calibration-style accuracy signal with an independent checker-agreement control.

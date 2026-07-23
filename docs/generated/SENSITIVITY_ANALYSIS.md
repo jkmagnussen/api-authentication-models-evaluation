@@ -1,6 +1,6 @@
 # Sensitivity Analysis
 
-Generated: 2026-07-23T19:41:23.643Z
+Generated: 2026-07-23T20:33:21.179Z
 Regenerate: npm run compare:reports
 
 This exploratory analysis tests whether model risk ordering is stable under alternative severity weighting schemes.
