@@ -2,7 +2,9 @@
 
 **Production commands:** `npm run prod` (clean build + start), `npm run prod:full` (full pipeline + start)
 
-**Build commands:** `npm run build` (clean compile, keeps repo cleaner), `npm run build:full` (runs db setup + tests + docs/report generation + compile, will update generated artifacts)
+**Build commands:** `npm run build` (auto-cleans tracked generated outputs, then compiles), `npm run build:full` (auto-cleans generated outputs first, then runs db setup + tests + docs/report generation + compile)
+
+**Clean regeneration:** `npm run regen:clean` (alias of `npm run build:full`), `npm run clean:generated` (tracked generated files only), `npm run clean:generated:all` (tracked + untracked generated files)
 
 **Run everything (start to finish):** `npm run run:all:offline`
 
