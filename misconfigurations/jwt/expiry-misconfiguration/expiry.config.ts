@@ -1,3 +1,3 @@
 export const jwtExpiryMisconfiguration = {
-  expiry: "999y",
+  expiry: "30d",
 };

@@ -1,6 +1,15 @@
 import fs from "fs";
 import { PERFORMANCE_FILES } from "./report-paths";
 
+const { jStat } = require("jstat") as {
+  jStat: {
+    studentt: {
+      cdf: (x: number, dof: number) => number;
+      inv: (p: number, dof: number) => number;
+    };
+  };
+};
+
 type PerfStats = {
   avg: number;
   p95: number;
@@ -20,6 +29,9 @@ type SummaryRow = {
   p99DeltaPct: number;
   throughputDeltaPct: number;
   effectSize: number | null;
+  welchTStat: number | null;
+  welchDf: number | null;
+  welchPValue: number | null;
   ci95AvgDeltaPct: [number, number] | null;
 };
 
@@ -43,6 +55,35 @@ function pooledStd(a: number[], b: number[]) {
   const varB = stdDev(b) ** 2;
   const pooledVariance = ((a.length - 1) * varA + (b.length - 1) * varB) / (a.length + b.length - 2);
   return Math.sqrt(pooledVariance);
+}
+
+function welchTest(a: number[], b: number[]): { tStat: number; df: number; pValue: number } | null {
+  if (a.length < 2 || b.length < 2) return null;
+
+  const meanA = mean(a);
+  const meanB = mean(b);
+  const varA = stdDev(a) ** 2;
+  const varB = stdDev(b) ** 2;
+  const nA = a.length;
+  const nB = b.length;
+
+  const denominator = Math.sqrt(varA / nA + varB / nB);
+  if (!Number.isFinite(denominator) || denominator === 0) return null;
+
+  const tStat = (meanB - meanA) / denominator;
+  const numerator = (varA / nA + varB / nB) ** 2;
+  const denominatorDf = (varA ** 2) / (nA ** 2 * (nA - 1)) + (varB ** 2) / (nB ** 2 * (nB - 1));
+  if (!Number.isFinite(denominatorDf) || denominatorDf === 0) return null;
+
+  const df = numerator / denominatorDf;
+  const cdf = jStat.studentt.cdf(Math.abs(tStat), df);
+  const pValue = 2 * (1 - cdf);
+
+  return {
+    tStat,
+    df,
+    pValue,
+  };
 }
 
 function safeReadJson<T>(path: string): T | null {
@@ -85,11 +126,12 @@ function ci95OfMeanDifference(a: number[], b: number[]): [number, number] | null
   const se = Math.sqrt(sdA ** 2 / a.length + sdB ** 2 / b.length);
   if (se === 0) return [0, 0];
 
-  const diffPct = percentDelta(meanA, meanB);
-  const z = 1.96;
+  const welch = welchTest(a, b);
+  if (!welch) return null;
 
-  const lower = percentDelta(meanA, meanB - z * se);
-  const upper = percentDelta(meanA, meanB + z * se);
+  const tCritical = jStat.studentt.inv(0.975, welch.df);
+  const lower = percentDelta(meanA, meanB - tCritical * se);
+  const upper = percentDelta(meanA, meanB + tCritical * se);
 
   return lower < upper ? [lower, upper] : [upper, lower];
 }
@@ -117,6 +159,8 @@ function buildSummaryRows(): SummaryRow[] {
     const effectSize =
       pooled > 0 ? (mean(attackAverages) - mean(baselineAverages)) / pooled : null;
 
+    const welch = welchTest(baselineAverages, attackAverages);
+
     const ci95AvgDeltaPct = ci95OfMeanDifference(baselineAverages, attackAverages);
 
     return {
@@ -128,6 +172,9 @@ function buildSummaryRows(): SummaryRow[] {
       p99DeltaPct: percentDelta(baseline.p99, attacks.p99),
       throughputDeltaPct: percentDelta(baseline.throughput, attacks.throughput),
       effectSize,
+      welchTStat: welch?.tStat ?? null,
+      welchDf: welch?.df ?? null,
+      welchPValue: welch?.pValue ?? null,
       ci95AvgDeltaPct,
     };
   });
@@ -153,8 +200,8 @@ function writeMarkdown(rows: SummaryRow[]) {
 
   lines.push("## Comparative Summary");
   lines.push("");
-  lines.push("| Model | Baseline Avg (ms) | Attack Avg (ms) | Avg Delta % | p95 Delta % | p99 Delta % | Throughput Delta % | Effect Size (d) | 95% CI Avg Delta % |");
-  lines.push("|---|---:|---:|---:|---:|---:|---:|---:|---:|");
+  lines.push("| Model | Baseline Avg (ms) | Attack Avg (ms) | Avg Delta % | p95 Delta % | p99 Delta % | Throughput Delta % | Effect Size (d) | Welch p-value | 95% CI Avg Delta % |");
+  lines.push("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|");
 
   for (const row of rows) {
     const ci = row.ci95AvgDeltaPct
@@ -162,7 +209,7 @@ function writeMarkdown(rows: SummaryRow[]) {
       : "n/a";
 
     lines.push(
-      `| ${row.model.toUpperCase()} | ${toFixed(row.baseline.avg, 4)} | ${toFixed(row.attacks.avg, 4)} | ${toFixed(row.avgDeltaPct)} | ${toFixed(row.p95DeltaPct)} | ${toFixed(row.p99DeltaPct)} | ${toFixed(row.throughputDeltaPct)} | ${row.effectSize === null ? "n/a" : toFixed(row.effectSize)} | ${ci} |`
+      `| ${row.model.toUpperCase()} | ${toFixed(row.baseline.avg, 4)} | ${toFixed(row.attacks.avg, 4)} | ${toFixed(row.avgDeltaPct)} | ${toFixed(row.p95DeltaPct)} | ${toFixed(row.p99DeltaPct)} | ${toFixed(row.throughputDeltaPct)} | ${row.effectSize === null ? "n/a" : toFixed(row.effectSize)} | ${row.welchPValue === null ? "n/a" : toFixed(row.welchPValue, 4)} | ${ci} |`
     );
   }
 
@@ -188,6 +235,9 @@ function writeCsv(rows: SummaryRow[]) {
     "p99_delta_pct",
     "throughput_delta_pct",
     "cohens_d",
+    "welch_t_stat",
+    "welch_df",
+    "welch_p_value",
     "ci95_avg_delta_pct_lower",
     "ci95_avg_delta_pct_upper",
   ];
@@ -204,6 +254,9 @@ function writeCsv(rows: SummaryRow[]) {
       row.p99DeltaPct,
       row.throughputDeltaPct,
       row.effectSize ?? "",
+      row.welchTStat ?? "",
+      row.welchDf ?? "",
+      row.welchPValue ?? "",
       row.ci95AvgDeltaPct?.[0] ?? "",
       row.ci95AvgDeltaPct?.[1] ?? "",
     ].join(","));

@@ -1,0 +1,40 @@
+{
+  "model": "sessions",
+  "sample": "sample27",
+  "samplePath": "ai-generated\\sessions\\sample27.ts",
+  "passed": false,
+  "checks": [
+    {
+      "name": "session regeneration present",
+      "passed": false,
+      "details": "Checks that the session is regenerated on login."
+    },
+    {
+      "name": "httpOnly cookie flag present",
+      "passed": false,
+      "details": "Checks for HttpOnly cookie protection."
+    },
+    {
+      "name": "logout invalidation present",
+      "passed": true,
+      "details": "Checks that logout invalidates the server-side session."
+    },
+    {
+      "name": "cookie not insecure none/false pair",
+      "passed": true,
+      "details": "Flags insecure SameSite=None with secure=false."
+    }
+  ],
+  "correctnessFailures": [
+    "session regeneration present",
+    "httpOnly cookie flag present"
+  ],
+  "securityFailures": [
+    "session regeneration present",
+    "httpOnly cookie flag present"
+  ],
+  "misconfigurationDetections": [
+    "session regeneration present",
+    "httpOnly cookie flag present"
+  ]
+}

@@ -1,0 +1,5 @@
+label,totalSamples,passedSamples,failedSamples,failureRatePct
+OAUTH,30,2,28,93.3
+JWT,30,26,4,13.3
+SESSIONS,30,30,0,0.0
+OVERALL,90,58,32,35.6

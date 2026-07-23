@@ -24,5 +24,15 @@
 ## Prompt And Generation Validity
 
 - The AI-generated workflow uses fixed prompts for fairness across samples.
-- In the current local setup, generation is deterministic rather than provider-backed and stochastic.
-- This improves reproducibility but reduces the ability to study prompt-variance effects.
+- The primary workflow is provider-backed (OpenAI and Claude) under neutral and security-guided prompt conditions.
+- Provider outputs are stochastic and credential-dependent; complete arm coverage is required for full-matrix comparisons.
+
+## Observed Negative Findings And Failure Modes
+
+- **Heuristic AI checks are fallible by design**: pattern-based detectors can over-flag or miss semantically equivalent constructs.
+- **Mutation-testing residual risk remains**: surviving mutants indicate that some behavioral regions remain weakly constrained by the current test suite.
+- **Environment sensitivity is non-trivial**: repeated performance runs reduce noise but cannot eliminate host/runtime/database variability.
+- **Variant representativeness is bounded**: selected misconfigurations are intentionally narrow probes and do not exhaust all plausible real-world failure modes.
+- **Provider drift can alter comparative baselines**: model updates outside repository control can move outcome distributions between runs.
+
+These findings do not invalidate the study design, but they do constrain claim strength. The resulting conclusions are therefore framed as reproducible evidence within this controlled setup, not universal dominance claims.

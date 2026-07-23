@@ -1,6 +1,6 @@
 # Advanced Security Research Analysis
 
-Generated: 2026-07-21T18:00:30.455Z
+Generated: 2026-07-23T03:49:03.824Z
 Regenerate: npm run research:advanced
 
 This report operationalizes advanced dissertation analyses over the existing baseline, controlled misconfiguration, and AI-generated evidence layers.
@@ -10,7 +10,7 @@ This report operationalizes advanced dissertation analyses over the existing bas
 | Variant | Severity | Propagation Chain | Secondary Failure Triggered | Proof |
 |---|---|---|---|---|
 | oauth-redirect-misconfiguration | Critical (5) | Untrusted redirect URI accepted -> Authorization code interception -> Code replay at attacker endpoint -> Unauthorized token issuance | Yes | PASS |
-| oauth-state-misconfiguration | Low (2) | Missing or unchecked OAuth state -> CSRF on authorization response -> Wrong user session binding -> Data leakage / account confusion | Yes | PASS |
+| oauth-state-misconfiguration | High (4) | Missing or unchecked OAuth state -> CSRF on authorization response -> Wrong user session binding -> Data leakage / account confusion | Yes | PASS |
 | oauth-scope-misconfiguration | Medium (3) | Over-broad scope assignment -> Token carries elevated privileges -> Access-control boundary erosion -> Privilege abuse on protected resources | Yes | PASS |
 | jwt-audience-misconfiguration | High (4) | Weak audience/issuer checks -> Cross-service token acceptance -> Improper trust transfer -> Unauthorized API access | Yes | PASS |
 | jwt-algorithm-misconfiguration | Critical (5) | Weak/none JWT signature validation -> Token forgery -> Session or access-control bypass -> Privilege escalation | Yes | PASS |
@@ -30,7 +30,7 @@ Interpretation: propagation chains model how a single configuration weakness can
 | Cookie hardening failure | No | No | Yes | High (4) | Model-specific |
 | Trust-boundary validation weakness | Yes | Yes | Yes | High-Critical | Cross-model pattern |
 
-- OAUTH average severity score: 3.33.
+- OAUTH average severity score: 4.00.
 - JWT average severity score: 4.33.
 - SESSIONS average severity score: 4.33.
 
@@ -38,15 +38,13 @@ Interpretation: propagation chains model how a single configuration weakness can
 
 | AI Signature Pattern | Frequency | Models Affected |
 |---|---:|---|
-| scope control | 24 | OAUTH |
-| cookie hardening | 24 | SESSIONS |
-| missing/weak state | 12 | OAUTH |
-| other security control | 12 | OAUTH |
+| redirect validation | 52 | OAUTH |
+| scope control | 34 | OAUTH |
 | audience/issuer validation | 12 | JWT |
-| algorithm enforcement | 12 | JWT |
-| token lifetime | 12 | JWT |
-| session fixation resistance | 12 | SESSIONS |
-| session invalidation | 12 | SESSIONS |
+| other security control | 8 | OAUTH |
+| session invalidation | 6 | SESSIONS |
+| session fixation resistance | 6 | SESSIONS |
+| cookie hardening | 2 | SESSIONS |
 
 Finding: recurring tags form an AI misconfiguration fingerprint, showing repeated control omissions rather than uniformly random errors.
 
@@ -55,10 +53,10 @@ Finding: recurring tags form an AI misconfiguration fingerprint, showing repeate
 | Layer | Complexity Density (Cyclomatic per 100 LOC) (X) | Security Burden Rate % (Y) |
 |---|---:|---:|
 | Baseline | 60.69 | 0.00 |
-| Misconfigured | 47.22 | 100.00 |
-| AI-generated | 12.00 | 53.33 |
+| Misconfigured | 47.29 | 100.00 |
+| AI-generated | n/a | 40.00 |
 
-Regression line estimate: y = -0.61x + 75.36.
+Regression line estimate: y = n/ax + n/a.
 
 ## 5) Authentication Model Difficulty Index (AMDI)
 
@@ -74,9 +72,9 @@ AMDI is an original composite index in this repository and can be used to compar
 
 | Model | Security Pass Rate | Cyclomatic StdDev | Maintainability StdDev | Security-Failure Tag Diversity |
 |---|---:|---:|---:|---:|
-| OAUTH | 60.00% | 1.36 | 5.84 | 3 |
-| JWT | 40.00% | 0.40 | 1.00 | 3 |
-| SESSIONS | 40.00% | 0.00 | 13.02 | 3 |
+| OAUTH | 10.00% | n/a | n/a | 3 |
+| JWT | 90.00% | n/a | n/a | 1 |
+| SESSIONS | 80.00% | n/a | n/a | 3 |
 
 Interpretation: non-zero variance in complexity and security outcomes demonstrates instability of generated security quality across nominally similar samples.
 
@@ -84,10 +82,10 @@ Interpretation: non-zero variance in complexity and security outcomes demonstrat
 
 | Outcome Type | Sample Count | Meaning |
 |---|---:|---|
-| Functional PASS + Security PASS | 42 | Correct and secure under current local checks. |
+| Functional PASS + Security PASS | 54 | Correct and secure under current local checks. |
 | Functional PASS + Security FAIL | 0 | Correctness-security gap (appears correct but insecure). |
 | Functional FAIL + Security PASS | 0 | Functionality failure without flagged security omission. |
-| Functional FAIL + Security FAIL | 48 | Broad quality failure affecting correctness and security. |
+| Functional FAIL + Security FAIL | 36 | Broad quality failure affecting correctness and security. |
 
 ## 8) Exploit Simulation Evidence
 
@@ -109,13 +107,13 @@ Interpretation: non-zero variance in complexity and security outcomes demonstrat
 |---|---|---:|---:|---:|---:|---|
 | OAUTH | Baseline | 15273.00 | 542.00 | 16.00 | 195.00 | Secure baseline reference |
 | OAUTH | Misconfigured | 17330.33 | 621.00 | 20.00 | 207.00 | Intentional exploit proofs: 3 / 3 |
-| OAUTH | AI-generated | 734.70 | 23.40 | 1.40 | 5.60 | Security failure rate: 40.00% |
+| OAUTH | AI-generated | 2868.70 | 112.07 | 0.00 | n/a | Security failure rate: 90.00% |
 | JWT | Baseline | 4847.00 | 155.00 | 14.00 | 106.00 | Secure baseline reference |
-| JWT | Misconfigured | 6886.33 | 234.33 | 18.00 | 118.00 | Intentional exploit proofs: 3 / 3 |
-| JWT | AI-generated | 875.50 | 28.60 | 2.00 | 2.20 | Security failure rate: 60.00% |
+| JWT | Misconfigured | 6878.67 | 234.00 | 18.00 | 118.00 | Intentional exploit proofs: 3 / 3 |
+| JWT | AI-generated | 2888.00 | 107.23 | 0.17 | n/a | Security failure rate: 10.00% |
 | SESSIONS | Baseline | 5491.00 | 175.00 | 12.00 | 136.00 | Secure baseline reference |
-| SESSIONS | Misconfigured | 7556.33 | 255.33 | 16.00 | 148.00 | Intentional exploit proofs: 3 / 3 |
-| SESSIONS | AI-generated | 584.70 | 21.60 | 3.60 | 1.00 | Security failure rate: 60.00% |
+| SESSIONS | Misconfigured | 7539.00 | 254.67 | 16.00 | 148.00 | Intentional exploit proofs: 3 / 3 |
+| SESSIONS | AI-generated | 2984.60 | 116.70 | 0.00 | n/a | Security failure rate: 20.00% |
 
 ## Notes and Caveats
 

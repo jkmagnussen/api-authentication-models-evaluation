@@ -1,0 +1,202 @@
+{
+  "generatedAt": "2026-07-22T23:49:03.398Z",
+  "fileCount": 90,
+  "issueCount": 39,
+  "issues": [
+    {
+      "filePath": "ai-generated/oauth/sample1.ts",
+      "stage": "typescript",
+      "message": "L110:C20 Unterminated template literal."
+    },
+    {
+      "filePath": "ai-generated/oauth/sample2.ts",
+      "stage": "typescript",
+      "message": "L1:C3 Module declaration names may only use ' or \" quoted strings."
+    },
+    {
+      "filePath": "ai-generated/oauth/sample2.ts",
+      "stage": "typescript",
+      "message": "L28:C24 Unexpected keyword or identifier."
+    },
+    {
+      "filePath": "ai-generated/oauth/sample2.ts",
+      "stage": "typescript",
+      "message": "L30:C3 Declaration or statement expected."
+    },
+    {
+      "filePath": "ai-generated/oauth/sample2.ts",
+      "stage": "typescript",
+      "message": "L30:C5 'try' expected."
+    },
+    {
+      "filePath": "ai-generated/oauth/sample2.ts",
+      "stage": "typescript",
+      "message": "L33:C1 Declaration or statement expected."
+    },
+    {
+      "filePath": "ai-generated/oauth/sample2.ts",
+      "stage": "typescript",
+      "message": "L112:C10 '}' expected."
+    },
+    {
+      "filePath": "ai-generated/oauth/sample2.ts",
+      "stage": "complexity",
+      "message": "Line 49: Illegal return statement"
+    },
+    {
+      "filePath": "ai-generated/oauth/sample3.ts",
+      "stage": "typescript",
+      "message": "L120:C13 Unterminated template literal."
+    },
+    {
+      "filePath": "ai-generated/oauth/sample4.ts",
+      "stage": "typescript",
+      "message": "L112:C24 Unterminated template literal."
+    },
+    {
+      "filePath": "ai-generated/oauth/sample5.ts",
+      "stage": "typescript",
+      "message": "L121:C16 Unterminated template literal."
+    },
+    {
+      "filePath": "ai-generated/jwt/sample1.ts",
+      "stage": "typescript",
+      "message": "L103:C19 Unterminated template literal."
+    },
+    {
+      "filePath": "ai-generated/jwt/sample2.ts",
+      "stage": "typescript",
+      "message": "L1:C3 Module declaration names may only use ' or \" quoted strings."
+    },
+    {
+      "filePath": "ai-generated/jwt/sample2.ts",
+      "stage": "typescript",
+      "message": "L45:C24 Unexpected keyword or identifier."
+    },
+    {
+      "filePath": "ai-generated/jwt/sample2.ts",
+      "stage": "typescript",
+      "message": "L45:C44 Unexpected keyword or identifier."
+    },
+    {
+      "filePath": "ai-generated/jwt/sample2.ts",
+      "stage": "typescript",
+      "message": "L89:C29 Unterminated template literal."
+    },
+    {
+      "filePath": "ai-generated/jwt/sample3.ts",
+      "stage": "typescript",
+      "message": "L115:C24 Unterminated template literal."
+    },
+    {
+      "filePath": "ai-generated/jwt/sample5.ts",
+      "stage": "typescript",
+      "message": "L1:C3 Module declaration names may only use ' or \" quoted strings."
+    },
+    {
+      "filePath": "ai-generated/jwt/sample5.ts",
+      "stage": "typescript",
+      "message": "L82:C26 Unexpected keyword or identifier."
+    },
+    {
+      "filePath": "ai-generated/jwt/sample5.ts",
+      "stage": "typescript",
+      "message": "L82:C41 Unexpected keyword or identifier."
+    },
+    {
+      "filePath": "ai-generated/jwt/sample5.ts",
+      "stage": "typescript",
+      "message": "L110:C11 Unterminated template literal."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample1.ts",
+      "stage": "typescript",
+      "message": "L1:C3 Module declaration names may only use ' or \" quoted strings."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample1.ts",
+      "stage": "typescript",
+      "message": "L67:C18 Unexpected keyword or identifier."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample1.ts",
+      "stage": "typescript",
+      "message": "L67:C26 Unexpected keyword or identifier."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample1.ts",
+      "stage": "typescript",
+      "message": "L67:C39 Unexpected keyword or identifier."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample1.ts",
+      "stage": "typescript",
+      "message": "L119:C15 Unterminated template literal."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample2.ts",
+      "stage": "typescript",
+      "message": "L1:C3 Module declaration names may only use ' or \" quoted strings."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample2.ts",
+      "stage": "typescript",
+      "message": "L116:C12 Unexpected keyword or identifier."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample2.ts",
+      "stage": "typescript",
+      "message": "L116:C33 Unexpected keyword or identifier."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample2.ts",
+      "stage": "typescript",
+      "message": "L116:C55 Expression expected."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample2.ts",
+      "stage": "typescript",
+      "message": "L116:C58 ';' expected."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample2.ts",
+      "stage": "typescript",
+      "message": "L116:C78 '(' expected."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample2.ts",
+      "stage": "typescript",
+      "message": "L116:C83 ';' expected."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample2.ts",
+      "stage": "typescript",
+      "message": "L116:C84 ';' expected."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample2.ts",
+      "stage": "typescript",
+      "message": "L125:C41 Unterminated template literal."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample2.ts",
+      "stage": "complexity",
+      "message": "Line 11: Unexpected token >"
+    },
+    {
+      "filePath": "ai-generated/sessions/sample3.ts",
+      "stage": "typescript",
+      "message": "L113:C34 Unterminated template literal."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample4.ts",
+      "stage": "typescript",
+      "message": "L110:C15 Unterminated template literal."
+    },
+    {
+      "filePath": "ai-generated/sessions/sample5.ts",
+      "stage": "typescript",
+      "message": "L128:C26 Unterminated template literal."
+    }
+  ]
+}

@@ -1,0 +1,340 @@
+{
+  "generatedAt": "2026-07-23T03:49:04.860Z",
+  "runtime": {
+    "nodeVersion": "v24.14.1",
+    "npmVersion": "11.12.1",
+    "platform": "win32",
+    "platformRelease": "10.0.26200",
+    "arch": "x64",
+    "cpuModel": "AMD Ryzen 9 9950X3D 16-Core Processor          ",
+    "cpuCores": 32,
+    "totalMemoryBytes": 66189025280,
+    "hostname": "JOE-PC"
+  },
+  "vcs": {
+    "gitCommit": "cf54f5621cf11efc8e79c06bb119b242a3982fa2",
+    "gitBranch": "main",
+    "dirtyWorkingTree": true
+  },
+  "dataStack": {
+    "databaseProvider": "unknown",
+    "databaseUrlPresent": false,
+    "prismaClientVersion": "^6.0.0",
+    "prismaCliVersion": "^6.0.0",
+    "prismaVersion": null
+  },
+  "methodology": {
+    "aiSampleCount": 30,
+    "allowPartialAiMatrix": false,
+    "runNormalization": {
+      "dependencyLockFilePresent": true,
+      "dependencyLockSha256": "2737c3ca8dea5307670ce11a25d64441100461727333e9dcace25a62a69aa1cf",
+      "expectedGenerationDefaults": {
+        "maxTokens": 900,
+        "temperature": 0.8,
+        "retryMaxAttempts": 5
+      }
+    },
+    "generationMetadata": {
+      "generatedAt": "2026-07-23T00:52:18.643Z",
+      "startedAt": "2026-07-23T00:44:13.574Z",
+      "provider": "claude",
+      "providerModel": "claude-haiku-4-5-20251001",
+      "providerModelIdentifier": "claude-haiku-4-5-20251001",
+      "providerEndpoint": "https://api.anthropic.com/v1/messages",
+      "promptMode": "security-guided",
+      "models": [
+        "oauth",
+        "jwt",
+        "sessions"
+      ],
+      "sampleCount": 30,
+      "generationParameters": {
+        "temperature": 0.8,
+        "maxTokens": 900
+      },
+      "promptFingerprints": {
+        "promptMode": "security-guided",
+        "systemPromptSha256": "1251c7b05f55c2d7fc51e0d0fabd2dabea788caa9951abb861a439fe9764e269",
+        "modelPromptFingerprints": {
+          "oauth": {
+            "promptSha256": "5f9327160509dc5c27d3f2e5f0bd47b3f512d188a8af0a40131e39d087d2569d",
+            "systemPromptSha256": "1251c7b05f55c2d7fc51e0d0fabd2dabea788caa9951abb861a439fe9764e269",
+            "combinedPromptSha256": "57e943d4e6a5abc283841eba598573b1db094907c0da11754c8103549c2cfb33"
+          },
+          "jwt": {
+            "promptSha256": "d676bb84cf7e09c069d46e1b9a7bf0288751aeecea0c7a8d26a6b62711cf8664",
+            "systemPromptSha256": "1251c7b05f55c2d7fc51e0d0fabd2dabea788caa9951abb861a439fe9764e269",
+            "combinedPromptSha256": "da117199fb620a38bfb799f118636f803ae3f9537c1481f0e9d8d7daf6770f50"
+          },
+          "sessions": {
+            "promptSha256": "8e3b56c8221edf63454362a205be29cac94bbeeb5057209c47d665cacbe0d82b",
+            "systemPromptSha256": "1251c7b05f55c2d7fc51e0d0fabd2dabea788caa9951abb861a439fe9764e269",
+            "combinedPromptSha256": "653825c1ff0d28ca783cdc806b6ff17070461ab946dd164b5c501488d4b6a76c"
+          }
+        }
+      },
+      "retryPolicy": {
+        "maxProviderAttempts": 5,
+        "baseRetryDelayMs": 750,
+        "maxRetryJitterMs": 250,
+        "requestTimeoutMs": 120000,
+        "sampleTimeoutMs": 180000,
+        "retryableStatusCodes": [
+          408,
+          409,
+          429,
+          500,
+          502,
+          503,
+          504,
+          529
+        ]
+      },
+      "retrySummary": {
+        "totalAttempts": 90,
+        "successfulRequests": 90,
+        "retries": 0,
+        "retryableHttpFailures": 0,
+        "networkFailures": 0,
+        "requestTimeoutFailures": 0,
+        "sampleTimeoutFailures": 0
+      }
+    },
+    "aiMatrix": {
+      "generatedAt": "2026-07-23T00:52:24.159Z",
+      "allowPartial": false,
+      "requiredArms": [
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided"
+      ],
+      "arms": [
+        {
+          "key": "openai-neutral",
+          "status": "completed",
+          "reason": null,
+          "provider": "openai",
+          "promptMode": "neutral",
+          "providerModelIdentifier": "gpt-4o",
+          "providerEndpoint": "https://api.openai.com/v1",
+          "systemPromptSha256": "f1d5d4b3de59ea1e3b3e17f5f66e04f11027d683ce1073ea8508f453171c7ff6",
+          "combinedPromptFingerprints": [
+            {
+              "model": "oauth",
+              "combinedPromptSha256": "c1a7695900c28ecf4708d99845728fd05b0bff9381618eebc39bef4e5c2524e4"
+            },
+            {
+              "model": "jwt",
+              "combinedPromptSha256": "68492d53ed1b30e0542d36649a17e64c25fe39139fdf4a667778d17f71b6990e"
+            },
+            {
+              "model": "sessions",
+              "combinedPromptSha256": "48cff4582d8e07d2ca0165d5cb483010cd03e4eb47a7e1776c8ff6c7f929ee89"
+            }
+          ],
+          "generationParameters": {
+            "temperature": 0.8,
+            "maxTokens": 900
+          },
+          "retryPolicy": {
+            "maxProviderAttempts": 5,
+            "baseRetryDelayMs": 750,
+            "maxRetryJitterMs": 250,
+            "requestTimeoutMs": 120000,
+            "sampleTimeoutMs": 180000,
+            "retryableStatusCodes": [
+              408,
+              409,
+              429,
+              500,
+              502,
+              503,
+              504,
+              529
+            ]
+          },
+          "retrySummary": {
+            "totalAttempts": 90,
+            "successfulRequests": 90,
+            "retries": 0,
+            "retryableHttpFailures": 0,
+            "networkFailures": 0,
+            "requestTimeoutFailures": 0,
+            "sampleTimeoutFailures": 0
+          }
+        },
+        {
+          "key": "openai-security-guided",
+          "status": "completed",
+          "reason": null,
+          "provider": "openai",
+          "promptMode": "security-guided",
+          "providerModelIdentifier": "gpt-4o",
+          "providerEndpoint": "https://api.openai.com/v1",
+          "systemPromptSha256": "1251c7b05f55c2d7fc51e0d0fabd2dabea788caa9951abb861a439fe9764e269",
+          "combinedPromptFingerprints": [
+            {
+              "model": "oauth",
+              "combinedPromptSha256": "57e943d4e6a5abc283841eba598573b1db094907c0da11754c8103549c2cfb33"
+            },
+            {
+              "model": "jwt",
+              "combinedPromptSha256": "da117199fb620a38bfb799f118636f803ae3f9537c1481f0e9d8d7daf6770f50"
+            },
+            {
+              "model": "sessions",
+              "combinedPromptSha256": "653825c1ff0d28ca783cdc806b6ff17070461ab946dd164b5c501488d4b6a76c"
+            }
+          ],
+          "generationParameters": {
+            "temperature": 0.8,
+            "maxTokens": 900
+          },
+          "retryPolicy": {
+            "maxProviderAttempts": 5,
+            "baseRetryDelayMs": 750,
+            "maxRetryJitterMs": 250,
+            "requestTimeoutMs": 120000,
+            "sampleTimeoutMs": 180000,
+            "retryableStatusCodes": [
+              408,
+              409,
+              429,
+              500,
+              502,
+              503,
+              504,
+              529
+            ]
+          },
+          "retrySummary": {
+            "totalAttempts": 90,
+            "successfulRequests": 90,
+            "retries": 0,
+            "retryableHttpFailures": 0,
+            "networkFailures": 0,
+            "requestTimeoutFailures": 0,
+            "sampleTimeoutFailures": 0
+          }
+        },
+        {
+          "key": "claude-neutral",
+          "status": "completed",
+          "reason": null,
+          "provider": "claude",
+          "promptMode": "neutral",
+          "providerModelIdentifier": "claude-haiku-4-5-20251001",
+          "providerEndpoint": "https://api.anthropic.com/v1/messages",
+          "systemPromptSha256": "f1d5d4b3de59ea1e3b3e17f5f66e04f11027d683ce1073ea8508f453171c7ff6",
+          "combinedPromptFingerprints": [
+            {
+              "model": "oauth",
+              "combinedPromptSha256": "c1a7695900c28ecf4708d99845728fd05b0bff9381618eebc39bef4e5c2524e4"
+            },
+            {
+              "model": "jwt",
+              "combinedPromptSha256": "68492d53ed1b30e0542d36649a17e64c25fe39139fdf4a667778d17f71b6990e"
+            },
+            {
+              "model": "sessions",
+              "combinedPromptSha256": "48cff4582d8e07d2ca0165d5cb483010cd03e4eb47a7e1776c8ff6c7f929ee89"
+            }
+          ],
+          "generationParameters": {
+            "temperature": 0.8,
+            "maxTokens": 900
+          },
+          "retryPolicy": {
+            "maxProviderAttempts": 5,
+            "baseRetryDelayMs": 750,
+            "maxRetryJitterMs": 250,
+            "requestTimeoutMs": 120000,
+            "sampleTimeoutMs": 180000,
+            "retryableStatusCodes": [
+              408,
+              409,
+              429,
+              500,
+              502,
+              503,
+              504,
+              529
+            ]
+          },
+          "retrySummary": {
+            "totalAttempts": 90,
+            "successfulRequests": 90,
+            "retries": 0,
+            "retryableHttpFailures": 0,
+            "networkFailures": 0,
+            "requestTimeoutFailures": 0,
+            "sampleTimeoutFailures": 0
+          }
+        },
+        {
+          "key": "claude-security-guided",
+          "status": "completed",
+          "reason": null,
+          "provider": "claude",
+          "promptMode": "security-guided",
+          "providerModelIdentifier": "claude-haiku-4-5-20251001",
+          "providerEndpoint": "https://api.anthropic.com/v1/messages",
+          "systemPromptSha256": "1251c7b05f55c2d7fc51e0d0fabd2dabea788caa9951abb861a439fe9764e269",
+          "combinedPromptFingerprints": [
+            {
+              "model": "oauth",
+              "combinedPromptSha256": "57e943d4e6a5abc283841eba598573b1db094907c0da11754c8103549c2cfb33"
+            },
+            {
+              "model": "jwt",
+              "combinedPromptSha256": "da117199fb620a38bfb799f118636f803ae3f9537c1481f0e9d8d7daf6770f50"
+            },
+            {
+              "model": "sessions",
+              "combinedPromptSha256": "653825c1ff0d28ca783cdc806b6ff17070461ab946dd164b5c501488d4b6a76c"
+            }
+          ],
+          "generationParameters": {
+            "temperature": 0.8,
+            "maxTokens": 900
+          },
+          "retryPolicy": {
+            "maxProviderAttempts": 5,
+            "baseRetryDelayMs": 750,
+            "maxRetryJitterMs": 250,
+            "requestTimeoutMs": 120000,
+            "sampleTimeoutMs": 180000,
+            "retryableStatusCodes": [
+              408,
+              409,
+              429,
+              500,
+              502,
+              503,
+              504,
+              529
+            ]
+          },
+          "retrySummary": {
+            "totalAttempts": 90,
+            "successfulRequests": 90,
+            "retries": 0,
+            "retryableHttpFailures": 0,
+            "networkFailures": 0,
+            "requestTimeoutFailures": 0,
+            "sampleTimeoutFailures": 0
+          }
+        }
+      ],
+      "armCompleteness": {
+        "allCompletedArmsHaveProviderName": true,
+        "allCompletedArmsHaveProviderModelIdentifier": true,
+        "allCompletedArmsHaveSystemPromptFingerprint": true,
+        "allCompletedArmsHaveGenerationParameters": true,
+        "allCompletedArmsHaveRetryPolicy": true
+      }
+    }
+  }
+}

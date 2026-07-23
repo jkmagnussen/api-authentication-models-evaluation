@@ -1,0 +1,66 @@
+{
+  "model": "sessions",
+  "sample": "sample21",
+  "characters": 731,
+  "lines": 32,
+  "functions": 3,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 7,
+      "total": 34,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const"
+      ]
+    },
+    "operands": {
+      "distinct": 28,
+      "total": 46,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "app",
+        0,
+        "express_1",
+        "\"express\"",
+        "require",
+        "express_session_1",
+        "\"express-session\"",
+        "default",
+        "secret",
+        "\"randomSecretKey123!\"",
+        "resave",
+        false,
+        "saveUninitialized",
+        "cookie",
+        "maxAge",
+        60000,
+        "use",
+        "\"/\"",
+        "get",
+        "\"/logout\""
+      ]
+    },
+    "length": 80,
+    "vocabulary": 35,
+    "difficulty": 5.75,
+    "volume": 410.3426413555973,
+    "effort": 2359.4701877946845,
+    "bugs": 0.13678088045186576,
+    "time": 131.0816770997047
+  },
+  "maintainabilityIndex": 99.52368477338744
+}

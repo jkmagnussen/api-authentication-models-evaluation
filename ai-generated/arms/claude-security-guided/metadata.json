@@ -1,0 +1,63 @@
+{
+  "provider": "claude",
+  "promptMode": "security-guided",
+  "generatedAt": "2026-07-23T00:52:24.159Z",
+  "providerModelIdentifier": "claude-haiku-4-5-20251001",
+  "providerEndpoint": "https://api.anthropic.com/v1/messages",
+  "generationParameters": {
+    "temperature": 0.8,
+    "maxTokens": 900
+  },
+  "promptFingerprints": {
+    "promptMode": "security-guided",
+    "systemPromptSha256": "1251c7b05f55c2d7fc51e0d0fabd2dabea788caa9951abb861a439fe9764e269",
+    "modelPromptFingerprints": {
+      "oauth": {
+        "promptSha256": "5f9327160509dc5c27d3f2e5f0bd47b3f512d188a8af0a40131e39d087d2569d",
+        "systemPromptSha256": "1251c7b05f55c2d7fc51e0d0fabd2dabea788caa9951abb861a439fe9764e269",
+        "combinedPromptSha256": "57e943d4e6a5abc283841eba598573b1db094907c0da11754c8103549c2cfb33"
+      },
+      "jwt": {
+        "promptSha256": "d676bb84cf7e09c069d46e1b9a7bf0288751aeecea0c7a8d26a6b62711cf8664",
+        "systemPromptSha256": "1251c7b05f55c2d7fc51e0d0fabd2dabea788caa9951abb861a439fe9764e269",
+        "combinedPromptSha256": "da117199fb620a38bfb799f118636f803ae3f9537c1481f0e9d8d7daf6770f50"
+      },
+      "sessions": {
+        "promptSha256": "8e3b56c8221edf63454362a205be29cac94bbeeb5057209c47d665cacbe0d82b",
+        "systemPromptSha256": "1251c7b05f55c2d7fc51e0d0fabd2dabea788caa9951abb861a439fe9764e269",
+        "combinedPromptSha256": "653825c1ff0d28ca783cdc806b6ff17070461ab946dd164b5c501488d4b6a76c"
+      }
+    }
+  },
+  "retryPolicy": {
+    "maxProviderAttempts": 5,
+    "baseRetryDelayMs": 750,
+    "maxRetryJitterMs": 250,
+    "requestTimeoutMs": 120000,
+    "sampleTimeoutMs": 180000,
+    "retryableStatusCodes": [
+      408,
+      409,
+      429,
+      500,
+      502,
+      503,
+      504,
+      529
+    ]
+  },
+  "retrySummary": {
+    "totalAttempts": 90,
+    "successfulRequests": 90,
+    "retries": 0,
+    "retryableHttpFailures": 0,
+    "networkFailures": 0,
+    "requestTimeoutFailures": 0,
+    "sampleTimeoutFailures": 0
+  },
+  "overallFailure": {
+    "totalSamples": 90,
+    "failedSamples": 36,
+    "failureRatePct": 40
+  }
+}

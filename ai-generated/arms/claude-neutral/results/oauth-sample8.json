@@ -1,0 +1,73 @@
+{
+  "model": "oauth",
+  "sample": "sample8",
+  "characters": 1456,
+  "lines": 41,
+  "functions": 2,
+  "classes": 0,
+  "cyclomaticComplexity": 2,
+  "halstead": {
+    "operators": {
+      "distinct": 11,
+      "total": 43,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "const",
+        "new",
+        "function",
+        "return",
+        ":?",
+        "==="
+      ]
+    },
+    "operands": {
+      "distinct": 31,
+      "total": 50,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "generateOAuth2AuthorizationEndpoint",
+        "demonstrateOAuth2Endpoint",
+        "sdk_1",
+        "\"@anthropic-ai/sdk\"",
+        "require",
+        "client",
+        "default",
+        "message",
+        "content",
+        0,
+        "type",
+        "\"text\"",
+        "text",
+        "\"\"",
+        "generatedCode",
+        "\"Generated OAuth2 Authorization Endpoint:\"",
+        "console",
+        "log",
+        50,
+        "\"=\"",
+        "repeat",
+        "error",
+        "catch"
+      ]
+    },
+    "length": 93,
+    "vocabulary": 42,
+    "difficulty": 8.870967741935484,
+    "volume": 501.48552031842473,
+    "effort": 4448.661873792477,
+    "bugs": 0.16716184010614157,
+    "time": 247.14788187735985
+  },
+  "maintainabilityIndex": 130.1935157508817
+}

@@ -1,0 +1,18 @@
+{
+  "model": "jwt",
+  "sample": "sample8",
+  "characters": 2981,
+  "lines": 111,
+  "functions": 0,
+  "classes": 0,
+  "cyclomaticComplexity": null,
+  "halstead": {
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
+  },
+  "maintainabilityIndex": null,
+  "analysisError": "Line 106: Unexpected quasi ,\n      },\n    ],\n  });\n\n  const content = message.content[0];\n  if (content.type !== \"text\") {\n    throw new Error(\"Unexpected response type from Claude\");\n  }\n\n  const payloadText = content.text.trim();\n  const jsonMatch = payloadText.match(/\\{[\\s\\S]*\\}/);\n  if (!jsonMatch) {\n    throw new Error(\"Could not extract JSON from Claude response\");\n  }\n\n  const payload = JSON.parse(jsonMatch[0]);\n\n  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });\n  return token;\n}\n\nexport function verifyTokenMiddleware(\n  req: AuthenticatedRequest,\n  res: Response,\n  next: NextFunction\n): void {\n  const authHeader = req.headers.authorization;\n\n  if (!authHeader || !authHeader.startsWith(\"Bearer \")) {\n    res.status(401).json({ error: \"Missing or invalid authorization header\" });\n    return;\n  }\n\n  const token = authHeader.substring(7);\n\n  try {\n    const decoded = jwt.verify(token, JWT_SECRET) as {\n      userId: string;\n      email: string;\n      role: string;\n    };\n    req.user = {\n      id: decoded.userId,\n      email: decoded.email,\n      role: decoded.role,\n    };\n    next();\n  } catch (err) {\n    res.status(401).json({ error: \"Invalid or expired token\" });\n  }\n}\n\nexport function requireRoleMiddleware(requiredRole: string) {\n  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {\n    if (!req.user) {\n      res.status(401).json({ error: \"User not authenticated\" });\n      return;\n    }\n\n    if (req.user.role !== requiredRole) {\n      res.status(403).json({\n        error: "
+}

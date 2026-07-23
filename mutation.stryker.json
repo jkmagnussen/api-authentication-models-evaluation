@@ -16,7 +16,7 @@
   ],
   "reporters": ["clear-text", "html", "progress"],
   "coverageAnalysis": "off",
-  "ignoreStatic": true,
+  "ignoreStatic": false,
   "allowEmpty": false,
   "tempDirName": ".stryker-tmp",
   "htmlReporter": {

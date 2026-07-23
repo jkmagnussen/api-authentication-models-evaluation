@@ -1,0 +1,69 @@
+{
+  "model": "jwt",
+  "sample": "sample18",
+  "characters": 1203,
+  "lines": 41,
+  "functions": 3,
+  "classes": 0,
+  "cyclomaticComplexity": 4,
+  "halstead": {
+    "operators": {
+      "distinct": 8,
+      "total": 45,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const",
+        "||"
+      ]
+    },
+    "operands": {
+      "distinct": 30,
+      "total": 49,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "verifyToken",
+        "createToken",
+        0,
+        "jsonwebtoken_1",
+        "\"jsonwebtoken\"",
+        "require",
+        "dotenv_1",
+        "\"dotenv\"",
+        "default",
+        "config",
+        "JWT_SECRET",
+        "process",
+        "env",
+        "\"your-secure-secret-key\"",
+        "JWT_ISSUER",
+        "\"your-issuer\"",
+        "JWT_AUDIENCE",
+        "\"your-audience\"",
+        "JWT_ALGORITHM",
+        "\"HS256\"",
+        "JWT_EXPIRATION",
+        "\"1h\""
+      ]
+    },
+    "length": 94,
+    "vocabulary": 38,
+    "difficulty": 6.533333333333333,
+    "volume": 493.305186263697,
+    "effort": 3222.92721692282,
+    "bugs": 0.16443506208789901,
+    "time": 179.0515120512678
+  },
+  "maintainabilityIndex": 98.13830007353134
+}

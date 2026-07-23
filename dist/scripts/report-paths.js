@@ -1,0 +1,77 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DRIFT_CHECK_PATHS = exports.EXPECTED_GENERATED_DOC_FILES = exports.PERFORMANCE_FILES = exports.GENERATED_FILES = exports.DOCS_PERFORMANCE_DIR = exports.DOCS_EVIDENCE_DIR = exports.DOCS_GENERATED_DIR = exports.DOCS_DIR = void 0;
+exports.DOCS_DIR = "docs";
+exports.DOCS_GENERATED_DIR = `${exports.DOCS_DIR}/generated`;
+exports.DOCS_EVIDENCE_DIR = `${exports.DOCS_DIR}/evidence`;
+exports.DOCS_PERFORMANCE_DIR = `${exports.DOCS_DIR}/performance-results`;
+exports.GENERATED_FILES = {
+    runManifest: `${exports.DOCS_GENERATED_DIR}/RUN_MANIFEST.json`,
+    aiSummary: `${exports.DOCS_GENERATED_DIR}/AI_EVALUATION_SUMMARY.md`,
+    advancedResearchAnalysis: `${exports.DOCS_GENERATED_DIR}/ADVANCED_SECURITY_RESEARCH_ANALYSIS.md`,
+    aiProviderPromptComparison: `${exports.DOCS_GENERATED_DIR}/AI_PROVIDER_PROMPT_COMPARISON.md`,
+    aiProviderPromptComparisonBlinded: `${exports.DOCS_GENERATED_DIR}/AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md`,
+    aiBlindInterpretation: `${exports.DOCS_GENERATED_DIR}/AI_BLIND_INTERPRETATION.md`,
+    protocolSeal: `${exports.DOCS_GENERATED_DIR}/PROTOCOL_SEAL.json`,
+    powerAnalysisSeal: `${exports.DOCS_GENERATED_DIR}/POWER_ANALYSIS_SEAL.json`,
+    analysisWindow: `${exports.DOCS_GENERATED_DIR}/ANALYSIS_WINDOW.json`,
+    holdoutSeal: `${exports.DOCS_GENERATED_DIR}/HOLDOUT_SEAL.json`,
+    sentinelControls: `${exports.DOCS_GENERATED_DIR}/SENTINEL_CONTROLS.md`,
+    auditTrail: `${exports.DOCS_GENERATED_DIR}/AUDIT_TRAIL.json`,
+    objectivityAssessment: `${exports.DOCS_GENERATED_DIR}/OBJECTIVITY_ASSESSMENT.md`,
+    aiStabilityReport: `${exports.DOCS_GENERATED_DIR}/AI_STABILITY_REPORT.md`,
+    protocolDeviations: `${exports.DOCS_GENERATED_DIR}/PROTOCOL_DEVIATIONS.md`,
+    aiSampleSyntaxReport: `${exports.DOCS_GENERATED_DIR}/AI_SAMPLE_SYNTAX_REPORT.md`,
+    aiSampleSyntaxReportJson: `${exports.DOCS_GENERATED_DIR}/ai-sample-syntax-report.json`,
+    codeFootprintSummary: `${exports.DOCS_GENERATED_DIR}/CODE_FOOTPRINT_SUMMARY.md`,
+    codeFootprintJson: `${exports.DOCS_GENERATED_DIR}/code-footprint-summary.json`,
+    variantDifferential: `${exports.DOCS_GENERATED_DIR}/VARIANT_DIFFERENTIAL_REPORT.md`,
+    variantFocusedSummary: `${exports.DOCS_GENERATED_DIR}/VARIANT_DIFFERENTIAL_REPORT.md`,
+    variantFocusedJson: `${exports.DOCS_GENERATED_DIR}/variant-focused-summary.json`,
+    misconfigurationImpact: `${exports.DOCS_GENERATED_DIR}/MISCONFIGURATION_IMPACT_MATRIX.md`,
+    modelRiskSummary: `${exports.DOCS_GENERATED_DIR}/MODEL_RISK_SUMMARY.md`,
+    aiFailureTaxonomy: `${exports.DOCS_GENERATED_DIR}/AI_FAILURE_TAXONOMY.md`,
+    securityPerformanceTradeoff: `${exports.DOCS_GENERATED_DIR}/SECURITY_PERFORMANCE_TRADEOFF.md`,
+    sensitivityAnalysis: `${exports.DOCS_GENERATED_DIR}/SENSITIVITY_ANALYSIS.md`,
+    preregCompliance: `${exports.DOCS_GENERATED_DIR}/PREREGISTERED_COMPLIANCE.md`,
+};
+exports.PERFORMANCE_FILES = {
+    analysis: `${exports.DOCS_PERFORMANCE_DIR}/analysis.md`,
+    statisticsCsv: `${exports.DOCS_PERFORMANCE_DIR}/statistical-summary.csv`,
+};
+exports.EXPECTED_GENERATED_DOC_FILES = [
+    exports.GENERATED_FILES.runManifest,
+    exports.GENERATED_FILES.aiSummary,
+    exports.GENERATED_FILES.advancedResearchAnalysis,
+    exports.GENERATED_FILES.aiProviderPromptComparison,
+    exports.GENERATED_FILES.aiProviderPromptComparisonBlinded,
+    exports.GENERATED_FILES.aiBlindInterpretation,
+    exports.GENERATED_FILES.protocolSeal,
+    exports.GENERATED_FILES.powerAnalysisSeal,
+    exports.GENERATED_FILES.analysisWindow,
+    exports.GENERATED_FILES.holdoutSeal,
+    exports.GENERATED_FILES.sentinelControls,
+    exports.GENERATED_FILES.auditTrail,
+    exports.GENERATED_FILES.objectivityAssessment,
+    exports.GENERATED_FILES.aiStabilityReport,
+    exports.GENERATED_FILES.protocolDeviations,
+    exports.GENERATED_FILES.aiSampleSyntaxReport,
+    exports.GENERATED_FILES.aiSampleSyntaxReportJson,
+    exports.GENERATED_FILES.codeFootprintSummary,
+    exports.GENERATED_FILES.codeFootprintJson,
+    exports.GENERATED_FILES.variantDifferential,
+    exports.GENERATED_FILES.variantFocusedJson,
+    exports.GENERATED_FILES.misconfigurationImpact,
+    exports.GENERATED_FILES.modelRiskSummary,
+    exports.GENERATED_FILES.aiFailureTaxonomy,
+    exports.GENERATED_FILES.securityPerformanceTradeoff,
+    exports.GENERATED_FILES.sensitivityAnalysis,
+    exports.GENERATED_FILES.preregCompliance,
+    exports.PERFORMANCE_FILES.analysis,
+    exports.PERFORMANCE_FILES.statisticsCsv,
+];
+exports.DRIFT_CHECK_PATHS = [
+    ...exports.EXPECTED_GENERATED_DOC_FILES,
+    "ai-generated/results/ai-samples-summary.csv",
+    "ai-generated/results/ai-samples-failure-rates.csv",
+];

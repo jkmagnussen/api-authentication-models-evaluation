@@ -1,5 +1,0 @@
-label,totalSamples,passedSamples,failedSamples,failureRatePct
-OAUTH,30,18,12,40.0
-JWT,30,12,18,60.0
-SESSIONS,30,12,18,60.0
-OVERALL,90,42,48,53.3

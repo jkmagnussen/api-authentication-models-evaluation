@@ -1,0 +1,53 @@
+{
+  "model": "oauth",
+  "label": "positive-control-oauth",
+  "expectedPass": true,
+  "actualPassPrimary": true,
+  "actualPassSecondary": true,
+  "matchedExpectationPrimary": true,
+  "matchedExpectationSecondary": true,
+  "checksPrimary": [
+    {
+      "name": "redirect validation present",
+      "passed": true,
+      "details": "Checks that redirect validation logic exists."
+    },
+    {
+      "name": "state handling present",
+      "passed": true,
+      "details": "Checks that the state parameter is referenced."
+    },
+    {
+      "name": "scope validation present",
+      "passed": true,
+      "details": "Checks that scope validation logic exists."
+    },
+    {
+      "name": "no permissive admin default",
+      "passed": true,
+      "details": "Flags broad default admin scope grants."
+    }
+  ],
+  "checksSecondary": [
+    {
+      "name": "redirect validation present",
+      "passed": true,
+      "details": "Secondary checker: looks for redirect allow-listing or explicit redirect URI rejection."
+    },
+    {
+      "name": "state handling present",
+      "passed": true,
+      "details": "Secondary checker: requires state mention plus a validation/rejection signal."
+    },
+    {
+      "name": "scope validation present",
+      "passed": true,
+      "details": "Secondary checker: looks for scope parsing and allow-list style checks."
+    },
+    {
+      "name": "no permissive admin default",
+      "passed": true,
+      "details": "Secondary checker: flags hard-coded permissive admin scope defaults."
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "model": "jwt",
+  "sample": "sample9",
+  "characters": 2816,
+  "lines": 119,
+  "functions": 8,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 7,
+      "total": 46,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const"
+      ]
+    },
+    "operands": {
+      "distinct": 25,
+      "total": 54,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "setupAuthRoutes",
+        "validateTokenMiddleware",
+        "generateAccessToken",
+        0,
+        "express_1",
+        "\"express\"",
+        "require",
+        "jsonwebtoken_1",
+        "\"jsonwebtoken\"",
+        "SECRET_KEY",
+        "\"your-secret-key-change-in-production\"",
+        "app",
+        "default",
+        "json",
+        "use",
+        "\"/public/health\"",
+        "get"
+      ]
+    },
+    "length": 100,
+    "vocabulary": 32,
+    "difficulty": 7.5600000000000005,
+    "volume": 500,
+    "effort": 3780.0000000000005,
+    "bugs": 0.16666666666666666,
+    "time": 210.00000000000003
+  },
+  "maintainabilityIndex": 96.0037983550235
+}

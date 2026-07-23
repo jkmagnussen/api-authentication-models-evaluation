@@ -11,6 +11,8 @@
       "constants": 58,
       "cyclomaticComplexity": 195,
       "maintainabilityIndexAverage": 109.9962725724954,
+      "complexityParseFailures": 0,
+      "parseErrorFiles": [],
       "files": [
         {
           "filePath": "src/oauth/oauth.controller.ts",
@@ -85,6 +87,8 @@
       "constants": 19,
       "cyclomaticComplexity": 106,
       "maintainabilityIndexAverage": 110.14709346073019,
+      "complexityParseFailures": 0,
+      "parseErrorFiles": [],
       "files": [
         {
           "filePath": "src/jwt/jwt.controller.ts",
@@ -139,6 +143,8 @@
       "constants": 15,
       "cyclomaticComplexity": 136,
       "maintainabilityIndexAverage": 118.54440845097437,
+      "complexityParseFailures": 0,
+      "parseErrorFiles": [],
       "files": [
         {
           "filePath": "src/sessions/sessions.controller.ts",
@@ -195,6 +201,8 @@
       "constants": 60,
       "cyclomaticComplexity": 207,
       "maintainabilityIndexAverage": 117.2479613386907,
+      "complexityParseFailures": 0,
+      "parseErrorFiles": [],
       "files": [
         {
           "filePath": "src/oauth/oauth.controller.ts",
@@ -309,6 +317,8 @@
       "constants": 60,
       "cyclomaticComplexity": 207,
       "maintainabilityIndexAverage": 117.36186618084938,
+      "complexityParseFailures": 0,
+      "parseErrorFiles": [],
       "files": [
         {
           "filePath": "src/oauth/oauth.controller.ts",
@@ -423,6 +433,8 @@
       "constants": 60,
       "cyclomaticComplexity": 207,
       "maintainabilityIndexAverage": 117.23807602515788,
+      "complexityParseFailures": 0,
+      "parseErrorFiles": [],
       "files": [
         {
           "filePath": "src/oauth/oauth.controller.ts",
@@ -530,13 +542,15 @@
       "label": "jwt-audience-misconfiguration",
       "scope": "misconfiguration",
       "fileCount": 8,
-      "characters": 6901,
-      "lines": 235,
+      "characters": 6879,
+      "lines": 234,
       "functions": 18,
       "classes": 0,
       "constants": 21,
       "cyclomaticComplexity": 118,
-      "maintainabilityIndexAverage": 118.92171942142859,
+      "maintainabilityIndexAverage": 119.27867502705526,
+      "complexityParseFailures": 0,
+      "parseErrorFiles": [],
       "files": [
         {
           "filePath": "src/jwt/jwt.controller.ts",
@@ -600,13 +614,13 @@
         },
         {
           "filePath": "misconfigurations/jwt/audience-misconfiguration/audience.config.ts",
-          "characters": 95,
-          "lines": 5,
+          "characters": 73,
+          "lines": 4,
           "functions": 0,
           "classes": 0,
           "constants": 1,
           "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 118.22155162441632
+          "maintainabilityIndex": 121.07719646942965
         },
         {
           "filePath": "misconfigurations/jwt/audience-misconfiguration/app.variant.ts",
@@ -631,6 +645,8 @@
       "constants": 21,
       "cyclomaticComplexity": 118,
       "maintainabilityIndexAverage": 119.27867502705526,
+      "complexityParseFailures": 0,
+      "parseErrorFiles": [],
       "files": [
         {
           "filePath": "src/jwt/jwt.controller.ts",
@@ -718,13 +734,15 @@
       "label": "jwt-expiry-misconfiguration",
       "scope": "misconfiguration",
       "fileCount": 8,
-      "characters": 6867,
+      "characters": 6866,
       "lines": 234,
       "functions": 18,
       "classes": 0,
       "constants": 21,
       "cyclomaticComplexity": 118,
       "maintainabilityIndexAverage": 119.27867502705526,
+      "complexityParseFailures": 0,
+      "parseErrorFiles": [],
       "files": [
         {
           "filePath": "src/jwt/jwt.controller.ts",
@@ -788,7 +806,7 @@
         },
         {
           "filePath": "misconfigurations/jwt/expiry-misconfiguration/expiry.config.ts",
-          "characters": 67,
+          "characters": 66,
           "lines": 4,
           "functions": 0,
           "classes": 0,
@@ -819,6 +837,8 @@
       "constants": 17,
       "cyclomaticComplexity": 148,
       "maintainabilityIndexAverage": 123.47733252217735,
+      "complexityParseFailures": 0,
+      "parseErrorFiles": [],
       "files": [
         {
           "filePath": "src/sessions/sessions.controller.ts",
@@ -906,13 +926,15 @@
       "label": "sessions-cookie-flag-misconfiguration",
       "scope": "misconfiguration",
       "fileCount": 8,
-      "characters": 7598,
-      "lines": 258,
+      "characters": 7546,
+      "lines": 256,
       "functions": 16,
       "classes": 0,
       "constants": 17,
       "cyclomaticComplexity": 148,
-      "maintainabilityIndexAverage": 122.47971844977229,
+      "maintainabilityIndexAverage": 123.08206120555846,
+      "complexityParseFailures": 0,
+      "parseErrorFiles": [],
       "files": [
         {
           "filePath": "src/sessions/sessions.controller.ts",
@@ -976,13 +998,13 @@
         },
         {
           "filePath": "misconfigurations/sessions/cookie-flag-misconfiguration/cookie-flag.config.ts",
-          "characters": 142,
-          "lines": 8,
+          "characters": 90,
+          "lines": 6,
           "functions": 0,
           "classes": 0,
           "constants": 1,
           "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 113.09628389018921
+          "maintainabilityIndex": 117.91502593647857
         },
         {
           "filePath": "misconfigurations/sessions/cookie-flag-misconfiguration/app.variant.ts",
@@ -1007,6 +1029,8 @@
       "constants": 17,
       "cyclomaticComplexity": 148,
       "maintainabilityIndexAverage": 123.47733252217735,
+      "complexityParseFailures": 0,
+      "parseErrorFiles": [],
       "files": [
         {
           "filePath": "src/sessions/sessions.controller.ts",
@@ -1096,313 +1120,328 @@
       "label": "OAUTH AI Samples (Aggregate)",
       "scope": "ai-generated",
       "fileCount": 30,
-      "characters": 22041,
-      "lines": 702,
-      "functions": 42,
+      "characters": 86061,
+      "lines": 3362,
+      "functions": 0,
       "classes": 0,
-      "constants": 138,
-      "cyclomaticComplexity": 1038,
-      "maintainabilityIndexAverage": 109.44234714757894,
-      "files": [
-        {
-          "filePath": "ai-generated/oauth/sample1.ts",
-          "characters": 869,
-          "lines": 27,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 109.51028233118645
-        },
-        {
-          "filePath": "ai-generated/oauth/sample2.ts",
-          "characters": 849,
-          "lines": 26,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 36,
-          "maintainabilityIndex": 109.51851918757471
-        },
-        {
-          "filePath": "ai-generated/oauth/sample3.ts",
-          "characters": 462,
-          "lines": 16,
-          "functions": 1,
-          "classes": 0,
-          "constants": 3,
-          "cyclomaticComplexity": 32,
-          "maintainabilityIndex": 110.50600721467256
-        },
-        {
-          "filePath": "ai-generated/oauth/sample4.ts",
-          "characters": 690,
-          "lines": 22,
-          "functions": 1,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 109.02463553956007
-        },
-        {
-          "filePath": "ai-generated/oauth/sample5.ts",
-          "characters": 800,
-          "lines": 26,
-          "functions": 1,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 108.65229146490105
-        },
-        {
-          "filePath": "ai-generated/oauth/sample6.ts",
-          "characters": 869,
-          "lines": 27,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 109.51028233118645
-        },
+      "constants": 0,
+      "cyclomaticComplexity": 82,
+      "maintainabilityIndexAverage": 118.79729473061391,
+      "complexityParseFailures": 3,
+      "parseErrorFiles": [
         {
           "filePath": "ai-generated/oauth/sample7.ts",
-          "characters": 849,
-          "lines": 26,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 36,
-          "maintainabilityIndex": 109.51851918757471
-        },
-        {
-          "filePath": "ai-generated/oauth/sample8.ts",
-          "characters": 462,
-          "lines": 16,
-          "functions": 1,
-          "classes": 0,
-          "constants": 3,
-          "cyclomaticComplexity": 32,
-          "maintainabilityIndex": 110.50600721467256
-        },
-        {
-          "filePath": "ai-generated/oauth/sample9.ts",
-          "characters": 690,
-          "lines": 22,
-          "functions": 1,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 109.02463553956007
-        },
-        {
-          "filePath": "ai-generated/oauth/sample10.ts",
-          "characters": 801,
-          "lines": 26,
-          "functions": 1,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 108.65229146490105
-        },
-        {
-          "filePath": "ai-generated/oauth/sample11.ts",
-          "characters": 870,
-          "lines": 27,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 109.51028233118645
-        },
-        {
-          "filePath": "ai-generated/oauth/sample12.ts",
-          "characters": 850,
-          "lines": 26,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 36,
-          "maintainabilityIndex": 109.51851918757471
-        },
-        {
-          "filePath": "ai-generated/oauth/sample13.ts",
-          "characters": 463,
-          "lines": 16,
-          "functions": 1,
-          "classes": 0,
-          "constants": 3,
-          "cyclomaticComplexity": 32,
-          "maintainabilityIndex": 110.50600721467256
-        },
-        {
-          "filePath": "ai-generated/oauth/sample14.ts",
-          "characters": 691,
-          "lines": 22,
-          "functions": 1,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 109.02463553956007
-        },
-        {
-          "filePath": "ai-generated/oauth/sample15.ts",
-          "characters": 801,
-          "lines": 26,
-          "functions": 1,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 108.65229146490105
-        },
-        {
-          "filePath": "ai-generated/oauth/sample16.ts",
-          "characters": 870,
-          "lines": 27,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 109.51028233118645
-        },
-        {
-          "filePath": "ai-generated/oauth/sample17.ts",
-          "characters": 850,
-          "lines": 26,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 36,
-          "maintainabilityIndex": 109.51851918757471
-        },
-        {
-          "filePath": "ai-generated/oauth/sample18.ts",
-          "characters": 463,
-          "lines": 16,
-          "functions": 1,
-          "classes": 0,
-          "constants": 3,
-          "cyclomaticComplexity": 32,
-          "maintainabilityIndex": 110.50600721467256
+          "error": "Line 47: Unexpected token :"
         },
         {
           "filePath": "ai-generated/oauth/sample19.ts",
-          "characters": 691,
-          "lines": 22,
-          "functions": 1,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 109.02463553956007
-        },
-        {
-          "filePath": "ai-generated/oauth/sample20.ts",
-          "characters": 801,
-          "lines": 26,
-          "functions": 1,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 108.65229146490105
-        },
-        {
-          "filePath": "ai-generated/oauth/sample21.ts",
-          "characters": 870,
-          "lines": 27,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 109.51028233118645
-        },
-        {
-          "filePath": "ai-generated/oauth/sample22.ts",
-          "characters": 850,
-          "lines": 26,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 36,
-          "maintainabilityIndex": 109.51851918757471
-        },
-        {
-          "filePath": "ai-generated/oauth/sample23.ts",
-          "characters": 463,
-          "lines": 16,
-          "functions": 1,
-          "classes": 0,
-          "constants": 3,
-          "cyclomaticComplexity": 32,
-          "maintainabilityIndex": 110.50600721467256
-        },
-        {
-          "filePath": "ai-generated/oauth/sample24.ts",
-          "characters": 691,
-          "lines": 22,
-          "functions": 1,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 109.02463553956007
-        },
-        {
-          "filePath": "ai-generated/oauth/sample25.ts",
-          "characters": 801,
-          "lines": 26,
-          "functions": 1,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 108.65229146490105
-        },
-        {
-          "filePath": "ai-generated/oauth/sample26.ts",
-          "characters": 870,
-          "lines": 27,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 109.51028233118645
+          "error": "Line 13: Unexpected token :"
         },
         {
           "filePath": "ai-generated/oauth/sample27.ts",
-          "characters": 850,
-          "lines": 26,
-          "functions": 2,
+          "error": "Line 48: Unexpected token :"
+        }
+      ],
+      "files": [
+        {
+          "filePath": "ai-generated/oauth/sample1.ts",
+          "characters": 2734,
+          "lines": 122,
+          "functions": 0,
           "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 36,
-          "maintainabilityIndex": 109.51851918757471
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample2.ts",
+          "characters": 2929,
+          "lines": 107,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample3.ts",
+          "characters": 2854,
+          "lines": 104,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample4.ts",
+          "characters": 2847,
+          "lines": 106,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample5.ts",
+          "characters": 2834,
+          "lines": 107,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample6.ts",
+          "characters": 3047,
+          "lines": 109,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample7.ts",
+          "characters": 2813,
+          "lines": 108,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": null,
+          "maintainabilityIndex": null
+        },
+        {
+          "filePath": "ai-generated/oauth/sample8.ts",
+          "characters": 2872,
+          "lines": 116,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample9.ts",
+          "characters": 2803,
+          "lines": 109,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample10.ts",
+          "characters": 2805,
+          "lines": 121,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample11.ts",
+          "characters": 2915,
+          "lines": 98,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample12.ts",
+          "characters": 2721,
+          "lines": 134,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample13.ts",
+          "characters": 2810,
+          "lines": 122,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample14.ts",
+          "characters": 2764,
+          "lines": 125,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample15.ts",
+          "characters": 2823,
+          "lines": 103,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample16.ts",
+          "characters": 2770,
+          "lines": 102,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample17.ts",
+          "characters": 2865,
+          "lines": 112,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample18.ts",
+          "characters": 2898,
+          "lines": 104,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample19.ts",
+          "characters": 2886,
+          "lines": 113,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": null,
+          "maintainabilityIndex": null
+        },
+        {
+          "filePath": "ai-generated/oauth/sample20.ts",
+          "characters": 2877,
+          "lines": 117,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample21.ts",
+          "characters": 2857,
+          "lines": 106,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample22.ts",
+          "characters": 3076,
+          "lines": 121,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample23.ts",
+          "characters": 2916,
+          "lines": 125,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample24.ts",
+          "characters": 2824,
+          "lines": 112,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample25.ts",
+          "characters": 2868,
+          "lines": 95,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample26.ts",
+          "characters": 2875,
+          "lines": 114,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/oauth/sample27.ts",
+          "characters": 3097,
+          "lines": 109,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": null,
+          "maintainabilityIndex": null
         },
         {
           "filePath": "ai-generated/oauth/sample28.ts",
-          "characters": 463,
-          "lines": 16,
-          "functions": 1,
+          "characters": 2909,
+          "lines": 112,
+          "functions": 0,
           "classes": 0,
-          "constants": 3,
-          "cyclomaticComplexity": 32,
-          "maintainabilityIndex": 110.50600721467256
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/oauth/sample29.ts",
-          "characters": 691,
-          "lines": 22,
-          "functions": 1,
+          "characters": 2892,
+          "lines": 104,
+          "functions": 0,
           "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 109.02463553956007
+          "constants": 0,
+          "cyclomaticComplexity": 4,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/oauth/sample30.ts",
-          "characters": 801,
-          "lines": 26,
-          "functions": 1,
+          "characters": 2880,
+          "lines": 125,
+          "functions": 0,
           "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 35,
-          "maintainabilityIndex": 108.65229146490105
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         }
       ]
     },
@@ -1410,313 +1449,332 @@
       "label": "JWT AI Samples (Aggregate)",
       "scope": "ai-generated",
       "fileCount": 30,
-      "characters": 26265,
-      "lines": 858,
-      "functions": 60,
+      "characters": 86640,
+      "lines": 3217,
+      "functions": 5,
       "classes": 0,
-      "constants": 168,
-      "cyclomaticComplexity": 66,
-      "maintainabilityIndexAverage": 110.52351775221608,
-      "files": [
-        {
-          "filePath": "ai-generated/jwt/sample1.ts",
-          "characters": 916,
-          "lines": 29,
-          "functions": 2,
-          "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 3,
-          "maintainabilityIndex": 109.63882863521788
-        },
-        {
-          "filePath": "ai-generated/jwt/sample2.ts",
-          "characters": 834,
-          "lines": 28,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 112.45613213855074
-        },
-        {
-          "filePath": "ai-generated/jwt/sample3.ts",
-          "characters": 855,
-          "lines": 28,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 109.94826956327255
-        },
-        {
-          "filePath": "ai-generated/jwt/sample4.ts",
-          "characters": 879,
-          "lines": 29,
-          "functions": 2,
-          "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 110.28717921201967
-        },
-        {
-          "filePath": "ai-generated/jwt/sample5.ts",
-          "characters": 890,
-          "lines": 29,
-          "functions": 2,
-          "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 110.28717921201967
-        },
-        {
-          "filePath": "ai-generated/jwt/sample6.ts",
-          "characters": 916,
-          "lines": 29,
-          "functions": 2,
-          "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 3,
-          "maintainabilityIndex": 109.63882863521788
-        },
-        {
-          "filePath": "ai-generated/jwt/sample7.ts",
-          "characters": 834,
-          "lines": 28,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 112.45613213855074
-        },
+      "constants": 10,
+      "cyclomaticComplexity": 141,
+      "maintainabilityIndexAverage": 118.17167176204379,
+      "complexityParseFailures": 4,
+      "parseErrorFiles": [
         {
           "filePath": "ai-generated/jwt/sample8.ts",
-          "characters": 855,
-          "lines": 28,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 109.94826956327255
-        },
-        {
-          "filePath": "ai-generated/jwt/sample9.ts",
-          "characters": 879,
-          "lines": 29,
-          "functions": 2,
-          "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 110.28717921201967
-        },
-        {
-          "filePath": "ai-generated/jwt/sample10.ts",
-          "characters": 891,
-          "lines": 29,
-          "functions": 2,
-          "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 110.28717921201967
-        },
-        {
-          "filePath": "ai-generated/jwt/sample11.ts",
-          "characters": 917,
-          "lines": 29,
-          "functions": 2,
-          "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 3,
-          "maintainabilityIndex": 109.63882863521788
-        },
-        {
-          "filePath": "ai-generated/jwt/sample12.ts",
-          "characters": 835,
-          "lines": 28,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 112.45613213855074
-        },
-        {
-          "filePath": "ai-generated/jwt/sample13.ts",
-          "characters": 856,
-          "lines": 28,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 109.94826956327255
+          "error": "Line 25: Unexpected token ;"
         },
         {
           "filePath": "ai-generated/jwt/sample14.ts",
-          "characters": 880,
-          "lines": 29,
-          "functions": 2,
-          "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 110.28717921201967
-        },
-        {
-          "filePath": "ai-generated/jwt/sample15.ts",
-          "characters": 891,
-          "lines": 29,
-          "functions": 2,
-          "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 110.28717921201967
+          "error": "Line 28: Unexpected token ("
         },
         {
           "filePath": "ai-generated/jwt/sample16.ts",
-          "characters": 917,
-          "lines": 29,
-          "functions": 2,
-          "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 3,
-          "maintainabilityIndex": 109.63882863521788
-        },
-        {
-          "filePath": "ai-generated/jwt/sample17.ts",
-          "characters": 835,
-          "lines": 28,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 112.45613213855074
-        },
-        {
-          "filePath": "ai-generated/jwt/sample18.ts",
-          "characters": 856,
-          "lines": 28,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 109.94826956327255
-        },
-        {
-          "filePath": "ai-generated/jwt/sample19.ts",
-          "characters": 880,
-          "lines": 29,
-          "functions": 2,
-          "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 110.28717921201967
-        },
-        {
-          "filePath": "ai-generated/jwt/sample20.ts",
-          "characters": 891,
-          "lines": 29,
-          "functions": 2,
-          "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 110.28717921201967
-        },
-        {
-          "filePath": "ai-generated/jwt/sample21.ts",
-          "characters": 917,
-          "lines": 29,
-          "functions": 2,
-          "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 3,
-          "maintainabilityIndex": 109.63882863521788
-        },
-        {
-          "filePath": "ai-generated/jwt/sample22.ts",
-          "characters": 835,
-          "lines": 28,
-          "functions": 2,
-          "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 112.45613213855074
+          "error": "Line 10: Unexpected token :"
         },
         {
           "filePath": "ai-generated/jwt/sample23.ts",
-          "characters": 856,
-          "lines": 28,
+          "error": "Line 31: Unexpected token :"
+        }
+      ],
+      "files": [
+        {
+          "filePath": "ai-generated/jwt/sample1.ts",
+          "characters": 2942,
+          "lines": 101,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample2.ts",
+          "characters": 3004,
+          "lines": 109,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample3.ts",
+          "characters": 2934,
+          "lines": 105,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample4.ts",
+          "characters": 3031,
+          "lines": 96,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample5.ts",
+          "characters": 3236,
+          "lines": 105,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample6.ts",
+          "characters": 2961,
+          "lines": 103,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample7.ts",
+          "characters": 2840,
+          "lines": 109,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample8.ts",
+          "characters": 3093,
+          "lines": 110,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": null,
+          "maintainabilityIndex": null
+        },
+        {
+          "filePath": "ai-generated/jwt/sample9.ts",
+          "characters": 2911,
+          "lines": 118,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample10.ts",
+          "characters": 1528,
+          "lines": 49,
+          "functions": 3,
+          "classes": 0,
+          "constants": 3,
+          "cyclomaticComplexity": 33,
+          "maintainabilityIndex": 111.37787365283218
+        },
+        {
+          "filePath": "ai-generated/jwt/sample11.ts",
+          "characters": 3014,
+          "lines": 106,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample12.ts",
+          "characters": 2221,
+          "lines": 68,
           "functions": 2,
           "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 109.94826956327255
+          "constants": 7,
+          "cyclomaticComplexity": 36,
+          "maintainabilityIndex": 109.95051862557166
+        },
+        {
+          "filePath": "ai-generated/jwt/sample13.ts",
+          "characters": 2953,
+          "lines": 110,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample14.ts",
+          "characters": 2937,
+          "lines": 105,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": null,
+          "maintainabilityIndex": null
+        },
+        {
+          "filePath": "ai-generated/jwt/sample15.ts",
+          "characters": 3121,
+          "lines": 128,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample16.ts",
+          "characters": 2914,
+          "lines": 110,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": null,
+          "maintainabilityIndex": null
+        },
+        {
+          "filePath": "ai-generated/jwt/sample17.ts",
+          "characters": 3054,
+          "lines": 119,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample18.ts",
+          "characters": 2933,
+          "lines": 101,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample19.ts",
+          "characters": 2910,
+          "lines": 115,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample20.ts",
+          "characters": 2959,
+          "lines": 130,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample21.ts",
+          "characters": 2987,
+          "lines": 112,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample22.ts",
+          "characters": 2871,
+          "lines": 119,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/jwt/sample23.ts",
+          "characters": 2756,
+          "lines": 111,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": null,
+          "maintainabilityIndex": null
         },
         {
           "filePath": "ai-generated/jwt/sample24.ts",
-          "characters": 880,
-          "lines": 29,
-          "functions": 2,
+          "characters": 2920,
+          "lines": 118,
+          "functions": 0,
           "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 110.28717921201967
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/jwt/sample25.ts",
-          "characters": 891,
-          "lines": 29,
-          "functions": 2,
+          "characters": 3074,
+          "lines": 110,
+          "functions": 0,
           "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 110.28717921201967
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/jwt/sample26.ts",
-          "characters": 917,
-          "lines": 29,
-          "functions": 2,
+          "characters": 2935,
+          "lines": 113,
+          "functions": 0,
           "classes": 0,
-          "constants": 6,
+          "constants": 0,
           "cyclomaticComplexity": 3,
-          "maintainabilityIndex": 109.63882863521788
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/jwt/sample27.ts",
-          "characters": 835,
-          "lines": 28,
-          "functions": 2,
+          "characters": 2900,
+          "lines": 123,
+          "functions": 0,
           "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 112.45613213855074
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/jwt/sample28.ts",
-          "characters": 856,
-          "lines": 28,
-          "functions": 2,
+          "characters": 2996,
+          "lines": 95,
+          "functions": 0,
           "classes": 0,
-          "constants": 5,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 109.94826956327255
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/jwt/sample29.ts",
-          "characters": 880,
-          "lines": 29,
-          "functions": 2,
+          "characters": 2924,
+          "lines": 106,
+          "functions": 0,
           "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 110.28717921201967
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/jwt/sample30.ts",
-          "characters": 891,
-          "lines": 29,
-          "functions": 2,
+          "characters": 2781,
+          "lines": 113,
+          "functions": 0,
           "classes": 0,
-          "constants": 6,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 110.28717921201967
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         }
       ]
     },
@@ -1724,313 +1782,324 @@
       "label": "SESSIONS AI Samples (Aggregate)",
       "scope": "ai-generated",
       "fileCount": 30,
-      "characters": 17541,
-      "lines": 648,
-      "functions": 108,
+      "characters": 89538,
+      "lines": 3501,
+      "functions": 0,
       "classes": 0,
       "constants": 0,
-      "cyclomaticComplexity": 36,
-      "maintainabilityIndexAverage": 131.94326954628286,
-      "files": [
-        {
-          "filePath": "ai-generated/sessions/sample1.ts",
-          "characters": 696,
-          "lines": 26,
-          "functions": 4,
-          "classes": 0,
-          "constants": 0,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 128.53243151432932
-        },
-        {
-          "filePath": "ai-generated/sessions/sample2.ts",
-          "characters": 537,
-          "lines": 20,
-          "functions": 3,
-          "classes": 0,
-          "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 129.71911970939857
-        },
-        {
-          "filePath": "ai-generated/sessions/sample3.ts",
-          "characters": 568,
-          "lines": 21,
-          "functions": 4,
-          "classes": 0,
-          "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 135.80957503132083
-        },
-        {
-          "filePath": "ai-generated/sessions/sample4.ts",
-          "characters": 559,
-          "lines": 20,
-          "functions": 3,
-          "classes": 0,
-          "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 129.83476253814518
-        },
-        {
-          "filePath": "ai-generated/sessions/sample5.ts",
-          "characters": 560,
-          "lines": 21,
-          "functions": 4,
-          "classes": 0,
-          "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 135.82045893822038
-        },
-        {
-          "filePath": "ai-generated/sessions/sample6.ts",
-          "characters": 696,
-          "lines": 26,
-          "functions": 4,
-          "classes": 0,
-          "constants": 0,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 128.53243151432932
-        },
-        {
-          "filePath": "ai-generated/sessions/sample7.ts",
-          "characters": 537,
-          "lines": 20,
-          "functions": 3,
-          "classes": 0,
-          "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 129.71911970939857
-        },
-        {
-          "filePath": "ai-generated/sessions/sample8.ts",
-          "characters": 568,
-          "lines": 21,
-          "functions": 4,
-          "classes": 0,
-          "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 135.80957503132083
-        },
-        {
-          "filePath": "ai-generated/sessions/sample9.ts",
-          "characters": 559,
-          "lines": 20,
-          "functions": 3,
-          "classes": 0,
-          "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 129.83476253814518
-        },
+      "cyclomaticComplexity": 84,
+      "maintainabilityIndexAverage": 118.79729473061391,
+      "complexityParseFailures": 2,
+      "parseErrorFiles": [
         {
           "filePath": "ai-generated/sessions/sample10.ts",
-          "characters": 561,
-          "lines": 21,
-          "functions": 4,
-          "classes": 0,
-          "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 135.82045893822038
-        },
-        {
-          "filePath": "ai-generated/sessions/sample11.ts",
-          "characters": 697,
-          "lines": 26,
-          "functions": 4,
-          "classes": 0,
-          "constants": 0,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 128.53243151432932
+          "error": "Line 9: Unexpected token :"
         },
         {
           "filePath": "ai-generated/sessions/sample12.ts",
-          "characters": 538,
-          "lines": 20,
-          "functions": 3,
+          "error": "Line 14: Unexpected token :"
+        }
+      ],
+      "files": [
+        {
+          "filePath": "ai-generated/sessions/sample1.ts",
+          "characters": 2948,
+          "lines": 118,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 129.71911970939857
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/sessions/sample2.ts",
+          "characters": 2984,
+          "lines": 141,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/sessions/sample3.ts",
+          "characters": 2950,
+          "lines": 113,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/sessions/sample4.ts",
+          "characters": 3132,
+          "lines": 111,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/sessions/sample5.ts",
+          "characters": 3078,
+          "lines": 112,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/sessions/sample6.ts",
+          "characters": 2923,
+          "lines": 112,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/sessions/sample7.ts",
+          "characters": 2956,
+          "lines": 99,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/sessions/sample8.ts",
+          "characters": 3196,
+          "lines": 113,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/sessions/sample9.ts",
+          "characters": 2970,
+          "lines": 115,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/sessions/sample10.ts",
+          "characters": 3029,
+          "lines": 131,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": null,
+          "maintainabilityIndex": null
+        },
+        {
+          "filePath": "ai-generated/sessions/sample11.ts",
+          "characters": 3088,
+          "lines": 107,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
+        },
+        {
+          "filePath": "ai-generated/sessions/sample12.ts",
+          "characters": 3109,
+          "lines": 120,
+          "functions": 0,
+          "classes": 0,
+          "constants": 0,
+          "cyclomaticComplexity": null,
+          "maintainabilityIndex": null
         },
         {
           "filePath": "ai-generated/sessions/sample13.ts",
-          "characters": 569,
-          "lines": 21,
-          "functions": 4,
+          "characters": 2969,
+          "lines": 119,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 135.80957503132083
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample14.ts",
-          "characters": 560,
-          "lines": 20,
-          "functions": 3,
+          "characters": 3011,
+          "lines": 121,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 129.83476253814518
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample15.ts",
-          "characters": 561,
-          "lines": 21,
-          "functions": 4,
+          "characters": 3037,
+          "lines": 107,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 135.82045893822038
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample16.ts",
-          "characters": 697,
-          "lines": 26,
-          "functions": 4,
+          "characters": 2959,
+          "lines": 120,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 128.53243151432932
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample17.ts",
-          "characters": 538,
-          "lines": 20,
-          "functions": 3,
+          "characters": 2993,
+          "lines": 130,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 129.71911970939857
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample18.ts",
-          "characters": 569,
-          "lines": 21,
-          "functions": 4,
+          "characters": 2832,
+          "lines": 116,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 135.80957503132083
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample19.ts",
-          "characters": 560,
-          "lines": 20,
-          "functions": 3,
+          "characters": 2782,
+          "lines": 115,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 129.83476253814518
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample20.ts",
-          "characters": 561,
-          "lines": 21,
-          "functions": 4,
+          "characters": 3022,
+          "lines": 121,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 135.82045893822038
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample21.ts",
-          "characters": 697,
-          "lines": 26,
-          "functions": 4,
+          "characters": 2981,
+          "lines": 112,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 128.53243151432932
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample22.ts",
-          "characters": 538,
-          "lines": 20,
-          "functions": 3,
+          "characters": 2791,
+          "lines": 112,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 129.71911970939857
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample23.ts",
-          "characters": 569,
-          "lines": 21,
-          "functions": 4,
+          "characters": 2984,
+          "lines": 113,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 135.80957503132083
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample24.ts",
-          "characters": 560,
-          "lines": 20,
-          "functions": 3,
+          "characters": 3162,
+          "lines": 120,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 129.83476253814518
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample25.ts",
-          "characters": 561,
-          "lines": 21,
-          "functions": 4,
+          "characters": 2901,
+          "lines": 117,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 135.82045893822038
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample26.ts",
-          "characters": 697,
-          "lines": 26,
-          "functions": 4,
+          "characters": 2872,
+          "lines": 119,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 2,
-          "maintainabilityIndex": 128.53243151432932
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample27.ts",
-          "characters": 538,
-          "lines": 20,
-          "functions": 3,
+          "characters": 3015,
+          "lines": 126,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 129.71911970939857
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample28.ts",
-          "characters": 569,
-          "lines": 21,
-          "functions": 4,
+          "characters": 2911,
+          "lines": 122,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 135.80957503132083
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample29.ts",
-          "characters": 560,
-          "lines": 20,
-          "functions": 3,
+          "characters": 2976,
+          "lines": 101,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 129.83476253814518
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         },
         {
           "filePath": "ai-generated/sessions/sample30.ts",
-          "characters": 561,
-          "lines": 21,
-          "functions": 4,
+          "characters": 2977,
+          "lines": 118,
+          "functions": 0,
           "classes": 0,
           "constants": 0,
-          "cyclomaticComplexity": 1,
-          "maintainabilityIndex": 135.82045893822038
+          "cyclomaticComplexity": 3,
+          "maintainabilityIndex": 118.797294730614
         }
       ]
     }

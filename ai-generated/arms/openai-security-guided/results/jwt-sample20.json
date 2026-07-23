@@ -1,0 +1,67 @@
+{
+  "model": "jwt",
+  "sample": "sample20",
+  "characters": 889,
+  "lines": 34,
+  "functions": 2,
+  "classes": 0,
+  "cyclomaticComplexity": 4,
+  "halstead": {
+    "operators": {
+      "distinct": 12,
+      "total": 31,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const",
+        "if",
+        "||",
+        "! (prefix)",
+        "throw",
+        "new"
+      ]
+    },
+    "operands": {
+      "distinct": 24,
+      "total": 31,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "authMiddleware",
+        0,
+        "jsonwebtoken_1",
+        "\"jsonwebtoken\"",
+        "require",
+        "dotenv_1",
+        "\"dotenv\"",
+        "default",
+        "config",
+        "process",
+        "env",
+        "JWT_SECRET",
+        "ISSUER",
+        "AUDIENCE",
+        "\"Environment variables for JWT are not set.\"",
+        "Error"
+      ]
+    },
+    "length": 62,
+    "vocabulary": 36,
+    "difficulty": 7.75,
+    "volume": 320.53535008942333,
+    "effort": 2484.148963193031,
+    "bugs": 0.10684511669647444,
+    "time": 138.00827573294615
+  },
+  "maintainabilityIndex": 103.68918046703243
+}

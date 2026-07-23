@@ -1,0 +1,37 @@
+{
+  "model": "oauth",
+  "sample": "sample9",
+  "samplePath": "ai-generated\\oauth\\sample9.ts",
+  "passed": false,
+  "checks": [
+    {
+      "name": "redirect validation present",
+      "passed": true,
+      "details": "Checks that redirect validation logic exists."
+    },
+    {
+      "name": "state handling present",
+      "passed": true,
+      "details": "Checks that the state parameter is referenced."
+    },
+    {
+      "name": "scope validation present",
+      "passed": false,
+      "details": "Checks that scope validation logic exists."
+    },
+    {
+      "name": "no permissive admin default",
+      "passed": true,
+      "details": "Flags broad default admin scope grants."
+    }
+  ],
+  "correctnessFailures": [
+    "scope validation present"
+  ],
+  "securityFailures": [
+    "scope validation present"
+  ],
+  "misconfigurationDetections": [
+    "scope validation present"
+  ]
+}

@@ -1,0 +1,10 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const apply_override_1 = require("../../apply-override");
+const scope_config_1 = require("./scope.config");
+(0, apply_override_1.applyOverride)({ oauth: scope_config_1.oauthScopeMisconfiguration });
+const app_1 = __importDefault(require("../../../src/app"));
+exports.default = app_1.default;

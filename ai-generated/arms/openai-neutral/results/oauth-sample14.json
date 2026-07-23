@@ -1,0 +1,60 @@
+{
+  "model": "oauth",
+  "sample": "sample14",
+  "characters": 1280,
+  "lines": 35,
+  "functions": 1,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 7,
+      "total": 25,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const"
+      ]
+    },
+    "operands": {
+      "distinct": 22,
+      "total": 31,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "oauthRouter",
+        0,
+        "express_1",
+        "\"express\"",
+        "require",
+        "authUtils_1",
+        "\"./authUtils\"",
+        "userAuth_1",
+        "\"./userAuth\"",
+        "default",
+        "Router",
+        "\"/authorize\"",
+        "authenticateUser",
+        "get"
+      ]
+    },
+    "length": 56,
+    "vocabulary": 29,
+    "difficulty": 4.931818181818182,
+    "volume": 272.04693572714405,
+    "effort": 1341.6860239270513,
+    "bugs": 0.09068231190904802,
+    "time": 74.53811244039174
+  },
+  "maintainabilityIndex": 110.77520828247874
+}

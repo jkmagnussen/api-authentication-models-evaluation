@@ -1,0 +1,67 @@
+{
+  "model": "oauth",
+  "sample": "sample11",
+  "characters": 1338,
+  "lines": 35,
+  "functions": 1,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 8,
+      "total": 33,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const",
+        "new"
+      ]
+    },
+    "operands": {
+      "distinct": 28,
+      "total": 39,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "authorizationRouter",
+        0,
+        "express_1",
+        "\"express\"",
+        "require",
+        "uuid_1",
+        "\"uuid\"",
+        "default",
+        "Router",
+        "clients",
+        "Map",
+        "\"client123\"",
+        "redirectUri",
+        "\"http://localhost:3000/callback\"",
+        "clientSecret",
+        "\"secret123\"",
+        "set",
+        "authorizationCodes",
+        "\"/authorize\"",
+        "get"
+      ]
+    },
+    "length": 72,
+    "vocabulary": 36,
+    "difficulty": 5.571428571428571,
+    "volume": 372.23460010384645,
+    "effort": 2073.8784862928587,
+    "bugs": 0.12407820003461548,
+    "time": 115.21547146071437
+  },
+  "maintainabilityIndex": 102.12813003102269
+}

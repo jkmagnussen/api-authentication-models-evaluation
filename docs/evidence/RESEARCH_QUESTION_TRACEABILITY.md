@@ -2,6 +2,8 @@
 
 This document links likely dissertation research questions to concrete repository evidence.
 
+- Pre-registered analysis plan: `docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md`
+
 ## RQ1. How do secure baseline implementations of Sessions, JWT, and OAuth2 behave under functional and attack-oriented evaluation?
 
 - Evidence: `docs/evidence/TEST_EVIDENCE_MATRIX.md`
@@ -15,7 +17,7 @@ This document links likely dissertation research questions to concrete repositor
 - Evidence: `docs/evidence/DISSERTATION_EVALUATION_TABLE.md`
 - Supporting artifacts:
   - `docs/generated/VARIANT_DIFFERENTIAL_REPORT.md`
-  - `docs/generated/VARIANT_FOCUSED_SUMMARY.md`
+  - `docs/generated/VARIANT_DIFFERENTIAL_REPORT.md` (Execution Outcomes section)
   - focused variant exploit commands in `package.json`
 
 ## RQ3. How does the complexity and code footprint of the baseline compare with misconfigured and AI-generated alternatives?

@@ -1,3 +1,5 @@
 {
-    "chat.restoreLastPanelSession": false
+    "chat.restoreLastPanelSession": false,
+    "python.terminal.useEnvFile": true,
+    "python.envFile": "${workspaceFolder}/.env"
 }

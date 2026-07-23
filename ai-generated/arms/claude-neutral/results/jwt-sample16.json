@@ -1,0 +1,59 @@
+{
+  "model": "jwt",
+  "sample": "sample16",
+  "characters": 2841,
+  "lines": 115,
+  "functions": 0,
+  "classes": 0,
+  "cyclomaticComplexity": 2,
+  "halstead": {
+    "operators": {
+      "distinct": 6,
+      "total": 11,
+      "identifiers": [
+        "for",
+        ".",
+        "=",
+        "()",
+        "new",
+        "*"
+      ]
+    },
+    "operands": {
+      "distinct": 22,
+      "total": 26,
+      "identifiers": [
+        "Analyze",
+        "this",
+        "JWT",
+        "token",
+        "payload",
+        "security",
+        "implications",
+        "and",
+        "provide",
+        "recommendations",
+        "Token",
+        "tokenPayload",
+        "userId",
+        "role",
+        "$",
+        "issued",
+        "iat",
+        1000,
+        "Date",
+        "toISOString",
+        "What",
+        "are"
+      ]
+    },
+    "length": 37,
+    "vocabulary": 28,
+    "difficulty": 3.545454545454546,
+    "volume": 177.87213211613133,
+    "effort": 630.6375593208293,
+    "bugs": 0.05929071070537711,
+    "time": 35.03541996226829
+  },
+  "maintainabilityIndex": 103.87681777967687
+}

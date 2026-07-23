@@ -16,6 +16,11 @@ type FileMetric = {
   maintainabilityIndex: number;
 };
 
+type FileMetricResult = {
+  metric: FileMetric;
+  parseError?: string;
+};
+
 type AggregateMetric = {
   label: string;
   scope: string;
@@ -27,8 +32,17 @@ type AggregateMetric = {
   constants: number;
   cyclomaticComplexity: number;
   maintainabilityIndexAverage: number;
+  complexityParseFailures: number;
+  parseErrorFiles: Array<{ filePath: string; error: string }>;
   files: FileMetric[];
 };
+
+function shouldTolerateParseErrors(): boolean {
+  return (
+    ["1", "true", "yes"].includes((process.env.AI_FOOTPRINT_TOLERATE_PARSE_ERRORS ?? "").toLowerCase()) ||
+    process.argv.includes("--tolerate-parse-errors")
+  );
+}
 
 const baselineScopes = {
   oauth: [
@@ -142,7 +156,7 @@ function listAiSampleFiles(model: keyof typeof aiScopes): string[] {
     .map((name) => path.join(relativeDir, name).replace(/\\/g, "/"));
 }
 
-function readFileMetric(relativePath: string): FileMetric {
+function readFileMetric(relativePath: string, tolerateParseErrors: boolean): FileMetricResult {
   const filePath = path.join(process.cwd(), relativePath);
   const sourceText = fs.readFileSync(filePath, "utf8");
   const sourceFile = ts.createSourceFile(relativePath, sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
@@ -181,22 +195,62 @@ function readFileMetric(relativePath: string): FileMetric {
     },
   }).outputText;
 
-  const complexity = escomplex.analyse(transpiled);
+  let complexity;
+  try {
+    complexity = escomplex.analyse(transpiled);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!tolerateParseErrors) {
+      throw new Error(`Failed complexity analysis for ${relativePath}: ${message}`);
+    }
+
+    return {
+      metric: {
+        filePath: relativePath,
+        characters: sourceText.length,
+        lines: sourceText.split(/\r?\n/).length,
+        functions,
+        classes,
+        constants,
+        cyclomaticComplexity: Number.NaN,
+        maintainabilityIndex: Number.NaN,
+      },
+      parseError: message,
+    };
+  }
 
   return {
-    filePath: relativePath,
-    characters: sourceText.length,
-    lines: sourceText.split(/\r?\n/).length,
-    functions,
-    classes,
-    constants,
-    cyclomaticComplexity: complexity.aggregate.cyclomatic,
-    maintainabilityIndex: complexity.maintainability,
+    metric: {
+      filePath: relativePath,
+      characters: sourceText.length,
+      lines: sourceText.split(/\r?\n/).length,
+      functions,
+      classes,
+      constants,
+      cyclomaticComplexity: complexity.aggregate.cyclomatic,
+      maintainabilityIndex: complexity.maintainability,
+    },
   };
 }
 
 function aggregateMetrics(label: string, scope: string, files: readonly string[]): AggregateMetric {
-  const fileMetrics = files.map(readFileMetric);
+  const tolerateParseErrors = shouldTolerateParseErrors();
+  const results = files.map((filePath) => readFileMetric(filePath, tolerateParseErrors));
+  const fileMetrics = results.map((result) => result.metric);
+  const parseErrorFiles = results
+    .filter((result): result is FileMetricResult & { parseError: string } => typeof result.parseError === "string")
+    .map((result) => ({ filePath: result.metric.filePath, error: result.parseError }));
+  const maintainabilityValues = fileMetrics
+    .map((item) => item.maintainabilityIndex)
+    .filter((value) => Number.isFinite(value));
+  const maintainabilityIndexAverage =
+    maintainabilityValues.length > 0
+      ? maintainabilityValues.reduce((sum, value) => sum + value, 0) / maintainabilityValues.length
+      : Number.NaN;
+  const cyclomaticComplexity = fileMetrics
+    .map((item) => item.cyclomaticComplexity)
+    .filter((value) => Number.isFinite(value))
+    .reduce((sum, value) => sum + value, 0);
 
   return {
     label,
@@ -207,9 +261,10 @@ function aggregateMetrics(label: string, scope: string, files: readonly string[]
     functions: fileMetrics.reduce((sum, item) => sum + item.functions, 0),
     classes: fileMetrics.reduce((sum, item) => sum + item.classes, 0),
     constants: fileMetrics.reduce((sum, item) => sum + item.constants, 0),
-    cyclomaticComplexity: fileMetrics.reduce((sum, item) => sum + item.cyclomaticComplexity, 0),
-    maintainabilityIndexAverage:
-      fileMetrics.reduce((sum, item) => sum + item.maintainabilityIndex, 0) / fileMetrics.length,
+    cyclomaticComplexity,
+    maintainabilityIndexAverage,
+    complexityParseFailures: parseErrorFiles.length,
+    parseErrorFiles,
     files: fileMetrics,
   };
 }
@@ -247,13 +302,16 @@ function writeJson(allMetrics: ReturnType<typeof buildAllMetrics>) {
   );
 }
 
-function writeMarkdown(allMetrics: ReturnType<typeof buildAllMetrics>) {
+function writeMarkdown(allMetrics: ReturnType<typeof buildAllMetrics>, tolerateParseErrors: boolean) {
+  const allParseFailures = [...allMetrics.baselineMetrics, ...allMetrics.variantMetrics, ...allMetrics.aiMetrics]
+    .flatMap((metric) => metric.parseErrorFiles.map((entry) => ({ label: metric.label, ...entry })));
+
   const generatedAt = new Date().toISOString();
   const lines: string[] = [];
   lines.push("# Code Footprint Summary");
   lines.push("");
   lines.push(`Generated: ${generatedAt}`);
-  lines.push("Regenerate: npm run code:footprint");
+  lines.push(`Regenerate: npm run ${tolerateParseErrors ? "code:footprint:tolerant" : "code:footprint"}`);
   lines.push("");
   lines.push("## Scope Rules");
   lines.push("");
@@ -290,13 +348,26 @@ function writeMarkdown(allMetrics: ReturnType<typeof buildAllMetrics>) {
     lines.push(`| ${metric.label} | ${metric.fileCount} | ${metric.characters} | ${metric.lines} | ${metric.functions} | ${metric.classes} | ${metric.constants} | ${metric.cyclomaticComplexity} | ${metric.maintainabilityIndexAverage.toFixed(2)} |`);
   }
 
+  lines.push("");
+  lines.push("## Complexity Parse Failures");
+  lines.push("");
+  if (allParseFailures.length === 0) {
+    lines.push("None.");
+  } else {
+    lines.push("| Scope | File | Error |");
+    lines.push("|---|---|---|");
+    for (const failure of allParseFailures) {
+      lines.push(`| ${failure.label} | ${failure.filePath} | ${failure.error.replace(/\|/g, "\\|")} |`);
+    }
+  }
+
   fs.writeFileSync(path.join(process.cwd(), GENERATED_FILES.codeFootprintSummary), `${lines.join("\n")}\n`);
 }
 
 function main() {
   const allMetrics = buildAllMetrics();
   writeJson(allMetrics);
-  writeMarkdown(allMetrics);
+  writeMarkdown(allMetrics, shouldTolerateParseErrors());
   console.log(`Wrote ${GENERATED_FILES.codeFootprintSummary}`);
   console.log(`Wrote ${GENERATED_FILES.codeFootprintJson}`);
 }

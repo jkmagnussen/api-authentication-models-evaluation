@@ -1,7 +1,7 @@
 # Code Footprint Summary
 
-Generated: 2026-07-21T18:00:25.905Z
-Regenerate: npm run code:footprint
+Generated: 2026-07-23T03:48:48.544Z
+Regenerate: npm run code:footprint:tolerant
 
 ## Scope Rules
 
@@ -26,17 +26,31 @@ Regenerate: npm run code:footprint
 | oauth-redirect-misconfiguration | 10 | 17364 | 621 | 20 | 0 | 60 | 207 | 117.25 |
 | oauth-state-misconfiguration | 10 | 17303 | 621 | 20 | 0 | 60 | 207 | 117.36 |
 | oauth-scope-misconfiguration | 10 | 17324 | 621 | 20 | 0 | 60 | 207 | 117.24 |
-| jwt-audience-misconfiguration | 8 | 6901 | 235 | 18 | 0 | 21 | 118 | 118.92 |
+| jwt-audience-misconfiguration | 8 | 6879 | 234 | 18 | 0 | 21 | 118 | 119.28 |
 | jwt-algorithm-misconfiguration | 8 | 6891 | 234 | 18 | 0 | 21 | 118 | 119.28 |
-| jwt-expiry-misconfiguration | 8 | 6867 | 234 | 18 | 0 | 21 | 118 | 119.28 |
+| jwt-expiry-misconfiguration | 8 | 6866 | 234 | 18 | 0 | 21 | 118 | 119.28 |
 | sessions-fixation-misconfiguration | 8 | 7546 | 254 | 16 | 0 | 17 | 148 | 123.48 |
-| sessions-cookie-flag-misconfiguration | 8 | 7598 | 258 | 16 | 0 | 17 | 148 | 122.48 |
+| sessions-cookie-flag-misconfiguration | 8 | 7546 | 256 | 16 | 0 | 17 | 148 | 123.08 |
 | sessions-logout-misconfiguration | 8 | 7525 | 254 | 16 | 0 | 17 | 148 | 123.48 |
 
 ## AI-Generated Footprints
 
 | Model | Files | Chars | Lines | Functions | Classes | Constants | Cyclomatic | Avg Maintainability |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| OAUTH AI Samples (Aggregate) | 30 | 22041 | 702 | 42 | 0 | 138 | 1038 | 109.44 |
-| JWT AI Samples (Aggregate) | 30 | 26265 | 858 | 60 | 0 | 168 | 66 | 110.52 |
-| SESSIONS AI Samples (Aggregate) | 30 | 17541 | 648 | 108 | 0 | 0 | 36 | 131.94 |
+| OAUTH AI Samples (Aggregate) | 30 | 86061 | 3362 | 0 | 0 | 0 | 82 | 118.80 |
+| JWT AI Samples (Aggregate) | 30 | 86640 | 3217 | 5 | 0 | 10 | 141 | 118.17 |
+| SESSIONS AI Samples (Aggregate) | 30 | 89538 | 3501 | 0 | 0 | 0 | 84 | 118.80 |
+
+## Complexity Parse Failures
+
+| Scope | File | Error |
+|---|---|---|
+| OAUTH AI Samples (Aggregate) | ai-generated/oauth/sample7.ts | Line 47: Unexpected token : |
+| OAUTH AI Samples (Aggregate) | ai-generated/oauth/sample19.ts | Line 13: Unexpected token : |
+| OAUTH AI Samples (Aggregate) | ai-generated/oauth/sample27.ts | Line 48: Unexpected token : |
+| JWT AI Samples (Aggregate) | ai-generated/jwt/sample8.ts | Line 25: Unexpected token ; |
+| JWT AI Samples (Aggregate) | ai-generated/jwt/sample14.ts | Line 28: Unexpected token ( |
+| JWT AI Samples (Aggregate) | ai-generated/jwt/sample16.ts | Line 10: Unexpected token : |
+| JWT AI Samples (Aggregate) | ai-generated/jwt/sample23.ts | Line 31: Unexpected token : |
+| SESSIONS AI Samples (Aggregate) | ai-generated/sessions/sample10.ts | Line 9: Unexpected token : |
+| SESSIONS AI Samples (Aggregate) | ai-generated/sessions/sample12.ts | Line 14: Unexpected token : |

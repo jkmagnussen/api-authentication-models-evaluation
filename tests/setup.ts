@@ -10,6 +10,8 @@ async function safeDeleteMany(model: any) {
   }
 }
 
+export { safeDeleteMany };
+
 export async function resetDatabase() {
   authLimiter.resetKey("127.0.0.1");
   authLimiter.resetKey("::ffff:127.0.0.1");
@@ -23,7 +25,7 @@ export async function resetDatabase() {
   const oauthClient = (prisma as any).oAuthClient;
 
   if (oauthClient?.create) {
-    // ⭐ Recreate ALL clients used in tests
+    // Recreate clients used in tests.
     await oauthClient.create({
       data: {
         id: "client-basic",
@@ -48,7 +50,7 @@ export async function resetDatabase() {
       },
     });
 
-    // ⭐ Legacy client used in older tests
+    // Legacy client used by older tests.
     await oauthClient.create({
       data: {
         id: "client-123",
@@ -57,4 +59,8 @@ export async function resetDatabase() {
       },
     });
   }
+}
+
+export async function resetAuthState() {
+  await resetDatabase();
 }

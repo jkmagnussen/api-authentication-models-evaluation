@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-07-23T00:30:58.532Z",
+  "startedAt": "2026-07-23T00:26:40.194Z",
+  "provider": "openai",
+  "providerModel": "gpt-4o",
+  "providerModelIdentifier": "gpt-4o",
+  "providerEndpoint": "https://api.openai.com/v1",
+  "promptMode": "neutral",
+  "models": [
+    "oauth",
+    "jwt",
+    "sessions"
+  ],
+  "sampleCount": 30,
+  "generationParameters": {
+    "temperature": 0.8,
+    "maxTokens": 900
+  },
+  "promptFingerprints": {
+    "promptMode": "neutral",
+    "systemPromptSha256": "f1d5d4b3de59ea1e3b3e17f5f66e04f11027d683ce1073ea8508f453171c7ff6",
+    "modelPromptFingerprints": {
+      "oauth": {
+        "promptSha256": "811e9b964eb7a10f1dcf1e338887f7182ee235b04cb154cb1d9cce4172dd389d",
+        "systemPromptSha256": "f1d5d4b3de59ea1e3b3e17f5f66e04f11027d683ce1073ea8508f453171c7ff6",
+        "combinedPromptSha256": "c1a7695900c28ecf4708d99845728fd05b0bff9381618eebc39bef4e5c2524e4"
+      },
+      "jwt": {
+        "promptSha256": "3258eb5f0a05422712a4af95cb308055e601e158d3ec297418fccecbecd670b4",
+        "systemPromptSha256": "f1d5d4b3de59ea1e3b3e17f5f66e04f11027d683ce1073ea8508f453171c7ff6",
+        "combinedPromptSha256": "68492d53ed1b30e0542d36649a17e64c25fe39139fdf4a667778d17f71b6990e"
+      },
+      "sessions": {
+        "promptSha256": "cdcd9838408e355e445d2f0054043b768097f90cbab15b3c27348536bbe6e18b",
+        "systemPromptSha256": "f1d5d4b3de59ea1e3b3e17f5f66e04f11027d683ce1073ea8508f453171c7ff6",
+        "combinedPromptSha256": "48cff4582d8e07d2ca0165d5cb483010cd03e4eb47a7e1776c8ff6c7f929ee89"
+      }
+    }
+  },
+  "retryPolicy": {
+    "maxProviderAttempts": 5,
+    "baseRetryDelayMs": 750,
+    "maxRetryJitterMs": 250,
+    "requestTimeoutMs": 120000,
+    "sampleTimeoutMs": 180000,
+    "retryableStatusCodes": [
+      408,
+      409,
+      429,
+      500,
+      502,
+      503,
+      504,
+      529
+    ]
+  },
+  "retrySummary": {
+    "totalAttempts": 90,
+    "successfulRequests": 90,
+    "retries": 0,
+    "retryableHttpFailures": 0,
+    "networkFailures": 0,
+    "requestTimeoutFailures": 0,
+    "sampleTimeoutFailures": 0
+  }
+}

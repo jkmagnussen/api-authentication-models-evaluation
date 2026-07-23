@@ -1,0 +1,70 @@
+{
+  "model": "oauth",
+  "sample": "sample6",
+  "characters": 1384,
+  "lines": 43,
+  "functions": 1,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 8,
+      "total": 47,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const",
+        "[]"
+      ]
+    },
+    "operands": {
+      "distinct": 31,
+      "total": 56,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "authEndpoint",
+        0,
+        "express_1",
+        "\"express\"",
+        "require",
+        "crypto_1",
+        "\"crypto\"",
+        "express_validator_1",
+        "\"express-validator\"",
+        "app",
+        "default",
+        "json",
+        "use",
+        "\"/auth\"",
+        "\"Invalid redirect URI\"",
+        "\"redirect_uri\"",
+        "check",
+        "isURL",
+        "withMessage",
+        "\"Scope must be a string\"",
+        "\"scope\"",
+        "isString",
+        "get"
+      ]
+    },
+    "length": 103,
+    "vocabulary": 39,
+    "difficulty": 7.225806451612903,
+    "volume": 544.3964285428116,
+    "effort": 3933.7032255996705,
+    "bugs": 0.1814654761809372,
+    "time": 218.53906808887058
+  },
+  "maintainabilityIndex": 101.1393293815469
+}

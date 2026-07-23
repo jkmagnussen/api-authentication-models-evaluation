@@ -34,6 +34,7 @@ type CombinedResult = ComplexityResult & {
   correctnessFailures: string[];
   securityFailures: string[];
   misconfigurationDetections: string[];
+  analysisError?: string;
 };
 
 type FailureRateRow = {
@@ -121,6 +122,14 @@ function getFailureRateRows(combinedResults: CombinedResult[]) {
   return rows;
 }
 
+function fmtNumber(value: number | null | undefined, digits = 2): string {
+  if (typeof value !== "number" || Number.isNaN(value) || !Number.isFinite(value)) {
+    return "n/a";
+  }
+
+  return value.toFixed(digits);
+}
+
 function writeCsv(combinedResults: CombinedResult[], failureRateRows: FailureRateRow[]) {
   const rows = [
     [
@@ -201,7 +210,7 @@ function writeMarkdown(combinedResults: CombinedResult[], failureRateRows: Failu
   lines.push("- The AI checks are pattern-based heuristic screens for expected security properties and omissions; they are not semantic runtime verification.");
   lines.push("- Because these checks are heuristic, false positives and false negatives are possible.");
   lines.push("- Baseline and misconfigured variants are evaluated behaviorally with executable tests; AI samples are evaluated primarily as generated artifacts.");
-  lines.push("- The current local generators are deterministic. Repeated rounds are only useful for prompt-variance analysis if generation is later backed by an external model or nondeterministic provider.");
+  lines.push("- The primary AI comparison covers OpenAI and Claude under neutral and security-guided prompt conditions. Archived local/template artifacts are not part of the main provider comparison.");
   lines.push("");
   lines.push("## Failure-Rate Summary");
   lines.push("");
@@ -231,12 +240,14 @@ function writeMarkdown(combinedResults: CombinedResult[], failureRateRows: Failu
       const issues = result.securityFailures.length > 0
         ? result.securityFailures.join("; ")
         : "None";
-      const interpretation = result.passed
-        ? "Sample passed the local automated security checks."
-        : "Sample shows weaknesses or omissions relative to the expected secure baseline.";
+      const interpretation = result.analysisError
+        ? `Sample could not be structurally analysed: ${result.analysisError}`
+        : result.passed
+          ? "Sample passed the local automated security checks."
+          : "Sample shows weaknesses or omissions relative to the expected secure baseline.";
 
       lines.push(
-        `| ${result.sample} | ${result.passed ? "PASS" : "FAIL"} | ${result.characters} | ${result.lines} | ${result.functions} | ${result.classes} | ${result.cyclomaticComplexity} | ${result.maintainabilityIndex.toFixed(2)} | ${issues} | ${interpretation} |`
+        `| ${result.sample} | ${result.passed ? "PASS" : "FAIL"} | ${result.characters} | ${result.lines} | ${result.functions} | ${result.classes} | ${fmtNumber(result.cyclomaticComplexity, 0)} | ${fmtNumber(result.maintainabilityIndex)} | ${issues} | ${interpretation} |`
       );
     }
 

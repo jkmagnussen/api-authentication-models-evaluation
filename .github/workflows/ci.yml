@@ -44,7 +44,6 @@ jobs:
             docs/generated
             docs/performance-results/analysis.md
             docs/performance-results/statistical-summary.csv
-            docs/REPO_QUICK_GUIDE.pdf
             ai-generated/results/ai-samples-summary.csv
             ai-generated/results/ai-samples-failure-rates.csv
           if-no-files-found: error

@@ -1,6 +1,6 @@
 # Performance Analysis
 
-Generated: 2026-07-21T18:00:27.187Z
+Generated: 2026-07-23T03:48:49.821Z
 Regenerate: npm run perf:analyze
 
 ## Method
@@ -13,11 +13,11 @@ Regenerate: npm run perf:analyze
 
 ## Comparative Summary
 
-| Model | Baseline Avg (ms) | Attack Avg (ms) | Avg Delta % | p95 Delta % | p99 Delta % | Throughput Delta % | Effect Size (d) | 95% CI Avg Delta % |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| JWT | 1.2628 | 1.1731 | -7.11 | -9.29 | -0.58 | 7.65 | n/a | n/a |
-| OAUTH | 1.1446 | 1.1956 | 4.46 | 13.09 | 43.82 | -4.27 | n/a | n/a |
-| SESSIONS | 1.6955 | 1.0473 | -38.23 | -40.20 | -47.25 | 61.90 | n/a | n/a |
+| Model | Baseline Avg (ms) | Attack Avg (ms) | Avg Delta % | p95 Delta % | p99 Delta % | Throughput Delta % | Effect Size (d) | Welch p-value | 95% CI Avg Delta % |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| JWT | 1.2542 | 1.1828 | -5.69 | -5.23 | -0.92 | 6.04 | -0.02 | 0.9782 | [-68.27, 66.62] |
+| OAUTH | 1.2567 | 1.1605 | -7.65 | -13.87 | -4.13 | 8.28 | -0.37 | 0.5741 | [-73.68, 43.84] |
+| SESSIONS | 1.6262 | 1.0899 | -32.98 | -35.60 | -39.15 | 49.21 | -0.10 | 0.8748 | [-62.55, 54.39] |
 
 ## Raw Inputs
 

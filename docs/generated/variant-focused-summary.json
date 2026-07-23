@@ -11,7 +11,7 @@
     "stride": "Spoofing / Tampering",
     "owaspCategory": "A01 Broken Access Control",
     "passed": true,
-    "durationMs": 1490
+    "durationMs": 1499
   },
   {
     "variantName": "oauth-state-misconfiguration",
@@ -19,13 +19,13 @@
     "focusedTest": "tests/variants/oauth/state-misconfiguration.variant.test.ts",
     "regression": "Authorization code exchange succeeds despite mismatched state.",
     "command": "npm run test:variant:oauth:state",
-    "severityClass": "Low",
-    "severityScore": 2,
+    "severityClass": "High",
+    "severityScore": 4,
     "exploitabilityScore10": 10,
     "stride": "Tampering",
     "owaspCategory": "A01 Broken Access Control",
     "passed": true,
-    "durationMs": 1492
+    "durationMs": 1487
   },
   {
     "variantName": "oauth-scope-misconfiguration",
@@ -39,13 +39,13 @@
     "stride": "Elevation of Privilege",
     "owaspCategory": "A01 Broken Access Control",
     "passed": true,
-    "durationMs": 1497
+    "durationMs": 1475
   },
   {
     "variantName": "jwt-audience-misconfiguration",
     "category": "jwt",
     "focusedTest": "tests/variants/jwt/audience-misconfiguration.variant.test.ts",
-    "regression": "Tokens minted for weak audience/issuer values are accepted.",
+    "regression": "Tokens minted for a weak audience value are accepted.",
     "command": "npm run test:variant:jwt:audience",
     "severityClass": "High",
     "severityScore": 4,
@@ -53,7 +53,7 @@
     "stride": "Spoofing",
     "owaspCategory": "A07 Identification and Authentication Failures",
     "passed": true,
-    "durationMs": 1441
+    "durationMs": 1412
   },
   {
     "variantName": "jwt-algorithm-misconfiguration",
@@ -67,13 +67,13 @@
     "stride": "Spoofing / Tampering",
     "owaspCategory": "A08 Software and Data Integrity Failures",
     "passed": true,
-    "durationMs": 1431
+    "durationMs": 1428
   },
   {
     "variantName": "jwt-expiry-misconfiguration",
     "category": "jwt",
     "focusedTest": "tests/variants/jwt/expiry-misconfiguration.variant.test.ts",
-    "regression": "Issued JWT lifetime becomes excessively long.",
+    "regression": "Issued JWT lifetime is extended far beyond a normal session lifetime.",
     "command": "npm run test:variant:jwt:expiry",
     "severityClass": "High",
     "severityScore": 4,
@@ -81,7 +81,7 @@
     "stride": "Repudiation",
     "owaspCategory": "A07 Identification and Authentication Failures",
     "passed": true,
-    "durationMs": 1472
+    "durationMs": 1471
   },
   {
     "variantName": "sessions-fixation-misconfiguration",
@@ -95,7 +95,7 @@
     "stride": "Spoofing",
     "owaspCategory": "A07 Identification and Authentication Failures",
     "passed": true,
-    "durationMs": 1458
+    "durationMs": 1492
   },
   {
     "variantName": "sessions-cookie-flag-misconfiguration",
@@ -109,7 +109,7 @@
     "stride": "Information Disclosure",
     "owaspCategory": "A05 Security Misconfiguration",
     "passed": true,
-    "durationMs": 1468
+    "durationMs": 1512
   },
   {
     "variantName": "sessions-logout-misconfiguration",
@@ -123,6 +123,6 @@
     "stride": "Spoofing",
     "owaspCategory": "A07 Identification and Authentication Failures",
     "passed": true,
-    "durationMs": 1495
+    "durationMs": 1489
   }
 ]

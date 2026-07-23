@@ -19,7 +19,7 @@ describe("JWT expiry misconfiguration exploit", () => {
     });
   });
 
-  it("issues a token with excessively long lifetime", async () => {
+  it("issues a token with an excessively long lifetime", async () => {
     const loginRes = await request(app)
       .post("/jwt/login")
       .send({ email: "test@example.com", password: "password" });
@@ -31,6 +31,6 @@ describe("JWT expiry misconfiguration exploit", () => {
     expect(decoded.iat).toBeDefined();
 
     const lifetimeSeconds = (decoded.exp as number) - (decoded.iat as number);
-    expect(lifetimeSeconds).toBeGreaterThan(60 * 60 * 24 * 365 * 50);
+    expect(lifetimeSeconds).toBeGreaterThan(60 * 60 * 24 * 7);
   });
 });

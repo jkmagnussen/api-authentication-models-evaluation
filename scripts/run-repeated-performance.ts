@@ -6,7 +6,7 @@ for (let index = 1; index <= repeatCount; index += 1) {
   const runId = `run-${String(index).padStart(2, "0")}`;
   console.log(`Starting performance repetition ${runId}`);
 
-  const result = spawnSync("npm", ["run", "perf:once"], {
+  const result = spawnSync("npm", ["test", "--", "tests/performance"], {
     stdio: "inherit",
     shell: true,
     env: {

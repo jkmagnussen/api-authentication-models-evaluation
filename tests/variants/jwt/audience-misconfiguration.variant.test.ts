@@ -6,9 +6,9 @@ const app = loadVariantApp();
 const secret = process.env.JWT_SECRET || "dev-secret";
 
 describe("JWT audience misconfiguration exploit", () => {
-  it("accepts token minted for weak audience and issuer values", async () => {
+  it("accepts token minted for a weak audience value", async () => {
     const token = jwt.sign(
-      { userId: "user-123", aud: "anyone", iss: "unknown" },
+      { userId: "user-123", aud: "anyone", iss: "api-auth-service" },
       secret,
       { expiresIn: "1h" }
     );

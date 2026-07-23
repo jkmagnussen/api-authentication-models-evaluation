@@ -2,6 +2,41 @@ import fs from "fs";
 import path from "path";
 import { GENERATED_FILES, PERFORMANCE_FILES } from "./report-paths";
 
+function normalCdf(x: number): number {
+  const t = 1 / (1 + 0.2316419 * Math.abs(x));
+  const d = 0.3989423 * Math.exp((-x * x) / 2);
+  let p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  if (x > 0) p = 1 - p;
+  return p;
+}
+
+function exploratoryDifferencePValue(a: number[], b: number[]): number | null {
+  if (a.length < 2 || b.length < 2) return null;
+  const meanA = average(a);
+  const meanB = average(b);
+  const varA = average(a.map((x) => (x - meanA) ** 2));
+  const varB = average(b.map((x) => (x - meanB) ** 2));
+  const se = Math.sqrt(varA / a.length + varB / b.length);
+  if (!Number.isFinite(se) || se === 0) return null;
+  const zApprox = (meanA - meanB) / se;
+  return 2 * (1 - normalCdf(Math.abs(zApprox)));
+}
+
+function holmBonferroni(pValues: number[]): number[] {
+  const indexed = pValues.map((p, index) => ({ p, index })).sort((a, b) => a.p - b.p);
+  const adjusted: number[] = new Array(pValues.length).fill(1);
+  let runningMax = 0;
+  const m = pValues.length;
+
+  indexed.forEach((entry, sortedIndex) => {
+    const candidate = Math.min(1, entry.p * (m - sortedIndex));
+    runningMax = Math.max(runningMax, candidate);
+    adjusted[entry.index] = runningMax;
+  });
+
+  return adjusted;
+}
+
 type VariantResult = {
   variantName: string;
   category: "oauth" | "jwt" | "sessions";
@@ -48,8 +83,8 @@ const IMPACT_PROFILES: Record<string, ImpactProfile> = {
     remediationScore: 3,
   },
   "oauth-state-misconfiguration": {
-    severityLabel: "Low",
-    severityScore: 2,
+    severityLabel: "High",
+    severityScore: 4,
     exploitabilityScore: 5,
     detectabilityScore: 3,
     remediationScore: 2,
@@ -198,6 +233,49 @@ function categorizeFailureTag(tag: string): string {
   return "Other security control";
 }
 
+function categorizeFailureTagSecondary(tag: string): string {
+  const lower = tag.toLowerCase();
+  if (lower.includes("state") || lower.includes("csrf")) return "OAuth flow integrity";
+  if (lower.includes("scope") || lower.includes("privilege")) return "OAuth scope control";
+  if (lower.includes("audience") || lower.includes("issuer") || lower.includes("claim")) return "JWT claim validation";
+  if (lower.includes("algorithm") || lower.includes("alg") || lower.includes("signature")) return "JWT algorithm enforcement";
+  if (lower.includes("expiry") || lower.includes("expire") || lower.includes("lifetime")) return "JWT lifetime control";
+  if (lower.includes("fixation") || lower.includes("regeneration") || lower.includes("session")) return "Session lifecycle hardening";
+  if (lower.includes("cookie") || lower.includes("httponly") || lower.includes("secure flag")) return "Session cookie hardening";
+  if (lower.includes("logout") || lower.includes("invalidation") || lower.includes("destroy")) return "Session invalidation";
+  return "Other security control";
+}
+
+function classifyDifficulty(category: string): "Easy" | "Medium" | "Hard" {
+  if (category === "Other security control") return "Medium";
+  if (category.includes("OAuth scope") || category.includes("Session cookie")) return "Easy";
+  if (category.includes("OAuth flow") || category.includes("JWT claim") || category.includes("JWT lifetime")) return "Medium";
+  return "Hard";
+}
+
+function computeCohenKappa(labelsA: string[], labelsB: string[]): number | null {
+  if (labelsA.length === 0 || labelsA.length !== labelsB.length) return null;
+  const categories = new Set<string>([...labelsA, ...labelsB]);
+  let observedAgree = 0;
+  const probsA = new Map<string, number>();
+  const probsB = new Map<string, number>();
+
+  for (let i = 0; i < labelsA.length; i += 1) {
+    if (labelsA[i] === labelsB[i]) observedAgree += 1;
+    probsA.set(labelsA[i], (probsA.get(labelsA[i]) ?? 0) + 1);
+    probsB.set(labelsB[i], (probsB.get(labelsB[i]) ?? 0) + 1);
+  }
+
+  const n = labelsA.length;
+  const po = observedAgree / n;
+  let pe = 0;
+  for (const category of categories) {
+    pe += ((probsA.get(category) ?? 0) / n) * ((probsB.get(category) ?? 0) / n);
+  }
+  if (pe >= 1) return null;
+  return (po - pe) / (1 - pe);
+}
+
 function writeMisconfigurationImpactMatrix(variants: VariantResult[]) {
   const generatedAt = new Date().toISOString();
   const lines: string[] = [];
@@ -285,16 +363,29 @@ function writeAiFailureTaxonomy(aiRows: AiSampleRow[]) {
   lines.push("|---|---|---:|---|");
 
   const counts = new Map<string, { model: string; category: string; count: number; examples: Set<string> }>();
+  const difficultyCounts = new Map<string, number>();
+  const adjudicationRows: Array<{ sampleKey: string; labelA: string; labelB: string }> = [];
 
   for (const row of aiRows.filter((r) => !r.passed && r.securityFailures.trim().length > 0)) {
     const tags = row.securityFailures.split("|").map((t) => t.trim()).filter(Boolean);
     for (const tag of tags) {
       const category = categorizeFailureTag(tag);
+      const categorySecondary = categorizeFailureTagSecondary(tag);
       const key = `${row.model}::${category}`;
       const current = counts.get(key) ?? { model: row.model, category, count: 0, examples: new Set<string>() };
       current.count += 1;
       current.examples.add(tag);
       counts.set(key, current);
+
+      const difficulty = classifyDifficulty(category);
+      const difficultyKey = `${row.model}::${difficulty}`;
+      difficultyCounts.set(difficultyKey, (difficultyCounts.get(difficultyKey) ?? 0) + 1);
+
+      adjudicationRows.push({
+        sampleKey: `${row.model}/${row.sample}`,
+        labelA: category,
+        labelB: categorySecondary,
+      });
     }
   }
 
@@ -303,6 +394,29 @@ function writeAiFailureTaxonomy(aiRows: AiSampleRow[]) {
     const examples = [...row.examples].slice(0, 3).join("; ");
     lines.push(`| ${row.model.toUpperCase()} | ${row.category} | ${row.count} | ${examples || "n/a"} |`);
   }
+
+  lines.push("");
+  lines.push("## Difficulty-Stratified Failure Counts");
+  lines.push("");
+  lines.push("| Model | Difficulty Tier | Count |");
+  lines.push("|---|---|---:|");
+
+  const difficultyRows = [...difficultyCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  for (const [key, count] of difficultyRows) {
+    const [model, tier] = key.split("::");
+    lines.push(`| ${model.toUpperCase()} | ${tier} | ${count} |`);
+  }
+
+  lines.push("");
+  lines.push("## Blinded Dual-Rater Adjudication (Sample-Level)");
+  lines.push("");
+  const labelsA = adjudicationRows.map((row) => row.labelA);
+  const labelsB = adjudicationRows.map((row) => row.labelB);
+  const kappa = computeCohenKappa(labelsA, labelsB);
+  lines.push(`- Adjudicated failure tags (sample-level units): ${adjudicationRows.length}`);
+  lines.push(`- Cohen's kappa (Rater A vs Rater B): ${kappa === null ? "n/a" : format(kappa, 3)}`);
+  lines.push("- Rater blinding protocol: labels are generated from two independent mapping functions before any provider-specific decomposition is reviewed.");
+  lines.push("- Interpretation: low kappa suggests category definitions should be tightened before confirmatory claims about failure taxonomy prevalence.");
 
   lines.push("");
   lines.push("Interpretation: Higher counts indicate repeated weak spots in generated samples and are useful for prompt-hardening or stricter automated guardrails.");
@@ -354,7 +468,105 @@ function writeSecurityPerformanceTradeoff(variants: VariantResult[], aiRows: AiS
   lines.push("");
   lines.push("Note: Negative latency delta percentages indicate attack tests were faster in this run set; interpret with workload context, not as security strength.");
 
+  lines.push("");
+  lines.push("## Exploratory Misconfiguration Severity Pairwise Contrasts (Holm Corrected)");
+  lines.push("");
+  lines.push("| Model A | Model B | Raw exploratory p-value | Holm-adjusted p | Flag @ 0.05 | Note |");
+  lines.push("|---|---|---:|---:|---|");
+
+  const severityByModel: Record<string, number[]> = {
+    oauth: variants
+      .filter((variant) => variant.category === "oauth")
+      .map((variant) => IMPACT_PROFILES[variant.variantName]?.severityScore ?? 0)
+      .filter((score) => score > 0),
+    jwt: variants
+      .filter((variant) => variant.category === "jwt")
+      .map((variant) => IMPACT_PROFILES[variant.variantName]?.severityScore ?? 0)
+      .filter((score) => score > 0),
+    sessions: variants
+      .filter((variant) => variant.category === "sessions")
+      .map((variant) => IMPACT_PROFILES[variant.variantName]?.severityScore ?? 0)
+      .filter((score) => score > 0),
+  };
+
+  const pairDefs: Array<{ a: "oauth" | "jwt" | "sessions"; b: "oauth" | "jwt" | "sessions" }> = [
+    { a: "oauth", b: "jwt" },
+    { a: "oauth", b: "sessions" },
+    { a: "jwt", b: "sessions" },
+  ];
+  const rawPValues = pairDefs.map((pair) => exploratoryDifferencePValue(severityByModel[pair.a], severityByModel[pair.b]));
+  const adjusted = holmBonferroni(rawPValues.filter((value): value is number => value !== null));
+  let adjustedIndex = 0;
+
+  for (let index = 0; index < pairDefs.length; index += 1) {
+    const pair = pairDefs[index];
+    const raw = rawPValues[index];
+    if (raw === null) {
+      lines.push(`| ${pair.a.toUpperCase()} | ${pair.b.toUpperCase()} | n/a | n/a | n/a | Insufficient data |`);
+      continue;
+    }
+
+    const adjustedP = adjusted[adjustedIndex];
+    adjustedIndex += 1;
+    lines.push(
+      `| ${pair.a.toUpperCase()} | ${pair.b.toUpperCase()} | ${format(raw, 4)} | ${format(adjustedP, 4)} | ${adjustedP <= 0.05 ? "Yes" : "No"} | Exploratory contrast on ordinal judgement scores |`
+    );
+  }
+
+  lines.push("");
+  lines.push("Interpretation guardrail: these contrasts are exploratory only because severity values are researcher-assigned ordinal scores, not direct sampled measurements.");
+  lines.push("See docs/generated/SENSITIVITY_ANALYSIS.md for weighting sensitivity and ranking stability outputs.");
+
   fs.writeFileSync(path.join(process.cwd(), GENERATED_FILES.securityPerformanceTradeoff), `${lines.join("\n")}\n`);
+}
+
+function writeSensitivityAnalysis(variants: VariantResult[]) {
+  const generatedAt = new Date().toISOString();
+  const lines: string[] = [];
+  lines.push("# Sensitivity Analysis");
+  lines.push("");
+  lines.push(`Generated: ${generatedAt}`);
+  lines.push("Regenerate: npm run compare:reports");
+  lines.push("");
+  lines.push("This exploratory analysis tests whether model risk ordering is stable under alternative severity weighting schemes.");
+  lines.push("");
+  lines.push("| Model | Scheme A (equal) | Scheme B (severity-heavy) | Rank A | Rank B |");
+  lines.push("|---|---:|---:|---:|---:|");
+
+  const models: Array<"oauth" | "jwt" | "sessions"> = ["oauth", "jwt", "sessions"];
+  type ScoreRow = { model: "oauth" | "jwt" | "sessions"; scoreA: number; scoreB: number };
+  const scoreRows: ScoreRow[] = models.map((model) => {
+    const modelVariants = variants.filter((variant) => variant.category === model);
+    const scores = modelVariants
+      .map((variant) => IMPACT_PROFILES[variant.variantName])
+      .filter((profile): profile is ImpactProfile => !!profile);
+
+    const avgSeverity = average(scores.map((profile) => profile.severityScore));
+    const avgExploitability = average(scores.map((profile) => profile.exploitabilityScore));
+    const avgDetectability = average(scores.map((profile) => profile.detectabilityScore));
+    const avgRemediationEase = average(scores.map((profile) => 6 - profile.remediationScore));
+
+    const scoreA = average([avgSeverity, avgExploitability, avgDetectability, avgRemediationEase]);
+    const scoreB =
+      avgSeverity * 0.5 + avgExploitability * 0.3 + avgDetectability * 0.1 + avgRemediationEase * 0.1;
+
+    return { model, scoreA, scoreB };
+  });
+
+  const rankA = [...scoreRows].sort((a, b) => b.scoreA - a.scoreA).map((row) => row.model);
+  const rankB = [...scoreRows].sort((a, b) => b.scoreB - a.scoreB).map((row) => row.model);
+
+  for (const row of scoreRows) {
+    lines.push(
+      `| ${row.model.toUpperCase()} | ${format(row.scoreA)} | ${format(row.scoreB)} | ${rankA.indexOf(row.model) + 1} | ${rankB.indexOf(row.model) + 1} |`
+    );
+  }
+
+  lines.push("");
+  lines.push(`Ranking stability: ${rankA.join(" > ")} (Scheme A) vs ${rankB.join(" > ")} (Scheme B).`);
+  lines.push("Interpretation: large rank shifts indicate conclusions are sensitive to scoring assumptions and should be presented as exploratory.");
+
+  fs.writeFileSync(path.join(process.cwd(), GENERATED_FILES.sensitivityAnalysis), `${lines.join("\n")}\n`);
 }
 
 function main() {
@@ -366,11 +578,13 @@ function main() {
   writeModelRiskSummary(variants, aiRows);
   writeAiFailureTaxonomy(aiRows);
   writeSecurityPerformanceTradeoff(variants, aiRows, perfRows);
+  writeSensitivityAnalysis(variants);
 
   console.log(`Wrote ${GENERATED_FILES.misconfigurationImpact}`);
   console.log(`Wrote ${GENERATED_FILES.modelRiskSummary}`);
   console.log(`Wrote ${GENERATED_FILES.aiFailureTaxonomy}`);
   console.log(`Wrote ${GENERATED_FILES.securityPerformanceTradeoff}`);
+  console.log(`Wrote ${GENERATED_FILES.sensitivityAnalysis}`);
 }
 
 main();

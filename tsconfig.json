@@ -11,5 +11,11 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "types": ["node", "jest"]
-  }
+  },
+  "exclude": [
+    "dist",
+    "node_modules",
+    "ai-generated/**/sample*.ts",
+    "ai-generated/arms/**/samples/**/*.ts"
+  ]
 }
