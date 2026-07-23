@@ -1,6 +1,6 @@
 # AI Provider/Prompt Comparison (Blinded)
 
-Generated: 2026-07-23T12:16:53.196Z
+Generated: 2026-07-23T19:41:27.637Z
 Regenerate: npm run compare:reports
 
 This blinded view hides provider and prompt-condition labels (Arm A-D) to reduce interpretation anchoring bias.

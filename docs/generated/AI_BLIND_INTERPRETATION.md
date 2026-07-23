@@ -1,40 +1,42 @@
 # AI Blind Interpretation
 
-Generated: 2026-07-23T12:16:54.209Z
+Generated: 2026-07-23T19:41:28.643Z
 Regenerate: npm run objective:blind:interpretation
 
-Status: FINALIZED_PRE_UNBLIND
-Blinded report SHA256: cae748d83a8ecab2f58e24ce4de8741bc53083220173a5e09ff96450857f6154
-Finalized at: 2026-07-23T12:19:16.688Z
+Status: DRAFT_NEEDS_FINALIZATION
+Blinded report SHA256: f3cf2975aabd319eacff466be7573e32bf17e1a809204b0aef68dc672dcbd644
 
 ## Pre-Unblind Interpretation
 
 1. Primary contrast identified (Arm X vs Arm Y):
-- No blinded arm contrast met a strong confirmatory interpretation threshold prior to unblinding; results are treated as exploratory at this stage.
+- Replace with blinded arm labels and rationale.
 
 2. Decision-rule statement:
-- Under blinded pre-unblinding review, confirmatory interpretation is withheld and findings remain exploratory pending full adjudicated review context.
+- State whether blinded contrasts meet both Holm-adjusted significance and practical effect thresholds.
 
 3. Caveats before unblinding:
-- Limited cohort depth, potential run-to-run instability, and strict preregistered safeguards justify conservative interpretation before unblinding.
+- Record uncertainty and any reasons to keep conclusions exploratory.
+
+## Reviewer Sign-off
+
+Reviewer A: PENDING
+Reviewer A Signed At: PENDING
+Reviewer A Independence: PENDING
+Reviewer A COI Disclosure: PENDING
+Reviewer B: PENDING
+Reviewer B Signed At: PENDING
+Reviewer B Independence: PENDING
+Reviewer B COI Disclosure: PENDING
+Reviewer Selection Policy: Reviewer A and Reviewer B must be distinct, independent reviewers.
 
 ## Adjudication
 
-Reviewer Agreement: AGREE
-Tie-break Reviewer: NOT_REQUIRED
-Tie-break Decision: NOT_REQUIRED
-Tie-break Signed At: NOT_REQUIRED
+Reviewer Agreement: PENDING
+Tie-break Reviewer: PENDING
+Tie-break Decision: PENDING
+Tie-break Signed At: PENDING
 
 ## Finalization
 
 - Replace `Status: DRAFT_NEEDS_FINALIZATION` with `Status: FINALIZED_PRE_UNBLIND` after interpretation is complete and before consulting unblinded labels.
 - Keep the blinded report SHA256 unchanged; if it changes, re-interpret and re-finalize.
-
-Reviewer A: Independent Reviewer A
-Reviewer A Signed At: 2026-07-23T12:19:16.689Z
-Reviewer A Independence: INDEPENDENT
-Reviewer A COI Disclosure: NONE
-Reviewer B: Independent Reviewer B
-Reviewer B Signed At: 2026-07-23T12:19:16.689Z
-Reviewer B Independence: INDEPENDENT
-Reviewer B COI Disclosure: NONE

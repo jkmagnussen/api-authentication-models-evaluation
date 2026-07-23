@@ -1,0 +1,63 @@
+{
+  "generatedAt": "2026-07-23T19:41:25.616Z",
+  "calibration": {
+    "primaryThreshold": 1,
+    "falseConfidenceSamples": 16,
+    "totalSamples": 90,
+    "rate": 0.17777777777777778,
+    "sensitivity": [
+      {
+        "threshold": 0,
+        "falseConfidenceSamples": 0,
+        "totalSamples": 90,
+        "rate": 0
+      },
+      {
+        "threshold": 1,
+        "falseConfidenceSamples": 16,
+        "totalSamples": 90,
+        "rate": 0.17777777777777778
+      },
+      {
+        "threshold": 2,
+        "falseConfidenceSamples": 30,
+        "totalSamples": 90,
+        "rate": 0.3333333333333333
+      }
+    ]
+  },
+  "agreement": {
+    "controlAgreement": {
+      "observations": 6,
+      "kappa": 1,
+      "rawAgreementRate": 1,
+      "disagreementCount": 0
+    },
+    "generatedSampleAgreement": {
+      "observations": 90,
+      "kappa": 0.6348448687350835,
+      "rawAgreementRate": 0.8111111111111111,
+      "disagreementCount": 17,
+      "byModel": {
+        "oauth": {
+          "observations": 30,
+          "kappa": 0,
+          "rawAgreementRate": 0.9,
+          "disagreementCount": 3
+        },
+        "jwt": {
+          "observations": 30,
+          "kappa": 0.8888888888888888,
+          "rawAgreementRate": 0.9666666666666667,
+          "disagreementCount": 1
+        },
+        "sessions": {
+          "observations": 30,
+          "kappa": 0.2528735632183909,
+          "rawAgreementRate": 0.5666666666666667,
+          "disagreementCount": 13
+        }
+      }
+    }
+  }
+}

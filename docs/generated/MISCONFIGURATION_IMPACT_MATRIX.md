@@ -1,6 +1,6 @@
 # Misconfiguration Impact Matrix
 
-Generated: 2026-07-23T12:16:50.150Z
+Generated: 2026-07-23T19:41:23.640Z
 Regenerate: npm run compare:reports
 
 This matrix ranks each intentional misconfiguration by impact severity and practical exploitation characteristics.

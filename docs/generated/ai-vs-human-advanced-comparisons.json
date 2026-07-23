@@ -1,0 +1,316 @@
+{
+  "generatedAt": "2026-07-23T16:21:27.496Z",
+  "methodology": {
+    "bootstrapSeed": 20260723,
+    "bootstrapIterations": 2000,
+    "falseConfidenceThresholds": [
+      0,
+      1,
+      2
+    ],
+    "baselineSampleAssumption": "One curated baseline implementation per model.",
+    "greenProxyAssumption": "Attack-phase average latency is used as a compute-per-secure-outcome proxy; this is not direct energy metering."
+  },
+  "severityWeightedSafetyGapWithUncertainty": [
+    {
+      "model": "oauth",
+      "modelLabel": "OAuth2",
+      "baselineMeanRiskPerSample": 0,
+      "aiMeanRiskPerSample": 10.8,
+      "deltaAiMinusBaseline": 10.8,
+      "ci95Lower": 9.0975,
+      "ci95Upper": 12.4
+    },
+    {
+      "model": "jwt",
+      "modelLabel": "JWT",
+      "baselineMeanRiskPerSample": 0,
+      "aiMeanRiskPerSample": 0.8,
+      "deltaAiMinusBaseline": 0.8,
+      "ci95Lower": 0,
+      "ci95Upper": 1.8666666666666667
+    },
+    {
+      "model": "sessions",
+      "modelLabel": "Session",
+      "baselineMeanRiskPerSample": 0,
+      "aiMeanRiskPerSample": 1.3333333333333333,
+      "deltaAiMinusBaseline": 1.3333333333333333,
+      "ci95Lower": 0.26666666666666666,
+      "ci95Upper": 2.933333333333333
+    }
+  ],
+  "focalControlSelectionRationale": "Focal controls were preselected as high-impact sentinel controls; full-control coverage is also reported for sensitivity against control-selection bias.",
+  "focalControlCoverageReliability": [
+    {
+      "controlId": "oauth_redirect_uri_validation",
+      "controlLabel": "OAuth redirect URI validation",
+      "model": "oauth",
+      "baselinePassRate": 1,
+      "aiPassRate": 0.1333333333333333,
+      "aiFailureRate": 0.8666666666666667
+    },
+    {
+      "controlId": "oauth_state_binding",
+      "controlLabel": "OAuth state binding",
+      "model": "oauth",
+      "baselinePassRate": 1,
+      "aiPassRate": 1,
+      "aiFailureRate": 0
+    },
+    {
+      "controlId": "jwt_algorithm_allowlist",
+      "controlLabel": "JWT algorithm allowlist",
+      "model": "jwt",
+      "baselinePassRate": 1,
+      "aiPassRate": 1,
+      "aiFailureRate": 0
+    },
+    {
+      "controlId": "session_invalidation_on_logout",
+      "controlLabel": "Session invalidation on logout",
+      "model": "sessions",
+      "baselinePassRate": 1,
+      "aiPassRate": 0.9333333333333333,
+      "aiFailureRate": 0.06666666666666667
+    }
+  ],
+  "controlCoverageReliabilityFull": [
+    {
+      "controlId": "oauth_redirect_uri_validation",
+      "controlLabel": "OAuth redirect URI validation",
+      "model": "oauth",
+      "baselinePassRate": 1,
+      "aiPassRate": 0.1333333333333333,
+      "aiFailureRate": 0.8666666666666667
+    },
+    {
+      "controlId": "oauth_state_binding",
+      "controlLabel": "OAuth state binding",
+      "model": "oauth",
+      "baselinePassRate": 1,
+      "aiPassRate": 1,
+      "aiFailureRate": 0
+    },
+    {
+      "controlId": "oauth_scope_enforcement",
+      "controlLabel": "OAuth scope enforcement",
+      "model": "oauth",
+      "baselinePassRate": 1,
+      "aiPassRate": 0.5,
+      "aiFailureRate": 0.5
+    },
+    {
+      "controlId": "jwt_audience_issuer_validation",
+      "controlLabel": "JWT audience and issuer validation",
+      "model": "jwt",
+      "baselinePassRate": 1,
+      "aiPassRate": 0.9,
+      "aiFailureRate": 0.1
+    },
+    {
+      "controlId": "jwt_algorithm_allowlist",
+      "controlLabel": "JWT algorithm allowlist",
+      "model": "jwt",
+      "baselinePassRate": 1,
+      "aiPassRate": 1,
+      "aiFailureRate": 0
+    },
+    {
+      "controlId": "jwt_expiry_enforcement",
+      "controlLabel": "JWT expiry enforcement",
+      "model": "jwt",
+      "baselinePassRate": 1,
+      "aiPassRate": 1,
+      "aiFailureRate": 0
+    },
+    {
+      "controlId": "session_regeneration_on_auth",
+      "controlLabel": "Session regeneration on authentication",
+      "model": "sessions",
+      "baselinePassRate": 1,
+      "aiPassRate": 0.9,
+      "aiFailureRate": 0.1
+    },
+    {
+      "controlId": "session_cookie_protection",
+      "controlLabel": "Session cookie protection",
+      "model": "sessions",
+      "baselinePassRate": 1,
+      "aiPassRate": 1,
+      "aiFailureRate": 0
+    },
+    {
+      "controlId": "session_invalidation_on_logout",
+      "controlLabel": "Session invalidation on logout",
+      "model": "sessions",
+      "baselinePassRate": 1,
+      "aiPassRate": 0.9333333333333333,
+      "aiFailureRate": 0.06666666666666667
+    }
+  ],
+  "falseConfidenceRate": {
+    "lowCorrectnessThreshold": 1,
+    "falseConfidenceSamples": 16,
+    "totalSamples": 90,
+    "rate": 0.17777777777777778
+  },
+  "falseConfidenceSensitivity": [
+    {
+      "threshold": 0,
+      "falseConfidenceSamples": 0,
+      "totalSamples": 90,
+      "rate": 0
+    },
+    {
+      "threshold": 1,
+      "falseConfidenceSamples": 16,
+      "totalSamples": 90,
+      "rate": 0.17777777777777778
+    },
+    {
+      "threshold": 2,
+      "falseConfidenceSamples": 30,
+      "totalSamples": 90,
+      "rate": 0.3333333333333333
+    }
+  ],
+  "safetyStabilityComparison": {
+    "armHistoryStability": [
+      {
+        "arm": "claude-neutral",
+        "cohorts": 3,
+        "meanFailurePct": 47.43333333333334,
+        "stdDevFailurePct": 1.2701705922171742,
+        "spreadPct": 2.1999999999999957
+      },
+      {
+        "arm": "claude-security-guided",
+        "cohorts": 3,
+        "meanFailurePct": 38.9,
+        "stdDevFailurePct": 1.1000000000000014,
+        "spreadPct": 2.200000000000003
+      },
+      {
+        "arm": "openai-neutral",
+        "cohorts": 3,
+        "meanFailurePct": 48.9,
+        "stdDevFailurePct": 0,
+        "spreadPct": 0
+      },
+      {
+        "arm": "openai-security-guided",
+        "cohorts": 3,
+        "meanFailurePct": 38.166666666666664,
+        "stdDevFailurePct": 0.6350852961085892,
+        "spreadPct": 1.1000000000000014
+      }
+    ],
+    "aggregate": {
+      "baselineRiskPer10kVarianceAcrossModels": 0,
+      "aiRiskPer10kVarianceAcrossModels": 40.870386590141464,
+      "armFailureRateStdDevMean": 0.7513139720814412
+    }
+  },
+  "dominanceScoreAcrossCoreMetrics": [
+    {
+      "model": "oauth",
+      "modelLabel": "OAuth2",
+      "criteriaCount": 3,
+      "baselineWins": 3,
+      "baselineLosses": 0,
+      "baselineDominates": true
+    },
+    {
+      "model": "jwt",
+      "modelLabel": "JWT",
+      "criteriaCount": 3,
+      "baselineWins": 3,
+      "baselineLosses": 0,
+      "baselineDominates": true
+    },
+    {
+      "model": "sessions",
+      "modelLabel": "Session",
+      "criteriaCount": 3,
+      "baselineWins": 3,
+      "baselineLosses": 0,
+      "baselineDominates": true
+    }
+  ],
+  "costOfRemediationProxy": [
+    {
+      "model": "oauth",
+      "modelLabel": "OAuth2",
+      "baselineExpectedScore": 0,
+      "aiExpectedScore": 4.5,
+      "deltaAiMinusBaseline": 4.5
+    },
+    {
+      "model": "jwt",
+      "modelLabel": "JWT",
+      "baselineExpectedScore": 0,
+      "aiExpectedScore": 1.2000000000000002,
+      "deltaAiMinusBaseline": 1.2000000000000002
+    },
+    {
+      "model": "sessions",
+      "modelLabel": "Session",
+      "baselineExpectedScore": 0,
+      "aiExpectedScore": 2.033333333333333,
+      "deltaAiMinusBaseline": 2.033333333333333
+    }
+  ],
+  "robustnessUnderAdversarialPerturbation": [
+    {
+      "model": "oauth",
+      "modelLabel": "OAuth2",
+      "failureDegradationRatioAiToMisconfig": 6.12483354899568,
+      "riskDegradationRatioAiToMisconfig": 2.9398699369836487
+    },
+    {
+      "model": "jwt",
+      "modelLabel": "JWT",
+      "failureDegradationRatioAiToMisconfig": 0.3102884433657802,
+      "riskDegradationRatioAiToMisconfig": 0.09931088702310614
+    },
+    {
+      "model": "sessions",
+      "modelLabel": "Session",
+      "failureDegradationRatioAiToMisconfig": 0.4433246504049759,
+      "riskDegradationRatioAiToMisconfig": 0.19274334095648255
+    }
+  ],
+  "greenComputingComparison": [
+    {
+      "model": "oauth",
+      "modelLabel": "OAuth2",
+      "attackAvgMsProxy": 1.2089991999999994,
+      "baselineSecureSuccessRate": 1,
+      "aiSecureSuccessRate": 0.1,
+      "baselineComputePerSecureOutcome": 1.2089991999999994,
+      "aiComputePerSecureOutcome": 12.089991999999993,
+      "aiComputePerSecureOutcomeMultiplierVsBaseline": 10
+    },
+    {
+      "model": "jwt",
+      "modelLabel": "JWT",
+      "attackAvgMsProxy": 1.1969182000000018,
+      "baselineSecureSuccessRate": 1,
+      "aiSecureSuccessRate": 0.9,
+      "baselineComputePerSecureOutcome": 1.1969182000000018,
+      "aiComputePerSecureOutcome": 1.3299091111111132,
+      "aiComputePerSecureOutcomeMultiplierVsBaseline": 1.1111111111111112
+    },
+    {
+      "model": "sessions",
+      "modelLabel": "Session",
+      "attackAvgMsProxy": 1.0664439000000356,
+      "baselineSecureSuccessRate": 1,
+      "aiSecureSuccessRate": 0.8666666666666667,
+      "baselineComputePerSecureOutcome": 1.0664439000000356,
+      "aiComputePerSecureOutcome": 1.2305121923077333,
+      "aiComputePerSecureOutcomeMultiplierVsBaseline": 1.1538461538461537
+    }
+  ]
+}

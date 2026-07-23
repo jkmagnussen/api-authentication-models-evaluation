@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T12:17:04.402Z",
+  "generatedAt": "2026-07-23T19:41:38.689Z",
   "runtime": {
     "nodeVersion": "v24.14.1",
     "npmVersion": "11.12.1",
@@ -12,7 +12,7 @@
     "hostname": "JOE-PC"
   },
   "vcs": {
-    "gitCommit": "f7ed99af4a941598fa3175e64a39e90e44076011",
+    "gitCommit": "e038e8632f97f305ef2135077c09d676a50b3cc6",
     "gitBranch": "main",
     "dirtyWorkingTree": true
   },
@@ -28,7 +28,7 @@
     "allowPartialAiMatrix": false,
     "runNormalization": {
       "dependencyLockFilePresent": true,
-      "dependencyLockSha256": "2737c3ca8dea5307670ce11a25d64441100461727333e9dcace25a62a69aa1cf",
+      "dependencyLockSha256": "1669aeca237b7e85ecde6925de71dee24be081298ff0575430e0e2e7d37c5863",
       "expectedGenerationDefaults": {
         "maxTokens": 900,
         "temperature": 0.8,
