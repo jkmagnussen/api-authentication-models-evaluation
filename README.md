@@ -160,6 +160,8 @@ docs/               Dissertation-facing narrative and evidence
 - `docs/generated/AI_EVALUATION_SUMMARY.md`
 - `docs/generated/FAILURE_PROPAGATION_ANALYSIS.md`
 - `docs/generated/COGNITIVE_LOAD_INDEX.md`
+- `docs/generated/CROSS_REFERENCE_SYNTHESIS.md`
+- `docs/generated/COGNITIVE_SECURITY_ANALYSIS.md`
 - `docs/generated/UNIFIED_ATTACK_SURFACE_COMPRESSION.md`
 - `docs/generated/CODE_FOOTPRINT_SUMMARY.md`
 - `docs/generated/SECURITY_PERFORMANCE_TRADEOFF.md`

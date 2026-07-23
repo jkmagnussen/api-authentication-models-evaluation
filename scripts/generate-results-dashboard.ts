@@ -148,6 +148,8 @@ function writeDashboard(root: string) {
   lines.push("- docs/generated/ADVANCED_SECURITY_RESEARCH_ANALYSIS.md");
   lines.push("- docs/generated/FAILURE_PROPAGATION_ANALYSIS.md");
   lines.push("- docs/generated/COGNITIVE_LOAD_INDEX.md");
+  lines.push("- docs/generated/CROSS_REFERENCE_SYNTHESIS.md");
+  lines.push("- docs/generated/COGNITIVE_SECURITY_ANALYSIS.md");
   lines.push("- docs/generated/UNIFIED_ATTACK_SURFACE_COMPRESSION.md");
   lines.push("- docs/generated/AI_PROVIDER_PROMPT_COMPARISON.md");
   lines.push("- docs/generated/OBJECTIVITY_ASSESSMENT.md");
