@@ -6,6 +6,9 @@ export const DOCS_PERFORMANCE_DIR = `${DOCS_DIR}/performance-results`;
 export const GENERATED_FILES = {
   runManifest: `${DOCS_GENERATED_DIR}/RUN_MANIFEST.json`,
   submissionReadiness: `${DOCS_GENERATED_DIR}/SUBMISSION_READINESS.md`,
+  failurePropagationAnalysis: `${DOCS_GENERATED_DIR}/FAILURE_PROPAGATION_ANALYSIS.md`,
+  cognitiveLoadIndex: `${DOCS_GENERATED_DIR}/COGNITIVE_LOAD_INDEX.md`,
+  unifiedAttackSurfaceCompression: `${DOCS_GENERATED_DIR}/UNIFIED_ATTACK_SURFACE_COMPRESSION.md`,
   aiSummary: `${DOCS_GENERATED_DIR}/AI_EVALUATION_SUMMARY.md`,
   advancedResearchAnalysis: `${DOCS_GENERATED_DIR}/ADVANCED_SECURITY_RESEARCH_ANALYSIS.md`,
   aiProviderPromptComparison: `${DOCS_GENERATED_DIR}/AI_PROVIDER_PROMPT_COMPARISON.md`,
@@ -49,6 +52,9 @@ export const PERFORMANCE_FILES = {
 export const EXPECTED_GENERATED_DOC_FILES: string[] = [
   GENERATED_FILES.runManifest,
   GENERATED_FILES.submissionReadiness,
+  GENERATED_FILES.failurePropagationAnalysis,
+  GENERATED_FILES.cognitiveLoadIndex,
+  GENERATED_FILES.unifiedAttackSurfaceCompression,
   GENERATED_FILES.aiSummary,
   GENERATED_FILES.advancedResearchAnalysis,
   GENERATED_FILES.aiProviderPromptComparison,

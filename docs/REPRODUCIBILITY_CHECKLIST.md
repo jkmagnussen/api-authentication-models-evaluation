@@ -2,6 +2,8 @@
 
 Use this sequence to reproduce the full evidence set in the repository.
 
+Execution mode: local Node.js/npm is the primary workflow. Docker is optional and intended only for cross-machine reproducibility checks.
+
 ## Environment Setup
 
 1. Clone the repository.
@@ -13,6 +15,10 @@ Use this sequence to reproduce the full evidence set in the repository.
 
 ## Commands
 
+### Primary Local Execution (No Docker)
+
+Use the setup and command sections below as the default path.
+
 ### Setup
 
 ```powershell
@@ -22,6 +28,15 @@ npm install
 npx prisma migrate dev
 npx prisma generate
 npx ts-node prisma/seed.ts
+```
+
+### Optional Docker Execution (Assessor-Friendly)
+
+Use this only if Docker Desktop is installed and running.
+
+```powershell
+npm run docker:build
+docker run --rm -p 3000:3000 dissertation-backend:local
 ```
 
 ### Baseline Secure Evidence
@@ -129,6 +144,9 @@ This runs database setup, tests, docs/report generation, chart generation, and f
 - `docs/evidence/DISSERTATION_EVALUATION_TABLE.md`
 - `docs/generated/VARIANT_DIFFERENTIAL_REPORT.md`
 - `docs/generated/AI_EVALUATION_SUMMARY.md`
+- `docs/generated/FAILURE_PROPAGATION_ANALYSIS.md`
+- `docs/generated/COGNITIVE_LOAD_INDEX.md`
+- `docs/generated/UNIFIED_ATTACK_SURFACE_COMPRESSION.md`
 - `docs/generated/CODE_FOOTPRINT_SUMMARY.md`
 - `docs/generated/MISCONFIGURATION_IMPACT_MATRIX.md`
 - `docs/generated/AI_FAILURE_TAXONOMY.md`

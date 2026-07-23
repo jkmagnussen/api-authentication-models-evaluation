@@ -47,5 +47,6 @@ This document summarises the highest-level outcomes of the repository evidence.
 
 - Security vs performance tradeoff summary: `docs/generated/SECURITY_PERFORMANCE_TRADEOFF.md`
 - Misconfiguration impact and exploit interpretation: `docs/generated/MISCONFIGURATION_IMPACT_MATRIX.md` and `docs/evidence/DISSERTATION_EVALUATION_TABLE.md`
+- Failure propagation, cognitive load, and compressed attack-surface synthesis: `docs/generated/FAILURE_PROPAGATION_ANALYSIS.md`, `docs/generated/COGNITIVE_LOAD_INDEX.md`, and `docs/generated/UNIFIED_ATTACK_SURFACE_COMPRESSION.md`
 - AI artifact quality outcomes: `docs/generated/AI_EVALUATION_SUMMARY.md` and `docs/generated/AI_FAILURE_TAXONOMY.md`
 - Maintainability/footprint context: `docs/generated/CODE_FOOTPRINT_SUMMARY.md`
