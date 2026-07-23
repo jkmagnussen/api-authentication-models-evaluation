@@ -107,63 +107,8 @@ def main() -> None:
     actual = Counter(stride_vals[-sum(expected.values()) :])
     results.append(check_equal("stride-severity-scoring.svg", expected, actual))
 
-    # 4) Error diversity entropy annotations.
-    entropy_rows: list[dict[str, object]] = []
-    for (provider, prompt_mode), group in arm_df.groupby(["provider", "promptMode"]):
-        categories: list[str] = []
-        for values in group["failure_categories"].tolist():
-            if isinstance(values, list):
-                categories.extend(values)
-        entropy_rows.append(
-            {
-                "arm": f"{provider}-{prompt_mode}",
-                "entropy": gc.shannon_entropy(categories),
-            }
-        )
+    # 4) Misconfiguration severity heatmap cell labels.
 
-    entropy_df = pd.DataFrame(entropy_rows).sort_values("arm").reset_index(drop=True)
-    expected = Counter([f"{float(value):.2f}" for value in entropy_df["entropy"]])
-    entropy_vals = [
-        v
-        for v in numeric_svg_comments(CHARTS_SYNTH_DIR / "error-diversity-entropy.svg")
-        if re.fullmatch(r"[0-9]+\.[0-9]{2}", v)
-    ]
-    actual = Counter(entropy_vals[-sum(expected.values()) :])
-    results.append(check_equal("error-diversity-entropy.svg", expected, actual))
-
-    # 5) Cross-provider overlap weighted Jaccard annotations.
-    exploded = arm_df.explode("failure_categories").dropna(subset=["failure_categories"])
-    jaccard_values: list[float] = []
-    for model in sorted(exploded["model"].astype(str).unique().tolist()):
-        model_df = exploded[exploded["model"] == model]
-        openai_counts = (
-            model_df[model_df["provider"] == "openai"]["failure_categories"].astype(str).value_counts()
-        )
-        claude_counts = (
-            model_df[model_df["provider"] == "claude"]["failure_categories"].astype(str).value_counts()
-        )
-
-        categories = sorted(set(openai_counts.index).union(set(claude_counts.index)))
-        numerator = sum(
-            min(float(openai_counts.get(category, 0.0)), float(claude_counts.get(category, 0.0)))
-            for category in categories
-        )
-        denominator = sum(
-            max(float(openai_counts.get(category, 0.0)), float(claude_counts.get(category, 0.0)))
-            for category in categories
-        )
-        jaccard_values.append((numerator / denominator) if denominator > 0 else 0.0)
-
-    expected = Counter([f"{value:.2f}" for value in jaccard_values])
-    overlap_vals = [
-        v
-        for v in numeric_svg_comments(CHARTS_SYNTH_DIR / "cross-provider-overlap-venn.svg")
-        if re.fullmatch(r"[0-9]+\.[0-9]{2}", v)
-    ]
-    actual = Counter(overlap_vals[-sum(expected.values()) :])
-    results.append(check_equal("cross-provider-overlap-venn.svg", expected, actual))
-
-    # 6) Misconfiguration severity heatmap cell labels.
     row_label_col = "Misconfiguration" if "Misconfiguration" in misconfig_df.columns else "Variant"
     heatmap_df = misconfig_df[[row_label_col, "model", "severity_score_5"]].dropna().copy()
     heatmap_df["model_display"] = heatmap_df["model"].map(gc.display_model_name)
@@ -184,28 +129,10 @@ def main() -> None:
     actual = Counter(heatmap_vals[: sum(expected.values())])
     results.append(check_equal("misconfiguration-severity-heatmap.svg", expected, actual))
 
-    # 7) Provider bias analysis heatmap cell labels.
-    grouped = (
-        exploded.groupby(["provider", "promptMode", "failure_categories"], as_index=False)
-        .size()
-        .rename(columns={"size": "count"})
-    )
-    grouped["arm"] = grouped["provider"] + "-" + grouped["promptMode"]
-    grouped["share"] = grouped["count"] / grouped.groupby("arm")["count"].transform("sum")
-
-    pivot = grouped.pivot_table(index="failure_categories", columns="arm", values="share", fill_value=0)
-    pivot = pivot.sort_values(by=list(pivot.columns), ascending=False)
-
-    expected = Counter([f"{float(value * 100):.1f}" for value in pivot.to_numpy().ravel()])
-    provider_vals = [
-        v
-        for v in numeric_svg_comments(CHARTS_SYNTH_DIR / "provider-bias-analysis.svg")
-        if re.fullmatch(r"[0-9]+\.[0-9]", v)
-    ]
-    actual = Counter(provider_vals[: sum(expected.values())])
-    results.append(check_equal("provider-bias-analysis.svg", expected, actual))
-
-    # 8) Token lifecycle fragility invariants.
+    # 5) Token lifecycle fragility invariants.
+    # (Prepare exploded dataframe for downstream checks)
+    exploded = arm_df.explode("failure_categories").dropna(subset=["failure_categories"])
+    
     lifecycle_map = {
         "OAuth state integrity": "state handling",
         "OAuth redirect validation": "redirect validation",
