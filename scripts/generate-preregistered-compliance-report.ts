@@ -11,6 +11,12 @@ type RunSummary = {
 
 type RunManifest = {
   methodology?: {
+    governance?: {
+      mode?: "confirmatory" | "exploratory";
+      claimClass?: "governed-confirmatory" | "exploratory-author-interpreted";
+      blindInterpretationStatus?: "finalized-pre-unblind" | "draft-needs-finalization" | "unknown";
+      reviewerFinalizationComplete?: boolean;
+    };
     runNormalization?: {
       dependencyLockFilePresent?: boolean;
       dependencyLockSha256?: string | null;
@@ -187,6 +193,7 @@ function main(): void {
   const runManifest = fs.existsSync(runManifestPath)
     ? (JSON.parse(fs.readFileSync(runManifestPath, "utf8")) as RunManifest)
     : null;
+  const governance = runManifest?.methodology?.governance;
   const armCompleteness = runManifest?.methodology?.aiMatrix?.armCompleteness;
   const runNormalization = runManifest?.methodology?.runNormalization;
   const holdoutDefinitionPath = path.join(root, "docs", "evidence", "HOLDOUT_SET.md");
@@ -228,6 +235,10 @@ function main(): void {
     blindedReportText.includes("Decision rule: significance requires Holm-adjusted p <= 0.05") &&
     blindedReportText.includes("practical effect requires |delta| >=");
 
+  lines.push(`Governance mode: ${(governance?.mode ?? "exploratory").toUpperCase()}`);
+  lines.push(`Claim class: ${governance?.claimClass ?? "exploratory-author-interpreted"}`);
+  lines.push(`Blind interpretation status: ${governance?.blindInterpretationStatus ?? "unknown"}`);
+  lines.push("");
   lines.push("| Criterion | Status | Evidence |");
   lines.push("|---|---|---|");
   lines.push(`| Pre-registered analysis plan exists | ${fs.existsSync(preregPlanPath) ? "PASS" : "FAIL"} | docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md |`);
@@ -238,6 +249,8 @@ function main(): void {
   lines.push(`| Full AI matrix coverage for confirmatory claims | ${fullCoverage ? "PASS" : "FAIL"} | ai-generated/arms/run-summary.json (${completedArms}/${requiredArms}) |`);
   lines.push(`| Objectivity report explicitly states complete coverage | ${hasCoverageCompleteLine ? "PASS" : "FAIL"} | docs/generated/OBJECTIVITY_ASSESSMENT.md |`);
   lines.push(`| Run environment manifest present | ${fs.existsSync(path.join(root, GENERATED_FILES.runManifest)) ? "PASS" : "FAIL"} | docs/generated/RUN_MANIFEST.json |`);
+  lines.push(`| Governance mode is recorded in manifest | ${governance?.mode ? "PASS" : "FAIL"} | docs/generated/RUN_MANIFEST.json methodology.governance |`);
+  lines.push(`| Claim class is recorded in manifest | ${governance?.claimClass ? "PASS" : "FAIL"} | docs/generated/RUN_MANIFEST.json methodology.governance |`);
   lines.push(`| Dependency lock normalization captured | ${runNormalization?.dependencyLockFilePresent && runNormalization?.dependencyLockSha256 ? "PASS" : "FAIL"} | docs/generated/RUN_MANIFEST.json methodology.runNormalization |`);
   lines.push(`| Blinded provider report present | ${fs.existsSync(path.join(root, GENERATED_FILES.aiProviderPromptComparisonBlinded)) ? "PASS" : "FAIL"} | docs/generated/AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md |`);
   lines.push(`| Blind interpretation finalized pre-unblind | ${blindInterpretationFinalized ? "PASS" : "FAIL"} | docs/generated/AI_BLIND_INTERPRETATION.md |`);

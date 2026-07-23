@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T19:41:38.689Z",
+  "generatedAt": "2026-07-23T20:12:52.412Z",
   "runtime": {
     "nodeVersion": "v24.14.1",
     "npmVersion": "11.12.1",
@@ -12,7 +12,7 @@
     "hostname": "JOE-PC"
   },
   "vcs": {
-    "gitCommit": "e038e8632f97f305ef2135077c09d676a50b3cc6",
+    "gitCommit": "8b724c039f32707875282752151cc8af842da127",
     "gitBranch": "main",
     "dirtyWorkingTree": true
   },
@@ -24,6 +24,12 @@
     "prismaVersion": null
   },
   "methodology": {
+    "governance": {
+      "mode": "exploratory",
+      "claimClass": "exploratory-author-interpreted",
+      "blindInterpretationStatus": "draft-needs-finalization",
+      "reviewerFinalizationComplete": false
+    },
     "aiSampleCount": 30,
     "allowPartialAiMatrix": false,
     "runNormalization": {

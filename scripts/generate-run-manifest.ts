@@ -56,6 +56,8 @@ type LegacyGenerationMetadata = {
   temperature?: number;
 };
 
+type GovernanceMode = "confirmatory" | "exploratory";
+
 function readFileSha256IfExists(filePath: string): string | null {
   if (!fs.existsSync(filePath)) return null;
   return sha256(fs.readFileSync(filePath, "utf8"));
@@ -119,8 +121,58 @@ function readJsonIfExists<T>(filePath: string): T | null {
   return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
 }
 
+function readBlindInterpretationGovernance(root: string): {
+  mode: GovernanceMode;
+  claimClass: "governed-confirmatory" | "exploratory-author-interpreted";
+  blindInterpretationStatus: "finalized-pre-unblind" | "draft-needs-finalization" | "unknown";
+  reviewerFinalizationComplete: boolean;
+} {
+  const blindInterpretationPath = path.join(root, GENERATED_FILES.aiBlindInterpretation);
+  if (!fs.existsSync(blindInterpretationPath)) {
+    return {
+      mode: "exploratory",
+      claimClass: "exploratory-author-interpreted",
+      blindInterpretationStatus: "unknown",
+      reviewerFinalizationComplete: false,
+    };
+  }
+
+  const text = fs.readFileSync(blindInterpretationPath, "utf8");
+  const reviewerA = text.match(/^Reviewer A:\s*(.*)$/m)?.[1]?.trim() ?? "";
+  const reviewerASignedAt = text.match(/^Reviewer A Signed At:\s*(.*)$/m)?.[1]?.trim() ?? "";
+  const reviewerAIndependence = text.match(/^Reviewer A Independence:\s*(.*)$/m)?.[1]?.trim() ?? "";
+  const reviewerACoi = text.match(/^Reviewer A COI Disclosure:\s*(.*)$/m)?.[1]?.trim() ?? "";
+  const reviewerB = text.match(/^Reviewer B:\s*(.*)$/m)?.[1]?.trim() ?? "";
+  const reviewerBSignedAt = text.match(/^Reviewer B Signed At:\s*(.*)$/m)?.[1]?.trim() ?? "";
+  const reviewerBIndependence = text.match(/^Reviewer B Independence:\s*(.*)$/m)?.[1]?.trim() ?? "";
+  const reviewerBCoi = text.match(/^Reviewer B COI Disclosure:\s*(.*)$/m)?.[1]?.trim() ?? "";
+  const reviewerAgreement = text.match(/^Reviewer Agreement:\s*(.*)$/m)?.[1]?.trim() ?? "";
+
+  const finalized = /^Status:\s*FINALIZED_PRE_UNBLIND\s*$/m.test(text) && !/^Status:\s*DRAFT_NEEDS_FINALIZATION\s*$/m.test(text);
+  const reviewerFinalizationComplete =
+    finalized &&
+    reviewerA.length > 0 && reviewerA !== "PENDING" &&
+    reviewerASignedAt.length > 0 && reviewerASignedAt !== "PENDING" &&
+    reviewerAIndependence === "INDEPENDENT" &&
+    reviewerACoi === "NONE" &&
+    reviewerB.length > 0 && reviewerB !== "PENDING" &&
+    reviewerBSignedAt.length > 0 && reviewerBSignedAt !== "PENDING" &&
+    reviewerBIndependence === "INDEPENDENT" &&
+    reviewerBCoi === "NONE" &&
+    reviewerA !== reviewerB &&
+    (reviewerAgreement === "AGREE" || reviewerAgreement === "DISAGREE");
+
+  return {
+    mode: reviewerFinalizationComplete ? "confirmatory" : "exploratory",
+    claimClass: reviewerFinalizationComplete ? "governed-confirmatory" : "exploratory-author-interpreted",
+    blindInterpretationStatus: finalized ? "finalized-pre-unblind" : /^Status:\s*DRAFT_NEEDS_FINALIZATION\s*$/m.test(text) ? "draft-needs-finalization" : "unknown",
+    reviewerFinalizationComplete,
+  };
+}
+
 function main(): void {
-  const packageJsonPath = path.join(process.cwd(), "package.json");
+  const root = process.cwd();
+  const packageJsonPath = path.join(root, "package.json");
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
     dependencies?: Record<string, string>;
     devDependencies?: Record<string, string>;
@@ -140,19 +192,20 @@ function main(): void {
   ]);
   const platformRelease = os.release();
 
-  const generationMetadataPath = path.join(process.cwd(), "ai-generated", "results", "generation-metadata.json");
+  const generationMetadataPath = path.join(root, "ai-generated", "results", "generation-metadata.json");
   const generationMetadata = readJsonIfExists<Record<string, unknown>>(generationMetadataPath);
-  const packageLockPath = path.join(process.cwd(), "package-lock.json");
+  const packageLockPath = path.join(root, "package-lock.json");
   const packageLockSha256 = readFileSha256IfExists(packageLockPath);
 
-  const runSummaryPath = path.join(process.cwd(), "ai-generated", "arms", "run-summary.json");
+  const runSummaryPath = path.join(root, "ai-generated", "arms", "run-summary.json");
   const runSummary = readJsonIfExists<ArmRunSummary>(runSummaryPath);
+  const governance = readBlindInterpretationGovernance(root);
 
   const armMetadataEntries = (runSummary?.providers ?? []).map((provider) => {
-    const metadataPath = path.join(process.cwd(), "ai-generated", "arms", provider.key, "metadata.json");
+    const metadataPath = path.join(root, "ai-generated", "arms", provider.key, "metadata.json");
     const metadata = readJsonIfExists<ArmMetadata>(metadataPath);
     const legacyMetadataPath = path.join(
-      process.cwd(),
+      root,
       "ai-generated",
       "arms",
       provider.key,
@@ -254,6 +307,7 @@ function main(): void {
       prismaVersion,
     },
     methodology: {
+      governance,
       aiSampleCount: Number(process.env.AI_SAMPLE_COUNT ?? "30"),
       allowPartialAiMatrix: ["1", "true", "yes"].includes((process.env.AI_ALLOW_PARTIAL_MATRIX ?? "").toLowerCase()),
       runNormalization: {
@@ -276,7 +330,7 @@ function main(): void {
     },
   };
 
-  const outputPath = path.join(process.cwd(), GENERATED_FILES.runManifest);
+  const outputPath = path.join(root, GENERATED_FILES.runManifest);
   fs.writeFileSync(outputPath, JSON.stringify(manifest, null, 2));
   console.log(`Wrote ${outputPath}`);
 }

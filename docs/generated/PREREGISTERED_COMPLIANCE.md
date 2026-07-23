@@ -1,7 +1,11 @@
 # Pre-Registered Compliance Summary
 
-Generated: 2026-07-23T19:41:35.569Z
+Generated: 2026-07-23T20:12:53.415Z
 Regenerate: npm run objective:preregistered:report
+
+Governance mode: EXPLORATORY
+Claim class: exploratory-author-interpreted
+Blind interpretation status: draft-needs-finalization
 
 | Criterion | Status | Evidence |
 |---|---|---|
@@ -13,6 +17,8 @@ Regenerate: npm run objective:preregistered:report
 | Full AI matrix coverage for confirmatory claims | PASS | ai-generated/arms/run-summary.json (4/4) |
 | Objectivity report explicitly states complete coverage | PASS | docs/generated/OBJECTIVITY_ASSESSMENT.md |
 | Run environment manifest present | PASS | docs/generated/RUN_MANIFEST.json |
+| Governance mode is recorded in manifest | PASS | docs/generated/RUN_MANIFEST.json methodology.governance |
+| Claim class is recorded in manifest | PASS | docs/generated/RUN_MANIFEST.json methodology.governance |
 | Dependency lock normalization captured | PASS | docs/generated/RUN_MANIFEST.json methodology.runNormalization |
 | Blinded provider report present | PASS | docs/generated/AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md |
 | Blind interpretation finalized pre-unblind | FAIL | docs/generated/AI_BLIND_INTERPRETATION.md |
