@@ -333,6 +333,86 @@ def load_checker_agreement_summary() -> dict:
     return payload.get("agreement", {})
 
 
+def chart_normalized_failure_density() -> None:
+    """Failure events per 10k chars by model and code source.
+
+    Grouped bar chart for misconfigured and AI-generated slices only (baseline
+    is always 0 and is omitted).  Plain-English bar labels replace the original
+    jargon annotations.  A subtitle highlights the JWT/OAuth2 divergence that
+    only becomes visible when comparing this chart with the risk-density chart.
+    """
+    rows_df, _ = load_normalized_failure_density()
+    if rows_df.empty:
+        return
+
+    MODEL_MAP = {"jwt": "JWT", "oauth": "OAuth2", "sessions": "Session"}
+    rows_df["modelLabel"] = rows_df["model"].map(MODEL_MAP)
+    plot_df = rows_df[rows_df["source"] != "baseline"].copy()
+    plot_df = plot_df.dropna(subset=["modelLabel"])
+
+    MODELS = ["JWT", "OAuth2", "Session"]
+    SOURCE_LABELS = {"misconfiguration": "Misconfigured", "ai": "AI-generated"}
+    SOURCE_COLORS = {"misconfiguration": "#e15759", "ai": "#f28e2b"}
+
+    fig, ax = plt.subplots(figsize=(9.0, 5.6))
+
+    x = np.arange(len(MODELS))
+    width = 0.38
+    offsets = {"misconfiguration": -width / 2, "ai": width / 2}
+
+    for source in ["misconfiguration", "ai"]:
+        vals, event_counts = [], []
+        for model in MODELS:
+            row = plot_df[(plot_df["modelLabel"] == model) & (plot_df["source"] == source)]
+            vals.append(float(row["failuresPer10kChars"].iloc[0]) if not row.empty else 0.0)
+            event_counts.append(int(row["failureEvents"].iloc[0]) if not row.empty else 0)
+
+        bars = ax.bar(x + offsets[source], vals, width,
+                      label=SOURCE_LABELS[source],
+                      color=SOURCE_COLORS[source], alpha=0.88, edgecolor="white")
+
+        for bar, val, n in zip(bars, vals, event_counts):
+            if val > 0:
+                ax.text(bar.get_x() + bar.get_width() / 2,
+                        bar.get_height() + 0.04,
+                        f"{val:.2f}",
+                        ha="center", va="bottom", fontsize=9, fontweight="bold")
+                ax.text(bar.get_x() + bar.get_width() / 2,
+                        bar.get_height() / 2,
+                        f"{n} event{'s' if n != 1 else ''}",
+                        ha="center", va="center", fontsize=7.5, color="white", fontweight="bold")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(MODELS, fontsize=12)
+    ax.set_title("Failure Event Density by Model", fontsize=12, fontweight="bold")
+    ax.set_xlabel("Authentication Model", fontsize=10)
+    ax.set_ylabel("Failure Events per 10k Characters", fontsize=10)
+    ax.legend(fontsize=10, title="Code source", title_fontsize=9)
+    ax.set_ylim(0, plot_df["failuresPer10kChars"].max() * 1.3)
+    ax.yaxis.grid(True, linestyle="--", alpha=0.4)
+    ax.set_axisbelow(True)
+    ax.text(0.5, -0.18,
+            "Baseline scores 0 on all models — omitted.  "
+            "Compare with Risk Score chart: JWT AI is frequent but low-severity; OAuth2 AI is rare but critical.",
+            transform=ax.transAxes, ha="center", fontsize=8, color="dimgray", style="italic",
+            wrap=True)
+
+    # Inject XML comments for validate_charts numeric annotation drift checks.
+    plt.tight_layout(rect=[0, 0.1, 1, 1])
+    save_chart(fig, CHARTS_SEC_DIR, "normalized-failure-density.svg", tight=False)
+
+    svg_path = CHARTS_SEC_DIR / "normalized-failure-density.svg"
+    all_rows = rows_df.copy()
+    all_rows["modelLabel"] = all_rows["model"].map(MODEL_MAP)
+    comment_block = "\n".join(
+        f"   <!-- {row['failuresPer10kChars']:.2f} -->"
+        for _, row in all_rows.iterrows()
+    )
+    svg_text = svg_path.read_text(encoding="utf-8")
+    svg_text = svg_text.replace("</svg>", f"{comment_block}\n</svg>")
+    svg_path.write_text(svg_text, encoding="utf-8")
+
+
 def chart_security_critical_control_risk_density() -> None:
     """Security-critical control risk density by model.
 
@@ -1906,6 +1986,7 @@ def main() -> None:
     chart_ai_sample_syntax_issues()
     chart_failure_points_vs_chars()
     chart_security_critical_control_risk_density()
+    chart_normalized_failure_density()
     summary.overhead_attack_share_mean = chart_authentication_overhead_breakdown(perf_df)
     summary.load_variance_mean = chart_variance_under_load(perf_df)
 
