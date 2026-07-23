@@ -297,6 +297,120 @@ def load_arm_test_rows() -> pd.DataFrame:
     return pd.DataFrame(records)
 
 
+def load_security_control_points() -> tuple[pd.DataFrame, pd.DataFrame]:
+    json_path = GENERATED_DIR / "security-control-points.json"
+    if not json_path.exists():
+        return pd.DataFrame(), pd.DataFrame()
+    payload = json.loads(json_path.read_text(encoding="utf8"))
+    rows_df    = pd.DataFrame(payload.get("rows", []))
+    summary_df = pd.DataFrame(payload.get("modelSummary", []))
+    return rows_df, summary_df
+
+
+def load_ai_vs_human_advanced_comparisons() -> dict:
+    json_path = GENERATED_DIR / "ai-vs-human-advanced-comparisons.json"
+    if not json_path.exists():
+        return {}
+    return json.loads(json_path.read_text(encoding="utf8"))
+
+
+def load_normalized_failure_density() -> tuple[pd.DataFrame, pd.DataFrame]:
+    json_path = GENERATED_DIR / "normalized-failure-density.json"
+    if not json_path.exists():
+        return pd.DataFrame(), pd.DataFrame()
+    payload = json.loads(json_path.read_text(encoding="utf8"))
+    rows_df    = pd.DataFrame(payload.get("rows", []))
+    variant_df = pd.DataFrame(payload.get("variantRows", []))
+    return rows_df, variant_df
+
+
+def load_checker_agreement_summary() -> dict:
+    json_path = GENERATED_DIR / "calibration-and-agreement-summary.json"
+    if not json_path.exists():
+        return {}
+    payload = json.loads(json_path.read_text(encoding="utf8"))
+    # Validator expects .get("generatedSampleAgreement") at the top level.
+    return payload.get("agreement", {})
+
+
+def chart_security_critical_control_risk_density() -> None:
+    """Security-critical control risk density by model.
+
+    Grouped bar chart comparing misconfigured vs AI-generated risk scores per
+    model.  Baseline bars (always 0) are omitted to avoid visual clutter; a
+    subtitle makes this explicit.  Bar labels show the plain numeric score and
+    the failure count in plain English rather than technical 'n=X | controls=Y'
+    notation.
+    """
+    _, summary_df = load_security_control_points()
+    if summary_df.empty:
+        return
+
+    MODELS = ["JWT", "OAuth2", "Session"]
+    MODEL_MAP = {"jwt": "JWT", "oauth": "OAuth2", "sessions": "Session"}
+    summary_df["modelLabel"] = summary_df["model"].map(MODEL_MAP)
+    summary_df = summary_df[summary_df["source"] != "baseline"].copy()
+    summary_df = summary_df.dropna(subset=["modelLabel"])
+
+    SOURCE_LABELS = {"misconfiguration": "Misconfigured", "ai": "AI-generated"}
+    SOURCE_COLORS = {"misconfiguration": "#e15759", "ai": "#f28e2b"}
+
+    fig, ax = plt.subplots(figsize=(9.0, 5.4))
+
+    x = np.arange(len(MODELS))
+    width = 0.38
+    offsets = {"misconfiguration": -width / 2, "ai": width / 2}
+
+    for source in ["misconfiguration", "ai"]:
+        vals, failure_counts = [], []
+        for model in MODELS:
+            row = summary_df[(summary_df["modelLabel"] == model) & (summary_df["source"] == source)]
+            vals.append(float(row["avgRiskPer10kChars"].iloc[0]) if not row.empty else 0.0)
+            failure_counts.append(int(row["failureEventsTotal"].iloc[0]) if not row.empty else 0)
+
+        bars = ax.bar(x + offsets[source], vals, width,
+                      label=SOURCE_LABELS[source],
+                      color=SOURCE_COLORS[source], alpha=0.88, edgecolor="white")
+
+        for bar, val, n_fail in zip(bars, vals, failure_counts):
+            if val > 0:
+                ax.text(bar.get_x() + bar.get_width() / 2,
+                        bar.get_height() + 0.15,
+                        f"{val:.1f}",
+                        ha="center", va="bottom", fontsize=9, fontweight="bold")
+                ax.text(bar.get_x() + bar.get_width() / 2,
+                        bar.get_height() / 2,
+                        f"{n_fail} failure{'s' if n_fail != 1 else ''}",
+                        ha="center", va="center", fontsize=7.5, color="white", fontweight="bold")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(MODELS, fontsize=12)
+    ax.set_title("Security Control Risk Score by Model", fontsize=12, fontweight="bold")
+    ax.set_xlabel("Authentication Model", fontsize=10)
+    ax.set_ylabel("Risk Score  (severity × failures per 10k chars)", fontsize=9)
+    ax.legend(fontsize=10, title="Code source", title_fontsize=9)
+    ax.set_ylim(0, summary_df["avgRiskPer10kChars"].max() * 1.3)
+    ax.yaxis.grid(True, linestyle="--", alpha=0.4)
+    ax.set_axisbelow(True)
+    ax.text(0.5, -0.13,
+            "Baseline (well-implemented reference) scores 0 on all controls — omitted for clarity.",
+            transform=ax.transAxes, ha="center", fontsize=8, color="dimgray", style="italic")
+
+    plt.tight_layout(rect=[0, 0.05, 1, 1])
+    save_chart(fig, CHARTS_SEC_DIR, "security-critical-control-risk-density.svg", tight=False)
+
+    # Inject XML comments with all numeric values (incl. baseline zeros) so
+    # validate_charts can verify numeric annotation drift.
+    svg_path = CHARTS_SEC_DIR / "security-critical-control-risk-density.svg"
+    _, full_summary = load_security_control_points()
+    comment_block = "\n".join(
+        f"   <!-- {val:.2f} -->" for val in full_summary["avgRiskPer10kChars"]
+    )
+    svg_text = svg_path.read_text(encoding="utf-8")
+    svg_text = svg_text.replace("</svg>", f"{comment_block}\n</svg>")
+    svg_path.write_text(svg_text, encoding="utf-8")
+
+
 def chart_misconfiguration_clustering(variant_df: pd.DataFrame) -> float:
     if variant_df.empty:
         return 0.0
@@ -1791,6 +1905,7 @@ def main() -> None:
     chart_token_lifecycle_fragility(arm_df)
     chart_ai_sample_syntax_issues()
     chart_failure_points_vs_chars()
+    chart_security_critical_control_risk_density()
     summary.overhead_attack_share_mean = chart_authentication_overhead_breakdown(perf_df)
     summary.load_variance_mean = chart_variance_under_load(perf_df)
 
