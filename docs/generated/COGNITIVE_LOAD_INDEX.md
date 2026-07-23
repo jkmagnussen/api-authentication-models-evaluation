@@ -1,6 +1,6 @@
 # Cognitive Load Index
 
-Generated: 2026-07-23T21:11:17.635Z
+Generated: 2026-07-23T21:14:36.743Z
 Regenerate: npm run analysis:structural
 
 $$
