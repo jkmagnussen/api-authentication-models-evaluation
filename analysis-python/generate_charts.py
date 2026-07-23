@@ -1047,7 +1047,7 @@ def chart_failure_points_vs_chars() -> None:
     ax_left.set_title("Failure Density vs Code Size", fontsize=11, fontweight="bold")
     ax_left.set_xlabel("Character Footprint (chars)", fontsize=9)
     ax_left.set_ylabel("Failure Events per 10k Characters", fontsize=9)
-    ax_left.legend(fontsize=7.5, ncol=2, loc="upper right")
+    ax_left.legend(fontsize=7.5, ncol=2, loc="upper left")
 
     # Annotations for markers.
     from matplotlib.lines import Line2D
@@ -1057,7 +1057,7 @@ def chart_failure_points_vs_chars() -> None:
     ]
     ax_left.legend(handles=ax_left.get_legend_handles_labels()[0] + extra_handles,
                    labels=ax_left.get_legend_handles_labels()[1] + [h.get_label() for h in extra_handles],
-                   fontsize=7, ncol=2, loc="upper right")
+                   fontsize=7, ncol=2, loc="upper left")
 
     # ── Right panel: grouped bar ─────────────────────────────────────────────
     bar_data = rows_agg[rows_agg["source"].isin(["misconfiguration", "ai"])].copy()
