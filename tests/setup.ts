@@ -18,6 +18,8 @@ export async function resetDatabase() {
 
   await safeDeleteMany((prisma as any).oAuthAccessToken);
   await safeDeleteMany((prisma as any).oAuthAuthorizationCode);
+  await safeDeleteMany((prisma as any).passwordResetToken);
+  await safeDeleteMany((prisma as any).auditLog);
   await safeDeleteMany((prisma as any).session);
   await safeDeleteMany((prisma as any).oAuthClient);
   await safeDeleteMany((prisma as any).user);

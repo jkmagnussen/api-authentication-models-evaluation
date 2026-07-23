@@ -13,7 +13,17 @@ const crypto_1 = __importDefault(require("crypto"));
 const oauth_service_1 = require("./oauth.service");
 const clientScopes_1 = require("./clientScopes");
 const variant_overrides_1 = require("../variant-overrides");
-const DEFAULT_ALLOWED_REDIRECTS = ["https://example.com/callback"];
+const config_1 = __importDefault(require("../config"));
+const password_1 = require("../auth/password");
+const audit_service_1 = require("../security/audit.service");
+const SUPPORTED_PKCE_METHODS = new Set(["S256", "PLAIN"]);
+function getUserAgent(req) {
+    if (typeof req.get === "function") {
+        return req.get("user-agent");
+    }
+    const header = req.headers?.["user-agent"];
+    return typeof header === "string" ? header : undefined;
+}
 function getRequestedRedirectUri(req) {
     const redirectUri = req.body.redirectUri ?? req.body.redirect_uri;
     return typeof redirectUri === "string" ? redirectUri : undefined;
@@ -23,7 +33,7 @@ function validateRedirectUri(redirectUri) {
         return true;
     }
     const variantOverrides = (0, variant_overrides_1.getVariantOverrides)();
-    const allowedRedirects = variantOverrides.oauth?.allowedRedirects ?? DEFAULT_ALLOWED_REDIRECTS;
+    const allowedRedirects = variantOverrides.oauth?.allowedRedirects ?? config_1.default.oauth.allowedRedirects;
     const normalized = decodeURIComponent(redirectUri);
     return allowedRedirects.includes(normalized);
 }
@@ -48,6 +58,18 @@ async function authorize(req, res) {
     });
     if (!client) {
         return res.status(400).json({ error: "Invalid clientId" });
+    }
+    if (config_1.default.oauth.requirePkce && !code_challenge) {
+        return res.status(400).json({
+            error: "invalid_request",
+            error_description: "Missing code_challenge",
+        });
+    }
+    if (code_challenge_method && !SUPPORTED_PKCE_METHODS.has(String(code_challenge_method).toUpperCase())) {
+        return res.status(400).json({
+            error: "invalid_request",
+            error_description: "Unsupported code_challenge_method",
+        });
     }
     // ------------------------------------------------------
     // ⭐ SCOPE VALIDATION (NEW)
@@ -75,11 +97,19 @@ async function authorize(req, res) {
             clientId,
             state: state ?? null,
             scope: scope ?? "read",
-            expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+            expiresAt: new Date(Date.now() + config_1.default.oauth.authorizationCodeTtlSeconds * 1000),
             codeChallenge: code_challenge ?? null,
             codeChallengeMethod: code_challenge_method ?? null,
             used: false,
         },
+    });
+    await (0, audit_service_1.writeAuditEvent)({
+        userId,
+        eventType: "oauth.authorize",
+        outcome: "success",
+        ipAddress: req.ip,
+        userAgent: getUserAgent(req),
+        metadata: { clientId, scope: scope ?? "read" },
     });
     return res.status(200).json({
         code,
@@ -93,6 +123,7 @@ async function token(req, res) {
     const variantOverrides = (0, variant_overrides_1.getVariantOverrides)();
     const { code, state } = req.body;
     const codeVerifier = req.body.code_verifier ?? req.body.codeVerifier;
+    const requestClientId = req.body.clientId ?? req.body.client_id;
     const auth = req.headers.authorization;
     let authenticatedClientId;
     if (auth?.startsWith("Basic ")) {
@@ -103,7 +134,7 @@ async function token(req, res) {
         const client = await db_1.prisma.oAuthClient.findUnique({
             where: { id: clientId },
         });
-        if (!client || client.secret !== clientSecret) {
+        if (!client || !(await (0, password_1.matchesStoredHashOrValue)(clientSecret, client.secret))) {
             return res.status(401).json({
                 error: "invalid_client",
                 error_description: "Invalid client credentials",
@@ -113,6 +144,12 @@ async function token(req, res) {
     }
     if (!code) {
         return res.status(400).json({ error: "Missing code" });
+    }
+    if (!requestClientId && !authenticatedClientId && config_1.default.isProduction) {
+        return res.status(400).json({
+            error: "invalid_client",
+            error_description: "Missing client_id",
+        });
     }
     const stored = await db_1.prisma.oAuthAuthorizationCode.findUnique({
         where: { code },
@@ -131,6 +168,12 @@ async function token(req, res) {
         return res.status(401).json({
             error: "invalid_client",
             error_description: "Client does not match authorization code",
+        });
+    }
+    if (requestClientId && requestClientId !== stored.clientId) {
+        return res.status(401).json({
+            error: "invalid_client",
+            error_description: "client_id does not match authorization code",
         });
     }
     // PKCE verification (only if a challenge was stored)
@@ -156,6 +199,14 @@ async function token(req, res) {
     if (!tokenResult) {
         return res.status(400).json({ error: "Invalid authorization code" });
     }
+    await (0, audit_service_1.writeAuditEvent)({
+        userId: stored.userId,
+        eventType: "oauth.token",
+        outcome: "success",
+        ipAddress: req.ip,
+        userAgent: getUserAgent(req),
+        metadata: { clientId: stored.clientId },
+    });
     return res.status(200).json({
         access_token: tokenResult.accessToken,
         refresh_token: tokenResult.refreshToken,
@@ -179,13 +230,13 @@ async function refresh(req, res) {
     const newRefreshToken = crypto_1.default.randomUUID();
     const rotated = await db_1.prisma.oAuthAccessToken.updateMany({
         where: {
-            refreshToken,
+            refreshToken: (0, oauth_service_1.hashOpaqueToken)(refreshToken),
             clientId,
         },
         data: {
-            accessToken: newAccessToken,
-            refreshToken: newRefreshToken,
-            expiresAt: new Date(Date.now() + 3600 * 1000),
+            accessToken: (0, oauth_service_1.hashOpaqueToken)(newAccessToken),
+            refreshToken: (0, oauth_service_1.hashOpaqueToken)(newRefreshToken),
+            expiresAt: new Date(Date.now() + config_1.default.oauth.accessTokenTtlSeconds * 1000),
         },
     });
     if (rotated.count !== 1) {
@@ -213,17 +264,17 @@ async function revoke(req, res) {
         });
     }
     const access = await db_1.prisma.oAuthAccessToken.findUnique({
-        where: { accessToken: token },
+        where: { accessToken: (0, oauth_service_1.hashOpaqueToken)(token) },
     });
     if (access) {
-        await db_1.prisma.oAuthAccessToken.delete({ where: { accessToken: token } });
+        await db_1.prisma.oAuthAccessToken.delete({ where: { accessToken: (0, oauth_service_1.hashOpaqueToken)(token) } });
         return res.status(200).send();
     }
     const refresh = await db_1.prisma.oAuthAccessToken.findUnique({
-        where: { refreshToken: token },
+        where: { refreshToken: (0, oauth_service_1.hashOpaqueToken)(token) },
     });
     if (refresh) {
-        await db_1.prisma.oAuthAccessToken.delete({ where: { refreshToken: token } });
+        await db_1.prisma.oAuthAccessToken.delete({ where: { refreshToken: (0, oauth_service_1.hashOpaqueToken)(token) } });
         return res.status(200).send();
     }
     return res.status(200).send();
@@ -241,7 +292,7 @@ async function introspect(req, res) {
         });
     }
     const access = await db_1.prisma.oAuthAccessToken.findUnique({
-        where: { accessToken: token },
+        where: { accessToken: (0, oauth_service_1.hashOpaqueToken)(token) },
     });
     if (access) {
         const now = new Date();

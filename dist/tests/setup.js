@@ -20,6 +20,8 @@ async function resetDatabase() {
     rateLimiter_1.authLimiter.resetKey("::ffff:127.0.0.1");
     await safeDeleteMany(db_1.prisma.oAuthAccessToken);
     await safeDeleteMany(db_1.prisma.oAuthAuthorizationCode);
+    await safeDeleteMany(db_1.prisma.passwordResetToken);
+    await safeDeleteMany(db_1.prisma.auditLog);
     await safeDeleteMany(db_1.prisma.session);
     await safeDeleteMany(db_1.prisma.oAuthClient);
     await safeDeleteMany(db_1.prisma.user);

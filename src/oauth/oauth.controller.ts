@@ -1,11 +1,23 @@
 import { Request, Response } from "express";
 import { prisma } from "../db";
 import crypto from "crypto";
-import { exchangeCodeForToken } from "./oauth.service";
+import { exchangeCodeForToken, hashOpaqueToken } from "./oauth.service";
 import { clientScopes } from "./clientScopes";
 import { getVariantOverrides } from "../variant-overrides";
+import APP_CONFIG from "../config";
+import { matchesStoredHashOrValue } from "../auth/password";
+import { writeAuditEvent } from "../security/audit.service";
 
-const DEFAULT_ALLOWED_REDIRECTS = ["https://example.com/callback"];
+const SUPPORTED_PKCE_METHODS = new Set(["S256", "PLAIN"]);
+
+function getUserAgent(req: Request) {
+  if (typeof req.get === "function") {
+    return req.get("user-agent");
+  }
+
+  const header = req.headers?.["user-agent"];
+  return typeof header === "string" ? header : undefined;
+}
 
 function getRequestedRedirectUri(req: Request) {
   const redirectUri = req.body.redirectUri ?? req.body.redirect_uri;
@@ -18,7 +30,7 @@ function validateRedirectUri(redirectUri: string | undefined) {
   }
 
   const variantOverrides = getVariantOverrides();
-  const allowedRedirects = variantOverrides.oauth?.allowedRedirects ?? DEFAULT_ALLOWED_REDIRECTS;
+  const allowedRedirects = variantOverrides.oauth?.allowedRedirects ?? APP_CONFIG.oauth.allowedRedirects;
   const normalized = decodeURIComponent(redirectUri);
   return allowedRedirects.includes(normalized);
 }
@@ -59,6 +71,20 @@ export async function authorize(req: Request, res: Response) {
     return res.status(400).json({ error: "Invalid clientId" });
   }
 
+  if (APP_CONFIG.oauth.requirePkce && !code_challenge) {
+    return res.status(400).json({
+      error: "invalid_request",
+      error_description: "Missing code_challenge",
+    });
+  }
+
+  if (code_challenge_method && !SUPPORTED_PKCE_METHODS.has(String(code_challenge_method).toUpperCase())) {
+    return res.status(400).json({
+      error: "invalid_request",
+      error_description: "Unsupported code_challenge_method",
+    });
+  }
+
 
     // ------------------------------------------------------
   // ⭐ SCOPE VALIDATION (NEW)
@@ -95,11 +121,20 @@ export async function authorize(req: Request, res: Response) {
       clientId,
       state: state ?? null,
       scope: scope ?? "read",
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      expiresAt: new Date(Date.now() + APP_CONFIG.oauth.authorizationCodeTtlSeconds * 1000),
       codeChallenge: code_challenge ?? null,
       codeChallengeMethod: code_challenge_method ?? null,
       used: false,
     },
+  });
+
+  await writeAuditEvent({
+    userId,
+    eventType: "oauth.authorize",
+    outcome: "success",
+    ipAddress: req.ip,
+    userAgent: getUserAgent(req),
+    metadata: { clientId, scope: scope ?? "read" },
   });
 
   return res.status(200).json({
@@ -115,6 +150,7 @@ export async function token(req: Request, res: Response) {
   const variantOverrides = getVariantOverrides();
   const { code, state } = req.body;
   const codeVerifier = req.body.code_verifier ?? req.body.codeVerifier;
+  const requestClientId = req.body.clientId ?? req.body.client_id;
 
   const auth = req.headers.authorization;
   let authenticatedClientId: string | undefined;
@@ -129,7 +165,7 @@ export async function token(req: Request, res: Response) {
       where: { id: clientId },
     });
 
-    if (!client || client.secret !== clientSecret) {
+    if (!client || !(await matchesStoredHashOrValue(clientSecret, client.secret))) {
       return res.status(401).json({
         error: "invalid_client",
         error_description: "Invalid client credentials",
@@ -141,6 +177,13 @@ export async function token(req: Request, res: Response) {
 
   if (!code) {
     return res.status(400).json({ error: "Missing code" });
+  }
+
+  if (!requestClientId && !authenticatedClientId && APP_CONFIG.isProduction) {
+    return res.status(400).json({
+      error: "invalid_client",
+      error_description: "Missing client_id",
+    });
   }
 
   const stored = await prisma.oAuthAuthorizationCode.findUnique({
@@ -164,6 +207,13 @@ export async function token(req: Request, res: Response) {
     return res.status(401).json({
       error: "invalid_client",
       error_description: "Client does not match authorization code",
+    });
+  }
+
+  if (requestClientId && requestClientId !== stored.clientId) {
+    return res.status(401).json({
+      error: "invalid_client",
+      error_description: "client_id does not match authorization code",
     });
   }
 
@@ -195,6 +245,15 @@ export async function token(req: Request, res: Response) {
     return res.status(400).json({ error: "Invalid authorization code" });
   }
 
+  await writeAuditEvent({
+    userId: stored.userId,
+    eventType: "oauth.token",
+    outcome: "success",
+    ipAddress: req.ip,
+    userAgent: getUserAgent(req),
+    metadata: { clientId: stored.clientId },
+  });
+
   return res.status(200).json({
     access_token: tokenResult.accessToken,
     refresh_token: tokenResult.refreshToken,
@@ -222,13 +281,13 @@ export async function refresh(req: Request, res: Response) {
 
   const rotated = await prisma.oAuthAccessToken.updateMany({
     where: {
-      refreshToken,
+      refreshToken: hashOpaqueToken(refreshToken),
       clientId,
     },
     data: {
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-      expiresAt: new Date(Date.now() + 3600 * 1000),
+      accessToken: hashOpaqueToken(newAccessToken),
+      refreshToken: hashOpaqueToken(newRefreshToken),
+      expiresAt: new Date(Date.now() + APP_CONFIG.oauth.accessTokenTtlSeconds * 1000),
     },
   });
 
@@ -261,20 +320,20 @@ export async function revoke(req: Request, res: Response) {
   }
 
   const access = await prisma.oAuthAccessToken.findUnique({
-    where: { accessToken: token },
+    where: { accessToken: hashOpaqueToken(token) },
   });
 
   if (access) {
-    await prisma.oAuthAccessToken.delete({ where: { accessToken: token } });
+    await prisma.oAuthAccessToken.delete({ where: { accessToken: hashOpaqueToken(token) } });
     return res.status(200).send();
   }
 
   const refresh = await prisma.oAuthAccessToken.findUnique({
-    where: { refreshToken: token },
+    where: { refreshToken: hashOpaqueToken(token) },
   });
 
   if (refresh) {
-    await prisma.oAuthAccessToken.delete({ where: { refreshToken: token } });
+    await prisma.oAuthAccessToken.delete({ where: { refreshToken: hashOpaqueToken(token) } });
     return res.status(200).send();
   }
 
@@ -296,7 +355,7 @@ export async function introspect(req: Request, res: Response) {
   }
 
   const access = await prisma.oAuthAccessToken.findUnique({
-    where: { accessToken: token },
+    where: { accessToken: hashOpaqueToken(token) },
   });
 
   if (access) {

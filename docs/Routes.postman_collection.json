@@ -11,12 +11,61 @@
       "item": [
         {
           "name": "Sessions",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const secret = pm.collectionVariables.get('mfa_secret');",
+                  "if (!secret) { pm.collectionVariables.set('mfa_code', ''); return; }",
+                  "const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';",
+                  "function base32ToBytes(input) {",
+                  "  const normalized = input.replace(/=+$/g, '').toUpperCase();",
+                  "  let bits = 0; let value = 0; const bytes = [];",
+                  "  for (const char of normalized) {",
+                  "    const index = alphabet.indexOf(char);",
+                  "    if (index === -1) throw new Error('Invalid MFA secret');",
+                  "    value = (value << 5) | index; bits += 5;",
+                  "    if (bits >= 8) { bytes.push((value >>> (bits - 8)) & 255); bits -= 8; }",
+                  "  }",
+                  "  return bytes;",
+                  "}",
+                  "function bytesToWordArray(bytes) {",
+                  "  const words = [];",
+                  "  for (let index = 0; index < bytes.length; index += 1) {",
+                  "    words[index >>> 2] |= bytes[index] << (24 - (index % 4) * 8);",
+                  "  }",
+                  "  return CryptoJS.lib.WordArray.create(words, bytes.length);",
+                  "}",
+                  "function generateTotp(secretValue) {",
+                  "  const counter = Math.floor(Date.now() / 1000 / 30);",
+                  "  const counterBytes = Array(8).fill(0);",
+                  "  let remaining = counter;",
+                  "  for (let index = 7; index >= 0; index -= 1) { counterBytes[index] = remaining & 255; remaining = Math.floor(remaining / 256); }",
+                  "  const key = bytesToWordArray(base32ToBytes(secretValue));",
+                  "  const message = bytesToWordArray(counterBytes);",
+                  "  const digest = CryptoJS.HmacSHA1(message, key);",
+                  "  const hex = CryptoJS.enc.Hex.stringify(digest);",
+                  "  const digestBytes = [];",
+                  "  for (let index = 0; index < hex.length; index += 2) digestBytes.push(parseInt(hex.slice(index, index + 2), 16));",
+                  "  const offset = digestBytes[digestBytes.length - 1] & 15;",
+                  "  const code = ((digestBytes[offset] & 127) << 24) | ((digestBytes[offset + 1] & 255) << 16) | ((digestBytes[offset + 2] & 255) << 8) | (digestBytes[offset + 3] & 255);",
+                  "  return String(code % 1000000).padStart(6, '0');",
+                  "}",
+                  "pm.collectionVariables.set('mfa_code', generateTotp(secret));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"email\": \"test@example.com\",\r\n  \"password\": \"password123\"\r\n}",
+              "raw": "{\r\n  \"email\": \"{{auth_email}}\",\r\n  \"password\": \"{{auth_password}}\",\r\n  \"mfaCode\": \"{{mfa_code}}\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -24,12 +73,7 @@
               }
             },
             "url": {
-              "raw": "http://localhost:3000/sessions/login",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
+              "raw": "{{base_url}}/sessions/login",
               "path": [
                 "sessions",
                 "login"
@@ -40,12 +84,77 @@
         },
         {
           "name": "JWT",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const secret = pm.collectionVariables.get('mfa_secret');",
+                  "if (!secret) { pm.collectionVariables.set('mfa_code', ''); return; }",
+                  "const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';",
+                  "function base32ToBytes(input) {",
+                  "  const normalized = input.replace(/=+$/g, '').toUpperCase();",
+                  "  let bits = 0; let value = 0; const bytes = [];",
+                  "  for (const char of normalized) {",
+                  "    const index = alphabet.indexOf(char);",
+                  "    if (index === -1) throw new Error('Invalid MFA secret');",
+                  "    value = (value << 5) | index; bits += 5;",
+                  "    if (bits >= 8) { bytes.push((value >>> (bits - 8)) & 255); bits -= 8; }",
+                  "  }",
+                  "  return bytes;",
+                  "}",
+                  "function bytesToWordArray(bytes) {",
+                  "  const words = [];",
+                  "  for (let index = 0; index < bytes.length; index += 1) {",
+                  "    words[index >>> 2] |= bytes[index] << (24 - (index % 4) * 8);",
+                  "  }",
+                  "  return CryptoJS.lib.WordArray.create(words, bytes.length);",
+                  "}",
+                  "function generateTotp(secretValue) {",
+                  "  const counter = Math.floor(Date.now() / 1000 / 30);",
+                  "  const counterBytes = Array(8).fill(0);",
+                  "  let remaining = counter;",
+                  "  for (let index = 7; index >= 0; index -= 1) { counterBytes[index] = remaining & 255; remaining = Math.floor(remaining / 256); }",
+                  "  const key = bytesToWordArray(base32ToBytes(secretValue));",
+                  "  const message = bytesToWordArray(counterBytes);",
+                  "  const digest = CryptoJS.HmacSHA1(message, key);",
+                  "  const hex = CryptoJS.enc.Hex.stringify(digest);",
+                  "  const digestBytes = [];",
+                  "  for (let index = 0; index < hex.length; index += 2) digestBytes.push(parseInt(hex.slice(index, index + 2), 16));",
+                  "  const offset = digestBytes[digestBytes.length - 1] & 15;",
+                  "  const code = ((digestBytes[offset] & 127) << 24) | ((digestBytes[offset + 1] & 255) << 16) | ((digestBytes[offset + 2] & 255) << 8) | (digestBytes[offset + 3] & 255);",
+                  "  return String(code % 1000000).padStart(6, '0');",
+                  "}",
+                  "pm.collectionVariables.set('mfa_code', generateTotp(secret));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('JWT login returns token', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.token).to.be.a('string').and.not.empty;",
+                  "  pm.collectionVariables.set('jwt_access_token', json.token);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"email\": \"test@example.com\",\r\n  \"password\": \"password123\"\r\n}",
+              "raw": "{\r\n  \"email\": \"{{auth_email}}\",\r\n  \"password\": \"{{auth_password}}\",\r\n  \"mfaCode\": \"{{mfa_code}}\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -53,12 +162,7 @@
               }
             },
             "url": {
-              "raw": "http://localhost:3000/jwt/login",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
+              "raw": "{{base_url}}/jwt/login",
               "path": [
                 "jwt",
                 "login"
@@ -74,7 +178,31 @@
               "listen": "prerequest",
               "script": {
                 "exec": [
-                  ""
+                  "const verifier = (pm.variables.replaceIn('{{$guid}}') + pm.variables.replaceIn('{{$guid}}') + pm.variables.replaceIn('{{$guid}}')).replace(/-/g, '');",
+                  "const hash = CryptoJS.SHA256(verifier);",
+                  "const challenge = CryptoJS.enc.Base64.stringify(hash).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');",
+                  "const state = pm.variables.replaceIn('{{$guid}}');",
+                  "pm.collectionVariables.set('oauth_code_verifier', verifier);",
+                  "pm.collectionVariables.set('oauth_code_challenge', challenge);",
+                  "pm.collectionVariables.set('oauth_state', state);",
+                  "console.log('PKCE generated for OAuth authorize request');"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Authorize returned an authorization code', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.be.a('string').and.not.empty;",
+                  "  pm.collectionVariables.set('oauth_code', json.code);",
+                  "  if (json.state) pm.collectionVariables.set('oauth_state', json.state);",
+                  "});"
                 ],
                 "type": "text/javascript",
                 "packages": {},
@@ -87,7 +215,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"userId\": \"d9c7dba3-3f97-4418-9f7b-f89d8fa5d925\",\r\n  \"client_id\": \"client-123\",\r\n  \"state\": \"xyz\",\r\n  \"scope\": \"read write\",\r\n  \"code_challenge\": \"9glww3W6oKfPBA-MD_0nxg_RTj5XDq55WhgNUO7QCwk\",\r\n  \"code_challenge_method\": \"S256\"\r\n}",
+              "raw": "{\r\n  \"userId\": \"{{oauth_user_id}}\",\r\n  \"client_id\": \"{{oauth_client_id}}\",\r\n  \"state\": \"{{oauth_state}}\",\r\n  \"scope\": \"{{oauth_scope}}\",\r\n  \"code_challenge\": \"{{oauth_code_challenge}}\",\r\n  \"code_challenge_method\": \"S256\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -95,12 +223,7 @@
               }
             },
             "url": {
-              "raw": "http://localhost:3000/oauth/authorize",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
+              "raw": "{{base_url}}/oauth/authorize",
               "path": [
                 "oauth",
                 "authorize"
@@ -111,19 +234,252 @@
         },
         {
           "name": "OAuth (token)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('oauth_code')) {",
+                  "  throw new Error('Run OAuth (authorize) first to obtain oauth_code.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('oauth_code_verifier')) {",
+                  "  throw new Error('Missing oauth_code_verifier. Re-run OAuth (authorize).');",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Token exchange returns access token', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.access_token).to.be.a('string').and.not.empty;",
+                  "  pm.collectionVariables.set('oauth_access_token', json.access_token);",
+                  "  if (json.refresh_token) pm.collectionVariables.set('oauth_refresh_token', json.refresh_token);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"code\": \"{{oauth_code}}\",\r\n  \"state\": \"{{oauth_state}}\",\r\n  \"code_verifier\": \"{{oauth_code_verifier}}\",\r\n  \"client_id\": \"{{oauth_client_id}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
-              "raw": "http://localhost:3000/oauth/authorize",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
+              "raw": "{{base_url}}/oauth/token",
               "path": [
                 "oauth",
-                "authorize"
+                "token"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Supplementary Account Security",
+      "item": [
+        {
+          "name": "Password Reset Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Password reset request accepted', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([202]);",
+                  "  const json = pm.response.json();",
+                  "  if (json.reset_token) pm.collectionVariables.set('password_reset_token', json.reset_token);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"{{auth_email}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/security/password-reset/request",
+              "path": [
+                "auth",
+                "security",
+                "password-reset",
+                "request"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Password Reset Confirm",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"token\": \"{{password_reset_token}}\",\r\n  \"newPassword\": \"{{new_password}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/security/password-reset/confirm",
+              "path": [
+                "auth",
+                "security",
+                "password-reset",
+                "confirm"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MFA Enroll",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('MFA enrollment issued secret', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.secret).to.be.a('string').and.not.empty;",
+                  "  pm.collectionVariables.set('mfa_secret', json.secret);",
+                  "  if (json.otpauthUrl) pm.collectionVariables.set('mfa_otpauth_url', json.otpauthUrl);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"{{auth_email}}\",\r\n  \"password\": \"{{auth_password}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/security/mfa/enroll",
+              "path": [
+                "auth",
+                "security",
+                "mfa",
+                "enroll"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MFA Verify",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const secret = pm.collectionVariables.get('mfa_secret');",
+                  "if (!secret) throw new Error('Run MFA Enroll first to obtain mfa_secret.');",
+                  "const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';",
+                  "function base32ToBytes(input) {",
+                  "  const normalized = input.replace(/=+$/g, '').toUpperCase();",
+                  "  let bits = 0; let value = 0; const bytes = [];",
+                  "  for (const char of normalized) {",
+                  "    const index = alphabet.indexOf(char);",
+                  "    if (index === -1) throw new Error('Invalid MFA secret');",
+                  "    value = (value << 5) | index; bits += 5;",
+                  "    if (bits >= 8) { bytes.push((value >>> (bits - 8)) & 255); bits -= 8; }",
+                  "  }",
+                  "  return bytes;",
+                  "}",
+                  "function bytesToWordArray(bytes) {",
+                  "  const words = [];",
+                  "  for (let index = 0; index < bytes.length; index += 1) {",
+                  "    words[index >>> 2] |= bytes[index] << (24 - (index % 4) * 8);",
+                  "  }",
+                  "  return CryptoJS.lib.WordArray.create(words, bytes.length);",
+                  "}",
+                  "function generateTotp(secretValue) {",
+                  "  const counter = Math.floor(Date.now() / 1000 / 30);",
+                  "  const counterBytes = Array(8).fill(0);",
+                  "  let remaining = counter;",
+                  "  for (let index = 7; index >= 0; index -= 1) { counterBytes[index] = remaining & 255; remaining = Math.floor(remaining / 256); }",
+                  "  const key = bytesToWordArray(base32ToBytes(secretValue));",
+                  "  const message = bytesToWordArray(counterBytes);",
+                  "  const digest = CryptoJS.HmacSHA1(message, key);",
+                  "  const hex = CryptoJS.enc.Hex.stringify(digest);",
+                  "  const digestBytes = [];",
+                  "  for (let index = 0; index < hex.length; index += 2) digestBytes.push(parseInt(hex.slice(index, index + 2), 16));",
+                  "  const offset = digestBytes[digestBytes.length - 1] & 15;",
+                  "  const code = ((digestBytes[offset] & 127) << 24) | ((digestBytes[offset + 1] & 255) << 16) | ((digestBytes[offset + 2] & 255) << 8) | (digestBytes[offset + 3] & 255);",
+                  "  return String(code % 1000000).padStart(6, '0');",
+                  "}",
+                  "pm.collectionVariables.set('mfa_code', generateTotp(secret));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"{{auth_email}}\",\r\n  \"code\": \"{{mfa_code}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/security/mfa/verify",
+              "path": [
+                "auth",
+                "security",
+                "mfa",
+                "verify"
               ]
             }
           },
@@ -141,7 +497,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"email\": \"test@example.com\",\r\n  \"password\": \"password123\"\r\n}",
+              "raw": "{\r\n  \"email\": \"{{auth_email}}\",\r\n  \"password\": \"{{auth_password}}\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -149,12 +505,7 @@
               }
             },
             "url": {
-              "raw": "http://localhost:3000/sessions/logout",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
+              "raw": "{{base_url}}/sessions/logout",
               "path": [
                 "sessions",
                 "logout"
@@ -172,7 +523,15 @@
           "name": "Sessions Protected",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/sessions/protected",
+              "path": [
+                "sessions",
+                "protected"
+              ]
+            },
+            "description": "Uses the session cookie established by the session login request."
           },
           "response": []
         },
@@ -180,7 +539,20 @@
           "name": "JWT Protected",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jwt/protected",
+              "path": [
+                "jwt",
+                "protected"
+              ]
+            }
           },
           "response": []
         },
@@ -188,7 +560,20 @@
           "name": "OAuth Protected",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{oauth_access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/oauth/protected",
+              "path": [
+                "oauth",
+                "protected"
+              ]
+            }
           },
           "response": []
         }
@@ -196,6 +581,82 @@
     }
   ],
   "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "auth_email",
+      "value": "main@example.com"
+    },
+    {
+      "key": "auth_password",
+      "value": "password123"
+    },
+    {
+      "key": "oauth_user_id",
+      "value": "d9c7dba3-3f97-4418-9f7b-f89d8fa5d925"
+    },
+    {
+      "key": "oauth_client_id",
+      "value": "client-basic"
+    },
+    {
+      "key": "oauth_scope",
+      "value": "read"
+    },
+    {
+      "key": "oauth_state",
+      "value": ""
+    },
+    {
+      "key": "oauth_code_verifier",
+      "value": ""
+    },
+    {
+      "key": "oauth_code_challenge",
+      "value": ""
+    },
+    {
+      "key": "oauth_code",
+      "value": ""
+    },
+    {
+      "key": "oauth_access_token",
+      "value": ""
+    },
+    {
+      "key": "oauth_refresh_token",
+      "value": ""
+    },
+    {
+      "key": "password_reset_token",
+      "value": ""
+    },
+    {
+      "key": "new_password",
+      "value": "password456"
+    },
+    {
+      "key": "mfa_secret",
+      "value": ""
+    },
+    {
+      "key": "mfa_otpauth_url",
+      "value": ""
+    },
+    {
+      "key": "mfa_code",
+      "value": ""
+    },
+    {
+      "key": "mfa_enabled",
+      "value": "false"
+    },
+    {
+      "key": "jwt_access_token",
+      "value": ""
+    },
     {
       "key": "basic_auth_17u8",
       "secret": true

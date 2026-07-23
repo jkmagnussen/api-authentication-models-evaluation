@@ -1,0 +1,135 @@
+Dissertation readiness run: 2026-07-23T16:15:48.3392859+01:00
+Repo: C:\Users\jkmag\Development\api-authentication-models-evaluation
+\n== First generation ==
+
+> dissertation-backend@1.0.0 decision:ai-vs-human:advanced
+> ts-node scripts/generate-ai-vs-human-advanced-comparisons.ts
+
+Wrote docs/generated/AI_VS_HUMAN_ADVANCED_COMPARISONS.md
+Wrote docs/generated/ai-vs-human-advanced-comparisons.json
+\n== First hashes ==
+docs/generated/ai-vs-human-advanced-comparisons.json C19BC31BB074140B5496DCCA63580F7402D68D846A2FE278394148E0089C94FC
+docs/generated/AI_VS_HUMAN_ADVANCED_COMPARISONS.md 06B000D7355B2B23739816A30BC520B7E532EA73320BEF9357F84D79B2201C1E
+\n== Second generation ==
+
+> dissertation-backend@1.0.0 decision:ai-vs-human:advanced
+> ts-node scripts/generate-ai-vs-human-advanced-comparisons.ts
+
+Wrote docs/generated/AI_VS_HUMAN_ADVANCED_COMPARISONS.md
+Wrote docs/generated/ai-vs-human-advanced-comparisons.json
+\n== Second hashes ==
+docs/generated/ai-vs-human-advanced-comparisons.json BCE2BB4C1FDA84EF4191C39CF8AB24829F04C9E42EFEAD337E7E32E89C6DDAB2
+docs/generated/AI_VS_HUMAN_ADVANCED_COMPARISONS.md 0EF05A1D886290CFD19DF68219F2E031B379AB6E7ECF83FBDD6D2DBCC714BCCF
+\n== Determinism result ==
+identical_hashes=False
+\n== Build gate: npm run prod ==
+
+> dissertation-backend@1.0.0 prod
+> npm run build && npm start
+
+
+> dissertation-backend@1.0.0 build
+> npm run clean:generated && npm run build:compile
+
+
+> dissertation-backend@1.0.0 clean:generated
+> git restore --worktree -- docs/generated docs/performance-results ai-generated/results ai-generated/arms
+
+
+> dissertation-backend@1.0.0 build:compile
+> tsc
+
+
+> dissertation-backend@1.0.0 start
+> node dist/src/server.js
+
+Port 3000 is already in use. Stop the other process or change PORT.
+\n== Full pipeline gate ==
+-- npm run decision:ai-vs-human:advanced
+
+> dissertation-backend@1.0.0 decision:ai-vs-human:advanced
+> ts-node scripts/generate-ai-vs-human-advanced-comparisons.ts
+
+Wrote docs/generated/AI_VS_HUMAN_ADVANCED_COMPARISONS.md
+Wrote docs/generated/ai-vs-human-advanced-comparisons.json
+-- npm run py:charts
+
+> dissertation-backend@1.0.0 py:charts
+> uv run --python analysis-python/.venv/Scripts/python.exe analysis-python/generate_charts.py && npm run py:charts:validate
+
+Generated charts in C:\Users\jkmag\Development\api-authentication-models-evaluation\docs\charts
+Generated summary report at C:\Users\jkmag\Development\api-authentication-models-evaluation\docs\generated\ML_LITE_ANALYSIS_SUMMARY.md
+
+> dissertation-backend@1.0.0 py:charts:validate
+> uv run --python analysis-python/.venv/Scripts/python.exe analysis-python/validate_charts.py
+
+PASS maintainability-difficulty-index.svg
+PASS variance-under-load.svg
+PASS stride-severity-scoring.svg
+PASS error-diversity-entropy.svg
+PASS cross-provider-overlap-venn.svg
+PASS misconfiguration-severity-heatmap.svg
+PASS provider-bias-analysis.svg
+PASS token-lifecycle-fragility invariants
+PASS authentication-overhead-breakdown invariants
+PASS security-critical-control-risk-density.svg
+PASS control-point-risk-heatmap.svg
+PASS ai-vs-human-severity-gap-ci.svg
+PASS ai-vs-human-dominance-heatmap.svg
+PASS ai-vs-human-green-waste-multiplier.svg
+-- npm run py:charts:validate
+
+> dissertation-backend@1.0.0 py:charts:validate
+> uv run --python analysis-python/.venv/Scripts/python.exe analysis-python/validate_charts.py
+
+PASS maintainability-difficulty-index.svg
+PASS variance-under-load.svg
+PASS stride-severity-scoring.svg
+PASS error-diversity-entropy.svg
+PASS cross-provider-overlap-venn.svg
+PASS misconfiguration-severity-heatmap.svg
+PASS provider-bias-analysis.svg
+PASS token-lifecycle-fragility invariants
+PASS authentication-overhead-breakdown invariants
+PASS security-critical-control-risk-density.svg
+PASS control-point-risk-heatmap.svg
+PASS ai-vs-human-severity-gap-ci.svg
+PASS ai-vs-human-dominance-heatmap.svg
+PASS ai-vs-human-green-waste-multiplier.svg
+-- npm run docs:check
+
+> dissertation-backend@1.0.0 docs:check
+> ts-node scripts/check-generated-docs.ts
+
+All expected generated artifacts are present.
+\n== Determinism (timestamp-normalized) ==
+json_timestamp_normalized_equal=True
+md_timestamp_normalized_equal=True
+\n== Build gate retry with PORT override ==
+
+> dissertation-backend@1.0.0 prod
+> npm run build && npm start
+
+
+> dissertation-backend@1.0.0 build
+> npm run clean:generated && npm run build:compile
+
+
+> dissertation-backend@1.0.0 clean:generated
+> git restore --worktree -- docs/generated docs/performance-results ai-generated/results ai-generated/arms
+
+
+> dissertation-backend@1.0.0 build:compile
+> tsc
+
+
+> dissertation-backend@1.0.0 start
+> node dist/src/server.js
+
+Server running on http://localhost:3001
+\n== REPRO_MODE raw hash determinism ==
+first docs/generated/ai-vs-human-advanced-comparisons.json B4B5F65A15DC6DC54649B8973D0A750CC10419860BDFB6D559DEC56564A4AD64
+first docs/generated/AI_VS_HUMAN_ADVANCED_COMPARISONS.md 3AB6845CA6080DA2C33CD808716F61EFCFD9C77181D5FD1D1A09A2FBD6D4311A
+second docs/generated/ai-vs-human-advanced-comparisons.json B4B5F65A15DC6DC54649B8973D0A750CC10419860BDFB6D559DEC56564A4AD64
+second docs/generated/AI_VS_HUMAN_ADVANCED_COMPARISONS.md 3AB6845CA6080DA2C33CD808716F61EFCFD9C77181D5FD1D1A09A2FBD6D4311A
+repro_mode_raw_hash_equal=True

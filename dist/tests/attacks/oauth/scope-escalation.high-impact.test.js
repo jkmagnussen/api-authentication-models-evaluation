@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const supertest_1 = __importDefault(require("supertest"));
 const app_1 = __importDefault(require("../../../src/app"));
 const db_1 = require("../../../src/db");
+const oauth_service_1 = require("../../../src/oauth/oauth.service");
 const setup_1 = require("../../setup");
 const validUUID = "123e4567-e89b-12d3-a456-426614174000";
 describe("OAuth scope escalation high-impact", () => {
@@ -43,7 +44,7 @@ describe("OAuth scope escalation high-impact", () => {
             .send({ code: authRes.body.code });
         expect(tokenRes.status).toBe(200);
         const issued = await db_1.prisma.oAuthAccessToken.findUnique({
-            where: { accessToken: tokenRes.body.access_token },
+            where: { accessToken: (0, oauth_service_1.hashOpaqueToken)(tokenRes.body.access_token) },
         });
         expect(issued?.scope).toBe("read write");
     });

@@ -11,6 +11,10 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 CHARTS_DIR = ROOT / "docs" / "charts"
+CHARTS_PERF_DIR = CHARTS_DIR / "performance"
+CHARTS_SEC_DIR = CHARTS_DIR / "security"
+CHARTS_MAINT_DIR = CHARTS_DIR / "maintainability"
+CHARTS_SYNTH_DIR = CHARTS_DIR / "synthesis"
 GENERATOR_PATH = ROOT / "analysis-python" / "generate_charts.py"
 
 
@@ -70,7 +74,7 @@ def main() -> None:
     ) * 100.0
 
     expected = Counter([f"{value:.1f}%" for value in mdi_pct])
-    actual = Counter([v for v in numeric_svg_comments(CHARTS_DIR / "maintainability-difficulty-index.svg") if v.endswith("%")])
+    actual = Counter([v for v in numeric_svg_comments(CHARTS_MAINT_DIR / "maintainability-difficulty-index.svg") if v.endswith("%")])
     results.append(check_equal("maintainability-difficulty-index.svg", expected, actual))
 
     # 2) Variance under load annotations.
@@ -82,7 +86,7 @@ def main() -> None:
     stats["cv_pct"] = np.where(stats["avg_ms"] > 0, (stats["std_ms"] / stats["avg_ms"]) * 100.0, 0.0)
 
     expected = Counter([f"{value:.2f}%" for value in stats["cv_pct"]])
-    actual = Counter([v for v in numeric_svg_comments(CHARTS_DIR / "variance-under-load.svg") if v.endswith("%")])
+    actual = Counter([v for v in numeric_svg_comments(CHARTS_PERF_DIR / "variance-under-load.svg") if v.endswith("%")])
     results.append(check_equal("variance-under-load.svg", expected, actual))
 
     # 3) STRIDE severity scoring annotations.
@@ -97,7 +101,7 @@ def main() -> None:
     expected = Counter([f"{float(value):.2f}" for value in stride_agg["avg_severity"]])
     stride_vals = [
         v
-        for v in numeric_svg_comments(CHARTS_DIR / "stride-severity-scoring.svg")
+        for v in numeric_svg_comments(CHARTS_SEC_DIR / "stride-severity-scoring.svg")
         if re.fullmatch(r"[0-9]+\.[0-9]{2}", v)
     ]
     actual = Counter(stride_vals[-sum(expected.values()) :])
@@ -121,7 +125,7 @@ def main() -> None:
     expected = Counter([f"{float(value):.2f}" for value in entropy_df["entropy"]])
     entropy_vals = [
         v
-        for v in numeric_svg_comments(CHARTS_DIR / "error-diversity-entropy.svg")
+        for v in numeric_svg_comments(CHARTS_SYNTH_DIR / "error-diversity-entropy.svg")
         if re.fullmatch(r"[0-9]+\.[0-9]{2}", v)
     ]
     actual = Counter(entropy_vals[-sum(expected.values()) :])
@@ -153,7 +157,7 @@ def main() -> None:
     expected = Counter([f"{value:.2f}" for value in jaccard_values])
     overlap_vals = [
         v
-        for v in numeric_svg_comments(CHARTS_DIR / "cross-provider-overlap-venn.svg")
+        for v in numeric_svg_comments(CHARTS_SYNTH_DIR / "cross-provider-overlap-venn.svg")
         if re.fullmatch(r"[0-9]+\.[0-9]{2}", v)
     ]
     actual = Counter(overlap_vals[-sum(expected.values()) :])
@@ -174,7 +178,7 @@ def main() -> None:
     expected = Counter([f"{float(value):.1f}" for value in pivot.to_numpy().ravel() if pd.notna(value)])
     heatmap_vals = [
         v
-        for v in numeric_svg_comments(CHARTS_DIR / "misconfiguration-severity-heatmap.svg")
+        for v in numeric_svg_comments(CHARTS_SEC_DIR / "misconfiguration-severity-heatmap.svg")
         if re.fullmatch(r"[0-9]+\.[0-9]", v)
     ]
     actual = Counter(heatmap_vals[: sum(expected.values())])
@@ -195,7 +199,7 @@ def main() -> None:
     expected = Counter([f"{float(value * 100):.1f}" for value in pivot.to_numpy().ravel()])
     provider_vals = [
         v
-        for v in numeric_svg_comments(CHARTS_DIR / "provider-bias-analysis.svg")
+        for v in numeric_svg_comments(CHARTS_SYNTH_DIR / "provider-bias-analysis.svg")
         if re.fullmatch(r"[0-9]+\.[0-9]", v)
     ]
     actual = Counter(provider_vals[: sum(expected.values())])
@@ -250,6 +254,145 @@ def main() -> None:
             weights_ok = False
 
     results.append((weights_ok, "PASS authentication-overhead-breakdown invariants" if weights_ok else "FAIL authentication-overhead-breakdown invariants"))
+
+    # 10) Security-critical control risk density annotations.
+    control_rows_df, control_summary_df = gc.load_security_control_points()
+    if control_rows_df.empty or control_summary_df.empty:
+        results.append((False, "FAIL security-critical-control-risk-density.svg (missing control-point data)"))
+    else:
+        summary_local = control_summary_df.copy()
+        summary_local["source"] = pd.Categorical(
+            summary_local["source"], ["baseline", "misconfiguration", "ai"], ordered=True
+        )
+        summary_local = summary_local.sort_values(["modelLabel", "source"]).reset_index(drop=True)
+
+        expected = Counter([f"{float(value):.2f}" for value in summary_local["avgRiskPer10kChars"]])
+        risk_vals = [
+            v
+            for v in numeric_svg_comments(CHARTS_SEC_DIR / "security-critical-control-risk-density.svg")
+            if re.fullmatch(r"[0-9]+\.[0-9]{2}", v)
+        ]
+        actual = Counter(risk_vals[-sum(expected.values()) :])
+        results.append(check_equal("security-critical-control-risk-density.svg", expected, actual))
+
+    # 11) Control-point risk heatmap cell labels.
+    if control_rows_df.empty:
+        results.append((False, "FAIL control-point-risk-heatmap.svg (missing control-point data)"))
+    else:
+        controls_local = control_rows_df[control_rows_df["source"] != "baseline"].copy()
+        controls_local["column_label"] = (
+            controls_local["modelLabel"] + " (" + controls_local["source"] + ")"
+        )
+        pivot = controls_local.pivot_table(
+            index="controlLabel",
+            columns="column_label",
+            values="riskPer10kChars",
+            aggfunc="mean",
+            fill_value=0.0,
+        )
+
+        ordered_columns: list[str] = []
+        for source in ["misconfiguration", "ai"]:
+            for model in ["OAuth2", "JWT", "Session"]:
+                col = f"{model} ({source})"
+                if col in pivot.columns:
+                    ordered_columns.append(col)
+        if ordered_columns:
+            pivot = pivot.reindex(columns=ordered_columns)
+
+        expected = Counter([f"{float(value):.2f}" for value in pivot.to_numpy().ravel()])
+        heatmap_vals = [
+            v
+            for v in numeric_svg_comments(CHARTS_SEC_DIR / "control-point-risk-heatmap.svg")
+            if re.fullmatch(r"[0-9]+\.[0-9]{2}", v)
+        ]
+        actual = Counter(heatmap_vals[: sum(expected.values())])
+        results.append(check_equal("control-point-risk-heatmap.svg", expected, actual))
+
+    # 12) AI-vs-human severity gap CI bar labels.
+    advanced_payload = gc.load_ai_vs_human_advanced_comparisons()
+    severity_rows = pd.DataFrame(advanced_payload.get("severityWeightedSafetyGapWithUncertainty", []))
+    if severity_rows.empty:
+        results.append((False, "FAIL ai-vs-human-severity-gap-ci.svg (missing advanced comparison data)"))
+    else:
+        expected = Counter([f"{float(value):.2f}" for value in severity_rows["aiMeanRiskPerSample"]])
+        severity_vals = [
+            v
+            for v in numeric_svg_comments(CHARTS_SEC_DIR / "ai-vs-human-severity-gap-ci.svg")
+            if re.fullmatch(r"[0-9]+\.[0-9]{2}", v)
+        ]
+        actual = Counter(severity_vals[: sum(expected.values())])
+        results.append(check_equal("ai-vs-human-severity-gap-ci.svg", expected, actual))
+
+    # 13) AI-vs-human dominance heatmap cell labels.
+    density_rows, _ = gc.load_normalized_failure_density()
+    if density_rows.empty or control_summary_df.empty:
+        results.append((False, "FAIL ai-vs-human-dominance-heatmap.svg (missing density/control summary data)"))
+    else:
+        dominance_values: list[str] = []
+        for model in ["oauth", "jwt", "sessions"]:
+            base_density = density_rows[(density_rows["model"] == model) & (density_rows["source"] == "baseline")]
+            ai_density = density_rows[(density_rows["model"] == model) & (density_rows["source"] == "ai")]
+            base_control = control_summary_df[(control_summary_df["model"] == model) & (control_summary_df["source"] == "baseline")]
+            ai_control = control_summary_df[(control_summary_df["model"] == model) & (control_summary_df["source"] == "ai")]
+            if base_density.empty or ai_density.empty or base_control.empty or ai_control.empty:
+                continue
+
+            dominance_values.extend(
+                [
+                    f"{int(float(base_density.iloc[0]['failuresPer10kChars']) < float(ai_density.iloc[0]['failuresPer10kChars']))}",
+                    f"{int(float(base_density.iloc[0]['failurePointsPer10kChars']) < float(ai_density.iloc[0]['failurePointsPer10kChars']))}",
+                    f"{int(float(base_control.iloc[0]['avgRiskPer10kChars']) < float(ai_control.iloc[0]['avgRiskPer10kChars']))}",
+                ]
+            )
+
+        expected = Counter([
+            "Baseline safer" if value == "1" else "AI safer / tie"
+            for value in dominance_values
+        ])
+        dominance_text = (CHARTS_SEC_DIR / "ai-vs-human-dominance-heatmap.svg").read_text(encoding="utf-8")
+        dominance_vals = re.findall(r"<!--\s*(Baseline safer|AI safer / tie)\s*-->", dominance_text)
+        actual = Counter(dominance_vals[: sum(expected.values())])
+        results.append(check_equal("ai-vs-human-dominance-heatmap.svg", expected, actual))
+
+    # 14) AI-vs-human green waste multiplier bar labels.
+    green_rows = pd.DataFrame(advanced_payload.get("greenComputingComparison", []))
+    if green_rows.empty:
+        results.append((False, "FAIL ai-vs-human-green-waste-multiplier.svg (missing advanced comparison data)"))
+    else:
+        expected = Counter([f"{float(value):.2f}" for value in green_rows["aiComputePerSecureOutcomeMultiplierVsBaseline"]])
+        green_vals = [
+            v
+            for v in numeric_svg_comments(CHARTS_PERF_DIR / "ai-vs-human-green-waste-multiplier.svg")
+            if re.fullmatch(r"[0-9]+\.[0-9]{2}", v)
+        ]
+        actual = Counter(green_vals[: sum(expected.values())])
+        results.append(check_equal("ai-vs-human-green-waste-multiplier.svg", expected, actual))
+
+    # 15) Calibration and independent agreement chart percent labels.
+    checker_agreement = gc.load_checker_agreement_summary()
+    generated_agreement = checker_agreement.get("generatedSampleAgreement", {}) or {}
+    by_model = generated_agreement.get("byModel", {}) or {}
+    sensitivity_rows = pd.DataFrame(advanced_payload.get("falseConfidenceSensitivity", []))
+    if sensitivity_rows.empty or not by_model:
+        results.append((False, "FAIL calibration-and-agreement-controls.svg (missing calibration/agreement data)"))
+    else:
+        expected = Counter([f"{float(value) * 100:.1f}%" for value in sensitivity_rows.sort_values("threshold")["rate"]])
+        expected.update(
+            [
+                f"{float((by_model.get(model, {}) or {}).get('rawAgreementRate', 0.0)) * 100:.1f}%"
+                for model in ["oauth", "jwt", "sessions"]
+                if model in by_model
+            ]
+        )
+
+        agreement_vals = [
+            v
+            for v in numeric_svg_comments(CHARTS_SYNTH_DIR / "calibration-and-agreement-controls.svg")
+            if v.endswith("%")
+        ]
+        actual = Counter(agreement_vals[: sum(expected.values())])
+        results.append(check_equal("calibration-and-agreement-controls.svg", expected, actual))
 
     all_ok = True
     for ok, message in results:

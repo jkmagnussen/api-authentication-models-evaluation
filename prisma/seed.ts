@@ -6,6 +6,9 @@ import bcrypt from "bcrypt";
 async function main() {
   // Seed main user with fixed ID
   const passwordHash = await bcrypt.hash("password123", 10);
+  const basicSecretHash = await bcrypt.hash("basic-secret", 10);
+  const privilegedSecretHash = await bcrypt.hash("privileged-secret", 10);
+  const adminSecretHash = await bcrypt.hash("admin-secret", 10);
 
   await prisma.user.upsert({
     where: { id: "d9c7dba3-3f97-4418-9f7b-f89d8fa5d925" },
@@ -25,7 +28,7 @@ async function main() {
     update: {},
     create: {
       id: "client-basic",
-      secret: "basic-secret",
+      secret: basicSecretHash,
       name: "Basic Client",
     },
   });
@@ -38,7 +41,7 @@ async function main() {
     update: {},
     create: {
       id: "client-privileged",
-      secret: "privileged-secret",
+      secret: privilegedSecretHash,
       name: "Privileged Client",
     },
   });
@@ -51,7 +54,7 @@ async function main() {
     update: {},
     create: {
       id: "client-admin",
-      secret: "admin-secret",
+      secret: adminSecretHash,
       name: "Admin Client",
     },
   });

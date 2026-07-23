@@ -9,48 +9,54 @@ exports.findUserByEmail = findUserByEmail;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_1 = require("../auth/user");
 const variant_overrides_1 = require("../variant-overrides");
-function getJwtSecret() {
-    return process.env.JWT_SECRET || "dev-secret";
-}
+const config_1 = __importDefault(require("../config"));
+const jwt_keys_1 = require("./jwt.keys");
 function getJwtAudience() {
     const variantOverrides = (0, variant_overrides_1.getVariantOverrides)();
-    return variantOverrides.jwt?.audience || process.env.JWT_AUDIENCE || "api-auth-eval";
+    return variantOverrides.jwt?.audience || process.env.JWT_AUDIENCE || config_1.default.jwt.audience;
 }
 function getJwtIssuer() {
     const variantOverrides = (0, variant_overrides_1.getVariantOverrides)();
-    return variantOverrides.jwt?.issuer || process.env.JWT_ISSUER || "api-auth-service";
-}
-function getJwtAlgorithm() {
-    const variantOverrides = (0, variant_overrides_1.getVariantOverrides)();
-    return variantOverrides.jwt?.algorithm || "HS256";
+    return variantOverrides.jwt?.issuer || process.env.JWT_ISSUER || config_1.default.jwt.issuer;
 }
 function getJwtExpiry() {
     const variantOverrides = (0, variant_overrides_1.getVariantOverrides)();
-    return variantOverrides.jwt?.expiry || "1h";
+    return variantOverrides.jwt?.expiry || process.env.JWT_EXPIRES_IN || config_1.default.jwt.expiresIn;
 }
 function generateJwt(userId) {
-    const algorithm = getJwtAlgorithm();
+    const variantOverrides = (0, variant_overrides_1.getVariantOverrides)();
+    const { algorithm, signingKey, keyId } = (0, jwt_keys_1.getJwtSignContext)(variantOverrides.jwt?.algorithm);
     const signOptions = {
         expiresIn: getJwtExpiry(),
         audience: getJwtAudience(),
         issuer: getJwtIssuer(),
         algorithm: algorithm,
     };
+    if (keyId) {
+        signOptions.keyid = keyId;
+    }
     if (algorithm === "none") {
         return jsonwebtoken_1.default.sign({ userId }, null, {
             ...signOptions,
             algorithm: "none",
         });
     }
-    return jsonwebtoken_1.default.sign({ userId }, getJwtSecret(), signOptions);
+    return jsonwebtoken_1.default.sign({ userId }, signingKey, signOptions);
 }
-async function verifyJwt(token) {
-    try {
-        return jsonwebtoken_1.default.verify(token, getJwtSecret());
-    }
-    catch {
-        return null;
-    }
+function verifyJwt(token) {
+    const decodedHeader = jsonwebtoken_1.default.decode(token, { complete: true });
+    const header = typeof decodedHeader === "object" && decodedHeader && "header" in decodedHeader
+        ? decodedHeader.header
+        : undefined;
+    const expectedAlgorithm = (0, jwt_keys_1.getJwtAlgorithm)((0, variant_overrides_1.getVariantOverrides)().jwt?.algorithm);
+    const verificationAlgorithm = (expectedAlgorithm === "none"
+        ? "none"
+        : (header?.alg ?? expectedAlgorithm));
+    const key = (0, jwt_keys_1.getJwtVerifyKey)(verificationAlgorithm, header?.kid);
+    const algorithms = [verificationAlgorithm];
+    return jsonwebtoken_1.default.verify(token, key, {
+        algorithms,
+    });
 }
 async function findUserByEmail(email) {
     return (0, user_1.findUserByEmail)(email);

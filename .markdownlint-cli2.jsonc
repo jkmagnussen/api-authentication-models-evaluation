@@ -12,6 +12,7 @@
     "!node_modules/**",
     "!coverage/**",
     "!.venv/**",
+    "!.venv-analysis/**",
     "!analysis-python/.venv/**"
   ]
 }

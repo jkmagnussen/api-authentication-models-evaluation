@@ -1,8 +1,9 @@
 import rateLimit from "express-rate-limit";
+import { APP_CONFIG } from "../config";
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: Number(process.env.AUTH_RATE_LIMIT_MAX ?? (process.env.NODE_ENV === "test" ? 5 : 200)),
+  max: APP_CONFIG.security.authRateLimitMax,
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: false,

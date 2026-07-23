@@ -18,6 +18,10 @@ from sklearn.linear_model import LinearRegression
 ROOT = Path(__file__).resolve().parent.parent
 DOCS_DIR = ROOT / "docs"
 CHARTS_DIR = DOCS_DIR / "charts"
+CHARTS_PERF_DIR = CHARTS_DIR / "performance"
+CHARTS_SEC_DIR = CHARTS_DIR / "security"
+CHARTS_MAINT_DIR = CHARTS_DIR / "maintainability"
+CHARTS_SYNTH_DIR = CHARTS_DIR / "synthesis"
 RESULTS_DIR = ROOT / "ai-generated" / "results"
 ARMS_DIR = ROOT / "ai-generated" / "arms"
 PERF_DIR = DOCS_DIR / "performance-results"
@@ -41,15 +45,17 @@ class AnalysisSummary:
 
 
 def ensure_output_dir() -> None:
-    CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    for d in (CHARTS_DIR, CHARTS_PERF_DIR, CHARTS_SEC_DIR, CHARTS_MAINT_DIR, CHARTS_SYNTH_DIR):
+        d.mkdir(parents=True, exist_ok=True)
 
 
-def save_chart(fig: plt.Figure, file_name: str, tight: bool = True) -> None:
+def save_chart(fig: plt.Figure, cluster_dir: Path, file_name: str, tight: bool = True) -> None:
+    dest = cluster_dir / file_name
     if tight:
         fig.tight_layout()
-        fig.savefig(CHARTS_DIR / file_name, bbox_inches="tight")
+        fig.savefig(dest, bbox_inches="tight")
     else:
-        fig.savefig(CHARTS_DIR / file_name)
+        fig.savefig(dest)
     plt.close(fig)
 
 
@@ -375,7 +381,7 @@ def chart_misconfiguration_clustering(variant_df: pd.DataFrame) -> float:
         linespacing=1.4,
         bbox={"boxstyle": "round,pad=0.45", "fc": "#f7f7f7", "ec": "#dddddd"},
     )
-    save_chart(fig, "misconfiguration-clustering-kmeans.svg", tight=False)
+    save_chart(fig, CHARTS_SYNTH_DIR, "misconfiguration-clustering-kmeans.svg", tight=False)
     return float(kmeans.inertia_)
 
 
@@ -412,7 +418,7 @@ def chart_complexity_misconfiguration_regression(variant_df: pd.DataFrame) -> tu
     ax.set_title("Complexity to Misconfiguration Risk Regression")
     ax.set_xlabel("Cyclomatic Complexity")
     ax.set_ylabel("Risk Index (severity * exploitability)")
-    save_chart(fig, "complexity-to-misconfig-regression.svg")
+    save_chart(fig, CHARTS_MAINT_DIR, "complexity-to-misconfig-regression.svg")
     return r2, slope
 
 
@@ -460,7 +466,7 @@ def chart_ai_determinism_variance(arm_df: pd.DataFrame) -> float:
             ax.vlines(x_center, max(0.0, y - sd_pct), min(105.0, y + sd_pct), color="black", linewidth=1)
 
     ax.legend(title="Model", bbox_to_anchor=(1.02, 1), loc="upper left")
-    save_chart(fig, "ai-determinism-variance.svg")
+    save_chart(fig, CHARTS_SYNTH_DIR, "ai-determinism-variance.svg")
     return float(grouped["failure_std"].mean())
 
 
@@ -497,7 +503,7 @@ def chart_stride_severity_scoring(variant_df: pd.DataFrame) -> None:
             va="bottom",
             fontsize=8,
         )
-    save_chart(fig, "stride-severity-scoring.svg")
+    save_chart(fig, CHARTS_SEC_DIR, "stride-severity-scoring.svg")
 
 
 def chart_correctness_security_tradeoff(arm_df: pd.DataFrame, perf_df: pd.DataFrame, variant_df: pd.DataFrame) -> None:
@@ -582,7 +588,7 @@ def chart_correctness_security_tradeoff(arm_df: pd.DataFrame, perf_df: pd.DataFr
         fontsize=8,
         color="#333333",
     )
-    save_chart(fig, "correctness-security-tradeoff.svg")
+    save_chart(fig, CHARTS_SYNTH_DIR, "correctness-security-tradeoff.svg")
 
 
 def chart_cross_provider_overlap(arm_df: pd.DataFrame) -> None:
@@ -684,7 +690,7 @@ def chart_cross_provider_overlap(arm_df: pd.DataFrame) -> None:
             fontsize=9,
         )
 
-    save_chart(fig, "cross-provider-overlap-venn.svg")
+    save_chart(fig, CHARTS_SYNTH_DIR, "cross-provider-overlap-venn.svg")
 
 
 def chart_provider_bias_analysis(arm_df: pd.DataFrame) -> None:
@@ -712,7 +718,7 @@ def chart_provider_bias_analysis(arm_df: pd.DataFrame) -> None:
     ax.set_title("Provider Bias Analysis: Failure Fingerprint by Arm")
     ax.set_xlabel("Provider Arm")
     ax.set_ylabel("Failure Category")
-    save_chart(fig, "provider-bias-analysis.svg")
+    save_chart(fig, CHARTS_SYNTH_DIR, "provider-bias-analysis.svg")
 
 
 def chart_misconfiguration_frequency_comparison(
@@ -772,7 +778,7 @@ def chart_misconfiguration_frequency_comparison(
             fontsize=8,
         )
 
-    save_chart(fig, "misconfiguration-frequency-comparison.svg")
+    save_chart(fig, CHARTS_SEC_DIR, "misconfiguration-frequency-comparison.svg")
     return freq_df
 
 
@@ -812,7 +818,7 @@ def chart_misconfiguration_severity_heatmap(misconfig_df: pd.DataFrame) -> None:
     ax.set_title("Misconfiguration Severity Heatmap")
     ax.set_xlabel("Authentication Model")
     ax.set_ylabel("Misconfiguration Type")
-    save_chart(fig, "misconfiguration-severity-heatmap.svg")
+    save_chart(fig, CHARTS_SEC_DIR, "misconfiguration-severity-heatmap.svg")
 
 
 def chart_correctness_security_by_provider(
@@ -877,7 +883,7 @@ def chart_correctness_security_by_provider(
     ax.set_xlim(0, 102)
     ax.set_ylim(0, 102)
     ax.legend(title="Provider and Model", bbox_to_anchor=(1.02, 1), loc="upper left")
-    save_chart(fig, "correctness-vs-security-provider-scatter.svg")
+    save_chart(fig, CHARTS_SYNTH_DIR, "correctness-vs-security-provider-scatter.svg")
 
 
 def chart_complexity_vs_misconfig_frequency(
@@ -935,7 +941,7 @@ def chart_complexity_vs_misconfig_frequency(
         va="bottom",
         fontsize=8,
     )
-    save_chart(fig, "complexity-vs-misconfig-frequency-regression.svg")
+    save_chart(fig, CHARTS_MAINT_DIR, "complexity-vs-misconfig-frequency-regression.svg")
     return r2, slope
 
 
@@ -990,7 +996,7 @@ def chart_error_diversity_entropy(arm_df: pd.DataFrame) -> float:
         fontsize=7.5,
         color="#444444",
     )
-    save_chart(fig, "error-diversity-entropy.svg")
+    save_chart(fig, CHARTS_SYNTH_DIR, "error-diversity-entropy.svg")
     return float(df["entropy"].mean())
 
 
@@ -1025,7 +1031,7 @@ def chart_maintainability_difficulty_index(baseline_df: pd.DataFrame) -> None:
     for patch, value in zip(ax.patches, local["mdi_pct"]):
         ax.annotate(f"{value:.1f}%", (patch.get_x() + patch.get_width() / 2, patch.get_height()),
                     ha="center", va="bottom", fontsize=8)
-    save_chart(fig, "maintainability-difficulty-index.svg")
+    save_chart(fig, CHARTS_MAINT_DIR, "maintainability-difficulty-index.svg")
 
 
 def chart_token_lifecycle_fragility(arm_df: pd.DataFrame) -> None:
@@ -1066,7 +1072,7 @@ def chart_token_lifecycle_fragility(arm_df: pd.DataFrame) -> None:
     ax.set_xlabel("Lifecycle Step")
     ax.set_ylabel("Fragility Score (0-10, relative within model)")
     ax.legend(title="Model")
-    save_chart(fig, "token-lifecycle-fragility.svg")
+    save_chart(fig, CHARTS_SEC_DIR, "token-lifecycle-fragility.svg")
 
 
 def chart_authentication_overhead_breakdown(perf_df: pd.DataFrame) -> float:
@@ -1132,7 +1138,7 @@ def chart_authentication_overhead_breakdown(perf_df: pd.DataFrame) -> float:
     ax.set_xlabel("Authentication Model")
     ax.set_ylabel("Average Latency (ms)")
     ax.legend(title="Component", bbox_to_anchor=(1.02, 1), loc="upper left")
-    save_chart(fig, "authentication-overhead-breakdown.svg")
+    save_chart(fig, CHARTS_PERF_DIR, "authentication-overhead-breakdown.svg")
 
     return float(np.mean(attack_shares)) if attack_shares else 0.0
 
@@ -1158,7 +1164,7 @@ def chart_variance_under_load(perf_df: pd.DataFrame) -> float:
             for patch, value in zip(ax.patches, stats["cv_pct"]):
                 ax.annotate(f"{value:.2f}%", (patch.get_x() + patch.get_width() / 2, patch.get_height()),
                             ha="center", va="bottom", fontsize=8)
-            save_chart(fig, "variance-under-load.svg")
+            save_chart(fig, CHARTS_PERF_DIR, "variance-under-load.svg")
             return float(stats["cv_pct"].mean())
 
     # Fallback path when repeated runs are unavailable: derive an instability index
@@ -1202,7 +1208,7 @@ def chart_variance_under_load(perf_df: pd.DataFrame) -> float:
     for patch, value in zip(ax2.patches, fallback_df["instability_index"]):
         ax2.annotate(f"{value:.2f}", (patch.get_x() + patch.get_width() / 2, patch.get_height()),
                      ha="center", va="bottom", fontsize=8)
-    save_chart(fig2, "variance-under-load.svg")
+    save_chart(fig2, CHARTS_PERF_DIR, "variance-under-load.svg")
 
     return float(fallback_df["instability_index"].mean())
 
@@ -1220,7 +1226,7 @@ def chart_baseline_context(ai_df: pd.DataFrame, perf_df: pd.DataFrame) -> None:
     ax.set_xlabel("Model")
     ax.set_ylabel("Failure Rate (%)")
     ax.set_ylim(0, 100)
-    save_chart(fig, "ai-failure-rates.svg")
+    save_chart(fig, CHARTS_SEC_DIR, "ai-failure-rates.svg")
 
     perf_plot = perf_df[["model", "baseline_avg_ms", "attack_avg_ms"]].copy().melt(
         id_vars=["model"], var_name="series", value_name="avg_ms"
@@ -1234,7 +1240,7 @@ def chart_baseline_context(ai_df: pd.DataFrame, perf_df: pd.DataFrame) -> None:
     ax2.set_xlabel("Model")
     ax2.set_ylabel("Average Latency (ms)")
     ax2.legend(title="")
-    save_chart(fig2, "performance-comparison.svg")
+    save_chart(fig2, CHARTS_PERF_DIR, "performance-comparison.svg")
 
 
 def write_chart_catalog() -> None:
@@ -1252,11 +1258,11 @@ def write_chart_catalog() -> None:
         "",
         "| Chart | Description |",
         "|---|---|",
-        "| `runtime-latency-comparison-ci.svg` | Measured baseline versus attack latency with 95% confidence intervals and delta annotation. **Primary evidence.** |",
-        "| `performance-comparison.svg` | Side-by-side latency context across JWT, OAuth2, and Sessions under normal and attack conditions. |",
-        "| `authentication-overhead-breakdown.svg` | Estimated latency decomposition by authentication stage (token issue, validation, refresh). |",
-        "| `variance-under-load.svg` | Tail-spread and jitter across repeated runs; identifies unstable performers. |",
-        "| `ai-vs-human-green-waste-multiplier.svg` | Compute-per-secure-outcome proxy: how much extra overhead AI-generated code incurs relative to the human baseline. |",
+        "| `performance/runtime-latency-comparison-ci.svg` | Measured baseline versus attack latency with 95% confidence intervals and delta annotation. **Primary evidence.** |",
+        "| `performance/performance-comparison.svg` | Side-by-side latency context across JWT, OAuth2, and Sessions under normal and attack conditions. |",
+        "| `performance/authentication-overhead-breakdown.svg` | Estimated latency decomposition by authentication stage (token issue, validation, refresh). |",
+        "| `performance/variance-under-load.svg` | Tail-spread and jitter across repeated runs; identifies unstable performers. |",
+        "| `performance/ai-vs-human-green-waste-multiplier.svg` | Compute-per-secure-outcome proxy: how much extra overhead AI-generated code incurs relative to the human baseline. |",
         "",
         "**Cluster A interpretation:** JWT consistently shows the lowest absolute latency and the tightest CI, confirming its advantage for high-throughput paths. OAuth2 carries the highest overhead but distributes it predictably across clearly defined stages. Session-based auth shows the widest variance under load, making it the least suitable for latency-sensitive deployments. AI-generated implementations add a small but consistent overhead multiplier even when functionally correct, suggesting the cost of AI code is not purely in security failures.",
         "",
@@ -1268,16 +1274,16 @@ def write_chart_catalog() -> None:
         "",
         "| Chart | Description |",
         "|---|---|",
-        "| `ai-vs-human-severity-gap-ci.svg` | Severity-weighted AI risk gap with 95% bootstrap confidence intervals. **Primary evidence.** |",
-        "| `security-critical-control-risk-density.svg` | Average weighted risk density across security-critical control points. **Primary evidence.** |",
-        "| `control-point-risk-heatmap.svg` | Per-control risk density map across misconfiguration and AI sources. |",
-        "| `normalized-failure-density.svg` | Failure events normalised by character footprint across baseline, misconfiguration, and AI slices. |",
-        "| `stride-severity-scoring.svg` | Average severity score by primary STRIDE category, disaggregated by model. |",
-        "| `misconfiguration-severity-heatmap.svg` | Severity intensity by misconfiguration type and authentication model. |",
-        "| `misconfiguration-frequency-comparison.svg` | Observed issue frequency across proper, misconfigured, and AI-generated sources. |",
-        "| `ai-failure-rates.svg` | Model-level AI failure rates as baseline context. |",
-        "| `ai-vs-human-dominance-heatmap.svg` | Dominance map across core safety metrics: shows where AI underperforms the human baseline. |",
-        "| `token-lifecycle-fragility.svg` | Fragility profile at each JWT and OAuth2 lifecycle step. |",
+        "| `security/ai-vs-human-severity-gap-ci.svg` | Severity-weighted AI risk gap with 95% bootstrap confidence intervals. **Primary evidence.** |",
+        "| `security/security-critical-control-risk-density.svg` | Average weighted risk density across security-critical control points. **Primary evidence.** |",
+        "| `security/control-point-risk-heatmap.svg` | Per-control risk density map across misconfiguration and AI sources. |",
+        "| `security/normalized-failure-density.svg` | Failure events normalised by character footprint across baseline, misconfiguration, and AI slices. |",
+        "| `security/stride-severity-scoring.svg` | Average severity score by primary STRIDE category, disaggregated by model. |",
+        "| `security/misconfiguration-severity-heatmap.svg` | Severity intensity by misconfiguration type and authentication model. |",
+        "| `security/misconfiguration-frequency-comparison.svg` | Observed issue frequency across proper, misconfigured, and AI-generated sources. |",
+        "| `security/ai-failure-rates.svg` | Model-level AI failure rates as baseline context. |",
+        "| `security/ai-vs-human-dominance-heatmap.svg` | Dominance map across core safety metrics: shows where AI underperforms the human baseline. |",
+        "| `security/token-lifecycle-fragility.svg` | Fragility profile at each JWT and OAuth2 lifecycle step. |",
         "",
         "**Cluster B interpretation:** AI-generated code introduces a statistically significant severity gap relative to the human baseline across all three models. OAuth2 exhibits the widest misconfiguration propagation, with a single incorrect redirect URI triggering Spoofing, Information Disclosure, and Elevation simultaneously. JWT failures cluster in Elevation of Privilege, reflecting missing claim validation rather than broad lateral propagation. Session failures are narrow in STRIDE scope but high in individual impact when triggered. The token lifecycle fragility chart confirms that the most dangerous moments are token issuance and validation, not revocation.",
         "",
@@ -1289,12 +1295,12 @@ def write_chart_catalog() -> None:
         "",
         "| Chart | Description |",
         "|---|---|",
-        "| `ai-sample-syntax-issues-by-model-stage.svg` | Syntax, type, and complexity issue counts by model and generation stage. **Primary evidence.** |",
-        "| `code-footprint-deltas.svg` | Percent footprint deltas across characters, lines, functions, and cyclomatic complexity relative to baseline. **Primary evidence.** |",
-        "| `complexity-to-misconfig-regression.svg` | Regression line from cyclomatic complexity to risk index; quantifies the complexity-risk slope. |",
-        "| `complexity-vs-misconfig-frequency-regression.svg` | Regression of complexity against observed issue frequency across all variants. |",
-        "| `maintainability-difficulty-index.svg` | Normalised maintainability difficulty index (0-171 scale) by authentication model. |",
-        "| `failure-points-vs-chars.svg` | Distinct failure-point concentration against character footprint; identifies high-density failure zones. |",
+        "| `maintainability/ai-sample-syntax-issues-by-model-stage.svg` | Syntax, type, and complexity issue counts by model and generation stage. **Primary evidence.** |",
+        "| `maintainability/code-footprint-deltas.svg` | Percent footprint deltas across characters, lines, functions, and cyclomatic complexity relative to baseline. **Primary evidence.** |",
+        "| `maintainability/complexity-to-misconfig-regression.svg` | Regression line from cyclomatic complexity to risk index; quantifies the complexity-risk slope. |",
+        "| `maintainability/complexity-vs-misconfig-frequency-regression.svg` | Regression of complexity against observed issue frequency across all variants. |",
+        "| `maintainability/maintainability-difficulty-index.svg` | Normalised maintainability difficulty index (0-171 scale) by authentication model. |",
+        "| `maintainability/failure-points-vs-chars.svg` | Distinct failure-point concentration against character footprint; identifies high-density failure zones. |",
         "",
         "**Cluster C interpretation:** OAuth2 carries the highest code footprint and the steepest complexity-to-misconfiguration slope, confirming that its expressiveness comes at a direct developer-error cost. JWT has a compact footprint but a non-trivial difficulty index, reflecting how deceptively simple its API is to misuse. Session-based auth has the simplest footprint but generates the highest failure density per character when misconfigured, because its few critical control points are unforgiving. AI-generated code consistently inflates footprint metrics without a proportional gain in security outcome.",
         "",
@@ -1306,14 +1312,14 @@ def write_chart_catalog() -> None:
         "",
         "| Chart | Description |",
         "|---|---|",
-        "| `correctness-vs-security-provider-scatter.svg` | Correctness-security trade-off scatter across Local, OpenAI, and Claude providers. **Primary evidence.** |",
-        "| `correctness-security-tradeoff.svg` | Trade-off view with request latency encoded as bubble size; identifies the Pareto-efficient model. |",
-        "| `cross-provider-overlap-venn.svg` | Shared versus unique failure categories across AI providers; quantifies provider-specific blind spots. |",
-        "| `provider-bias-analysis.svg` | Failure fingerprint heatmap by provider arm; reveals systematic provider tendencies. |",
-        "| `ai-determinism-variance.svg` | Failure-rate variability across provider arms and prompt modes; measures AI output stability. |",
-        "| `error-diversity-entropy.svg` | Shannon entropy of failure category diversity by arm; higher entropy means less predictable failures. |",
-        "| `misconfiguration-clustering-kmeans.svg` | K-means clusters of misconfiguration patterns; reveals natural groupings in the failure space. |",
-        "| `calibration-and-agreement-controls.svg` | False-confidence calibration and independent checker agreement; methodology control chart. |",
+        "| `synthesis/correctness-vs-security-provider-scatter.svg` | Correctness-security trade-off scatter across Local, OpenAI, and Claude providers. **Primary evidence.** |",
+        "| `synthesis/correctness-security-tradeoff.svg` | Trade-off view with request latency encoded as bubble size; identifies the Pareto-efficient model. |",
+        "| `synthesis/cross-provider-overlap-venn.svg` | Shared versus unique failure categories across AI providers; quantifies provider-specific blind spots. |",
+        "| `synthesis/provider-bias-analysis.svg` | Failure fingerprint heatmap by provider arm; reveals systematic provider tendencies. |",
+        "| `synthesis/ai-determinism-variance.svg` | Failure-rate variability across provider arms and prompt modes; measures AI output stability. |",
+        "| `synthesis/error-diversity-entropy.svg` | Shannon entropy of failure category diversity by arm; higher entropy means less predictable failures. |",
+        "| `synthesis/misconfiguration-clustering-kmeans.svg` | K-means clusters of misconfiguration patterns; reveals natural groupings in the failure space. |",
+        "| `synthesis/calibration-and-agreement-controls.svg` | False-confidence calibration and independent checker agreement; methodology control chart. |",
         "",
         "**Cluster D interpretation:** No single AI provider dominates cleanly across both correctness and security dimensions. OpenAI shows a slight correctness advantage under the neutral prompt but loses ground on security-critical control points when compared to the security-guided prompt variant. Claude shows more consistent security behaviour across prompt modes but at the cost of higher variance in correctness. The overlap Venn confirms that roughly 60% of failure categories are shared across providers, meaning the failure modes are fundamentally architectural rather than model-specific.",
         "",

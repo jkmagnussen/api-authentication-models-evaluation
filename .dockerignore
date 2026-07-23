@@ -1,0 +1,10 @@
+node_modules
+coverage
+analysis-python/.venv
+.git
+.github
+docs/generated
+docs/performance-results
+ai-generated/results
+ai-generated/arms
+npm-debug.log

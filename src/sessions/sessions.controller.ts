@@ -4,6 +4,9 @@ import { isValidPassword } from "../auth/password";
 import { createSession } from "./session.service";
 import { createSessionWithId, deleteSession } from "./session.service";
 import { getVariantOverrides } from "../variant-overrides";
+import APP_CONFIG from "../config";
+import { validateMfaForUser } from "../auth/account-security.service";
+import { writeAuditEvent } from "../security/audit.service";
 
 export async function loginWithSession(req: Request, res: Response, next: NextFunction) {
   try {
@@ -11,13 +14,25 @@ export async function loginWithSession(req: Request, res: Response, next: NextFu
     const regenerateOnLogin = variantOverrides.sessions?.regenerateOnLogin ?? true;
     const sessionCookieOverride = variantOverrides.sessions?.cookie;
 
-    const { email, password } = req.body;
+    const { email, password, mfaCode } = req.body;
 
     const user = await findUserByEmail(email);
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    if (!user) {
+      await writeAuditEvent({ eventType: "session.login", outcome: "failure", ipAddress: req.ip, userAgent: req.get("user-agent"), metadata: { email } });
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
     const match = await isValidPassword(password, user.password);
-    if (!match) return res.status(401).json({ message: "Invalid credentials" });
+    if (!match) {
+      await writeAuditEvent({ userId: user.id, eventType: "session.login", outcome: "failure", ipAddress: req.ip, userAgent: req.get("user-agent") });
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const mfaValid = await validateMfaForUser(user.id, mfaCode);
+    if (!mfaValid) {
+      await writeAuditEvent({ userId: user.id, eventType: "session.login", outcome: "failure", ipAddress: req.ip, userAgent: req.get("user-agent"), metadata: { reason: "mfa" } });
+      return res.status(401).json({ message: "MFA required or invalid code" });
+    }
 
     const existingSessionId = req.cookies?.sessionId;
     if (existingSessionId && regenerateOnLogin) {
@@ -29,10 +44,14 @@ export async function loginWithSession(req: Request, res: Response, next: NextFu
       : await createSession(user.id);
 
     res.cookie("sessionId", session.id, {
-      httpOnly: sessionCookieOverride?.httpOnly ?? true,
-      secure: sessionCookieOverride?.secure ?? false,
-      sameSite: sessionCookieOverride?.sameSite ?? "lax",
+      httpOnly: sessionCookieOverride?.httpOnly ?? APP_CONFIG.cookie.httpOnly,
+      secure: sessionCookieOverride?.secure ?? APP_CONFIG.cookie.secure,
+      sameSite: sessionCookieOverride?.sameSite ?? APP_CONFIG.cookie.sameSite,
+      domain: APP_CONFIG.cookie.domain,
+      maxAge: APP_CONFIG.cookie.maxAgeMs,
     });
+
+    await writeAuditEvent({ userId: user.id, eventType: "session.login", outcome: "success", ipAddress: req.ip, userAgent: req.get("user-agent") });
 
     return res.status(200).json({
       message: "Session created",
@@ -52,7 +71,14 @@ export async function logoutSession(req: Request, res: Response) {
     await deleteSession(sessionId);     // delete from DB
   }
 
-  res.clearCookie("sessionId");       // remove cookie
+  res.clearCookie("sessionId", {
+    httpOnly: APP_CONFIG.cookie.httpOnly,
+    secure: APP_CONFIG.cookie.secure,
+    sameSite: APP_CONFIG.cookie.sameSite,
+    domain: APP_CONFIG.cookie.domain,
+  });       // remove cookie
+
+  await writeAuditEvent({ eventType: "session.logout", outcome: "success", ipAddress: req.ip, userAgent: req.get("user-agent") });
 
   return res.json({ message: "Logged out" });
 }

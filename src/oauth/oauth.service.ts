@@ -1,11 +1,16 @@
 import { prisma } from "../db";
 import crypto from "crypto";
+import APP_CONFIG from "../config";
 
 /**
  * Generate a secure random token
  */
 function generateToken() {
-  return crypto.randomBytes(48).toString("hex");
+  return crypto.randomBytes(48).toString("base64url");
+}
+
+function hashToken(token: string) {
+  return crypto.createHash("sha256").update(token).digest("hex");
 }
 
 /**
@@ -43,15 +48,18 @@ export async function exchangeCodeForToken(code: string) {
 
   if (!authCode) return null;
 
+  const accessToken = generateToken();
+  const refreshToken = generateToken();
+
   // Create access + refresh tokens with scope
   const token = await prisma.oAuthAccessToken.create({
     data: {
-      accessToken: generateToken(),
-      refreshToken: generateToken(),
+      accessToken: hashToken(accessToken),
+      refreshToken: hashToken(refreshToken),
       userId: authCode.userId,
       clientId: authCode.clientId,
       scope: authCode.scope,
-      expiresAt: expiresIn(60),
+      expiresAt: new Date(Date.now() + APP_CONFIG.oauth.accessTokenTtlSeconds * 1000),
     },
   });
 
@@ -59,8 +67,8 @@ export async function exchangeCodeForToken(code: string) {
   await prisma.oAuthAuthorizationCode.delete({ where: { code } });
 
   return {
-    accessToken: token.accessToken,
-    refreshToken: token.refreshToken,
+    accessToken,
+    refreshToken,
     scope: token.scope,
   };
 }
@@ -70,11 +78,15 @@ export async function exchangeCodeForToken(code: string) {
  */
 export async function validateAccessToken(accessToken: string) {
   const stored = await prisma.oAuthAccessToken.findUnique({
-    where: { accessToken },
+    where: { accessToken: hashToken(accessToken) },
   });
 
   if (!stored) return null;
   if (stored.expiresAt < new Date()) return null;
 
   return stored; // includes scope
+}
+
+export function hashOpaqueToken(token: string) {
+  return hashToken(token);
 }

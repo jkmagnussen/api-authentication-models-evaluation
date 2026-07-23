@@ -1,6 +1,7 @@
 import request from "supertest";
 import app from "../../../src/app";
 import { prisma } from "../../../src/db";
+import { hashOpaqueToken } from "../../../src/oauth/oauth.service";
 import { resetDatabase } from "../../setup";
 
 const validUUID = "123e4567-e89b-12d3-a456-426614174000";
@@ -47,7 +48,7 @@ describe("OAuth scope escalation high-impact", () => {
     expect(tokenRes.status).toBe(200);
 
     const issued = await prisma.oAuthAccessToken.findUnique({
-      where: { accessToken: tokenRes.body.access_token },
+      where: { accessToken: hashOpaqueToken(tokenRes.body.access_token) },
     });
 
     expect(issued?.scope).toBe("read write");
