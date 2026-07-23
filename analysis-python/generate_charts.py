@@ -1077,13 +1077,14 @@ def chart_ai_sample_syntax_issues() -> None:
                           str(int(cln)),
                           ha="center", va="center", fontsize=9, color="white", fontweight="bold")
 
-    # Percentage label — offset to the right of each bar with a white backing so it's easy to read.
+    # Percentage label — offset to the right of each bar with a solid white backing.
     for i, (aff, model) in enumerate(zip(affected_files.values, MODELS)):
         pct = int(aff) / files_per_model * 100
-        ax_right.text(i + 0.32, files_per_model * 0.5,
+        ax_right.text(i + 0.34, files_per_model * 0.5,
                       f"{pct:.0f}%\naffected",
                       ha="left", va="center", fontsize=8, color="#e15759", fontweight="bold",
-                      bbox=dict(boxstyle="round,pad=0.25", facecolor="white", edgecolor="none", alpha=0.85))
+                      bbox=dict(boxstyle="round,pad=0.35", facecolor="white", edgecolor="#cccccc", alpha=1.0),
+                      zorder=5)
 
     ax_right.set_xticks(x)
     ax_right.set_xticklabels(MODELS, fontsize=11)
@@ -1091,9 +1092,9 @@ def chart_ai_sample_syntax_issues() -> None:
     ax_right.set_title("Files Affected vs Clean", fontsize=11, fontweight="bold")
     ax_right.set_xlabel("Authentication Model", fontsize=9)
     ax_right.set_ylabel("File Count", fontsize=9)
-    ax_right.legend(fontsize=9, loc="upper center", ncol=2,
-                    bbox_to_anchor=(0.5, 1.16),
-                    framealpha=0.95, edgecolor="lightgrey")
+    ax_right.legend(fontsize=9, loc="upper left", ncol=2,
+                    bbox_to_anchor=(0.0, 1.16),
+                    framealpha=1.0, edgecolor="lightgrey")
 
     fig.suptitle("AI-Generated Sample Syntax and Compile Issues", fontsize=12, fontweight="bold")
     plt.tight_layout(rect=[0, 0, 1, 0.95])
