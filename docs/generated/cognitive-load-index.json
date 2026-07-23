@@ -1,0 +1,126 @@
+{
+  "generatedAt": "2026-07-23T20:50:15.214Z",
+  "formula": {
+    "default": "CLI = 1.2P + 1.1F + 1.3L + 1.0B + 1.2V + 1.4M",
+    "terms": {
+      "P": "configuration points",
+      "F": "security flags",
+      "L": "lifecycle steps",
+      "B": "trust-boundary crossings",
+      "V": "validation rules",
+      "M": "must-remember behaviors"
+    }
+  },
+  "weightProfiles": {
+    "default": {
+      "configPoints": 1.2,
+      "securityFlags": 1.1,
+      "lifecycleSteps": 1.3,
+      "trustBoundaryCrossings": 1,
+      "validationRules": 1.2,
+      "mustRememberBehaviors": 1.4
+    },
+    "lifecycle_heavy": {
+      "configPoints": 1,
+      "securityFlags": 1,
+      "lifecycleSteps": 1.8,
+      "trustBoundaryCrossings": 0.9,
+      "validationRules": 1.1,
+      "mustRememberBehaviors": 1.5
+    },
+    "boundary_heavy": {
+      "configPoints": 1,
+      "securityFlags": 1,
+      "lifecycleSteps": 1.1,
+      "trustBoundaryCrossings": 1.8,
+      "validationRules": 1.1,
+      "mustRememberBehaviors": 1.5
+    }
+  },
+  "rows": [
+    {
+      "model": "oauth",
+      "label": "OAuth2",
+      "configPoints": 8,
+      "securityFlags": 6,
+      "lifecycleSteps": 7,
+      "trustBoundaryCrossings": 5,
+      "validationRules": 7,
+      "mustRememberBehaviors": 6,
+      "propagationReading": "OAuth2 mistakes propagate non-linearly because redirect, state, code, token, and scope checks compound across multiple trust boundaries.",
+      "rawCli": 47.099999999999994,
+      "normalizedCli": 100
+    },
+    {
+      "model": "jwt",
+      "label": "JWT",
+      "configPoints": 7,
+      "securityFlags": 5,
+      "lifecycleSteps": 5,
+      "trustBoundaryCrossings": 3,
+      "validationRules": 6,
+      "mustRememberBehaviors": 5,
+      "propagationReading": "JWT mistakes tend to propagate linearly through token issuance and validation rules, especially where signature and claim checks are weakened.",
+      "rawCli": 37.599999999999994,
+      "normalizedCli": 79.83014861995753
+    },
+    {
+      "model": "sessions",
+      "label": "Session",
+      "configPoints": 8,
+      "securityFlags": 5,
+      "lifecycleSteps": 5,
+      "trustBoundaryCrossings": 3,
+      "validationRules": 5,
+      "mustRememberBehaviors": 5,
+      "propagationReading": "Session mistakes often amplify quickly because one cookie or invalidation weakness can spill into replay, fixation, and impersonation outcomes.",
+      "rawCli": 37.6,
+      "normalizedCli": 79.83014861995755
+    }
+  ],
+  "sensitivity": [
+    {
+      "profile": "default",
+      "rawScores": {
+        "oauth": 47.099999999999994,
+        "jwt": 37.599999999999994,
+        "sessions": 37.6
+      },
+      "normalizedScores": {
+        "oauth": 100,
+        "jwt": 79.83014861995753,
+        "sessions": 79.83014861995755
+      },
+      "ranking": "OAuth2 > Session > JWT"
+    },
+    {
+      "profile": "lifecycle_heavy",
+      "rawScores": {
+        "oauth": 47.800000000000004,
+        "jwt": 37.8,
+        "sessions": 37.7
+      },
+      "normalizedScores": {
+        "oauth": 100,
+        "jwt": 79.07949790794979,
+        "sessions": 78.8702928870293
+      },
+      "ranking": "OAuth2 > JWT > Session"
+    },
+    {
+      "profile": "boundary_heavy",
+      "rawScores": {
+        "oauth": 47.400000000000006,
+        "jwt": 37,
+        "sessions": 36.9
+      },
+      "normalizedScores": {
+        "oauth": 100,
+        "jwt": 78.0590717299578,
+        "sessions": 77.84810126582278
+      },
+      "ranking": "OAuth2 > JWT > Session"
+    }
+  ],
+  "claimClass": "exploratory-author-interpreted"
+}

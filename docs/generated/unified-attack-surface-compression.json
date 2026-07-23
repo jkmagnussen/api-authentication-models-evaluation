@@ -1,0 +1,91 @@
+{
+  "generatedAt": "2026-07-23T20:50:15.218Z",
+  "formula": {
+    "default": "UASC = 10 * (0.35S + 0.30E + 0.20T + 0.15B)",
+    "terms": {
+      "S": "normalized mean severity",
+      "E": "normalized mean exploitability",
+      "T": "normalized STRIDE breadth",
+      "B": "normalized trust-boundary breadth"
+    }
+  },
+  "weightProfiles": {
+    "default": {
+      "severity": 0.35,
+      "exploitability": 0.3,
+      "strideBreadth": 0.2,
+      "boundaryBreadth": 0.15
+    },
+    "severity_heavy": {
+      "severity": 0.5,
+      "exploitability": 0.25,
+      "strideBreadth": 0.15,
+      "boundaryBreadth": 0.1
+    },
+    "breadth_heavy": {
+      "severity": 0.2,
+      "exploitability": 0.2,
+      "strideBreadth": 0.3,
+      "boundaryBreadth": 0.3
+    }
+  },
+  "rows": [
+    {
+      "model": "oauth",
+      "label": "OAuth2",
+      "meanSeverity": 4,
+      "meanExploitability": 8.333333333333334,
+      "uniqueStrideClasses": 3,
+      "trustBoundaryCrossings": 5,
+      "score": 8.8
+    },
+    {
+      "model": "jwt",
+      "label": "JWT",
+      "meanSeverity": 4.333333333333333,
+      "meanExploitability": 8.333333333333334,
+      "uniqueStrideClasses": 3,
+      "trustBoundaryCrossings": 3,
+      "score": 8.433333333333332
+    },
+    {
+      "model": "sessions",
+      "label": "Session",
+      "meanSeverity": 4.333333333333333,
+      "meanExploitability": 7.666666666666667,
+      "uniqueStrideClasses": 2,
+      "trustBoundaryCrossings": 3,
+      "score": 7.566666666666666
+    }
+  ],
+  "sensitivity": [
+    {
+      "profile": "default",
+      "scores": {
+        "oauth": 8.8,
+        "jwt": 8.433333333333332,
+        "sessions": 7.566666666666666
+      },
+      "ranking": "OAuth2 > JWT > Session"
+    },
+    {
+      "profile": "severity_heavy",
+      "scores": {
+        "oauth": 8.583333333333334,
+        "jwt": 8.516666666666666,
+        "sessions": 7.85
+      },
+      "ranking": "OAuth2 > JWT > Session"
+    },
+    {
+      "profile": "breadth_heavy",
+      "scores": {
+        "oauth": 9.266666666666667,
+        "jwt": 8.200000000000001,
+        "sessions": 7.0666666666666655
+      },
+      "ranking": "OAuth2 > JWT > Session"
+    }
+  ],
+  "claimClass": "exploratory-author-interpreted"
+}

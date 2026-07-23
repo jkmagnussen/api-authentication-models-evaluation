@@ -1,9 +1,25 @@
 # Failure Propagation Analysis
 
-Generated: 2026-07-23T20:43:34.233Z
+Generated: 2026-07-23T20:50:15.211Z
 Regenerate: npm run analysis:structural
 
 This report models how each controlled authentication misconfiguration propagates beyond its initial defect point into downstream components, flows, and STRIDE consequences.
+
+## Formula
+
+Default CFPA score uses normalized component breadth, flow breadth, STRIDE breadth, secondary-failure breadth, and trust-boundary crossings:
+
+$$
+CFPA = 10 \times (0.25C + 0.25F + 0.20S + 0.15X + 0.15B)
+$$
+
+Where $C$ is affected-component breadth, $F$ affected-flow breadth, $S$ STRIDE breadth, $X$ secondary-failure breadth, and $B$ trust-boundary breadth, each normalized to the observed repository design space.
+
+## Weight Rationale
+
+- Component and flow breadth receive the largest weight because they best capture cascade scope inside the controlled backend.
+- STRIDE breadth captures threat diversity, but not all STRIDE categories imply the same structural spread, so its weight is lower than direct propagation breadth.
+- Secondary failures and boundary crossings are retained explicitly because they reflect amplification across trust-transfer points.
 
 ## Cross-Model Comparison
 
@@ -12,6 +28,14 @@ This report models how each controlled authentication misconfiguration propagate
 | OAuth2 | 9.39 | 10.00 | 4.00 | 3.00 | 2.33 | non-linear |
 | JWT | 8.57 | 9.63 | 4.00 | 2.67 | 2.33 | linear |
 | Session | 8.62 | 8.96 | 4.00 | 3.00 | 2.00 | fan-out |
+
+## Sensitivity Analysis
+
+| Weight Profile | OAuth2 | JWT | Session | Rank Order |
+|---|---:|---:|---:|---|
+| default | 9.39 | 8.57 | 8.62 | OAuth2 > Session > JWT |
+| equal | 9.33 | 8.39 | 8.39 | OAuth2 > JWT > Session |
+| boundary_heavy | 9.50 | 8.17 | 8.17 | OAuth2 > JWT > Session |
 
 ## Propagation Graphs
 

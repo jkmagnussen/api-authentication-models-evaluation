@@ -1,9 +1,21 @@
 # Cognitive Security Analysis
 
-Generated: 2026-07-23T20:43:34.238Z
+Generated: 2026-07-23T20:50:15.217Z
 Regenerate: npm run analysis:structural
 
 This report frames authentication security as a cognitive engineering problem by cross-referencing developer load, boundary stress, lifecycle burden, and cognitive error propagation.
+
+## Formula Notes
+
+- CMS combines severity, propagation, detectability, and repair effort as an exploratory proxy for cognitively fragile mistakes.
+- CBS uses trust-boundary crossings, must-remember behaviors, and security flags to approximate boundary reasoning stress.
+- CLB uses lifecycle steps, validation rules, and must-remember behaviors to estimate sequencing burden.
+- CSPS blends CLI, CMS, CBS, CLB, and CEP with default weights $(0.18, 0.24, 0.18, 0.18, 0.22)$. 
+
+## Weight Rationale
+
+- CMS and CEP receive slightly higher weight in CSPS because the central research question is not just cognitive effort, but how cognitive slips create security-relevant cascades.
+- CLI, CBS, and CLB are retained separately so the posture score remains interpretable rather than collapsing all burden into one undifferentiated measure.
 
 ## 1) Cognitive Load Index (CLI)
 
@@ -30,6 +42,14 @@ See docs/generated/COGNITIVE_LOAD_INDEX.md for the structural CLI table. Higher 
 | OAuth2 | 5 | 6 | 25.00 | Highest boundary stress because client, redirect, auth-server, token, and resource-server assumptions must all line up. |
 | JWT | 3 | 5 | 18.50 | Boundary count is lower, but validation discipline keeps stress concentrated rather than diffuse. |
 | Session | 3 | 5 | 18.50 | Boundary count is moderate, yet browser-side invisibility makes the effective stress easy to underestimate. |
+
+## Sensitivity Analysis
+
+| Weight Profile | OAuth2 | JWT | Session | Rank Order |
+|---|---:|---:|---:|---|
+| default | 22.36 | 17.95 | 17.77 | OAuth2 > JWT > Session |
+| cognition_heavy | 26.42 | 21.01 | 20.73 | OAuth2 > JWT > Session |
+| propagation_heavy | 18.64 | 15.20 | 15.08 | OAuth2 > JWT > Session |
 
 ## 4) Cognitive Lifecycle Burden (CLB)
 

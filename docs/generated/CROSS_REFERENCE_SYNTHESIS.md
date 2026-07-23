@@ -1,9 +1,15 @@
 # Cross-Reference Synthesis
 
-Generated: 2026-07-23T20:43:34.238Z
+Generated: 2026-07-23T20:50:15.215Z
 Regenerate: npm run analysis:structural
 
 This report cross-references STRIDE, trust boundaries, lifecycle complexity, performance, empirical attack evidence, and code footprint to expose model-specific structural trade-offs.
+
+## Formula Notes
+
+- Weighted Exploit Burden (WEB) uses $0.45 \times severity + 0.25 \times exploitability + 0.30 \times propagation$.
+- Lifecycle Error Likelihood Proxy (LELP) uses $(1.4 \times lifecycleSteps + 1.3 \times mustRemember + 1.2 \times boundaryCrossings) \times (1 + WEB/20)$. 
+- These are exploratory structural proxies derived from repository evidence, not direct estimates of field prevalence.
 
 ## 1) STRIDE vs Misconfiguration Variants
 
@@ -69,3 +75,21 @@ Interpretation: OAuth2 shows the widest propagation breadth, JWT stays comparati
 | OAuth2 | 9.39 | 0 | 117.51 | No repeated-run attack outliers flagged; structural risk here is driven more by exploitability than jitter. |
 | JWT | 8.57 | 0 | 134.89 | No repeated-run attack outliers flagged; structural risk here is driven more by exploitability than jitter. |
 | Session | 8.62 | 2 | 116.93 | Propagation-heavy weaknesses coincide with measurable repeated-run instability and should be interpreted conservatively. |
+
+## Sensitivity Analysis
+
+### Weighted Exploit Burden Sensitivity
+
+| Weight Profile | OAuth2 | JWT | Session | Rank Order |
+|---|---:|---:|---:|---|
+| default | 6.70 | 6.60 | 6.45 | OAuth2 > JWT > Session |
+| severity_heavy | 5.94 | 5.98 | 5.86 | JWT > OAuth2 > Session |
+| propagation_heavy | 7.56 | 7.25 | 7.15 | OAuth2 > JWT > Session |
+
+### Lifecycle Error Likelihood Sensitivity
+
+| Weight Profile | OAuth2 | JWT | Session | Rank Order |
+|---|---:|---:|---:|---|
+| default | 31.51 | 22.75 | 22.62 | OAuth2 > JWT > Session |
+| lifecycle_heavy | 34.04 | 24.61 | 24.47 | OAuth2 > JWT > Session |
+| boundary_heavy | 32.57 | 22.88 | 22.75 | OAuth2 > JWT > Session |

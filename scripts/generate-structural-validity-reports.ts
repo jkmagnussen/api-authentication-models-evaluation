@@ -80,6 +80,50 @@ type CognitiveVariantMeta = {
   boundaryStress: string;
 };
 
+type CfpaWeights = {
+  component: number;
+  flow: number;
+  stride: number;
+  secondary: number;
+  boundary: number;
+};
+
+type CliWeights = {
+  configPoints: number;
+  securityFlags: number;
+  lifecycleSteps: number;
+  trustBoundaryCrossings: number;
+  validationRules: number;
+  mustRememberBehaviors: number;
+};
+
+type UascWeights = {
+  severity: number;
+  exploitability: number;
+  strideBreadth: number;
+  boundaryBreadth: number;
+};
+
+type WeightedExploitBurdenWeights = {
+  severity: number;
+  exploitability: number;
+  propagation: number;
+};
+
+type LifecycleLikelihoodWeights = {
+  lifecycleSteps: number;
+  mustRememberBehaviors: number;
+  trustBoundaryCrossings: number;
+};
+
+type CspsWeights = {
+  cli: number;
+  cms: number;
+  cbs: number;
+  clb: number;
+  cep: number;
+};
+
 const MODEL_ORDER: Model[] = ["oauth", "jwt", "sessions"];
 
 const MODEL_PROFILES: Record<Model, ModelProfile> = {
@@ -322,6 +366,42 @@ const PROPAGATION: Record<VariantName, PropagationMeta> = {
   },
 };
 
+const CFPA_WEIGHT_PROFILES: Record<string, CfpaWeights> = {
+  default: { component: 0.25, flow: 0.25, stride: 0.2, secondary: 0.15, boundary: 0.15 },
+  equal: { component: 0.2, flow: 0.2, stride: 0.2, secondary: 0.2, boundary: 0.2 },
+  boundary_heavy: { component: 0.15, flow: 0.15, stride: 0.15, secondary: 0.15, boundary: 0.4 },
+};
+
+const CLI_WEIGHT_PROFILES: Record<string, CliWeights> = {
+  default: { configPoints: 1.2, securityFlags: 1.1, lifecycleSteps: 1.3, trustBoundaryCrossings: 1.0, validationRules: 1.2, mustRememberBehaviors: 1.4 },
+  lifecycle_heavy: { configPoints: 1.0, securityFlags: 1.0, lifecycleSteps: 1.8, trustBoundaryCrossings: 0.9, validationRules: 1.1, mustRememberBehaviors: 1.5 },
+  boundary_heavy: { configPoints: 1.0, securityFlags: 1.0, lifecycleSteps: 1.1, trustBoundaryCrossings: 1.8, validationRules: 1.1, mustRememberBehaviors: 1.5 },
+};
+
+const UASC_WEIGHT_PROFILES: Record<string, UascWeights> = {
+  default: { severity: 0.35, exploitability: 0.3, strideBreadth: 0.2, boundaryBreadth: 0.15 },
+  severity_heavy: { severity: 0.5, exploitability: 0.25, strideBreadth: 0.15, boundaryBreadth: 0.1 },
+  breadth_heavy: { severity: 0.2, exploitability: 0.2, strideBreadth: 0.3, boundaryBreadth: 0.3 },
+};
+
+const WEB_WEIGHT_PROFILES: Record<string, WeightedExploitBurdenWeights> = {
+  default: { severity: 0.45, exploitability: 0.25, propagation: 0.3 },
+  severity_heavy: { severity: 0.6, exploitability: 0.2, propagation: 0.2 },
+  propagation_heavy: { severity: 0.3, exploitability: 0.2, propagation: 0.5 },
+};
+
+const LIFECYCLE_LIKELIHOOD_WEIGHT_PROFILES: Record<string, LifecycleLikelihoodWeights> = {
+  default: { lifecycleSteps: 1.4, mustRememberBehaviors: 1.3, trustBoundaryCrossings: 1.2 },
+  lifecycle_heavy: { lifecycleSteps: 1.9, mustRememberBehaviors: 1.2, trustBoundaryCrossings: 1.0 },
+  boundary_heavy: { lifecycleSteps: 1.1, mustRememberBehaviors: 1.2, trustBoundaryCrossings: 1.9 },
+};
+
+const CSPS_WEIGHT_PROFILES: Record<string, CspsWeights> = {
+  default: { cli: 0.18, cms: 0.24, cbs: 0.18, clb: 0.18, cep: 0.22 },
+  cognition_heavy: { cli: 0.24, cms: 0.18, cbs: 0.2, clb: 0.24, cep: 0.14 },
+  propagation_heavy: { cli: 0.12, cms: 0.22, cbs: 0.14, clb: 0.14, cep: 0.38 },
+};
+
 function readVariantSummaries(): VariantSummary[] {
   const filePath = path.join(process.cwd(), GENERATED_FILES.variantFocusedJson);
   return JSON.parse(fs.readFileSync(filePath, "utf8")) as VariantSummary[];
@@ -382,6 +462,10 @@ function readCodeFootprint(): CodeFootprintJson {
   return JSON.parse(fs.readFileSync(filePath, "utf8")) as CodeFootprintJson;
 }
 
+function writeJsonArtifact(relativePath: string, payload: unknown): void {
+  fs.writeFileSync(path.join(process.cwd(), relativePath), `${JSON.stringify(payload, null, 2)}\n`);
+}
+
 function average(values: number[]): number {
   if (values.length === 0) return 0;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
@@ -409,7 +493,7 @@ function titleCase(value: string): string {
     .join(" ");
 }
 
-function propagationScore(meta: PropagationMeta): number {
+function propagationScore(meta: PropagationMeta, weights: CfpaWeights = CFPA_WEIGHT_PROFILES.default): number {
   const componentSpread = meta.affectedComponents.length / 4;
   const flowSpread = meta.affectedFlows.length / 3;
   const strideSpread = meta.affectedStrides.length / 3;
@@ -417,26 +501,26 @@ function propagationScore(meta: PropagationMeta): number {
   const boundarySpread = meta.trustBoundaryCrossings / 4;
 
   return 10 * (
-    componentSpread * 0.25 +
-    flowSpread * 0.25 +
-    strideSpread * 0.2 +
-    secondarySpread * 0.15 +
-    boundarySpread * 0.15
+    componentSpread * weights.component +
+    flowSpread * weights.flow +
+    strideSpread * weights.stride +
+    secondarySpread * weights.secondary +
+    boundarySpread * weights.boundary
   );
 }
 
-function cognitiveLoadRaw(profile: ModelProfile): number {
+function cognitiveLoadRaw(profile: ModelProfile, weights: CliWeights = CLI_WEIGHT_PROFILES.default): number {
   return (
-    profile.configPoints * 1.2 +
-    profile.securityFlags * 1.1 +
-    profile.lifecycleSteps * 1.3 +
-    profile.trustBoundaryCrossings * 1.0 +
-    profile.validationRules * 1.2 +
-    profile.mustRememberBehaviors * 1.4
+    profile.configPoints * weights.configPoints +
+    profile.securityFlags * weights.securityFlags +
+    profile.lifecycleSteps * weights.lifecycleSteps +
+    profile.trustBoundaryCrossings * weights.trustBoundaryCrossings +
+    profile.validationRules * weights.validationRules +
+    profile.mustRememberBehaviors * weights.mustRememberBehaviors
   );
 }
 
-function attackSurfaceCompression(model: Model, variants: VariantSummary[]): number {
+function attackSurfaceCompression(model: Model, variants: VariantSummary[], weights: UascWeights = UASC_WEIGHT_PROFILES.default): number {
   const relevant = variants.filter((variant) => variant.category === model);
   const avgSeverity = average(relevant.map((variant) => variant.severityScore)) / 5;
   const avgExploitability = average(relevant.map((variant) => variant.exploitabilityScore10)) / 10;
@@ -444,27 +528,39 @@ function attackSurfaceCompression(model: Model, variants: VariantSummary[]): num
   const boundarySpread = MODEL_PROFILES[model].trustBoundaryCrossings / 5;
 
   return 10 * (
-    avgSeverity * 0.35 +
-    avgExploitability * 0.3 +
-    strideBreadth * 0.2 +
-    boundarySpread * 0.15
+    avgSeverity * weights.severity +
+    avgExploitability * weights.exploitability +
+    strideBreadth * weights.strideBreadth +
+    boundarySpread * weights.boundaryBreadth
   );
 }
 
-function weightedExploitBurden(model: Model, variants: VariantSummary[]): number {
+function weightedExploitBurden(model: Model, variants: VariantSummary[], weights: WeightedExploitBurdenWeights = WEB_WEIGHT_PROFILES.default): number {
   const relevant = variants.filter((variant) => variant.category === model);
   return average(
     relevant.map((variant) => {
       const propagation = PROPAGATION[variant.variantName];
-      return variant.severityScore * 0.45 + variant.exploitabilityScore10 * 0.25 + propagationScore(propagation) * 0.3;
+      return (
+        variant.severityScore * weights.severity +
+        variant.exploitabilityScore10 * weights.exploitability +
+        propagationScore(propagation) * weights.propagation
+      );
     })
   );
 }
 
-function lifecycleErrorLikelihoodProxy(model: Model, variants: VariantSummary[]): number {
+function lifecycleErrorLikelihoodProxy(
+  model: Model,
+  variants: VariantSummary[],
+  burdenWeights: LifecycleLikelihoodWeights = LIFECYCLE_LIKELIHOOD_WEIGHT_PROFILES.default,
+  exploitWeights: WeightedExploitBurdenWeights = WEB_WEIGHT_PROFILES.default,
+): number {
   const profile = MODEL_PROFILES[model];
-  const burden = profile.lifecycleSteps * 1.4 + profile.mustRememberBehaviors * 1.3 + profile.trustBoundaryCrossings * 1.2;
-  return burden * (1 + weightedExploitBurden(model, variants) / 20);
+  const burden =
+    profile.lifecycleSteps * burdenWeights.lifecycleSteps +
+    profile.mustRememberBehaviors * burdenWeights.mustRememberBehaviors +
+    profile.trustBoundaryCrossings * burdenWeights.trustBoundaryCrossings;
+  return burden * (1 + weightedExploitBurden(model, variants, exploitWeights) / 20);
 }
 
 function cognitiveMisconfigurationSensitivity(variant: VariantSummary): number {
@@ -485,14 +581,14 @@ function cognitiveLifecycleBurden(model: Model): number {
   return profile.lifecycleSteps * 2 + profile.validationRules * 1.4 + profile.mustRememberBehaviors * 1.3;
 }
 
-function cognitiveSecurityPostureScore(model: Model, variants: VariantSummary[]): number {
+function cognitiveSecurityPostureScore(model: Model, variants: VariantSummary[], weights: CspsWeights = CSPS_WEIGHT_PROFILES.default): number {
   const relevant = variants.filter((variant) => variant.category === model);
   const cli = cognitiveLoadRaw(MODEL_PROFILES[model]);
   const cms = average(relevant.map((variant) => cognitiveMisconfigurationSensitivity(variant)));
   const cbs = cognitiveBoundaryStress(model);
   const clb = cognitiveLifecycleBurden(model);
   const cep = average(relevant.map((variant) => propagationScore(PROPAGATION[variant.variantName])));
-  return (cli * 0.18) + (cms * 0.24) + (cbs * 0.18) + (clb * 0.18) + (cep * 0.22);
+  return (cli * weights.cli) + (cms * weights.cms) + (cbs * weights.cbs) + (clb * weights.clb) + (cep * weights.cep);
 }
 
 function propagationShapeForModel(model: Model, variants: VariantSummary[]): string {
@@ -506,8 +602,95 @@ function propagationShapeForModel(model: Model, variants: VariantSummary[]): str
   return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "mixed";
 }
 
+function normalizeTo100(scores: Record<Model, number>): Record<Model, number> {
+  const max = Math.max(...MODEL_ORDER.map((model) => scores[model]));
+  if (max === 0) {
+    return { oauth: 0, jwt: 0, sessions: 0 };
+  }
+
+  return {
+    oauth: (scores.oauth / max) * 100,
+    jwt: (scores.jwt / max) * 100,
+    sessions: (scores.sessions / max) * 100,
+  };
+}
+
+function rankOrder(scores: Record<Model, number>): string {
+  return [...MODEL_ORDER]
+    .sort((left, right) => scores[right] - scores[left])
+    .map((model) => MODEL_PROFILES[model].label)
+    .join(" > ");
+}
+
+function cfpaSensitivityRows(variants: VariantSummary[]) {
+  return Object.entries(CFPA_WEIGHT_PROFILES).map(([profile, weights]) => {
+    const scores: Record<Model, number> = {
+      oauth: average(variants.filter((variant) => variant.category === "oauth").map((variant) => propagationScore(PROPAGATION[variant.variantName], weights))),
+      jwt: average(variants.filter((variant) => variant.category === "jwt").map((variant) => propagationScore(PROPAGATION[variant.variantName], weights))),
+      sessions: average(variants.filter((variant) => variant.category === "sessions").map((variant) => propagationScore(PROPAGATION[variant.variantName], weights))),
+    };
+    return { profile, scores, ranking: rankOrder(scores) };
+  });
+}
+
+function cliSensitivityRows() {
+  return Object.entries(CLI_WEIGHT_PROFILES).map(([profile, weights]) => {
+    const rawScores: Record<Model, number> = {
+      oauth: cognitiveLoadRaw(MODEL_PROFILES.oauth, weights),
+      jwt: cognitiveLoadRaw(MODEL_PROFILES.jwt, weights),
+      sessions: cognitiveLoadRaw(MODEL_PROFILES.sessions, weights),
+    };
+    return { profile, rawScores, normalizedScores: normalizeTo100(rawScores), ranking: rankOrder(rawScores) };
+  });
+}
+
+function uascSensitivityRows(variants: VariantSummary[]) {
+  return Object.entries(UASC_WEIGHT_PROFILES).map(([profile, weights]) => {
+    const scores: Record<Model, number> = {
+      oauth: attackSurfaceCompression("oauth", variants, weights),
+      jwt: attackSurfaceCompression("jwt", variants, weights),
+      sessions: attackSurfaceCompression("sessions", variants, weights),
+    };
+    return { profile, scores, ranking: rankOrder(scores) };
+  });
+}
+
+function weightedExploitSensitivityRows(variants: VariantSummary[]) {
+  return Object.entries(WEB_WEIGHT_PROFILES).map(([profile, weights]) => {
+    const scores: Record<Model, number> = {
+      oauth: weightedExploitBurden("oauth", variants, weights),
+      jwt: weightedExploitBurden("jwt", variants, weights),
+      sessions: weightedExploitBurden("sessions", variants, weights),
+    };
+    return { profile, scores, ranking: rankOrder(scores) };
+  });
+}
+
+function lifecycleLikelihoodSensitivityRows(variants: VariantSummary[]) {
+  return Object.entries(LIFECYCLE_LIKELIHOOD_WEIGHT_PROFILES).map(([profile, weights]) => {
+    const scores: Record<Model, number> = {
+      oauth: lifecycleErrorLikelihoodProxy("oauth", variants, weights),
+      jwt: lifecycleErrorLikelihoodProxy("jwt", variants, weights),
+      sessions: lifecycleErrorLikelihoodProxy("sessions", variants, weights),
+    };
+    return { profile, scores, ranking: rankOrder(scores) };
+  });
+}
+
+function cspsSensitivityRows(variants: VariantSummary[]) {
+  return Object.entries(CSPS_WEIGHT_PROFILES).map(([profile, weights]) => {
+    const scores: Record<Model, number> = {
+      oauth: cognitiveSecurityPostureScore("oauth", variants, weights),
+      jwt: cognitiveSecurityPostureScore("jwt", variants, weights),
+      sessions: cognitiveSecurityPostureScore("sessions", variants, weights),
+    };
+    return { profile, scores, ranking: rankOrder(scores) };
+  });
+}
+
 function writeFailurePropagationAnalysis(variants: VariantSummary[]): void {
   const outputPath = path.join(process.cwd(), GENERATED_FILES.failurePropagationAnalysis);
+  const sensitivityRows = cfpaSensitivityRows(variants);
   const lines: string[] = [];
   lines.push("# Failure Propagation Analysis");
   lines.push("");
@@ -515,6 +698,22 @@ function writeFailurePropagationAnalysis(variants: VariantSummary[]): void {
   lines.push("Regenerate: npm run analysis:structural");
   lines.push("");
   lines.push("This report models how each controlled authentication misconfiguration propagates beyond its initial defect point into downstream components, flows, and STRIDE consequences.");
+  lines.push("");
+  lines.push("## Formula");
+  lines.push("");
+  lines.push("Default CFPA score uses normalized component breadth, flow breadth, STRIDE breadth, secondary-failure breadth, and trust-boundary crossings:");
+  lines.push("");
+  lines.push("$$");
+  lines.push("CFPA = 10 \\times (0.25C + 0.25F + 0.20S + 0.15X + 0.15B)");
+  lines.push("$$");
+  lines.push("");
+  lines.push("Where $C$ is affected-component breadth, $F$ affected-flow breadth, $S$ STRIDE breadth, $X$ secondary-failure breadth, and $B$ trust-boundary breadth, each normalized to the observed repository design space.");
+  lines.push("");
+  lines.push("## Weight Rationale");
+  lines.push("");
+  lines.push("- Component and flow breadth receive the largest weight because they best capture cascade scope inside the controlled backend.");
+  lines.push("- STRIDE breadth captures threat diversity, but not all STRIDE categories imply the same structural spread, so its weight is lower than direct propagation breadth.");
+  lines.push("- Secondary failures and boundary crossings are retained explicitly because they reflect amplification across trust-transfer points.");
   lines.push("");
   lines.push("## Cross-Model Comparison");
   lines.push("");
@@ -528,6 +727,15 @@ function writeFailurePropagationAnalysis(variants: VariantSummary[]): void {
     lines.push(
       `| ${MODEL_PROFILES[model].label} | ${format(average(scores))} | ${format(Math.max(...scores))} | ${format(average(metas.map((meta) => meta.affectedComponents.length)))} | ${format(average(metas.map((meta) => meta.affectedFlows.length)))} | ${format(average(metas.map((meta) => meta.affectedStrides.length)))} | ${propagationShapeForModel(model, variants)} |`
     );
+  }
+
+  lines.push("");
+  lines.push("## Sensitivity Analysis");
+  lines.push("");
+  lines.push("| Weight Profile | OAuth2 | JWT | Session | Rank Order |");
+  lines.push("|---|---:|---:|---:|---|");
+  for (const row of sensitivityRows) {
+    lines.push(`| ${row.profile} | ${format(row.scores.oauth)} | ${format(row.scores.jwt)} | ${format(row.scores.sessions)} | ${row.ranking} |`);
   }
 
   lines.push("");
@@ -594,11 +802,49 @@ function writeFailurePropagationAnalysis(variants: VariantSummary[]): void {
   lines.push("- OAuth2 exhibits the widest propagation graph because redirect, state, code, token, and scope flows cross more boundaries and therefore branch more aggressively when weakened.");
 
   fs.writeFileSync(outputPath, `${lines.join("\n")}\n`);
+  writeJsonArtifact(GENERATED_FILES.failurePropagationAnalysisJson, {
+    generatedAt: new Date().toISOString(),
+    formula: {
+      default: "CFPA = 10 * (0.25C + 0.25F + 0.20S + 0.15X + 0.15B)",
+      terms: {
+        C: "affected-component breadth",
+        F: "affected-flow breadth",
+        S: "STRIDE breadth",
+        X: "secondary-failure breadth",
+        B: "trust-boundary breadth",
+      },
+    },
+    weightProfiles: CFPA_WEIGHT_PROFILES,
+    crossModel: MODEL_ORDER.map((model) => {
+      const relevant = variants.filter((variant) => variant.category === model);
+      const metas = relevant.map((variant) => PROPAGATION[variant.variantName]);
+      const scores = metas.map((meta) => propagationScore(meta));
+      return {
+        model,
+        label: MODEL_PROFILES[model].label,
+        meanPropagationScore: average(scores),
+        maxVariantScore: Math.max(...scores),
+        avgComponentsTouched: average(metas.map((meta) => meta.affectedComponents.length)),
+        avgFlowsTouched: average(metas.map((meta) => meta.affectedFlows.length)),
+        avgStrideBreadth: average(metas.map((meta) => meta.affectedStrides.length)),
+        dominantPattern: propagationShapeForModel(model, variants),
+      };
+    }),
+    variants: variants.map((variant) => ({
+      variantName: variant.variantName,
+      model: variant.category,
+      score: propagationScore(PROPAGATION[variant.variantName]),
+      meta: PROPAGATION[variant.variantName],
+    })),
+    sensitivity: sensitivityRows,
+    claimClass: "exploratory-author-interpreted",
+  });
   console.log(`Wrote ${outputPath}`);
 }
 
 function writeCognitiveLoadIndex(): void {
   const outputPath = path.join(process.cwd(), GENERATED_FILES.cognitiveLoadIndex);
+  const sensitivityRows = cliSensitivityRows();
   const lines: string[] = [];
   lines.push("# Cognitive Load Index");
   lines.push("");
@@ -606,6 +852,22 @@ function writeCognitiveLoadIndex(): void {
   lines.push("Regenerate: npm run analysis:structural");
   lines.push("");
   lines.push("This report estimates model-specific developer cognitive load from configuration points, lifecycle steps, trust-boundary crossings, validation rules, and must-remember security behaviors.");
+  lines.push("");
+  lines.push("## Formula");
+  lines.push("");
+  lines.push("Default CLI is a weighted structural burden index:");
+  lines.push("");
+  lines.push("$$");
+  lines.push("CLI = 1.2P + 1.1F + 1.3L + 1.0B + 1.2V + 1.4M");
+  lines.push("$$");
+  lines.push("");
+  lines.push("Where $P$ is configuration points, $F$ security flags, $L$ lifecycle steps, $B$ trust-boundary crossings, $V$ validation rules, and $M$ must-remember behaviors.");
+  lines.push("");
+  lines.push("## Weight Rationale");
+  lines.push("");
+  lines.push("- Must-remember behaviors and lifecycle steps are weighted most heavily because they dominate sequencing and memory burden during secure implementation.");
+  lines.push("- Validation rules and configuration points are weighted next because they represent repeated opportunities for omission or inconsistency.");
+  lines.push("- Trust-boundary crossings and security flags remain explicit because they increase the number of contexts a developer must model correctly.");
   lines.push("");
   lines.push("| Model | Config Points | Security Flags | Lifecycle Steps | Trust Boundary Crossings | Validation Rules | Must-Remember Behaviors | Raw CLI | Normalized CLI (0-100) |");
   lines.push("|---|---:|---:|---:|---:|---:|---:|---:|---:|");
@@ -623,6 +885,15 @@ function writeCognitiveLoadIndex(): void {
   }
 
   lines.push("");
+  lines.push("## Sensitivity Analysis");
+  lines.push("");
+  lines.push("| Weight Profile | OAuth2 | JWT | Session | Rank Order |");
+  lines.push("|---|---:|---:|---:|---|");
+  for (const row of sensitivityRows) {
+    lines.push(`| ${row.profile} | ${format(row.normalizedScores.oauth)} | ${format(row.normalizedScores.jwt)} | ${format(row.normalizedScores.sessions)} | ${row.ranking} |`);
+  }
+
+  lines.push("");
   lines.push("## Reading");
   lines.push("");
   lines.push("- OAuth2 carries the highest cognitive load because more moving parts must be remembered across redirect, state, PKCE, code exchange, token issuance, and scope enforcement.");
@@ -634,11 +905,40 @@ function writeCognitiveLoadIndex(): void {
   lines.push("The CLI is a developer-centric structural index, not a psychometric measurement. It is intended to compare implementation burden within this repository's controlled design, not to estimate universal human effort.");
 
   fs.writeFileSync(outputPath, `${lines.join("\n")}\n`);
+  writeJsonArtifact(GENERATED_FILES.cognitiveLoadIndexJson, {
+    generatedAt: new Date().toISOString(),
+    formula: {
+      default: "CLI = 1.2P + 1.1F + 1.3L + 1.0B + 1.2V + 1.4M",
+      terms: {
+        P: "configuration points",
+        F: "security flags",
+        L: "lifecycle steps",
+        B: "trust-boundary crossings",
+        V: "validation rules",
+        M: "must-remember behaviors",
+      },
+    },
+    weightProfiles: CLI_WEIGHT_PROFILES,
+    rows: MODEL_ORDER.map((model) => {
+      const profile = MODEL_PROFILES[model];
+      const raw = cognitiveLoadRaw(profile);
+      const maxRaw = Math.max(...MODEL_ORDER.map((inner) => cognitiveLoadRaw(MODEL_PROFILES[inner])));
+      return {
+        model,
+        ...profile,
+        rawCli: raw,
+        normalizedCli: maxRaw === 0 ? 0 : (raw / maxRaw) * 100,
+      };
+    }),
+    sensitivity: sensitivityRows,
+    claimClass: "exploratory-author-interpreted",
+  });
   console.log(`Wrote ${outputPath}`);
 }
 
 function writeUnifiedAttackSurfaceCompression(variants: VariantSummary[]): void {
   const outputPath = path.join(process.cwd(), GENERATED_FILES.unifiedAttackSurfaceCompression);
+  const sensitivityRows = uascSensitivityRows(variants);
   const lines: string[] = [];
   lines.push("# Unified Attack Surface Compression");
   lines.push("");
@@ -646,6 +946,19 @@ function writeUnifiedAttackSurfaceCompression(variants: VariantSummary[]): void 
   lines.push("Regenerate: npm run analysis:structural");
   lines.push("");
   lines.push("This report compresses per-model STRIDE breadth, severity, exploitability, and trust-boundary breadth into a single exploratory attack-surface score for cross-model comparison.");
+  lines.push("");
+  lines.push("## Formula");
+  lines.push("");
+  lines.push("$$");
+  lines.push("UASC = 10 \\times (0.35S + 0.30E + 0.20T + 0.15B)");
+  lines.push("$$");
+  lines.push("");
+  lines.push("Where $S$ is mean severity normalized to 0-1, $E$ mean exploitability normalized to 0-1, $T$ primary STRIDE breadth normalized to the repository's three-class spread, and $B$ trust-boundary breadth normalized to the widest modeled boundary count.");
+  lines.push("");
+  lines.push("## Weight Rationale");
+  lines.push("");
+  lines.push("- Severity and exploitability dominate because the compressed surface should still privilege actual security consequence over structural breadth alone.");
+  lines.push("- STRIDE breadth and trust-boundary breadth remain explicit so narrow-but-severe surfaces can be distinguished from broad-and-branching ones.");
   lines.push("");
   lines.push("| Model | Mean Severity (1-5) | Mean Exploitability (0-10) | Unique STRIDE Classes | Trust Boundary Crossings | UASC Score (0-10) |");
   lines.push("|---|---:|---:|---:|---:|---:|");
@@ -656,6 +969,15 @@ function writeUnifiedAttackSurfaceCompression(variants: VariantSummary[]): void 
     lines.push(
       `| ${MODEL_PROFILES[model].label} | ${format(average(relevant.map((variant) => variant.severityScore)))} | ${format(average(relevant.map((variant) => variant.exploitabilityScore10)))} | ${uniqueStrides.size} | ${MODEL_PROFILES[model].trustBoundaryCrossings} | ${format(attackSurfaceCompression(model, variants))} |`
     );
+  }
+
+  lines.push("");
+  lines.push("## Sensitivity Analysis");
+  lines.push("");
+  lines.push("| Weight Profile | OAuth2 | JWT | Session | Rank Order |");
+  lines.push("|---|---:|---:|---:|---|");
+  for (const row of sensitivityRows) {
+    lines.push(`| ${row.profile} | ${format(row.scores.oauth)} | ${format(row.scores.jwt)} | ${format(row.scores.sessions)} | ${row.ranking} |`);
   }
 
   lines.push("");
@@ -670,6 +992,33 @@ function writeUnifiedAttackSurfaceCompression(variants: VariantSummary[]): void 
   lines.push("- Sessions usually compress lower on breadth, but individual cookie and revocation weaknesses can still have strong local impact even if the overall surface is narrower.");
 
   fs.writeFileSync(outputPath, `${lines.join("\n")}\n`);
+  writeJsonArtifact(GENERATED_FILES.unifiedAttackSurfaceCompressionJson, {
+    generatedAt: new Date().toISOString(),
+    formula: {
+      default: "UASC = 10 * (0.35S + 0.30E + 0.20T + 0.15B)",
+      terms: {
+        S: "normalized mean severity",
+        E: "normalized mean exploitability",
+        T: "normalized STRIDE breadth",
+        B: "normalized trust-boundary breadth",
+      },
+    },
+    weightProfiles: UASC_WEIGHT_PROFILES,
+    rows: MODEL_ORDER.map((model) => {
+      const relevant = variants.filter((variant) => variant.category === model);
+      return {
+        model,
+        label: MODEL_PROFILES[model].label,
+        meanSeverity: average(relevant.map((variant) => variant.severityScore)),
+        meanExploitability: average(relevant.map((variant) => variant.exploitabilityScore10)),
+        uniqueStrideClasses: new Set(relevant.flatMap((variant) => primaryStrideClasses(variant.stride))).size,
+        trustBoundaryCrossings: MODEL_PROFILES[model].trustBoundaryCrossings,
+        score: attackSurfaceCompression(model, variants),
+      };
+    }),
+    sensitivity: sensitivityRows,
+    claimClass: "exploratory-author-interpreted",
+  });
   console.log(`Wrote ${outputPath}`);
 }
 
@@ -677,6 +1026,8 @@ function writeCrossReferenceSynthesis(variants: VariantSummary[]): void {
   const outputPath = path.join(process.cwd(), GENERATED_FILES.crossReferenceSynthesis);
   const perf = readPerformanceSummary();
   const footprint = readCodeFootprint();
+  const weightedBurdenSensitivity = weightedExploitSensitivityRows(variants);
+  const lifecycleSensitivity = lifecycleLikelihoodSensitivityRows(variants);
   const baselineMap = new Map<Model, AggregateMetric>();
 
   for (const metric of footprint.baselineMetrics) {
@@ -692,6 +1043,12 @@ function writeCrossReferenceSynthesis(variants: VariantSummary[]): void {
   lines.push("Regenerate: npm run analysis:structural");
   lines.push("");
   lines.push("This report cross-references STRIDE, trust boundaries, lifecycle complexity, performance, empirical attack evidence, and code footprint to expose model-specific structural trade-offs.");
+  lines.push("");
+  lines.push("## Formula Notes");
+  lines.push("");
+  lines.push("- Weighted Exploit Burden (WEB) uses $0.45 \\times severity + 0.25 \\times exploitability + 0.30 \\times propagation$.");
+  lines.push("- Lifecycle Error Likelihood Proxy (LELP) uses $(1.4 \\times lifecycleSteps + 1.3 \\times mustRemember + 1.2 \\times boundaryCrossings) \\times (1 + WEB/20)$. ");
+  lines.push("- These are exploratory structural proxies derived from repository evidence, not direct estimates of field prevalence.");
   lines.push("");
   lines.push("## 1) STRIDE vs Misconfiguration Variants");
   lines.push("");
@@ -784,12 +1141,90 @@ function writeCrossReferenceSynthesis(variants: VariantSummary[]): void {
     lines.push(`| ${MODEL_PROFILES[model].label} | ${format(meanPropagation)} | ${perfRow?.attackOutlierCount ?? 0} | ${format(ciWidth)} | ${interpretation} |`);
   }
 
+  lines.push("");
+  lines.push("## Sensitivity Analysis");
+  lines.push("");
+  lines.push("### Weighted Exploit Burden Sensitivity");
+  lines.push("");
+  lines.push("| Weight Profile | OAuth2 | JWT | Session | Rank Order |");
+  lines.push("|---|---:|---:|---:|---|");
+  for (const row of weightedBurdenSensitivity) {
+    lines.push(`| ${row.profile} | ${format(row.scores.oauth)} | ${format(row.scores.jwt)} | ${format(row.scores.sessions)} | ${row.ranking} |`);
+  }
+  lines.push("");
+  lines.push("### Lifecycle Error Likelihood Sensitivity");
+  lines.push("");
+  lines.push("| Weight Profile | OAuth2 | JWT | Session | Rank Order |");
+  lines.push("|---|---:|---:|---:|---|");
+  for (const row of lifecycleSensitivity) {
+    lines.push(`| ${row.profile} | ${format(row.scores.oauth)} | ${format(row.scores.jwt)} | ${format(row.scores.sessions)} | ${row.ranking} |`);
+  }
+
   fs.writeFileSync(outputPath, `${lines.join("\n")}\n`);
+  writeJsonArtifact(GENERATED_FILES.crossReferenceSynthesisJson, {
+    generatedAt: new Date().toISOString(),
+    formulas: {
+      weightedExploitBurden: "WEB = 0.45*severity + 0.25*exploitability + 0.30*propagation",
+      lifecycleErrorLikelihood: "LELP = (1.4*lifecycle + 1.3*mustRemember + 1.2*boundary) * (1 + WEB/20)",
+    },
+    weightProfiles: {
+      weightedExploitBurden: WEB_WEIGHT_PROFILES,
+      lifecycleErrorLikelihood: LIFECYCLE_LIKELIHOOD_WEIGHT_PROFILES,
+    },
+    sections: {
+      strideVsVariants: variants.map((variant) => ({
+        variantName: variant.variantName,
+        model: variant.category,
+        strideClasses: PROPAGATION[variant.variantName].affectedStrides,
+        propagationPattern: PROPAGATION[variant.variantName].propagationPattern,
+        propagationScore: propagationScore(PROPAGATION[variant.variantName]),
+      })),
+      trustBoundaries: BOUNDARY_ANALYSIS,
+      performanceTradeoff: MODEL_ORDER.map((model) => {
+        const perfRow = perf.find((row) => row.model === model);
+        return {
+          model,
+          avgLatencyDeltaPct: perfRow?.avgDeltaPct ?? null,
+          throughputDeltaPct: perfRow?.throughputDeltaPct ?? null,
+          weightedExploitBurden: weightedExploitBurden(model, variants),
+        };
+      }),
+      lifecycleBurden: MODEL_ORDER.map((model) => ({
+        model,
+        lifecycleSteps: MODEL_PROFILES[model].lifecycleSteps,
+        mustRememberBehaviors: MODEL_PROFILES[model].mustRememberBehaviors,
+        proxy: lifecycleErrorLikelihoodProxy(model, variants),
+      })),
+      protocolExpectations: PROTOCOL_EXPECTATIONS,
+      attackSurfaceVsFootprint: MODEL_ORDER.map((model) => ({
+        model,
+        characters: baselineMap.get(model)?.characters ?? 0,
+        lines: baselineMap.get(model)?.lines ?? 0,
+        cyclomaticComplexity: baselineMap.get(model)?.cyclomaticComplexity ?? 0,
+        uascScore: attackSurfaceCompression(model, variants),
+      })),
+      propagationVsJitter: MODEL_ORDER.map((model) => {
+        const perfRow = perf.find((row) => row.model === model);
+        return {
+          model,
+          meanPropagationScore: average(variants.filter((variant) => variant.category === model).map((variant) => propagationScore(PROPAGATION[variant.variantName]))),
+          attackAvgOutliers: perfRow?.attackOutlierCount ?? 0,
+          avgDeltaCiWidth: perfRow && perfRow.ciLower !== null && perfRow.ciUpper !== null ? perfRow.ciUpper - perfRow.ciLower : null,
+        };
+      }),
+    },
+    sensitivity: {
+      weightedExploitBurden: weightedBurdenSensitivity,
+      lifecycleErrorLikelihood: lifecycleSensitivity,
+    },
+    claimClass: "exploratory-author-interpreted",
+  });
   console.log(`Wrote ${outputPath}`);
 }
 
 function writeCognitiveSecurityAnalysis(variants: VariantSummary[]): void {
   const outputPath = path.join(process.cwd(), GENERATED_FILES.cognitiveSecurityAnalysis);
+  const cspsSensitivity = cspsSensitivityRows(variants);
   const lines: string[] = [];
   lines.push("# Cognitive Security Analysis");
   lines.push("");
@@ -797,6 +1232,18 @@ function writeCognitiveSecurityAnalysis(variants: VariantSummary[]): void {
   lines.push("Regenerate: npm run analysis:structural");
   lines.push("");
   lines.push("This report frames authentication security as a cognitive engineering problem by cross-referencing developer load, boundary stress, lifecycle burden, and cognitive error propagation.");
+  lines.push("");
+  lines.push("## Formula Notes");
+  lines.push("");
+  lines.push("- CMS combines severity, propagation, detectability, and repair effort as an exploratory proxy for cognitively fragile mistakes.");
+  lines.push("- CBS uses trust-boundary crossings, must-remember behaviors, and security flags to approximate boundary reasoning stress.");
+  lines.push("- CLB uses lifecycle steps, validation rules, and must-remember behaviors to estimate sequencing burden.");
+  lines.push("- CSPS blends CLI, CMS, CBS, CLB, and CEP with default weights $(0.18, 0.24, 0.18, 0.18, 0.22)$. ");
+  lines.push("");
+  lines.push("## Weight Rationale");
+  lines.push("");
+  lines.push("- CMS and CEP receive slightly higher weight in CSPS because the central research question is not just cognitive effort, but how cognitive slips create security-relevant cascades.");
+  lines.push("- CLI, CBS, and CLB are retained separately so the posture score remains interpretable rather than collapsing all burden into one undifferentiated measure.");
   lines.push("");
   lines.push("## 1) Cognitive Load Index (CLI)");
   lines.push("");
@@ -823,6 +1270,15 @@ function writeCognitiveSecurityAnalysis(variants: VariantSummary[]): void {
         ? "Boundary count is lower, but validation discipline keeps stress concentrated rather than diffuse."
         : "Boundary count is moderate, yet browser-side invisibility makes the effective stress easy to underestimate.";
     lines.push(`| ${profile.label} | ${profile.trustBoundaryCrossings} | ${profile.mustRememberBehaviors} | ${format(cognitiveBoundaryStress(model))} | ${interpretation} |`);
+  }
+
+  lines.push("");
+  lines.push("## Sensitivity Analysis");
+  lines.push("");
+  lines.push("| Weight Profile | OAuth2 | JWT | Session | Rank Order |");
+  lines.push("|---|---:|---:|---:|---|");
+  for (const row of cspsSensitivity) {
+    lines.push(`| ${row.profile} | ${format(row.scores.oauth)} | ${format(row.scores.jwt)} | ${format(row.scores.sessions)} | ${row.ranking} |`);
   }
   lines.push("");
   lines.push("## 4) Cognitive Lifecycle Burden (CLB)");
@@ -863,6 +1319,40 @@ function writeCognitiveSecurityAnalysis(variants: VariantSummary[]): void {
   lines.push("- Sessions look simpler, but browser-coupled defaults create invisible risks that keep their cognitive security posture non-trivial.");
 
   fs.writeFileSync(outputPath, `${lines.join("\n")}\n`);
+  writeJsonArtifact(GENERATED_FILES.cognitiveSecurityAnalysisJson, {
+    generatedAt: new Date().toISOString(),
+    formulas: {
+      cms: "CMS = 0.4*severity + 0.35*propagation + detectabilityPenalty + repairPenalty",
+      cbs: "CBS = 2*boundaryCrossings + 1.5*mustRemember + securityFlags",
+      clb: "CLB = 2*lifecycleSteps + 1.4*validationRules + 1.3*mustRemember",
+      csps: "CSPS = 0.18*CLI + 0.24*CMS + 0.18*CBS + 0.18*CLB + 0.22*CEP",
+    },
+    weightProfiles: {
+      csps: CSPS_WEIGHT_PROFILES,
+    },
+    sections: {
+      cms: variants.map((variant) => ({
+        variantName: variant.variantName,
+        model: variant.category,
+        errorMode: COGNITIVE_VARIANT_META[variant.variantName].errorMode,
+        detectability: COGNITIVE_VARIANT_META[variant.variantName].detectability,
+        repairEffort: COGNITIVE_VARIANT_META[variant.variantName].repairEffort,
+        score: cognitiveMisconfigurationSensitivity(variant),
+      })),
+      cbs: MODEL_ORDER.map((model) => ({ model, score: cognitiveBoundaryStress(model) })),
+      clb: MODEL_ORDER.map((model) => ({ model, score: cognitiveLifecycleBurden(model) })),
+      cep: MODEL_ORDER.map((model) => ({
+        model,
+        meanPropagationScore: average(variants.filter((variant) => variant.category === model).map((variant) => propagationScore(PROPAGATION[variant.variantName]))),
+      })),
+      csps: MODEL_ORDER.map((model) => ({
+        model,
+        score: cognitiveSecurityPostureScore(model, variants),
+      })),
+    },
+    sensitivity: cspsSensitivity,
+    claimClass: "exploratory-author-interpreted",
+  });
   console.log(`Wrote ${outputPath}`);
 }
 
