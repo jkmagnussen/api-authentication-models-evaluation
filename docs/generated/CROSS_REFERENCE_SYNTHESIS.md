@@ -1,15 +1,10 @@
 # Cross-Reference Synthesis
 
-Generated: 2026-07-23T20:53:27.546Z
+Generated: 2026-07-23T21:11:17.637Z
 Regenerate: npm run analysis:structural
-
-This report cross-references STRIDE, trust boundaries, lifecycle complexity, performance, empirical attack evidence, and code footprint to expose model-specific structural trade-offs.
-
-## Formula Notes
 
 - Weighted Exploit Burden (WEB) uses $0.45 \times severity + 0.25 \times exploitability + 0.30 \times propagation$.
 - Lifecycle Error Likelihood Proxy (LELP) uses $(1.4 \times lifecycleSteps + 1.3 \times mustRemember + 1.2 \times boundaryCrossings) \times (1 + WEB/20)$.
-- These are exploratory structural proxies derived from repository evidence, not direct estimates of field prevalence.
 
 ## 1) STRIDE vs Misconfiguration Variants
 
@@ -24,8 +19,6 @@ This report cross-references STRIDE, trust boundaries, lifecycle complexity, per
 | Sessions Fixation Misconfiguration | Session | Spoofing<br>Elevation of Privilege | fan-out | 8.46 | A fixation bug turns the login transition itself into the propagation point, binding the victim identity to attacker-controlled state. |
 | Sessions Cookie Flag Misconfiguration | Session | Information Disclosure<br>Spoofing | fan-out | 8.96 | Cookie hardening failures propagate outward because once a browser-side boundary is weakened, every subsequent session-bearing request inherits that weakness. |
 | Sessions Logout Misconfiguration | Session | Spoofing<br>Repudiation | fan-out | 8.46 | Failure to invalidate the server-side session after logout turns a single missed revocation event into a continuing authenticated replay path. |
-
-Interpretation: OAuth2 shows the widest propagation breadth, JWT stays comparatively linear, and sessions remain narrow in scope but high-impact once browser-coupled controls fail.
 
 ## 2) Trust Boundaries vs Attack Evidence
 
@@ -62,11 +55,11 @@ Interpretation: OAuth2 shows the widest propagation breadth, JWT stays comparati
 
 ## 6) Attack Surface vs Code Footprint
 
-| Model | Characters | Lines | Cyclomatic Complexity | UASC Score | Mean Propagation Score | Reading |
-|---|---:|---:|---:|---:|---:|---|
-| OAuth2 | 17703 | 613 | 209 | 8.80 | 9.39 | Largest baseline footprint also coincides with the broadest compressed attack surface. |
-| JWT | 5934 | 160 | 112 | 8.43 | 8.57 | Smaller footprint does not guarantee safety; the surface is compact but high-impact when validation is weak. |
-| Session | 6974 | 201 | 146 | 7.57 | 8.62 | Moderate footprint aligns with a narrower surface, but browser-linked failures remain operationally sharp. |
+| Model | Characters | Lines | Cyclomatic Complexity | Mean Propagation Score | Reading |
+|---|---:|---:|---:|---:|---|
+| OAuth2 | 17703 | 613 | 209 | 9.39 | Largest baseline footprint also coincides with the broadest propagation surface. |
+| JWT | 5934 | 160 | 112 | 8.57 | Smaller footprint does not guarantee safety; the slice is compact but high-impact when validation is weak. |
+| Session | 6974 | 201 | 146 | 8.62 | Moderate footprint aligns with a narrower surface, but browser-linked failures remain operationally sharp. |
 
 ## 7) Misconfiguration Propagation vs Performance Jitter
 

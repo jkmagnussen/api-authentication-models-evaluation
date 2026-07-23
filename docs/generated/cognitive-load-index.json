@@ -1,16 +1,5 @@
 {
-  "generatedAt": "2026-07-23T20:53:27.545Z",
-  "formula": {
-    "default": "CLI = 1.2P + 1.1F + 1.3L + 1.0B + 1.2V + 1.4M",
-    "terms": {
-      "P": "configuration points",
-      "F": "security flags",
-      "L": "lifecycle steps",
-      "B": "trust-boundary crossings",
-      "V": "validation rules",
-      "M": "must-remember behaviors"
-    }
-  },
+  "generatedAt": "2026-07-23T21:11:17.636Z",
   "weightProfiles": {
     "default": {
       "configPoints": 1.2,
@@ -37,47 +26,6 @@
       "mustRememberBehaviors": 1.5
     }
   },
-  "rows": [
-    {
-      "model": "oauth",
-      "label": "OAuth2",
-      "configPoints": 8,
-      "securityFlags": 6,
-      "lifecycleSteps": 7,
-      "trustBoundaryCrossings": 5,
-      "validationRules": 7,
-      "mustRememberBehaviors": 6,
-      "propagationReading": "OAuth2 mistakes propagate non-linearly because redirect, state, code, token, and scope checks compound across multiple trust boundaries.",
-      "rawCli": 47.099999999999994,
-      "normalizedCli": 100
-    },
-    {
-      "model": "jwt",
-      "label": "JWT",
-      "configPoints": 7,
-      "securityFlags": 5,
-      "lifecycleSteps": 5,
-      "trustBoundaryCrossings": 3,
-      "validationRules": 6,
-      "mustRememberBehaviors": 5,
-      "propagationReading": "JWT mistakes tend to propagate linearly through token issuance and validation rules, especially where signature and claim checks are weakened.",
-      "rawCli": 37.599999999999994,
-      "normalizedCli": 79.83014861995753
-    },
-    {
-      "model": "sessions",
-      "label": "Session",
-      "configPoints": 8,
-      "securityFlags": 5,
-      "lifecycleSteps": 5,
-      "trustBoundaryCrossings": 3,
-      "validationRules": 5,
-      "mustRememberBehaviors": 5,
-      "propagationReading": "Session mistakes often amplify quickly because one cookie or invalidation weakness can spill into replay, fixation, and impersonation outcomes.",
-      "rawCli": 37.6,
-      "normalizedCli": 79.83014861995755
-    }
-  ],
   "sensitivity": [
     {
       "profile": "default",
