@@ -18,11 +18,11 @@
 ## Key Numeric Outputs
 
 - Clustering inertia: 17.333
-- Regression R^2: 0.006
-- Regression slope: -0.020
+- Regression R^2: 0.007
+- Regression slope: -0.019
 - Average AI failure variance (std dev): 0.366
 - Mean error diversity entropy: 2.216
-- Mean attack-overhead share: 0.015
+- Mean attack-overhead share: 0.009
 - Mean load-variance index: 43.932
 
 ## Notes

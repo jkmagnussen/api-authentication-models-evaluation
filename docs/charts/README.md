@@ -1,6 +1,7 @@
 # Charts Catalog
 
-Charts are organised into four insight clusters. Each cluster maps to a distinct research dimension. Within each cluster, charts are ordered from primary evidence to supporting context.
+Charts are organised into four insight clusters. Each cluster maps to a distinct research dimension.
+Within each cluster, charts are ordered from primary evidence to supporting context.
 
 ---
 
@@ -49,12 +50,12 @@ These charts examine how code complexity, footprint, and structural choices corr
 |---|---|
 | `maintainability/ai-sample-syntax-issues-by-model-stage.svg` | Syntax, type, and complexity issue counts by model and generation stage. **Primary evidence.** |
 | `maintainability/code-footprint-deltas.svg` | Percent footprint deltas across characters, lines, functions, and cyclomatic complexity relative to baseline. **Primary evidence.** |
-| `maintainability/complexity-to-misconfig-regression.svg` | Regression line from cyclomatic complexity to risk index; quantifies the complexity–risk slope. |
+| `maintainability/complexity-to-misconfig-regression.svg` | Regression line from cyclomatic complexity to risk index; quantifies the complexity-risk slope. |
 | `maintainability/complexity-vs-misconfig-frequency-regression.svg` | Regression of complexity against observed issue frequency across all variants. |
-| `maintainability/maintainability-difficulty-index.svg` | Normalised maintainability difficulty index (0–171 scale) by authentication model. |
+| `maintainability/maintainability-difficulty-index.svg` | Normalised maintainability difficulty index (0-171 scale) by authentication model. |
 | `maintainability/failure-points-vs-chars.svg` | Distinct failure-point concentration against character footprint; identifies high-density failure zones. |
 
-**Cluster C interpretation:** OAuth2 carries the highest code footprint and the steepest complexity-to-misconfiguration slope, confirming that its expressiveness comes at a direct developer-error cost. JWT has a compact footprint but a non-trivial difficulty index, reflecting how deceptively simple its API is to misuse. Session-based auth has the simplest footprint but generates the highest failure density per character when misconfigured, because its few critical control points are unforgiving. AI-generated code consistently inflates footprint metrics without a proportional gain in security outcome, confirming the Cognitive Load Index finding that AI adds complexity noise rather than meaningful structure.
+**Cluster C interpretation:** OAuth2 carries the highest code footprint and the steepest complexity-to-misconfiguration slope, confirming that its expressiveness comes at a direct developer-error cost. JWT has a compact footprint but a non-trivial difficulty index, reflecting how deceptively simple its API is to misuse. Session-based auth has the simplest footprint but generates the highest failure density per character when misconfigured, because its few critical control points are unforgiving. AI-generated code consistently inflates footprint metrics without a proportional gain in security outcome.
 
 ---
 
@@ -73,8 +74,8 @@ These charts synthesise comparisons across all three models and AI providers, re
 | `synthesis/misconfiguration-clustering-kmeans.svg` | K-means clusters of misconfiguration patterns; reveals natural groupings in the failure space. |
 | `synthesis/calibration-and-agreement-controls.svg` | False-confidence calibration and independent checker agreement; methodology control chart. |
 
-**Cluster D interpretation:** No single AI provider dominates cleanly across both correctness and security dimensions. OpenAI shows a slight correctness advantage under the neutral prompt but loses ground on security-critical control points when compared to the security-guided prompt variant. Claude shows more consistent security behaviour across prompt modes but at the cost of higher variance in correctness. The overlap Venn confirms that roughly 60% of failure categories are shared across providers, meaning the failure modes are fundamentally architectural rather than model-specific. The entropy chart shows that security-guided prompts reduce failure diversity, making AI behaviour more predictable and auditable.
+**Cluster D interpretation:** No single AI provider dominates cleanly across both correctness and security dimensions. OpenAI shows a slight correctness advantage under the neutral prompt but loses ground on security-critical control points when compared to the security-guided prompt variant. Claude shows more consistent security behaviour across prompt modes but at the cost of higher variance in correctness. The overlap Venn confirms that roughly 60% of failure categories are shared across providers, meaning the failure modes are fundamentally architectural rather than model-specific.
 
 ---
 
-*For full derivation details and sensitivity analysis, see [docs/generated/FAILURE_PROPAGATION_ANALYSIS.md](../generated/FAILURE_PROPAGATION_ANALYSIS.md), [docs/generated/COGNITIVE_LOAD_INDEX.md](../generated/COGNITIVE_LOAD_INDEX.md), and [docs/generated/CROSS_REFERENCE_SYNTHESIS.md](../generated/CROSS_REFERENCE_SYNTHESIS.md).*
+*For full derivation details and sensitivity analysis, see docs/generated/FAILURE_PROPAGATION_ANALYSIS.md, docs/generated/COGNITIVE_LOAD_INDEX.md, and docs/generated/CROSS_REFERENCE_SYNTHESIS.md.*

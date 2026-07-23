@@ -945,6 +945,172 @@ def chart_complexity_vs_misconfig_frequency(
     return r2, slope
 
 
+def chart_failure_points_vs_chars() -> None:
+    """Failure density vs character footprint.
+
+    Dual-panel chart:
+      Left  — scatter of failure events per 10k chars vs character count, one
+              point per variant (misconfigurations) and per model-aggregate (AI).
+              Regression lines drawn separately for each source group.
+      Right — grouped bar showing failure density by model and source to give a
+              direct side-by-side comparison without overplotting.
+    """
+    density_path = GENERATED_DIR / "normalized-failure-density.json"
+    if not density_path.exists():
+        return
+
+    payload = json.loads(density_path.read_text(encoding="utf8"))
+    rows_agg = pd.DataFrame(payload.get("rows", []))
+    rows_var = pd.DataFrame(payload.get("variantRows", []))
+
+    if rows_agg.empty:
+        return
+
+    # Use per-10k-chars failure rate so the Y axis is continuous and comparable.
+    MODEL_COLORS = {"JWT": "#1f77b4", "OAuth2": "#ff7f0e", "Session": "#2ca02c"}
+    SOURCE_MARKERS = {"misconfiguration": "o", "ai": "^"}
+    SOURCE_LABELS = {"misconfiguration": "Misconfiguration", "ai": "AI-generated"}
+
+    fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(13.0, 5.6))
+
+    # ── Left panel: scatter ──────────────────────────────────────────────────
+    # Individual variant rows for misconfigurations give 9 data points.
+    if not rows_var.empty:
+        rows_var["model"] = rows_var["model"].map(gc_normalize := {
+            "oauth": "OAuth2", "jwt": "JWT", "sessions": "Session",
+        })
+        for model in ["JWT", "OAuth2", "Session"]:
+            sub = rows_var[rows_var["model"] == model]
+            if sub.empty:
+                continue
+            ax_left.scatter(
+                sub["characters"],
+                sub["failuresPer10kChars"],
+                color=MODEL_COLORS[model],
+                marker="o",
+                s=70,
+                alpha=0.75,
+                label=f"{model} (misconfig)",
+                zorder=3,
+            )
+
+    # Aggregate AI rows: one point per model.
+    ai_rows = rows_agg[rows_agg["source"] == "ai"].copy()
+    ai_rows["modelLabel"] = ai_rows["modelLabel"].map(
+        lambda x: {"OAuth2": "OAuth2", "JWT": "JWT", "Session": "Session"}.get(x, x)
+    )
+    for model in ["JWT", "OAuth2", "Session"]:
+        sub = ai_rows[ai_rows["modelLabel"] == model]
+        if sub.empty:
+            continue
+        ax_left.scatter(
+            sub["characters"],
+            sub["failuresPer10kChars"],
+            color=MODEL_COLORS[model],
+            marker="^",
+            s=110,
+            alpha=0.85,
+            label=f"{model} (AI)",
+            zorder=3,
+        )
+        # Annotate AI points with model name.
+        for _, row in sub.iterrows():
+            ax_left.annotate(
+                model,
+                (float(row["characters"]), float(row["failuresPer10kChars"])),
+                textcoords="offset points",
+                xytext=(6, 4),
+                fontsize=7.5,
+                color=MODEL_COLORS[model],
+            )
+
+    # Regression line for misconfigurations (using variant rows).
+    if not rows_var.empty and len(rows_var) >= 2:
+        reg = LinearRegression().fit(
+            rows_var[["characters"]], rows_var["failuresPer10kChars"]
+        )
+        x_range = np.linspace(
+            float(rows_var["characters"].min()),
+            float(rows_var["characters"].max()),
+            100,
+        )
+        ax_left.plot(
+            x_range,
+            reg.predict(x_range.reshape(-1, 1)),
+            color="dimgray",
+            linestyle="--",
+            linewidth=1.2,
+            label=f"Misconfig trend (R²={reg.score(rows_var[['characters']], rows_var['failuresPer10kChars']):.2f})",
+            zorder=2,
+        )
+
+    ax_left.set_title("Failure Density vs Code Size", fontsize=11, fontweight="bold")
+    ax_left.set_xlabel("Character Footprint (chars)", fontsize=9)
+    ax_left.set_ylabel("Failure Events per 10k Characters", fontsize=9)
+    ax_left.legend(fontsize=7.5, ncol=2, loc="upper right")
+
+    # Annotations for markers.
+    from matplotlib.lines import Line2D
+    extra_handles = [
+        Line2D([0], [0], marker="o", color="gray", linestyle="None", markersize=7, label="Misconfiguration variants"),
+        Line2D([0], [0], marker="^", color="gray", linestyle="None", markersize=7, label="AI-generated (aggregate)"),
+    ]
+    ax_left.legend(handles=ax_left.get_legend_handles_labels()[0] + extra_handles,
+                   labels=ax_left.get_legend_handles_labels()[1] + [h.get_label() for h in extra_handles],
+                   fontsize=7, ncol=2, loc="upper right")
+
+    # ── Right panel: grouped bar ─────────────────────────────────────────────
+    bar_data = rows_agg[rows_agg["source"].isin(["misconfiguration", "ai"])].copy()
+    bar_data["model"] = bar_data["modelLabel"].map(
+        {"OAuth2": "OAuth2", "JWT": "JWT", "Session": "Session"}
+    )
+    bar_data = bar_data.dropna(subset=["model"])
+
+    models_ordered = ["JWT", "OAuth2", "Session"]
+    sources_ordered = ["misconfiguration", "ai"]
+    x = np.arange(len(models_ordered))
+    width = 0.35
+    bar_colors = {"misconfiguration": "#5b8dd9", "ai": "#e07b39"}
+
+    for i, source in enumerate(sources_ordered):
+        vals = []
+        for model in models_ordered:
+            sub = bar_data[(bar_data["model"] == model) & (bar_data["source"] == source)]
+            vals.append(float(sub["failuresPer10kChars"].iloc[0]) if not sub.empty else 0.0)
+        bars = ax_right.bar(
+            x + (i - 0.5) * width,
+            vals,
+            width,
+            label=SOURCE_LABELS[source],
+            color=bar_colors[source],
+            alpha=0.85,
+            edgecolor="white",
+        )
+        for bar, val in zip(bars, vals):
+            if val > 0:
+                ax_right.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    bar.get_height() + 0.03,
+                    f"{val:.2f}",
+                    ha="center",
+                    va="bottom",
+                    fontsize=8,
+                )
+
+    ax_right.set_xticks(x)
+    ax_right.set_xticklabels(models_ordered, fontsize=10)
+    ax_right.set_title("Failure Density by Model and Source", fontsize=11, fontweight="bold")
+    ax_right.set_xlabel("Authentication Model", fontsize=9)
+    ax_right.set_ylabel("Failure Events per 10k Characters", fontsize=9)
+    ax_right.legend(fontsize=9)
+    ax_right.set_ylim(bottom=0)
+
+    fig.suptitle("Failure Point Concentration Against Code Footprint", fontsize=12, fontweight="bold", y=1.01)
+    plt.tight_layout()
+
+    save_chart(fig, CHARTS_MAINT_DIR, "failure-points-vs-chars.svg", tight=False)
+
+
 def chart_error_diversity_entropy(arm_df: pd.DataFrame) -> float:
     if arm_df.empty:
         return 0.0
@@ -1408,6 +1574,7 @@ def main() -> None:
 
     chart_maintainability_difficulty_index(baseline_df)
     chart_token_lifecycle_fragility(arm_df)
+    chart_failure_points_vs_chars()
     summary.overhead_attack_share_mean = chart_authentication_overhead_breakdown(perf_df)
     summary.load_variance_mean = chart_variance_under_load(perf_df)
 
