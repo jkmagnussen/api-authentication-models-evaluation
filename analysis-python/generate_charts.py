@@ -963,7 +963,7 @@ def chart_misconfiguration_frequency_comparison(
     ax.set_axisbelow(True)
     ax.legend(title="Code source", fontsize=9, title_fontsize=9,
               loc="upper left", bbox_to_anchor=(0.0, 1.14), framealpha=1.0)
-    ax.text(0.5, -0.15,
+    ax.text(0.5, -0.2,
             "Properly implemented baseline fails 0% by design on all models — omitted.",
             transform=ax.transAxes, ha="center", fontsize=8, color="dimgray", style="italic")
 
@@ -976,7 +976,7 @@ def chart_misconfiguration_frequency_comparison(
                 ha="center", va="bottom", fontsize=9, fontweight="bold",
             )
 
-    plt.tight_layout(rect=[0, 0.08, 1, 1])
+    plt.tight_layout(rect=[0, 0.1, 1, 1])
     save_chart(fig, CHARTS_SEC_DIR, "misconfiguration-frequency-comparison.svg", tight=False)
     return freq_df
 
