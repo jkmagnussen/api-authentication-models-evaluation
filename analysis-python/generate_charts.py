@@ -333,6 +333,70 @@ def load_checker_agreement_summary() -> dict:
     return payload.get("agreement", {})
 
 
+def chart_ai_vs_human_severity_gap_ci() -> None:
+    """AI vs baseline severity-weighted risk gap with 95% bootstrap CI.
+
+    Horizontal bar chart: one bar per model showing the mean AI risk score per
+    sample (baseline = 0 by construction).  Error bars show the 95% bootstrap
+    CI so significance is immediately visible.
+    """
+    payload = load_ai_vs_human_advanced_comparisons()
+    rows = pd.DataFrame(payload.get("severityWeightedSafetyGapWithUncertainty", []))
+    if rows.empty:
+        return
+
+    MODELS = ["JWT", "OAuth2", "Session"]
+    MODEL_MAP = {"jwt": "JWT", "oauth": "OAuth2", "sessions": "Session"}
+    rows["modelLabel"] = rows["model"].map(MODEL_MAP)
+    rows = rows.set_index("modelLabel").reindex(MODELS).reset_index()
+
+    MODEL_COLORS = {"JWT": "#1f77b4", "OAuth2": "#ff7f0e", "Session": "#2ca02c"}
+
+    fig, ax = plt.subplots(figsize=(9.0, 5.0))
+
+    y = np.arange(len(MODELS))
+    for i, row in rows.iterrows():
+        mean  = float(row["aiMeanRiskPerSample"])
+        lo    = float(row["ci95Lower"])
+        hi    = float(row["ci95Upper"])
+        model = str(row["modelLabel"])
+        color = MODEL_COLORS.get(model, "#888888")
+        sig   = "  ✓ significant" if lo > 0 else "  (CI includes 0)"
+
+        ax.barh(y[i], mean, 0.5, color=color, alpha=0.85, edgecolor="white", zorder=2)
+        ax.errorbar(mean, y[i],
+                    xerr=[[mean - lo], [hi - mean]],
+                    fmt="none", color="black", capsize=5, linewidth=1.5, zorder=3)
+        ax.text(hi + 0.15, y[i],
+                f"{mean:.2f}{sig}",
+                va="center", fontsize=8.5, color=color, fontweight="bold")
+
+    ax.axvline(0, color="black", linewidth=1.0, linestyle="--", alpha=0.5)
+    ax.set_yticks(y)
+    ax.set_yticklabels(MODELS, fontsize=11)
+    ax.set_title("AI-Generated Code: Average Risk Score per Sample", fontsize=12, fontweight="bold")
+    ax.set_xlabel("Mean severity-weighted risk score  (baseline well-implemented code = 0)", fontsize=9)
+    ax.invert_yaxis()
+    ax.xaxis.grid(True, linestyle="--", alpha=0.35)
+    ax.set_axisbelow(True)
+    ax.set_xlim(left=-0.5)
+
+    ax.text(0.5, -0.14,
+            "Error bars show 95% bootstrap CI (2 000 iterations, seed fixed for reproducibility).",
+            transform=ax.transAxes, ha="center", fontsize=8, color="dimgray", style="italic")
+
+    plt.tight_layout(rect=[0, 0.08, 1, 1])
+
+    save_chart(fig, CHARTS_SEC_DIR, "ai-vs-human-severity-gap-ci.svg", tight=False)
+
+    # Inject XML comments so validate_charts can check numeric annotation drift.
+    svg_path = CHARTS_SEC_DIR / "ai-vs-human-severity-gap-ci.svg"
+    comment_block = "\n".join(f"   <!-- {row['aiMeanRiskPerSample']:.2f} -->" for _, row in rows.iterrows())
+    svg_text = svg_path.read_text(encoding="utf-8")
+    svg_text = svg_text.replace("</svg>", f"{comment_block}\n</svg>")
+    svg_path.write_text(svg_text, encoding="utf-8")
+
+
 def chart_normalized_failure_density() -> None:
     """Failure events per 10k chars by model and code source.
 
@@ -1992,6 +2056,7 @@ def main() -> None:
     chart_failure_points_vs_chars()
     chart_security_critical_control_risk_density()
     chart_normalized_failure_density()
+    chart_ai_vs_human_severity_gap_ci()
     summary.overhead_attack_share_mean = chart_authentication_overhead_breakdown(perf_df)
     summary.load_variance_mean = chart_variance_under_load(perf_df)
 
