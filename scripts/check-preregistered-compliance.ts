@@ -131,11 +131,16 @@ function sha256(text: string): string {
   return createHash("sha256").update(text).digest("hex");
 }
 
+function hasFlag(flag: string): boolean {
+  return process.argv.includes(flag);
+}
+
 function main(): void {
   const root = process.cwd();
   const minConfirmatoryCohorts = Number(process.env.AI_CONFIRMATORY_MIN_COHORTS ?? "3");
   const maxAllowedSpreadPct = Number(process.env.AI_STABILITY_MAX_SPREAD_PCT ?? "10");
   const leakageProbeStrings = buildLeakageProbeStrings();
+  const allowExploratoryBlindInterpretation = hasFlag("--allow-exploratory-blind-interpretation");
 
   const requiredFiles = [
     "docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md",
@@ -278,12 +283,20 @@ function main(): void {
   const hasFinalizedStatusLine = /^Status:\s*FINALIZED_PRE_UNBLIND\s*$/m.test(blindInterpretationText);
   const hasDraftStatusLine = /^Status:\s*DRAFT_NEEDS_FINALIZATION\s*$/m.test(blindInterpretationText);
 
-  if (!hasFinalizedStatusLine || hasDraftStatusLine) {
+  if (!allowExploratoryBlindInterpretation && (!hasFinalizedStatusLine || hasDraftStatusLine)) {
     fail("Blind interpretation artifact is not finalized. Finalize docs/generated/AI_BLIND_INTERPRETATION.md before confirmatory checks.");
+  }
+
+  if (allowExploratoryBlindInterpretation && !hasFinalizedStatusLine && !hasDraftStatusLine) {
+    fail("Blind interpretation artifact must declare either FINALIZED_PRE_UNBLIND or DRAFT_NEEDS_FINALIZATION status.");
   }
 
   if (!blindInterpretationText.includes(`Blinded report SHA256: ${blindedReportHash}`)) {
     fail("Blind interpretation hash does not match the current blinded report. Re-interpret and finalize before confirmatory checks.");
+  }
+
+  if (allowExploratoryBlindInterpretation) {
+    console.warn("[preregistered-compliance] Exploratory mode enabled: blind reviewer finalization requirements are being skipped.");
   }
 
   const reviewerALine = blindInterpretationText.match(/^Reviewer A:\s*(.*)$/m)?.[1]?.trim() ?? "";
@@ -295,40 +308,40 @@ function main(): void {
   const reviewerBIndependence = blindInterpretationText.match(/^Reviewer B Independence:\s*(.*)$/m)?.[1]?.trim() ?? "";
   const reviewerBCoiDisclosure = blindInterpretationText.match(/^Reviewer B COI Disclosure:\s*(.*)$/m)?.[1]?.trim() ?? "";
 
-  if (!reviewerALine || reviewerALine === "PENDING" || !reviewerASignedAt || reviewerASignedAt === "PENDING") {
+  if (!allowExploratoryBlindInterpretation && (!reviewerALine || reviewerALine === "PENDING" || !reviewerASignedAt || reviewerASignedAt === "PENDING")) {
     fail("Blind interpretation reviewer A sign-off is missing or pending.");
   }
 
-  if (reviewerALine === reviewerBLine) {
+  if (!allowExploratoryBlindInterpretation && reviewerALine === reviewerBLine) {
     fail("Blind interpretation reviewers must be distinct people.");
   }
 
-  if (reviewerAIndependence !== "INDEPENDENT") {
+  if (!allowExploratoryBlindInterpretation && reviewerAIndependence !== "INDEPENDENT") {
     fail("Blind interpretation reviewer A independence must be declared as INDEPENDENT.");
   }
 
-  if (reviewerACoiDisclosure !== "NONE") {
+  if (!allowExploratoryBlindInterpretation && reviewerACoiDisclosure !== "NONE") {
     fail("Blind interpretation reviewer A COI disclosure must be NONE.");
   }
 
-  if (!reviewerBLine || reviewerBLine === "PENDING" || !reviewerBSignedAt || reviewerBSignedAt === "PENDING") {
+  if (!allowExploratoryBlindInterpretation && (!reviewerBLine || reviewerBLine === "PENDING" || !reviewerBSignedAt || reviewerBSignedAt === "PENDING")) {
     fail("Blind interpretation reviewer B sign-off is missing or pending.");
   }
 
-  if (reviewerBIndependence !== "INDEPENDENT") {
+  if (!allowExploratoryBlindInterpretation && reviewerBIndependence !== "INDEPENDENT") {
     fail("Blind interpretation reviewer B independence must be declared as INDEPENDENT.");
   }
 
-  if (reviewerBCoiDisclosure !== "NONE") {
+  if (!allowExploratoryBlindInterpretation && reviewerBCoiDisclosure !== "NONE") {
     fail("Blind interpretation reviewer B COI disclosure must be NONE.");
   }
 
   const reviewerAgreement = blindInterpretationText.match(/^Reviewer Agreement:\s*(.*)$/m)?.[1]?.trim() ?? "";
-  if (reviewerAgreement !== "AGREE" && reviewerAgreement !== "DISAGREE") {
+  if (!allowExploratoryBlindInterpretation && reviewerAgreement !== "AGREE" && reviewerAgreement !== "DISAGREE") {
     fail("Blind interpretation reviewer agreement must be AGREE or DISAGREE.");
   }
 
-  if (reviewerAgreement === "DISAGREE") {
+  if (!allowExploratoryBlindInterpretation && reviewerAgreement === "DISAGREE") {
     const tieBreakReviewer = blindInterpretationText.match(/^Tie-break Reviewer:\s*(.*)$/m)?.[1]?.trim() ?? "";
     const tieBreakDecision = blindInterpretationText.match(/^Tie-break Decision:\s*(.*)$/m)?.[1]?.trim() ?? "";
     const tieBreakSignedAt = blindInterpretationText.match(/^Tie-break Signed At:\s*(.*)$/m)?.[1]?.trim() ?? "";
