@@ -945,6 +945,159 @@ def chart_complexity_vs_misconfig_frequency(
     return r2, slope
 
 
+def chart_ai_sample_syntax_issues() -> None:
+    """AI sample syntax and compile issues by model.
+
+    Dual-panel chart:
+      Left  — stacked bar of issue count by error category per model, so the
+              reader sees both the total volume and the breakdown of what went wrong.
+      Right — files-affected breakdown: clean vs affected files per model, as a
+              100% stacked bar, giving an immediate sense of issue prevalence.
+    """
+    report_path = GENERATED_DIR / "ai-sample-syntax-report.json"
+    if not report_path.exists():
+        return
+
+    payload = json.loads(report_path.read_text(encoding="utf8"))
+    issues = payload.get("issues", [])
+    total_files = payload.get("fileCount", 90)
+    files_per_model = total_files // 3  # 30 per model
+
+    if not issues:
+        return
+
+    MODEL_DISPLAY = {"oauth": "OAuth2", "jwt": "JWT", "sessions": "Session"}
+    MODELS = ["JWT", "OAuth2", "Session"]
+
+    def model_from_path(path: str) -> str:
+        for key, label in MODEL_DISPLAY.items():
+            if f"/{key}/" in path or f"\\{key}\\" in path:
+                return label
+        return "Unknown"
+
+    def categorize(message: str) -> str:
+        m = message.lower()
+        if "unterminated template" in m:
+            return "Unterminated template"
+        if "module declaration" in m or "' or \"" in m:
+            return "Module declaration syntax"
+        if "unexpected keyword" in m or "unexpected token" in m:
+            return "Unexpected keyword/token"
+        if "expected" in m:
+            return "Missing expected token"
+        if "illegal return" in m:
+            return "Complexity parse error"
+        return "Other"
+
+    rows = [
+        {
+            "model": model_from_path(issue["filePath"]),
+            "file": issue["filePath"],
+            "category": categorize(issue["message"]),
+        }
+        for issue in issues
+    ]
+    df = pd.DataFrame(rows)
+
+    # ── Left panel: stacked bar by issue category per model ──────────────────
+    CATEGORY_COLORS = {
+        "Unterminated template":    "#e15759",
+        "Module declaration syntax": "#f28e2b",
+        "Unexpected keyword/token": "#4e79a7",
+        "Missing expected token":   "#76b7b2",
+        "Complexity parse error":   "#59a14f",
+        "Other":                    "#bab0ac",
+    }
+
+    cat_counts = (
+        df.groupby(["model", "category"], as_index=False)
+        .size()
+        .rename(columns={"size": "count"})
+    )
+    all_cats = list(CATEGORY_COLORS.keys())
+
+    fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(13.0, 5.6))
+
+    x = np.arange(len(MODELS))
+    bottoms = np.zeros(len(MODELS))
+    for cat in all_cats:
+        vals = []
+        for model in MODELS:
+            sub = cat_counts[(cat_counts["model"] == model) & (cat_counts["category"] == cat)]
+            vals.append(int(sub["count"].iloc[0]) if not sub.empty else 0)
+        if sum(vals) == 0:
+            continue
+        bars = ax_left.bar(x, vals, bottom=bottoms, color=CATEGORY_COLORS[cat],
+                           label=cat, edgecolor="white", linewidth=0.5)
+        # Label each segment if it's tall enough to read.
+        for bar, val in zip(bars, vals):
+            if val >= 2:
+                ax_left.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    bar.get_y() + bar.get_height() / 2,
+                    str(val),
+                    ha="center", va="center", fontsize=8, color="white", fontweight="bold",
+                )
+        bottoms += np.array(vals, dtype=float)
+
+    # Total issue count above each bar.
+    for i, (model, total) in enumerate(zip(MODELS, bottoms)):
+        ax_left.text(i, total + 0.2, str(int(total)),
+                     ha="center", va="bottom", fontsize=9, fontweight="bold")
+
+    ax_left.set_xticks(x)
+    ax_left.set_xticklabels(MODELS, fontsize=11)
+    ax_left.set_title("Issue Count by Category and Model", fontsize=11, fontweight="bold")
+    ax_left.set_xlabel("Authentication Model", fontsize=9)
+    ax_left.set_ylabel("Number of Issues", fontsize=9)
+    ax_left.legend(fontsize=7.5, loc="upper left", framealpha=0.9)
+    ax_left.set_ylim(0, max(bottoms) * 1.18)
+
+    # ── Right panel: clean vs affected files per model ───────────────────────
+    affected_files = df.groupby("model")["file"].nunique().reindex(MODELS, fill_value=0)
+    clean_files = files_per_model - affected_files
+
+    bar_width = 0.55
+    p_affected = ax_right.bar(x, affected_files.values, bar_width,
+                               label="Files with issues", color="#e15759", alpha=0.88, edgecolor="white")
+    p_clean = ax_right.bar(x, clean_files.values, bar_width,
+                            bottom=affected_files.values, label="Clean files",
+                            color="#76b7b2", alpha=0.88, edgecolor="white")
+
+    for bar, val in zip(p_affected, affected_files.values):
+        if val > 0:
+            ax_right.text(bar.get_x() + bar.get_width() / 2,
+                          bar.get_height() / 2,
+                          str(int(val)),
+                          ha="center", va="center", fontsize=9, color="white", fontweight="bold")
+    for bar, aff, cln in zip(p_clean, affected_files.values, clean_files.values):
+        if cln > 0:
+            ax_right.text(bar.get_x() + bar.get_width() / 2,
+                          float(aff) + float(cln) / 2,
+                          str(int(cln)),
+                          ha="center", va="center", fontsize=9, color="white", fontweight="bold")
+
+    # Percentage label above each full bar.
+    for i, (aff, model) in enumerate(zip(affected_files.values, MODELS)):
+        pct = int(aff) / files_per_model * 100
+        ax_right.text(i, files_per_model + 0.3,
+                      f"{pct:.0f}% affected",
+                      ha="center", va="bottom", fontsize=8, color="#e15759", fontweight="bold")
+
+    ax_right.set_xticks(x)
+    ax_right.set_xticklabels(MODELS, fontsize=11)
+    ax_right.set_ylim(0, files_per_model * 1.18)
+    ax_right.set_title(f"Files Affected vs Clean (n={files_per_model} per model)", fontsize=11, fontweight="bold")
+    ax_right.set_xlabel("Authentication Model", fontsize=9)
+    ax_right.set_ylabel("File Count", fontsize=9)
+    ax_right.legend(fontsize=9, loc="upper right")
+
+    fig.suptitle("AI-Generated Sample Syntax and Compile Issues", fontsize=12, fontweight="bold", y=1.01)
+    plt.tight_layout()
+
+    save_chart(fig, CHARTS_MAINT_DIR, "ai-sample-syntax-issues-by-model-stage.svg", tight=False)
+
+
 def chart_failure_points_vs_chars() -> None:
     """Failure density vs character footprint.
 
@@ -1586,6 +1739,7 @@ def main() -> None:
 
     chart_maintainability_difficulty_index(baseline_df)
     chart_token_lifecycle_fragility(arm_df)
+    chart_ai_sample_syntax_issues()
     chart_failure_points_vs_chars()
     summary.overhead_attack_share_mean = chart_authentication_overhead_breakdown(perf_df)
     summary.load_variance_mean = chart_variance_under_load(perf_df)
