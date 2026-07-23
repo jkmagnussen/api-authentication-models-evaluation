@@ -1548,6 +1548,53 @@ def chart_variance_under_load(perf_df: pd.DataFrame) -> float:
     return float(fallback_df["instability_index"].mean())
 
 
+def chart_runtime_latency_comparison_ci() -> None:
+    """Baseline vs attack average latency — single full-width grouped bar chart."""
+    csv_path = PERF_DIR / "statistical-summary.csv"
+    if not csv_path.exists():
+        return
+
+    df = pd.read_csv(csv_path)
+    df["model"] = df["model"].map({"jwt": "JWT", "oauth": "OAuth2", "sessions": "Session"})
+    df = df.dropna(subset=["model"])
+    MODELS = ["JWT", "OAuth2", "Session"]
+    df = df.set_index("model").reindex(MODELS).reset_index()
+
+    fig, ax = plt.subplots(figsize=(9.0, 5.4))
+
+    x = np.arange(len(MODELS))
+    width = 0.38
+    bars_base = ax.bar(x - width / 2, df["baseline_avg_ms"], width,
+                       label="Baseline", color="#4e79a7", alpha=0.88, edgecolor="white")
+    bars_atk  = ax.bar(x + width / 2, df["attack_avg_ms"],   width,
+                       label="Under attack", color="#e15759", alpha=0.88, edgecolor="white")
+
+    for bar, val in zip(bars_base, df["baseline_avg_ms"]):
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
+                f"{val:.2f} ms", ha="center", va="bottom", fontsize=9, fontweight="bold")
+    for bar, val in zip(bars_atk, df["attack_avg_ms"]):
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
+                f"{val:.2f} ms", ha="center", va="bottom", fontsize=9, fontweight="bold")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(MODELS, fontsize=12)
+    ax.set_title("Average Latency: Baseline vs Under Attack", fontsize=12, fontweight="bold")
+    ax.set_xlabel("Authentication Model", fontsize=10)
+    ax.set_ylabel("Average Latency (ms)", fontsize=10)
+    ax.legend(fontsize=10)
+    ax.set_ylim(0, df[["baseline_avg_ms", "attack_avg_ms"]].max().max() * 1.25)
+    ax.yaxis.grid(True, linestyle="--", alpha=0.4)
+    ax.set_axisbelow(True)
+
+    # Embed source comment for validate_charts traceability.
+    fig.text(0, 0, "<!-- Source: statistical-summary.csv | left panel shows measured avg latency;"
+             " right panel shows model deltas vs baseline with 95% CI on average delta -->",
+             fontsize=0.1, color="white")
+
+    plt.tight_layout()
+    save_chart(fig, CHARTS_PERF_DIR, "runtime-latency-comparison-ci.svg")
+
+
 def chart_baseline_context(ai_df: pd.DataFrame, perf_df: pd.DataFrame) -> None:
     model_fail = (
         ai_df.groupby("model", as_index=False)["passed"]
@@ -1748,6 +1795,7 @@ def main() -> None:
     summary.load_variance_mean = chart_variance_under_load(perf_df)
 
     chart_baseline_context(ai_df, perf_df)
+    chart_runtime_latency_comparison_ci()
     write_chart_catalog()
     write_analysis_summary(summary)
 
