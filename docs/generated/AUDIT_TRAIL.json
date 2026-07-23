@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-07-23T19:41:36.549Z",
-  "signedAt": "2026-07-23T19:41:36.549Z",
-  "signatureSha256": "2d6ab2ee7acfa1bda463934aba6399d6e2432518ccee63e9f4adc2a510f85efe",
+  "generatedAt": "2026-07-23T20:15:36.051Z",
+  "signedAt": "2026-07-23T20:15:36.051Z",
+  "signatureSha256": "8a1334e8a5f32d041b20df40daf52f896972bf2126e586e8b29a24276a347b6b",
   "entries": [
     {
       "label": "protocol-seal",
@@ -31,7 +31,7 @@
     {
       "label": "preregistered-compliance",
       "path": "docs/generated/PREREGISTERED_COMPLIANCE.md",
-      "sha256": "068912cddf19b679314ff703b62376ba1adc8b063eca3cce3db6d08011858de8"
+      "sha256": "f39e0918ecb0fc086529497abad89a580769bdca8a5d75997b48ed7538ae1c4d"
     }
   ]
 }

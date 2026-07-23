@@ -104,7 +104,7 @@
     "docs:generate:code": "npm run code:footprint:tolerant",
     "docs:generate:performance": "npm run perf:analyze",
     "docs:generate:ai": "npm run compare:reports && npm run research:advanced",
-    "docs:generate": "npm run docs:generate:variants && npm run docs:generate:code && npm run docs:generate:performance && npm run docs:generate:ai && npm run env:manifest && npm run submission:readiness && npm run docs:check",
+    "docs:generate": "npm run docs:generate:variants && npm run docs:generate:code && npm run docs:generate:performance && npm run docs:generate:ai && npm run env:manifest && npm run objective:preregistered:report && npm run objective:audit:trail && npm run submission:readiness && npm run docs:check",
     "docs:verify": "npm run docs:drift && npm run docs:lint && npm run objective:preregistered:check",
     "docs:verify:exploratory": "npm run docs:drift && npm run docs:lint && npm run objective:preregistered:check:exploratory",
     "docs:verify:strict": "npm run docs:drift:strict && npm run docs:lint && npm run objective:preregistered:check",
