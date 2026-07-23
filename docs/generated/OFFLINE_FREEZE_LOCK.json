@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T22:35:54.877Z",
+  "generatedAt": "2026-07-23T22:38:04.242Z",
   "mode": "offline-freeze",
   "notes": "Live provider generation is blocked while this lock file exists. Remove it intentionally or set ALLOW_LIVE_AI_GENERATION=true to override.",
   "lockVersion": 1,
@@ -13,7 +13,7 @@
     "ai-generated/arms"
   ],
   "fileCount": 1467,
-  "totalBytes": 3733072,
+  "totalBytes": 3733067,
   "files": [
     {
       "path": "ai-generated/arms/claude-neutral/metadata.json",
@@ -6767,7 +6767,7 @@
     },
     {
       "path": "docs/charts/maintainability/ai-sample-syntax-issues-by-model-stage.svg",
-      "sha256": "49582b30edadc4cb231ceed3508789f1d3b3561088a62660e903b47bff1afc55",
+      "sha256": "da6ce5e2b9843b8135f2810b10772894cac4629ae05cb1cc63100259093a82be",
       "bytes": 95444
     },
     {
@@ -6777,42 +6777,42 @@
     },
     {
       "path": "docs/charts/maintainability/complexity-to-misconfig-regression.svg",
-      "sha256": "e4d41f9c5ef5ec1aa4af4593a6ad031a055cc8f9d3517173f75cd911e4bacda1",
+      "sha256": "5a2299a47cabb5a925e9490f6da2ced9025991c89a3b7de8244d7a5bb498e613",
       "bytes": 43214
     },
     {
       "path": "docs/charts/maintainability/complexity-vs-misconfig-frequency-regression.svg",
-      "sha256": "feb5bdc1776d6b4f318962162e269bc2843edf901bce7c7344d559be21c3f904",
+      "sha256": "247f8752659226f521416e0fee7c27622db115282dd40aad822aec8a4b0a2a20",
       "bytes": 46604
     },
     {
       "path": "docs/charts/maintainability/failure-points-vs-chars.svg",
-      "sha256": "a45137cc3bab4e7e5596e41f0a98bd49356833d0114ffee982c1807e7ed943d5",
+      "sha256": "8cacc5476307ce198241adb5815901771d27fd1ef0da4e38858473cbe5f84881",
       "bytes": 103215
     },
     {
       "path": "docs/charts/maintainability/maintainability-difficulty-index.svg",
-      "sha256": "d125d4ead9e27ca9753a6d1fdc6921127858507b9041b6b9f692baf28ca66b45",
+      "sha256": "8ead76a2071a8a98cc41af0c3c2fa4b35ec91f4201c1e2f5594a45fa0d5519e7",
       "bytes": 38495
     },
     {
       "path": "docs/charts/performance/authentication-overhead-breakdown.svg",
-      "sha256": "f0852c9dc7a7828f984035b624097dfe6ebb19396ff6ecbc211f6ef594019ec1",
+      "sha256": "f944b1c21a04924d289950eae0a77c56a24929d74adc0fca3601c691b27af6d9",
       "bytes": 44118
     },
     {
       "path": "docs/charts/performance/performance-comparison.svg",
-      "sha256": "9a3f05b4dba7c82f2920c1248a7bd22ae8898834ae99ed1c8fea8967b24d0008",
+      "sha256": "92fcc9f041b8ce2f61985b5b8dd0324354d819b77599ab4ebd1a4e124f790ffc",
       "bytes": 34857
     },
     {
       "path": "docs/charts/performance/runtime-latency-comparison-ci.svg",
-      "sha256": "18033423a4f497106659fda77bd142f4b257f3a4910021313fde163bd117df36",
+      "sha256": "1260301de644918ff875f2593c5363bdb87d9423037015871bb96d96e6610154",
       "bytes": 68186
     },
     {
       "path": "docs/charts/performance/variance-under-load.svg",
-      "sha256": "aba0f1f0e5579ccec453d9141b98352c1ebd3b83aa89b23acd82d99d56037a67",
+      "sha256": "b35b061460539609b165b5e812f1fd964c5a6cd61d41b12a0d05c2d0b632cdc5",
       "bytes": 33400
     },
     {
@@ -6822,7 +6822,7 @@
     },
     {
       "path": "docs/charts/security/ai-failure-rates.svg",
-      "sha256": "fc35f69a08752649cdc4df2210d8257f20a7aef4dabb4ba1bee3f2926736a871",
+      "sha256": "75c423de5ab0ce9531915d2feafd7570c5b4a5335e103c4421a54a217e3b85e5",
       "bytes": 29980
     },
     {
@@ -6842,12 +6842,12 @@
     },
     {
       "path": "docs/charts/security/misconfiguration-frequency-comparison.svg",
-      "sha256": "d816d24468a6de3bb2db6c6ff13118a88c4462cf152c5c233dcaf1b3c376c048",
+      "sha256": "1dc2716e781c2d3fb6e8ebe40eec2094b874e49bfd2c1771fc137e1a9a63ba55",
       "bytes": 47641
     },
     {
       "path": "docs/charts/security/misconfiguration-severity-heatmap.svg",
-      "sha256": "dadc684170b4073eeead3568d640d340000e70b54eb0eefd6f43f46bb20c121b",
+      "sha256": "743d0d7cef859873a9e6d8981e22d43bbf9182f1b7c85fdc87dfe5152151efc8",
       "bytes": 71259
     },
     {
@@ -6857,22 +6857,22 @@
     },
     {
       "path": "docs/charts/security/security-critical-control-risk-density.svg",
-      "sha256": "bf1535d82f7e7a751548e8e1a66a172a2697fe9d592c68d2824afa85444c02e2",
-      "bytes": 79528
+      "sha256": "05f9c319248946c018fd9f5ee4aa6957a941d175705d87881231e42cb7dec143",
+      "bytes": 79523
     },
     {
       "path": "docs/charts/security/stride-severity-scoring.svg",
-      "sha256": "66960aaf302a7fd78a3c63b03110204c6372cd7d99d3e57bd5156a19e49f7feb",
+      "sha256": "cad5e5a7ef45f233cca4ac830311fd470cd56802db44733cf5dedae4f4264c48",
       "bytes": 41075
     },
     {
       "path": "docs/charts/security/token-lifecycle-fragility.svg",
-      "sha256": "a83faec514d59c5e0229399bceaee664a1f203a37909ba0009e5f9d364212edc",
+      "sha256": "5ec79da66dacd80a1ce5270e0c1e319a9dfcaa0a9e06b9b17e57bca0cf0fe197",
       "bytes": 38964
     },
     {
       "path": "docs/charts/synthesis/ai-determinism-variance.svg",
-      "sha256": "eead50803f8a0803e023b6adb4dfc089e0b5411d0b5f0c2ea0d9897ae63065d1",
+      "sha256": "6d3b7d3394ca1009f130b10a7539ce759f79da0940d7c3290c5dfdcec46917d6",
       "bytes": 45835
     },
     {
@@ -6882,32 +6882,32 @@
     },
     {
       "path": "docs/charts/synthesis/correctness-security-tradeoff.svg",
-      "sha256": "4f024505a3d73497fbced6c28f4a46f13372eafa21ed20f958db1f103d3b1659",
+      "sha256": "3b184b3ffe35f6c7c99a1d1f0d37906b79c6367220d3e1f52301bfa849fd7976",
       "bytes": 50871
     },
     {
       "path": "docs/charts/synthesis/correctness-vs-security-provider-scatter.svg",
-      "sha256": "bd0a790632c132213f892a7448dee258b87ab7a2b34ca0f7f5a44adb6030e25c",
+      "sha256": "8915fee3d75f80c0776d460ffda7b2c3d19fa72a98404ffea5fb13989c980ea2",
       "bytes": 48440
     },
     {
       "path": "docs/charts/synthesis/cross-provider-overlap-venn.svg",
-      "sha256": "2a6acf53f5b23d9a16698a4494adcbd845c9f1240fe8ad519bb373ddecf00878",
+      "sha256": "812c34d919e197e93e6500ae25ef2cc2e84495cc3bdd1bd590e6bb19577008a0",
       "bytes": 67414
     },
     {
       "path": "docs/charts/synthesis/error-diversity-entropy.svg",
-      "sha256": "686f22b5fde16addbc431c2cc6ed1f2b2f50ed5a452814291c692cd04308018d",
+      "sha256": "909e0d95986b74e27f2bfa48fd67be289c7468788535d9a5d553e20efc06602d",
       "bytes": 50562
     },
     {
       "path": "docs/charts/synthesis/misconfiguration-clustering-kmeans.svg",
-      "sha256": "db6b24a3004196e61a8821598712ef7aac45daf22faadd8d75e8165bfe7d365c",
+      "sha256": "877cbb7ebb7dd05c53d3fc6b368286a8e897d2421cc2cb168f1ce97af3a31bfb",
       "bytes": 88809
     },
     {
       "path": "docs/charts/synthesis/provider-bias-analysis.svg",
-      "sha256": "d71a0c6daf437c1569008fbc1cace6ef81e25e127d0ea0b3c1bc91632ba33ebe",
+      "sha256": "3a8c620e4db6895edee43e0fc5a6de80adfe8d1dc1d6df0c6c700c5a71c47e38",
       "bytes": 75671
     },
     {

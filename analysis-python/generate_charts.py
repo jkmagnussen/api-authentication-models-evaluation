@@ -392,11 +392,11 @@ def chart_security_critical_control_risk_density() -> None:
     ax.set_ylim(0, summary_df["avgRiskPer10kChars"].max() * 1.3)
     ax.yaxis.grid(True, linestyle="--", alpha=0.4)
     ax.set_axisbelow(True)
-    ax.text(0.5, -0.13,
+    ax.text(0.5, -0.18,
             "Baseline (well-implemented reference) scores 0 on all controls — omitted for clarity.",
             transform=ax.transAxes, ha="center", fontsize=8, color="dimgray", style="italic")
 
-    plt.tight_layout(rect=[0, 0.05, 1, 1])
+    plt.tight_layout(rect=[0, 0.08, 1, 1])
     save_chart(fig, CHARTS_SEC_DIR, "security-critical-control-risk-density.svg", tight=False)
 
     # Inject XML comments with all numeric values (incl. baseline zeros) so
