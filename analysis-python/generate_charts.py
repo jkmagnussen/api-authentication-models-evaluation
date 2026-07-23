@@ -1549,15 +1549,14 @@ def chart_variance_under_load(perf_df: pd.DataFrame) -> float:
 
 
 def chart_runtime_latency_comparison_ci() -> None:
-    """Runtime latency: baseline vs attack, with delta summary and CI context.
+    """Runtime latency: baseline vs attack, with 95% CI on the average delta.
 
     Dual-panel chart:
-      Left  — grouped bars of measured average latency (ms) per model, with
-              value labels and a delta arrow annotation between the two bars.
-      Right — horizontal bar chart of avg delta (%), coloured green/red,
-              with the 95% CI range shown as small text beneath each bar and
-              a significance marker, so the wide CIs are visible without
-              dominating the visual.
+      Left  — grouped bars showing measured average latency (ms) for baseline
+              and attack phases per model, with value labels.
+      Right — forest-plot style: average delta (%) per model with 95% CI
+              whiskers, coloured green (improvement) / red (regression),
+              with a zero reference line.
     """
     csv_path = PERF_DIR / "statistical-summary.csv"
     if not csv_path.exists():
@@ -1567,93 +1566,76 @@ def chart_runtime_latency_comparison_ci() -> None:
     df["model"] = df["model"].map({"jwt": "JWT", "oauth": "OAuth2", "sessions": "Session"})
     df = df.dropna(subset=["model"])
     MODELS = ["JWT", "OAuth2", "Session"]
+    MODEL_COLORS = {"JWT": "#1f77b4", "OAuth2": "#ff7f0e", "Session": "#2ca02c"}
     df = df.set_index("model").reindex(MODELS).reset_index()
 
-    fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(13.0, 5.6))
+    fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(13.0, 5.4))
 
-    # ── Left panel: baseline vs attack grouped bars ───────────────────────────
+    # ── Left panel: baseline vs attack bars ──────────────────────────────────
     x = np.arange(len(MODELS))
-    width = 0.38
+    width = 0.35
     bars_base = ax_left.bar(x - width / 2, df["baseline_avg_ms"], width,
                              label="Baseline", color="#4e79a7", alpha=0.88, edgecolor="white")
     bars_atk  = ax_left.bar(x + width / 2, df["attack_avg_ms"],   width,
-                             label="Under attack", color="#f28e2b", alpha=0.88, edgecolor="white")
+                             label="Under attack", color="#e15759", alpha=0.88, edgecolor="white")
 
     for bar, val in zip(bars_base, df["baseline_avg_ms"]):
-        ax_left.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.015,
-                     f"{val:.2f} ms", ha="center", va="bottom", fontsize=8, fontweight="bold",
-                     color="#4e79a7")
+        ax_left.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
+                     f"{val:.2f}", ha="center", va="bottom", fontsize=8.5, fontweight="bold")
     for bar, val in zip(bars_atk, df["attack_avg_ms"]):
-        ax_left.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.015,
-                     f"{val:.2f} ms", ha="center", va="bottom", fontsize=8, fontweight="bold",
-                     color="#f28e2b")
-
-    # Delta arrow annotation between the pair of bars for each model.
-    y_arrow = df[["baseline_avg_ms", "attack_avg_ms"]].max().max() * 1.1
-    for i, row in df.iterrows():
-        delta = float(row["avg_delta_pct"])
-        sign  = "▲" if delta > 0 else "▼"
-        color = "#e15759" if delta > 0 else "#2ca02c"
-        ax_left.annotate("", xy=(x[i] + width / 2, y_arrow), xytext=(x[i] - width / 2, y_arrow),
-                         arrowprops=dict(arrowstyle="->" if delta > 0 else "<-",
-                                         color=color, lw=1.4))
-        ax_left.text(x[i], y_arrow + 0.02, f"{sign}{abs(delta):.1f}%",
-                     ha="center", va="bottom", fontsize=7.5, color=color, fontweight="bold")
+        ax_left.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
+                     f"{val:.2f}", ha="center", va="bottom", fontsize=8.5, fontweight="bold")
 
     ax_left.set_xticks(x)
     ax_left.set_xticklabels(MODELS, fontsize=11)
     ax_left.set_title("Average Latency: Baseline vs Under Attack", fontsize=11, fontweight="bold")
     ax_left.set_xlabel("Authentication Model", fontsize=9)
     ax_left.set_ylabel("Average Latency (ms)", fontsize=9)
-    ax_left.legend(fontsize=9, loc="upper left")
-    ax_left.set_ylim(0, df[["baseline_avg_ms", "attack_avg_ms"]].max().max() * 1.35)
-    ax_left.yaxis.grid(True, linestyle="--", alpha=0.4)
-    ax_left.set_axisbelow(True)
+    ax_left.legend(fontsize=9)
+    ax_left.set_ylim(0, df[["baseline_avg_ms", "attack_avg_ms"]].max().max() * 1.25)
 
-    # ── Right panel: horizontal delta bars with CI as text ────────────────────
-    ax_right.axvline(0, color="black", linewidth=1.2, linestyle="--", alpha=0.5, zorder=1)
+    # ── Right panel: forest plot of average delta % with 95% CI ──────────────
+    ax_right.axvline(0, color="black", linewidth=1.0, linestyle="--", alpha=0.6, zorder=1)
 
-    bar_height = 0.5
-    y_pos = np.arange(len(MODELS), dtype=float)
+    y_pos = np.arange(len(MODELS))
     for i, row in df.iterrows():
+        model  = row["model"]
         delta  = float(row["avg_delta_pct"])
         ci_lo  = float(row["ci95_avg_delta_pct_lower"])
         ci_hi  = float(row["ci95_avg_delta_pct_upper"])
-        p_val  = float(row["welch_p_value"])
-        color  = "#2ca02c" if delta <= 0 else "#e15759"
-        sig    = "n.s." if p_val >= 0.05 else f"p={p_val:.3f}"
+        color  = "#2ca02c" if delta <= 0 else "#e15759"   # green=faster, red=slower
 
-        ax_right.barh(y_pos[i], delta, bar_height,
-                      color=color, alpha=0.82, edgecolor="white", zorder=2)
-
-        # Value label at end of bar.
+        ax_right.errorbar(
+            delta, y_pos[i],
+            xerr=[[delta - ci_lo], [ci_hi - delta]],
+            fmt="o", color=color, markersize=9, capsize=6,
+            linewidth=1.8, capthick=1.8, zorder=3,
+        )
+        # Delta label with white backing.
         direction = "faster" if delta <= 0 else "slower"
-        label_x = delta + (1.5 if delta >= 0 else -1.5)
-        ax_right.text(label_x, y_pos[i],
-                      f"{delta:+.1f}%  ({direction})",
-                      ha="left" if delta >= 0 else "right",
-                      va="center", fontsize=9, color=color, fontweight="bold")
-
-        # CI range and significance as small text below the bar.
-        ax_right.text(0, y_pos[i] - 0.33,
-                      f"95% CI  [{ci_lo:+.0f}%, {ci_hi:+.0f}%]   {sig}",
-                      ha="center", va="top", fontsize=7, color="dimgray",
-                      style="italic")
+        ax_right.text(
+            delta + (8 if delta >= 0 else -8),
+            y_pos[i],
+            f"{delta:+.1f}%\n({direction})",
+            ha="left" if delta >= 0 else "right",
+            va="center", fontsize=8, color=color, fontweight="bold",
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#cccccc", alpha=1.0),
+            zorder=4,
+        )
 
     ax_right.set_yticks(y_pos)
     ax_right.set_yticklabels(MODELS, fontsize=11)
-    ax_right.set_title("Average Latency Delta vs Baseline (%)", fontsize=11, fontweight="bold")
+    ax_right.set_title("Average Latency Delta (%) with 95% CI", fontsize=11, fontweight="bold")
     ax_right.set_xlabel("Change vs Baseline (%)", fontsize=9)
     ax_right.invert_yaxis()
-    ax_right.set_ylim(len(MODELS) - 0.7, -0.65)
-    ax_right.xaxis.grid(True, linestyle="--", alpha=0.35)
-    ax_right.set_axisbelow(True)
 
-    # Direction labels.
-    ax_right.text(0.01, 0.01, "← faster", transform=ax_right.transAxes,
-                  fontsize=8, color="#2ca02c", alpha=0.75)
-    ax_right.text(0.99, 0.01, "slower →", transform=ax_right.transAxes,
-                  fontsize=8, color="#e15759", alpha=0.75, ha="right")
+    # Shade regions.
+    ax_right.axvspan(ax_right.get_xlim()[0], 0, alpha=0.04, color="green", zorder=0)
+    ax_right.axvspan(0, ax_right.get_xlim()[1], alpha=0.04, color="red",   zorder=0)
+    ax_right.text(0.02, 0.02, "← faster under attack",
+                  transform=ax_right.transAxes, fontsize=7.5, color="green", alpha=0.7)
+    ax_right.text(0.98, 0.02, "slower under attack →",
+                  transform=ax_right.transAxes, fontsize=7.5, color="red", alpha=0.7, ha="right")
 
     # Embed source comment for validate_charts traceability.
     fig.text(0, 0, "<!-- Source: statistical-summary.csv | left panel shows measured avg latency;"
