@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T22:13:03.203Z",
+  "generatedAt": "2026-07-23T22:14:37.505Z",
   "mode": "offline-freeze",
   "notes": "Live provider generation is blocked while this lock file exists. Remove it intentionally or set ALLOW_LIVE_AI_GENERATION=true to override.",
   "lockVersion": 1,
@@ -13,7 +13,7 @@
     "ai-generated/arms"
   ],
   "fileCount": 1468,
-  "totalBytes": 3811105,
+  "totalBytes": 3790999,
   "files": [
     {
       "path": "ai-generated/arms/claude-neutral/metadata.json",
@@ -6812,8 +6812,8 @@
     },
     {
       "path": "docs/charts/performance/runtime-latency-comparison-ci.svg",
-      "sha256": "e587da54f8d4b34fd4a8152b6a85b54ec4cae9a6b1d25cbea800b93b0161e2ca",
-      "bytes": 105917
+      "sha256": "d00825433dc5d0ca9b8f27ff18f0ac314d2bc21873aefec0e96280d668f36e5f",
+      "bytes": 85811
     },
     {
       "path": "docs/charts/performance/variance-under-load.svg",
