@@ -925,9 +925,6 @@ def chart_misconfiguration_frequency_comparison(
     for model in model_order:
         model_name = display_model_name(model)
 
-        # Secure baseline is treated as correctly configured by design.
-        rows.append({"model": model_name, "source": "Proper", "frequency_pct": 0.0})
-
         model_variants = variant_df[variant_df["model"] == model].copy()
         misconfig_rate = 0.0
         if not model_variants.empty and "passed" in model_variants.columns:
@@ -944,35 +941,42 @@ def chart_misconfiguration_frequency_comparison(
     if freq_df.empty:
         return freq_df
 
-    source_order = ["Proper", "Misconfigured", "AI-generated"]
-    fig, ax = plt.subplots(figsize=(9.2, 5.2))
+    source_order = ["Misconfigured", "AI-generated"]
+    display_order = [display_model_name(m) for m in model_order]
+
+    fig, ax = plt.subplots(figsize=(9.0, 5.4))
     sns.barplot(
         data=freq_df,
         x="model",
         y="frequency_pct",
         hue="source",
-        order=[display_model_name(m) for m in model_order],
+        order=display_order,
         hue_order=source_order,
-        palette={"Proper": "#4C78A8", "Misconfigured": "#E45756", "AI-generated": "#72B7B2"},
+        palette={"Misconfigured": "#e15759", "AI-generated": "#f28e2b"},
         ax=ax,
     )
-    ax.set_title("Misconfiguration Frequency by Model and Artifact Source")
-    ax.set_xlabel("Authentication Model")
-    ax.set_ylabel("Misconfiguration Frequency (%)")
-    ax.set_ylim(0, 105)
-    ax.legend(title="Source", bbox_to_anchor=(1.02, 1), loc="upper left")
+    ax.set_title("Misconfiguration Failure Rate by Model", fontsize=12, fontweight="bold")
+    ax.set_xlabel("Authentication Model", fontsize=10)
+    ax.set_ylabel("Failure Rate (%)", fontsize=10)
+    ax.set_ylim(0, 115)
+    ax.yaxis.grid(True, linestyle="--", alpha=0.4)
+    ax.set_axisbelow(True)
+    ax.legend(title="Code source", fontsize=9, title_fontsize=9, loc="upper left")
+    ax.text(0.5, -0.15,
+            "Properly implemented baseline fails 0% by design on all models — omitted.",
+            transform=ax.transAxes, ha="center", fontsize=8, color="dimgray", style="italic")
 
     for patch in ax.patches:
         value = float(patch.get_height())
-        ax.annotate(
-            f"{value:.0f}%",
-            (patch.get_x() + patch.get_width() / 2, value),
-            ha="center",
-            va="bottom",
-            fontsize=8,
-        )
+        if value > 0:
+            ax.annotate(
+                f"{value:.0f}%",
+                (patch.get_x() + patch.get_width() / 2, value + 1.5),
+                ha="center", va="bottom", fontsize=9, fontweight="bold",
+            )
 
-    save_chart(fig, CHARTS_SEC_DIR, "misconfiguration-frequency-comparison.svg")
+    plt.tight_layout(rect=[0, 0.08, 1, 1])
+    save_chart(fig, CHARTS_SEC_DIR, "misconfiguration-frequency-comparison.svg", tight=False)
     return freq_df
 
 
