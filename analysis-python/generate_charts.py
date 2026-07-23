@@ -381,11 +381,11 @@ def chart_ai_vs_human_severity_gap_ci() -> None:
     ax.set_axisbelow(True)
     ax.set_xlim(left=-0.5)
 
-    ax.text(0.5, -0.14,
+    ax.text(0.5, -0.19,
             "Error bars show 95% bootstrap CI (2 000 iterations, seed fixed for reproducibility).",
             transform=ax.transAxes, ha="center", fontsize=8, color="dimgray", style="italic")
 
-    plt.tight_layout(rect=[0, 0.08, 1, 1])
+    plt.tight_layout(rect=[0, 0.1, 1, 1])
 
     save_chart(fig, CHARTS_SEC_DIR, "ai-vs-human-severity-gap-ci.svg", tight=False)
 
