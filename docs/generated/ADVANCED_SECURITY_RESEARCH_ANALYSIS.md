@@ -1,6 +1,6 @@
 # Advanced Security Research Analysis
 
-Generated: 2026-07-23T04:51:42.616Z
+Generated: 2026-07-23T12:17:03.313Z
 Regenerate: npm run research:advanced
 
 This report operationalizes advanced dissertation analyses over the existing baseline, controlled misconfiguration, and AI-generated evidence layers.

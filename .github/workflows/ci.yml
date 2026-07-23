@@ -32,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate documentation artifacts
+      - name: Validate documentation artifacts
         run: npm run ci:docs
 
       - name: Upload generated artifacts snapshot

@@ -1003,25 +1003,27 @@ def chart_maintainability_difficulty_index(baseline_df: pd.DataFrame) -> None:
     if local.empty:
         return
 
-    c_min = float(local["cyclomaticComplexity"].min())
-    c_max = float(local["cyclomaticComplexity"].max())
-    m_min = float(local["maintainabilityIndexAverage"].min())
-    m_max = float(local["maintainabilityIndexAverage"].max())
-    c_scale = max(c_max - c_min, 1e-9)
-    m_scale = max(m_max - m_min, 1e-9)
+    # Use fixed anchors (instead of sample min/max) to avoid forced top scores while
+    # preserving separation across models.
+    # MI from this tooling follows the 0-171 convention; values above 100 are valid.
+    complexity = local["cyclomaticComplexity"].astype(float).clip(lower=0.0)
+    maintainability = local["maintainabilityIndexAverage"].astype(float).clip(lower=0.0)
 
-    local["complexity_norm"] = (local["cyclomaticComplexity"] - c_min) / c_scale
-    local["maint_inv_norm"] = 1 - ((local["maintainabilityIndexAverage"] - m_min) / m_scale)
-    local["mdi_10"] = (0.6 * local["complexity_norm"] + 0.4 * local["maint_inv_norm"]) * 10
+    complexity_anchor = 250.0
+    maintainability_anchor = 171.0
+    local["complexity_norm"] = (complexity / complexity_anchor).clip(0.0, 1.0)
+    local["maint_inv_norm"] = 1.0 - (maintainability / maintainability_anchor).clip(0.0, 1.0)
+    local["mdi_pct"] = (0.6 * local["complexity_norm"] + 0.4 * local["maint_inv_norm"]) * 100.0
 
     fig, ax = plt.subplots(figsize=(8.0, 4.8))
-    sns.barplot(data=local, x="model", y="mdi_10", hue="model", palette="rocket", legend=False, ax=ax)
-    ax.set_title("Maintainability Difficulty Index (MDI)")
+    sns.barplot(data=local, x="model", y="mdi_pct", hue="model", palette="rocket", legend=False, ax=ax)
+    ax.set_title("Maintainability Difficulty Index (Absolute)")
     ax.set_xlabel("Authentication Model")
-    ax.set_ylabel("MDI (0-10, higher = harder to maintain)")
-    ax.set_ylim(0, 10.5)
-    for patch, value in zip(ax.patches, local["mdi_10"]):
-        ax.annotate(f"{value:.2f}", (patch.get_x() + patch.get_width() / 2, patch.get_height()),
+    ax.set_ylabel("Difficulty Score (%; higher = harder to maintain)")
+    y_max = float(local["mdi_pct"].max()) if not local.empty else 0.0
+    ax.set_ylim(0, min(100.0, y_max + 8.0))
+    for patch, value in zip(ax.patches, local["mdi_pct"]):
+        ax.annotate(f"{value:.1f}%", (patch.get_x() + patch.get_width() / 2, patch.get_height()),
                     ha="center", va="bottom", fontsize=8)
     save_chart(fig, "maintainability-difficulty-index.svg")
 

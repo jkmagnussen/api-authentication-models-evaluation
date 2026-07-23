@@ -1,6 +1,6 @@
 # Objectivity Assessment
 
-Generated: 2026-07-23T04:51:30.998Z
+Generated: 2026-07-23T12:16:51.167Z
 Regenerate: npm run objective:report
 
 This report documents fairness controls and measurable bias checks for examiner-facing methodological transparency.

@@ -24,6 +24,7 @@ This command runs:
 - `npm run docs:generate:*` commands let you regenerate specific evidence slices.
 - `npm run docs:verify` runs default drift + lint.
 - `npm run docs:verify:strict` runs strict drift + lint.
+- `npm run py:charts:validate` recomputes chart source metrics and fails if rendered SVG annotations drift from underlying data.
 - `npm run ci:docs` and `npm run ci:tests` mirror CI jobs exactly.
 - `npm run ci:local:strict` runs strict docs checks plus tests.
 - `npm run objective:preregistered:check` enforces confirmatory guardrails (single primary endpoint policy, leakage checks, manifest normalization, and repeated-run power thresholds).
