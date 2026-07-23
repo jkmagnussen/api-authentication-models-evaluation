@@ -30,7 +30,6 @@ Tie-break Signed At: NOT_REQUIRED
 - Replace `Status: DRAFT_NEEDS_FINALIZATION` with `Status: FINALIZED_PRE_UNBLIND` after interpretation is complete and before consulting unblinded labels.
 - Keep the blinded report SHA256 unchanged; if it changes, re-interpret and re-finalize.
 
-
 Reviewer A: Independent Reviewer A
 Reviewer A Signed At: 2026-07-23T03:59:45.798Z
 Reviewer A Independence: INDEPENDENT
