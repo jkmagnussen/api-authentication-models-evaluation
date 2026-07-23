@@ -372,6 +372,8 @@ def chart_ai_vs_human_severity_gap_ci() -> None:
                 va="center", fontsize=8.5, color=color, fontweight="bold")
 
     ax.axvline(0, color="black", linewidth=1.0, linestyle="--", alpha=0.5)
+    ax.text(0.02, 0.02, "← baseline (0)", transform=ax.transAxes,
+            fontsize=7.5, color="dimgray", va="bottom")
     ax.set_yticks(y)
     ax.set_yticklabels(MODELS, fontsize=11)
     ax.set_title("AI-Generated Code: Average Risk Score per Sample", fontsize=12, fontweight="bold")
