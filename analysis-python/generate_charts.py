@@ -1087,7 +1087,7 @@ def chart_ai_sample_syntax_issues() -> None:
     ax_right.set_xticks(x)
     ax_right.set_xticklabels(MODELS, fontsize=11)
     ax_right.set_ylim(0, files_per_model * 1.18)
-    ax_right.set_title(f"Files Affected vs Clean (n={files_per_model} per model)", fontsize=11, fontweight="bold")
+    ax_right.set_title("Files Affected vs Clean", fontsize=11, fontweight="bold")
     ax_right.set_xlabel("Authentication Model", fontsize=9)
     ax_right.set_ylabel("File Count", fontsize=9)
     ax_right.legend(fontsize=9, loc="upper right")
