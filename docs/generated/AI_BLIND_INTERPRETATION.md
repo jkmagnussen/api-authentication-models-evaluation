@@ -37,4 +37,4 @@ Reviewer A COI Disclosure: NONE
 Reviewer B: Independent Reviewer B
 Reviewer B Signed At: 2026-07-23T04:54:48.457Z
 Reviewer B Independence: INDEPENDENT
-Reviewer B COI Disclosure: NONE`r`n
+Reviewer B COI Disclosure: NONE
