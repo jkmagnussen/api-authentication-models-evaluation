@@ -1,0 +1,57 @@
+{
+  "generatedAt": "2026-07-23T04:18:24.751Z",
+  "sampleCount": 5,
+  "allowPartial": false,
+  "requiredArms": [
+    "openai-neutral",
+    "openai-security-guided",
+    "claude-neutral",
+    "claude-security-guided"
+  ],
+  "providers": [
+    {
+      "key": "openai-neutral",
+      "provider": "openai",
+      "promptMode": "neutral",
+      "status": "completed",
+      "providerModelIdentifier": "gpt-4o",
+      "promptFingerprint": "f1d5d4b3de59ea1e3b3e17f5f66e04f11027d683ce1073ea8508f453171c7ff6",
+      "overallFailureRatePct": 48.9,
+      "overallFailedSamples": 44,
+      "overallTotalSamples": 90
+    },
+    {
+      "key": "openai-security-guided",
+      "provider": "openai",
+      "promptMode": "security-guided",
+      "status": "completed",
+      "providerModelIdentifier": "gpt-4o",
+      "promptFingerprint": "1251c7b05f55c2d7fc51e0d0fabd2dabea788caa9951abb861a439fe9764e269",
+      "overallFailureRatePct": 37.8,
+      "overallFailedSamples": 34,
+      "overallTotalSamples": 90
+    },
+    {
+      "key": "claude-neutral",
+      "provider": "claude",
+      "promptMode": "neutral",
+      "status": "completed",
+      "providerModelIdentifier": "claude-haiku-4-5-20251001",
+      "promptFingerprint": "f1d5d4b3de59ea1e3b3e17f5f66e04f11027d683ce1073ea8508f453171c7ff6",
+      "overallFailureRatePct": 46.7,
+      "overallFailedSamples": 42,
+      "overallTotalSamples": 90
+    },
+    {
+      "key": "claude-security-guided",
+      "provider": "claude",
+      "promptMode": "security-guided",
+      "status": "completed",
+      "providerModelIdentifier": "claude-haiku-4-5-20251001",
+      "promptFingerprint": "1251c7b05f55c2d7fc51e0d0fabd2dabea788caa9951abb861a439fe9764e269",
+      "overallFailureRatePct": 37.8,
+      "overallFailedSamples": 34,
+      "overallTotalSamples": 90
+    }
+  ]
+}

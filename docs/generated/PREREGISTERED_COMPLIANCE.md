@@ -1,6 +1,6 @@
 # Pre-Registered Compliance Summary
 
-Generated: 2026-07-23T03:49:01.809Z
+Generated: 2026-07-23T04:33:57.589Z
 Regenerate: npm run objective:preregistered:report
 
 | Criterion | Status | Evidence |
@@ -15,13 +15,13 @@ Regenerate: npm run objective:preregistered:report
 | Run environment manifest present | PASS | docs/generated/RUN_MANIFEST.json |
 | Dependency lock normalization captured | PASS | docs/generated/RUN_MANIFEST.json methodology.runNormalization |
 | Blinded provider report present | PASS | docs/generated/AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md |
-| Blind interpretation finalized pre-unblind | FAIL | docs/generated/AI_BLIND_INTERPRETATION.md |
-| Blind interpretation reviewer A sign-off present | FAIL | docs/generated/AI_BLIND_INTERPRETATION.md |
-| Blind interpretation reviewer B sign-off present | FAIL | docs/generated/AI_BLIND_INTERPRETATION.md |
-| Reviewer agreement/adjudication is valid | FAIL | docs/generated/AI_BLIND_INTERPRETATION.md |
-| Frozen analysis window artifact present and fresh | FAIL | docs/generated/ANALYSIS_WINDOW.json |
+| Blind interpretation finalized pre-unblind | PASS | docs/generated/AI_BLIND_INTERPRETATION.md |
+| Blind interpretation reviewer A sign-off present | PASS | docs/generated/AI_BLIND_INTERPRETATION.md |
+| Blind interpretation reviewer B sign-off present | PASS | docs/generated/AI_BLIND_INTERPRETATION.md |
+| Reviewer agreement/adjudication is valid | PASS | docs/generated/AI_BLIND_INTERPRETATION.md |
+| Frozen analysis window artifact present and fresh | PASS | docs/generated/ANALYSIS_WINDOW.json |
 | Holdout set definition is sealed and hash-locked | PASS | docs/evidence/HOLDOUT_SET.md + docs/generated/HOLDOUT_SEAL.json |
-| Sentinel controls indicate expected detectability | FAIL | docs/generated/SENTINEL_CONTROLS.md |
+| Sentinel controls indicate expected detectability | PASS | docs/generated/SENTINEL_CONTROLS.md |
 | Signed audit trail is present | PASS | docs/generated/AUDIT_TRAIL.json |
 | Blinded report includes significance + practical thresholds | PASS | docs/generated/AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md |
 | AI stability report present | PASS | docs/generated/AI_STABILITY_REPORT.md |

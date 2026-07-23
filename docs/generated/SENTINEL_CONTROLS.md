@@ -1,9 +1,9 @@
 # Sentinel Controls Report
 
-Generated: 2026-07-23T04:00:50.011Z
+Generated: 2026-07-23T04:33:27.573Z
 Regenerate: npm run objective:sentinel
 
-Sentinel Control Status: FAIL
+Sentinel Control Status: PASS
 
 Definitions:
 - Positive sentinel trigger: each completed arm must have at least one failed sample (known-flawed pattern remains detectable).
@@ -11,10 +11,10 @@ Definitions:
 
 | Arm | Passed Samples (OVERALL) | Failed Samples (OVERALL) | Positive Sentinel | Negative Sentinel |
 |---|---:|---:|---|---|
-| openai-neutral | 0 | 90 | PASS | FAIL |
-| openai-security-guided | 58 | 32 | PASS | PASS |
-| claude-neutral | 13 | 77 | PASS | PASS |
-| claude-security-guided | 54 | 36 | PASS | PASS |
+| openai-neutral | 46 | 44 | PASS | PASS |
+| openai-security-guided | 56 | 34 | PASS | PASS |
+| claude-neutral | 46 | 44 | PASS | PASS |
+| claude-security-guided | 55 | 35 | PASS | PASS |
 
 Overall positive sentinel: PASS
-Overall negative sentinel: FAIL
+Overall negative sentinel: PASS

@@ -1,0 +1,41 @@
+{
+  "generatedAt": "2026-07-23T04:01:11.197Z",
+  "sampleCount": 5,
+  "allowPartial": false,
+  "requiredArms": [
+    "openai-neutral",
+    "openai-security-guided",
+    "claude-neutral",
+    "claude-security-guided"
+  ],
+  "providers": [
+    {
+      "key": "openai-neutral",
+      "provider": "openai",
+      "promptMode": "neutral",
+      "status": "failed",
+      "reason": "Missing OPENAI_API_KEY."
+    },
+    {
+      "key": "openai-security-guided",
+      "provider": "openai",
+      "promptMode": "security-guided",
+      "status": "failed",
+      "reason": "Missing OPENAI_API_KEY."
+    },
+    {
+      "key": "claude-neutral",
+      "provider": "claude",
+      "promptMode": "neutral",
+      "status": "failed",
+      "reason": "Missing ANTHROPIC_API_KEY."
+    },
+    {
+      "key": "claude-security-guided",
+      "provider": "claude",
+      "promptMode": "security-guided",
+      "status": "failed",
+      "reason": "Missing ANTHROPIC_API_KEY."
+    }
+  ]
+}
