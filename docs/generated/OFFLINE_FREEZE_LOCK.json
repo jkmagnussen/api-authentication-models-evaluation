@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T22:14:37.505Z",
+  "generatedAt": "2026-07-23T22:17:15.768Z",
   "mode": "offline-freeze",
   "notes": "Live provider generation is blocked while this lock file exists. Remove it intentionally or set ALLOW_LIVE_AI_GENERATION=true to override.",
   "lockVersion": 1,
@@ -12,8 +12,8 @@
     "ai-generated/results",
     "ai-generated/arms"
   ],
-  "fileCount": 1468,
-  "totalBytes": 3790999,
+  "fileCount": 1467,
+  "totalBytes": 3741228,
   "files": [
     {
       "path": "ai-generated/arms/claude-neutral/metadata.json",
@@ -6796,11 +6796,6 @@
       "bytes": 38495
     },
     {
-      "path": "docs/charts/performance/ai-vs-human-green-waste-multiplier.svg",
-      "sha256": "4272c43546ea5e1915b87292ed28dbb98dc5e9d2f8dbbd36a4ad2c82b1ad863f",
-      "bytes": 49596
-    },
-    {
       "path": "docs/charts/performance/authentication-overhead-breakdown.svg",
       "sha256": "fa751ca07fbbe82ec6a2e4416e1305b9a92cb0b93728e7326d644bb4914076a6",
       "bytes": 44118
@@ -6822,8 +6817,8 @@
     },
     {
       "path": "docs/charts/README.md",
-      "sha256": "3ef4b32ca4eac82503a1364639c2caa080b0035cc687c21dd282344f617ea506",
-      "bytes": 7964
+      "sha256": "e2f558d05534633c73e2b2ff8da669a05eaa9949435167748da398017207b931",
+      "bytes": 7789
     },
     {
       "path": "docs/charts/security/ai-failure-rates.svg",

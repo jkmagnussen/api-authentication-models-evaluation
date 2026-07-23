@@ -355,21 +355,7 @@ def main() -> None:
         actual = Counter(dominance_vals[: sum(expected.values())])
         results.append(check_equal("ai-vs-human-dominance-heatmap.svg", expected, actual))
 
-    # 14) AI-vs-human green waste multiplier bar labels.
-    green_rows = pd.DataFrame(advanced_payload.get("greenComputingComparison", []))
-    if green_rows.empty:
-        results.append((False, "FAIL ai-vs-human-green-waste-multiplier.svg (missing advanced comparison data)"))
-    else:
-        expected = Counter([f"{float(value):.2f}" for value in green_rows["aiComputePerSecureOutcomeMultiplierVsBaseline"]])
-        green_vals = [
-            v
-            for v in numeric_svg_comments(CHARTS_PERF_DIR / "ai-vs-human-green-waste-multiplier.svg")
-            if re.fullmatch(r"[0-9]+\.[0-9]{2}", v)
-        ]
-        actual = Counter(green_vals[: sum(expected.values())])
-        results.append(check_equal("ai-vs-human-green-waste-multiplier.svg", expected, actual))
-
-    # 15) Calibration and independent agreement chart percent labels.
+    # 14) Calibration and independent agreement chart percent labels.
     checker_agreement = gc.load_checker_agreement_summary()
     generated_agreement = checker_agreement.get("generatedSampleAgreement", {}) or {}
     by_model = generated_agreement.get("byModel", {}) or {}

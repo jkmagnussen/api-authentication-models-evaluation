@@ -15,7 +15,6 @@ These charts establish the runtime cost of each authentication model and how tha
 | `performance/performance-comparison.svg` | Side-by-side latency context across JWT, OAuth2, and Sessions under normal and attack conditions. |
 | `performance/authentication-overhead-breakdown.svg` | Estimated latency decomposition by authentication stage (token issue, validation, refresh). |
 | `performance/variance-under-load.svg` | Tail-spread and jitter across repeated runs; identifies unstable performers. |
-| `performance/ai-vs-human-green-waste-multiplier.svg` | Compute-per-secure-outcome proxy: how much extra overhead AI-generated code incurs relative to the human baseline. |
 
 **Cluster A interpretation:** JWT consistently shows the lowest absolute latency and the tightest CI, confirming its advantage for high-throughput paths. OAuth2 carries the highest overhead but distributes it predictably across clearly defined stages. Session-based auth shows the widest variance under load, making it the least suitable for latency-sensitive deployments. AI-generated implementations add a small but consistent overhead multiplier even when functionally correct, suggesting the cost of AI code is not purely in security failures.
 
