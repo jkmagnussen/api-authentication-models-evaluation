@@ -1090,7 +1090,7 @@ def chart_ai_sample_syntax_issues() -> None:
     ax_right.set_title("Files Affected vs Clean", fontsize=11, fontweight="bold")
     ax_right.set_xlabel("Authentication Model", fontsize=9)
     ax_right.set_ylabel("File Count", fontsize=9)
-    ax_right.legend(fontsize=9, loc="upper right")
+    ax_right.legend(fontsize=9, loc="upper right", bbox_to_anchor=(1.0, 1.12))
 
     fig.suptitle("AI-Generated Sample Syntax and Compile Issues", fontsize=12, fontweight="bold")
     plt.tight_layout(rect=[0, 0, 1, 0.95])
