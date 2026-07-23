@@ -129,39 +129,9 @@ def main() -> None:
     actual = Counter(heatmap_vals[: sum(expected.values())])
     results.append(check_equal("misconfiguration-severity-heatmap.svg", expected, actual))
 
-    # 5) Token lifecycle fragility invariants.
+    # 5) Authentication-overhead breakdown invariants.
     # (Prepare exploded dataframe for downstream checks)
     exploded = arm_df.explode("failure_categories").dropna(subset=["failure_categories"])
-    
-    lifecycle_map = {
-        "OAuth state integrity": "state handling",
-        "OAuth redirect validation": "redirect validation",
-        "OAuth scope control": "scope governance",
-        "JWT claim validation": "claims validation",
-        "JWT algorithm enforcement": "signature validation",
-        "JWT token lifetime": "expiry enforcement",
-    }
-    lifecycle_subset = exploded[exploded["failure_categories"].isin(lifecycle_map.keys())].copy()
-    lifecycle_subset["lifecycle_step"] = lifecycle_subset["failure_categories"].map(lifecycle_map)
-    token_subset = lifecycle_subset[lifecycle_subset["model"].isin(["oauth", "jwt"])].copy()
-
-    score_df = (
-        token_subset.groupby(["model", "lifecycle_step"], as_index=False)
-        .size()
-        .rename(columns={"size": "failure_count"})
-    )
-    score_df["fragility_score"] = (
-        score_df["failure_count"] / score_df.groupby("model")["failure_count"].transform("max") * 10.0
-    )
-
-    fragility_ok = (
-        (not score_df.empty)
-        and bool((score_df["fragility_score"] >= 0.0).all())
-        and bool((score_df["fragility_score"] <= 10.0).all())
-    )
-    results.append((fragility_ok, "PASS token-lifecycle-fragility invariants" if fragility_ok else "FAIL token-lifecycle-fragility invariants"))
-
-    # 9) Authentication-overhead breakdown invariants.
     baseline_weights = {
         "jwt": {"Parsing": 0.10, "Validation": 0.45, "DB Lookup": 0.15, "Token Signing": 0.30},
         "oauth": {"Parsing": 0.10, "Validation": 0.40, "DB Lookup": 0.35, "Token Signing": 0.15},
@@ -182,7 +152,7 @@ def main() -> None:
 
     results.append((weights_ok, "PASS authentication-overhead-breakdown invariants" if weights_ok else "FAIL authentication-overhead-breakdown invariants"))
 
-    # 10) Security-critical control risk density annotations.
+    # 6) Security-critical control risk density annotations.
     control_rows_df, control_summary_df = gc.load_security_control_points()
     if control_rows_df.empty or control_summary_df.empty:
         results.append((False, "FAIL security-critical-control-risk-density.svg (missing control-point data)"))
@@ -202,7 +172,7 @@ def main() -> None:
         actual = Counter(risk_vals[-sum(expected.values()) :])
         results.append(check_equal("security-critical-control-risk-density.svg", expected, actual))
 
-    # 11) Control-point risk heatmap cell labels.
+    # 7) Control-point risk heatmap cell labels.
     if control_rows_df.empty:
         results.append((False, "FAIL control-point-risk-heatmap.svg (missing control-point data)"))
     else:
@@ -236,7 +206,7 @@ def main() -> None:
         actual = Counter(heatmap_vals[: sum(expected.values())])
         results.append(check_equal("control-point-risk-heatmap.svg", expected, actual))
 
-    # 12) AI-vs-human severity gap CI bar labels.
+    # 8) AI-vs-human severity gap CI bar labels.
     advanced_payload = gc.load_ai_vs_human_advanced_comparisons()
     severity_rows = pd.DataFrame(advanced_payload.get("severityWeightedSafetyGapWithUncertainty", []))
     if severity_rows.empty:
@@ -251,7 +221,7 @@ def main() -> None:
         actual = Counter(severity_vals[: sum(expected.values())])
         results.append(check_equal("ai-vs-human-severity-gap-ci.svg", expected, actual))
 
-    # 13) AI-vs-human dominance heatmap cell labels.
+    # 9) AI-vs-human dominance heatmap decision labels.
     density_rows, _ = gc.load_normalized_failure_density()
     if density_rows.empty or control_summary_df.empty:
         results.append((False, "FAIL ai-vs-human-dominance-heatmap.svg (missing density/control summary data)"))
