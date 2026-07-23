@@ -961,7 +961,8 @@ def chart_misconfiguration_frequency_comparison(
     ax.set_ylim(0, 115)
     ax.yaxis.grid(True, linestyle="--", alpha=0.4)
     ax.set_axisbelow(True)
-    ax.legend(title="Code source", fontsize=9, title_fontsize=9, loc="upper left")
+    ax.legend(title="Code source", fontsize=9, title_fontsize=9,
+              loc="upper left", bbox_to_anchor=(0.0, 1.14), framealpha=1.0)
     ax.text(0.5, -0.15,
             "Properly implemented baseline fails 0% by design on all models — omitted.",
             transform=ax.transAxes, ha="center", fontsize=8, color="dimgray", style="italic")
