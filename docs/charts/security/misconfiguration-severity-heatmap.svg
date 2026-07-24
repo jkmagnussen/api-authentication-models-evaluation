@@ -1907,12 +1907,9 @@ z
   </g>
  </g>
  <g id="text_footnote">
-  <!-- Severity ratings by misconfiguration type and authentication model -->
+  <!-- Scale: 1=low severity → 5=critical | cells show mean severity per misconfiguration -->
   <g style="fill: #555555" transform="translate(210.181806 415) scale(0.80 0.80)">
-   <defs>
-    <path id="note-period" d="M 578 0 L 578 641 L 1219 641 L 1219 0 L 578 0 z" transform="scale(0.015625)"/>
-   </defs>
-   <text>Source: misconfiguration severity analysis | scale 1-5</text>
+   <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px;">Scale: 1=low severity → 5=critical | cells show mean severity</text>
   </g>
  </g>
  <defs>
