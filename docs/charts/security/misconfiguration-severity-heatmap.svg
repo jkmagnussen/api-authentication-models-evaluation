@@ -1908,7 +1908,7 @@ z
  </g>
  <g id="text_footnote">
   <!-- Source: misconfiguration-severity.json -->
-  <g style="fill: #555555" transform="translate(210.181806 415) scale(0.09 -0.09)">
+  <g style="fill: #555555" transform="translate(210.181806 400) scale(0.09 -0.09)">
    <text x="0" y="0" style="font-family: Arial; font-size: 11px;">Source: misconfiguration-severity.json | severity scale 0-10</text>
   </g>
  </g>
