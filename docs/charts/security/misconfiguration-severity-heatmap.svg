@@ -578,11 +578,6 @@ z
       <use xlink:href="#ArialMT-4f" transform="translate(911.65625 0)"/>
      </g>
     </g>
-    <g id="text_auth_footnote">
-     <!-- Authentication Model footnote -->
-     <g style="fill: #666666" transform="translate(348.613742 410) scale(0.08 -0.08)">
-      <text x="0" y="0" style="font-family: Arial; font-size: 8px;">three authentication protocols</text>
-     </g>
     </g>
    </g>
    <g id="matplotlib.axis_2">
