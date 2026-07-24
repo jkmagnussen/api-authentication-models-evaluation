@@ -1503,10 +1503,10 @@ z
   <clipPath id="p0e059a1089">
    <rect x="47.251953" y="21.936328" width="524.878966" height="244.521272"/>
   </clipPath>
- </defs></g>
+ </defs></g></g>
   <g id="text_footnote">
    <!-- Failure observations by provider: sample distribution across... -->
-   <g style="fill: #262626" transform="translate(289.6654595 304.600575) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(289.6654595 299.6) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Failure observations by provider: sample distribution across AI implementation variants</text>
    </g>
   </g>

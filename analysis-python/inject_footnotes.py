@@ -83,16 +83,19 @@ FOOTNOTES = {
         "text": "Severity-weighted risk gap: AI-generated code risk score with 95% bootstrap confidence intervals",
         "directory": "security",
         "scale": 0.95,
+        "y_position": 330.0,
     },
     "control-point-risk-heatmap.svg": {
         "text": "Security control risk matrix: vulnerability severity and control effectiveness assessment",
         "directory": "security",
         "scale": 0.95,
+        "y_position": 590.4,
     },
     "misconfiguration-frequency-comparison.svg": {
         "text": "Frequency comparison: occurrence of misconfiguration types across authentication models",
         "directory": "security",
         "scale": 0.95,
+        "y_position": 358.8,
     },
     "misconfiguration-severity-heatmap.svg": {
         "text": "Severity assessment: exploitability and remediation complexity across misconfiguration types",
@@ -103,11 +106,13 @@ FOOTNOTES = {
         "text": "Failure density: normalized event frequency per 10,000 lines across code sources",
         "directory": "security",
         "scale": 0.95,
+        "y_position": 373.2,
     },
     "security-critical-control-risk-density.svg": {
         "text": "Critical control failure density: security event frequency by authentication model",
         "directory": "security",
         "scale": 0.95,
+        "y_position": 358.8,
     },
     "stride-severity-scoring.svg": {
         "text": "STRIDE threat model: severity scoring by threat category and authentication model",
@@ -149,6 +154,7 @@ FOOTNOTES = {
         "text": "Failure observations by provider: sample distribution across AI implementation variants",
         "directory": "synthesis",
         "scale": 0.95,
+        "y_position": 299.6,
     },
     "misconfiguration-clustering-kmeans.svg": {
         "text": "K-means clustering of misconfiguration types by pattern similarity and severity",

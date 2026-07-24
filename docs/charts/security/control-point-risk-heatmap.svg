@@ -2910,10 +2910,10 @@ z
   <clipPath id="p5aeedaf429">
    <rect x="222.750078" y="21.936328" width="524.26082" height="367.852541"/>
   </clipPath>
- </defs>
+ </defs></g>
   <g id="text_footnote">
    <!-- Security control risk matrix: vulnerability severity and con... -->
-   <g style="fill: #262626" transform="translate(421.182804 595.424) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(421.182804 590.4) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Security control risk matrix: vulnerability severity and control effectiveness assessment</text>
    </g>
   </g>

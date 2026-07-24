@@ -2534,10 +2534,10 @@ z
   <clipPath id="p6ae0629c22">
    <rect x="53.646156" y="50.37264" width="581.393844" height="225.018042"/>
   </clipPath>
- </defs></g>
+ </defs></g></g>
   <g id="text_footnote">
    <!-- Frequency comparison: occurrence of misconfiguration types a... -->
-   <g style="fill: #262626" transform="translate(324.0 363.8) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(324.0 358.8) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Frequency comparison: occurrence of misconfiguration types across authentication models</text>
    </g>
   </g>
