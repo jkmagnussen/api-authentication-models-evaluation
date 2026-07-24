@@ -2034,7 +2034,7 @@ L 616.26943 98.170195
    </g>
   </g>
  </g>
- <text x="50" y="375" style="font-size: 8px; fill: #555555; font-family: Arial, sans-serif; font-style: italic">
+ <text x="50" y="382" style="font-size: 8px; fill: #555555; font-family: Arial, sans-serif; font-style: italic">
   <tspan>*Determinism variance measures consistency of AI sample generation across repeated runs per authentication model.</tspan>
  </text>
 
