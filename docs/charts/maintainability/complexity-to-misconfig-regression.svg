@@ -1442,6 +1442,10 @@ L 561.792248 165.955709
    </g>
   </g>
  </g>
+ <text x="50" y="342" style="font-size: 8px; fill: #555555; font-family: Arial, sans-serif; font-style: italic">
+  <tspan>*Risk Index = severity of misconfiguration × exploitability score; regression line shows correlation with code complexity.</tspan>
+ </text>
+
  <defs>
   <clipPath id="p06d125e34f">
    <rect x="44.196016" y="21.936328" width="542.243672" height="284.204167"/>
