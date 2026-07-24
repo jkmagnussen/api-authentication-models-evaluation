@@ -1500,9 +1500,9 @@ z
   </g>
  </g>
   <g id="text_footnote">
-   <!-- Error diversity entropy analysis -->
+   <!-- Failure observations and entropy analysis -->
    <g style="fill: #262626" transform="translate(289.6654595 334.60) scale(0.95 0.95)">
-    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Entropy: diversity and distribution of error types across AI-generated implementations</text>
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Failure observations by provider (n=71,57,74,56) | Shannon entropy measures diversity of error distribution</text>
    </g>
   </g>
  <defs>
