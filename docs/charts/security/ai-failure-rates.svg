@@ -1136,7 +1136,7 @@ z
   </g>
   <g id="text_footnote">
    <!-- AI failure rates analysis -->
-   <g style="fill: #262626" transform="translate(253.713653 310) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(253.713653 330) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Failure rate: percentage of AI-generated samples failing validation or containing critical errors</text>
    </g>
   </g>
