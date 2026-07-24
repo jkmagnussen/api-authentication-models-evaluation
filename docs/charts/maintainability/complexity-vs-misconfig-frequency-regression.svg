@@ -1617,4 +1617,10 @@ z
    <rect x="44.196016" y="21.936328" width="527.596185" height="284.204167"/>
   </clipPath>
  </defs>
+  <g id="text_footnote">
+   <!-- Complexity regression: code complexity vs. misconfiguration ... -->
+   <g style="fill: #262626" transform="translate(295.069028 323.42569) scale(0.95 0.95)">
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Complexity regression: code complexity vs. misconfiguration frequency across models</text>
+   </g>
+  </g>
 </svg>

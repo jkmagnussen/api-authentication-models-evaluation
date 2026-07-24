@@ -3096,4 +3096,10 @@ z
    <rect x="516.641676" y="51.244563" width="406.398324" height="306.687147"/>
   </clipPath>
  </defs>
+  <g id="text_footnote">
+   <!-- Failure density normalized: failure event frequency per unit... -->
+   <g style="fill: #262626" transform="translate(468.0 378.2) scale(0.95 0.95)">
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Failure density normalized: failure event frequency per unit of implementation size</text>
+   </g>
+  </g>
 </svg>

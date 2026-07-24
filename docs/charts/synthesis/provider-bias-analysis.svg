@@ -2173,4 +2173,10 @@ z
    <rect x="162.188203" y="21.936328" width="432.778467" height="341.819953"/>
   </clipPath>
  </defs>
+  <g id="text_footnote">
+   <!-- Provider analysis: failure mode distribution and bias assess... -->
+   <g style="fill: #262626" transform="translate(341.6511685 381.041457) scale(0.95 0.95)">
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Provider analysis: failure mode distribution and bias assessment across AI services</text>
+   </g>
+  </g>
 </svg>

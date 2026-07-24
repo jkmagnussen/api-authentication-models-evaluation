@@ -13,10 +13,82 @@ ROOT = Path(__file__).resolve().parent.parent
 DOCS_DIR = ROOT / "docs"
 CHARTS_DIR = DOCS_DIR / "charts"
 
-# Footnote configuration: chart_name -> (footnote_text, y_position, scale)
+# Footnote configuration: chart_name -> footnote config
 # y_position and scale are optional (use defaults if omitted)
 FOOTNOTES = {
+    # Maintainability Charts
+    "ai-sample-syntax-issues-by-model-stage.svg": {
+        "text": "AI code generation: syntax error frequency by development stage and authentication model",
+        "directory": "maintainability",
+        "scale": 0.95,
+    },
+    "code-footprint-deltas.svg": {
+        "text": "Code footprint analysis: metric differences across authentication implementations",
+        "directory": "maintainability",
+        "scale": 0.95,
+    },
+    "complexity-to-misconfig-regression.svg": {
+        "text": "Code complexity correlation: cyclomatic complexity and misconfiguration density relationship",
+        "directory": "maintainability",
+        "scale": 0.95,
+    },
+    "complexity-vs-misconfig-frequency-regression.svg": {
+        "text": "Complexity regression: code complexity vs. misconfiguration frequency across models",
+        "directory": "maintainability",
+        "scale": 0.95,
+    },
+    "failure-points-vs-chars.svg": {
+        "text": "Failure density normalized: failure event frequency per unit of implementation size",
+        "directory": "maintainability",
+        "scale": 0.95,
+    },
+    "maintainability-difficulty-index.svg": {
+        "text": "Maintainability metrics: difficulty index across authentication model implementations",
+        "directory": "maintainability",
+        "scale": 0.95,
+    },
+    # Performance Charts
+    "authentication-overhead-breakdown.svg": {
+        "text": "Performance overhead: latency contribution by authentication phase under normal load",
+        "directory": "performance",
+        "scale": 0.95,
+    },
+    "performance-comparison.svg": {
+        "text": "Performance metrics: latency and throughput comparison across authentication models",
+        "directory": "performance",
+        "scale": 0.95,
+    },
+    "runtime-latency-comparison-ci.svg": {
+        "text": "Runtime latency: mean response time with 95% confidence intervals by authentication model",
+        "directory": "performance",
+        "scale": 0.95,
+    },
+    "variance-under-load.svg": {
+        "text": "Performance stability: latency variance under sustained load conditions",
+        "directory": "performance",
+        "scale": 0.95,
+    },
     # Security Charts
+    "ai-failure-rates.svg": {
+        "text": "AI-generated code quality: failure rate by provider and authentication model",
+        "directory": "security",
+        "scale": 0.95,
+    },
+    "ai-vs-human-dominance-heatmap.svg": {
+        "text": "AI vs. human-written code: security outcome comparison across authentication implementations",
+        "directory": "security",
+        "scale": 0.95,
+    },
+    "ai-vs-human-severity-gap-ci.svg": {
+        "text": "Severity-weighted risk gap: AI-generated code risk score with 95% bootstrap confidence intervals",
+        "directory": "security",
+        "scale": 0.95,
+    },
+    "control-point-risk-heatmap.svg": {
+        "text": "Security control risk matrix: vulnerability severity and control effectiveness assessment",
+        "directory": "security",
+        "scale": 0.95,
+    },
     "misconfiguration-frequency-comparison.svg": {
         "text": "Frequency comparison: occurrence of misconfiguration types across authentication models",
         "directory": "security",
@@ -27,20 +99,52 @@ FOOTNOTES = {
         "directory": "security",
         "scale": 0.95,
     },
+    "normalized-failure-density.svg": {
+        "text": "Failure density: normalized event frequency per 10,000 lines across code sources",
+        "directory": "security",
+        "scale": 0.95,
+    },
+    "security-critical-control-risk-density.svg": {
+        "text": "Critical control failure density: security event frequency by authentication model",
+        "directory": "security",
+        "scale": 0.95,
+    },
+    "stride-severity-scoring.svg": {
+        "text": "STRIDE threat model: severity scoring by threat category and authentication model",
+        "directory": "security",
+        "scale": 0.95,
+    },
     "token-lifecycle-fragility.svg": {
         "text": "Token lifecycle vulnerabilities: session lifetime and refresh patterns across authentication models",
         "directory": "security",
         "scale": 0.95,
     },
-    # Performance Charts
-    "authentication-overhead-breakdown.svg": {
-        "text": "Performance overhead: latency contribution by authentication phase under normal load",
-        "directory": "performance",
+    # Synthesis Charts
+    "ai-determinism-variance.svg": {
+        "text": "AI output determinism: consistency analysis across repeated generations and models",
+        "directory": "synthesis",
         "scale": 0.95,
     },
-    # Maintainability Charts
-    # (Add more as needed)
-    # Synthesis Charts
+    "calibration-and-agreement-controls.svg": {
+        "text": "Checker calibration: agreement metrics for security control verification",
+        "directory": "synthesis",
+        "scale": 0.95,
+    },
+    "correctness-security-tradeoff.svg": {
+        "text": "Correctness vs. security: comparative performance analysis across AI providers",
+        "directory": "synthesis",
+        "scale": 0.95,
+    },
+    "correctness-vs-security-provider-scatter.svg": {
+        "text": "Provider comparison: correctness and security trade-off across AI code generators",
+        "directory": "synthesis",
+        "scale": 0.95,
+    },
+    "cross-provider-overlap-venn.svg": {
+        "text": "Provider coverage: shared and unique failure patterns across AI code generation services",
+        "directory": "synthesis",
+        "scale": 0.95,
+    },
     "error-diversity-entropy.svg": {
         "text": "Failure observations by provider: sample distribution across AI implementation variants",
         "directory": "synthesis",
@@ -51,6 +155,11 @@ FOOTNOTES = {
         "directory": "synthesis",
         "scale": 1.1,
         "y_position": 665,
+    },
+    "provider-bias-analysis.svg": {
+        "text": "Provider analysis: failure mode distribution and bias assessment across AI services",
+        "directory": "synthesis",
+        "scale": 0.95,
     },
 }
 
@@ -96,15 +205,19 @@ def extract_viewbox(svg_content: str) -> tuple[float, float]:
 def inject_footnote(svg_path: Path, footnote_text: str, scale: float = 0.95, y_position: float = None) -> bool:
     """
     Inject footnote into SVG file.
+    Replaces existing footnote if present to ensure consistent formatting.
     Returns True if successful, False otherwise.
     """
     try:
         svg_content = svg_path.read_text(encoding="utf-8")
         
-        # Skip if footnote already exists
-        if '<g id="text_footnote">' in svg_content:
-            print(f"  ⊘ Footnote already exists, skipping")
-            return False
+        # Remove existing footnote if present
+        svg_content = re.sub(
+            r'\s*<g id="text_footnote">.*?</g>\s*',
+            '',
+            svg_content,
+            flags=re.DOTALL
+        )
         
         # Extract canvas dimensions
         canvas_width, canvas_height = extract_viewbox(svg_content)

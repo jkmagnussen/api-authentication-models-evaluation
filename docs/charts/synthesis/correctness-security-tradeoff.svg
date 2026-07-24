@@ -1692,4 +1692,10 @@ z
    <rect x="44.196016" y="21.936328" width="562.149554" height="284.204167"/>
   </clipPath>
  </defs>
+  <g id="text_footnote">
+   <!-- Correctness vs. security: comparative performance analysis a... -->
+   <g style="fill: #262626" transform="translate(311.3605585 323.42569) scale(0.95 0.95)">
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Correctness vs. security: comparative performance analysis across AI providers</text>
+   </g>
+  </g>
 </svg>

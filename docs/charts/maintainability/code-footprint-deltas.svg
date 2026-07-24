@@ -2522,4 +2522,10 @@ z
    <rect x="160.152969" y="21.936328" width="485.98639" height="385.019953"/>
   </clipPath>
  </defs>
+  <g id="text_footnote">
+   <!-- Code footprint analysis: metric differences across authentic... -->
+   <g style="fill: #262626" transform="translate(376.097292 432.632) scale(0.95 0.95)">
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Code footprint analysis: metric differences across authentication implementations</text>
+   </g>
+  </g>
 </svg>

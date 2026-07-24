@@ -2773,4 +2773,10 @@ z
    <!-- 0.00 -->
    <!-- 8.50 -->
    <!-- 1.64 -->
+  <g id="text_footnote">
+   <!-- Critical control failure density: security event frequency b... -->
+   <g style="fill: #262626" transform="translate(324.0 363.8) scale(0.95 0.95)">
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Critical control failure density: security event frequency by authentication model</text>
+   </g>
+  </g>
 </svg>

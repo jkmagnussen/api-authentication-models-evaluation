@@ -2125,4 +2125,10 @@ z
    <rect x="520.046693" y="21.943125" width="311.284226" height="313.019953"/>
   </clipPath>
  </defs>
+  <g id="text_footnote">
+   <!-- Provider coverage: shared and unique failure patterns across... -->
+   <g style="fill: #262626" transform="translate(419.2654595 352.254269) scale(0.95 0.95)">
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Provider coverage: shared and unique failure patterns across AI code generation services</text>
+   </g>
+  </g>
 </svg>

@@ -2039,4 +2039,10 @@ L 616.26943 98.170195
    <rect x="48.436055" y="21.936328" width="624.593844" height="314.896906"/>
   </clipPath>
  </defs>
+  <g id="text_footnote">
+   <!-- AI output determinism: consistency analysis across repeated ... -->
+   <g style="fill: #262626" transform="translate(340.1149495 352.241457) scale(0.95 0.95)">
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">AI output determinism: consistency analysis across repeated generations and models</text>
+   </g>
+  </g>
 </svg>

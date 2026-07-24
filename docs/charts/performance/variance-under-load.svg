@@ -1204,4 +1204,10 @@ z
    <rect x="44.196016" y="21.936328" width="542.243672" height="284.219953"/>
   </clipPath>
  </defs>
+  <g id="text_footnote">
+   <!-- Performance stability: latency variance under sustained load... -->
+   <g style="fill: #262626" transform="translate(296.819844 323.441457) scale(0.95 0.95)">
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Performance stability: latency variance under sustained load conditions</text>
+   </g>
+  </g>
 </svg>

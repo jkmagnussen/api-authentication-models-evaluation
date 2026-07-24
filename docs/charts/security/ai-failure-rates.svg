@@ -1140,4 +1140,10 @@ z
    <rect x="50.313047" y="21.936328" width="449.91426" height="255.419953"/>
   </clipPath>
  </defs>
+  <g id="text_footnote">
+   <!-- AI-generated code quality: failure rate by provider and auth... -->
+   <g style="fill: #262626" transform="translate(253.7136535 294.641457) scale(0.95 0.95)">
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">AI-generated code quality: failure rate by provider and authentication model</text>
+   </g>
+  </g>
 </svg>

@@ -2168,6 +2168,12 @@ z
    <rect x="429.480722" y="53.144523" width="329.758966" height="244.659758"/>
   </clipPath>
  </defs>
+  <g id="text_footnote">
+   <!-- Checker calibration: agreement metrics for security control ... -->
+   <g style="fill: #262626" transform="translate(383.2198435 324.632) scale(0.95 0.95)">
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Checker calibration: agreement metrics for security control verification</text>
+   </g>
+  </g>
 </svg>
 
 

@@ -3435,4 +3435,10 @@ z
    <!-- 0.80 -->
    <!-- 10.80 -->
    <!-- 1.33 -->
+  <g id="text_footnote">
+   <!-- Severity-weighted risk gap: AI-generated code risk score wit... -->
+   <g style="fill: #262626" transform="translate(324.0 335.0) scale(0.95 0.95)">
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Severity-weighted risk gap: AI-generated code risk score with 95% bootstrap confidence intervals</text>
+   </g>
+  </g>
 </svg>

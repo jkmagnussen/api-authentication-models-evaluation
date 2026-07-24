@@ -3101,4 +3101,10 @@ z
    <rect x="500.735015" y="102.531745" width="398.310673" height="255.399966"/>
   </clipPath>
  </defs>
+  <g id="text_footnote">
+   <!-- AI code generation: syntax error frequency by development st... -->
+   <g style="fill: #262626" transform="translate(468.0 378.2) scale(0.95 0.95)">
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">AI code generation: syntax error frequency by development stage and authentication model</text>
+   </g>
+  </g>
 </svg>
