@@ -1769,7 +1769,7 @@ z
    </g>
    <g id="text_36">
     <!-- Control-set agreement: 100.0% | kappa=1.000 -->
-    <g style="fill: #555555" transform="translate(436.075901 291.227336) scale(0.08 -0.08)">
+    <g style="fill: #262626" transform="translate(436.075901 291.227336) scale(0.10 -0.10)">
      <defs>
       <path id="ArialMT-1d" d="M 578 2678 
 L 578 3319 
@@ -2168,3 +2168,5 @@ z
   </clipPath>
  </defs>
 </svg>
+
+
