@@ -1362,7 +1362,7 @@ z
    </g>
   </g>
  </g>
- <text x="50" y="360" style="font-size: 8px; fill: #555555; font-family: Arial, sans-serif; font-style: italic">
+ <text x="50" y="350" style="font-size: 8px; fill: #555555; font-family: Arial, sans-serif; font-style: italic">
   <tspan>*Maintainability Difficulty Index = composite score combining code complexity, cyclomatic complexity, and failure density.</tspan>
  </text>
 
