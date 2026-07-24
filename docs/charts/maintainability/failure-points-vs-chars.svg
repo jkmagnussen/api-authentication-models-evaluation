@@ -32,8 +32,8 @@ z
    <g id="patch_2">
     <path d="M 49.729818 357.931711 
 L 456.128142 357.931711 
-L 456.128142 51.244563 
-L 49.729818 51.244563 
+L 456.128142 75 
+L 49.729818 75 
 z
 " style="fill: #ffffff"/>
    </g>
@@ -2392,8 +2392,8 @@ z
    <g id="patch_8">
     <path d="M 516.641676 357.931711 
 L 923.04 357.931711 
-L 923.04 51.244563 
-L 516.641676 51.244563 
+L 923.04 75 
+L 516.641676 75 
 z
 " style="fill: #ffffff"/>
    </g>
@@ -3088,16 +3088,16 @@ z
    </g>
   </g>
  </g>
- <text x="55" y="445" style="font-size: 8px; fill: #555555; font-family: Arial, sans-serif; font-style: italic">
+ <text x="55" y="435" style="font-size: 9.5px; fill: #555555; font-family: Arial, sans-serif; font-style: italic">
   <tspan>*Unterminated template literal = AI-generated code containing an unclosed JavaScript template string (missing backtick or incomplete `${}` interpolation).</tspan>
  </text>
 
  <defs>
   <clipPath id="pe633c833dc">
-   <rect x="49.729818" y="51.244563" width="406.398324" height="306.687147"/>
+   <rect x="49.729818" y="75" width="406.398324" height="282.931711"/>
   </clipPath>
   <clipPath id="p6b0f979f81">
-   <rect x="516.641676" y="51.244563" width="406.398324" height="306.687147"/>
+   <rect x="516.641676" y="75" width="406.398324" height="282.931711"/>
   </clipPath>
  </defs>
 </svg>
