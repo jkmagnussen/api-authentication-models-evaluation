@@ -1,6 +1,6 @@
 # Security Performance Tradeoff
 
-Generated: 2026-07-23T20:33:21.179Z
+Generated: 2026-07-24T11:08:53.849Z
 Regenerate: npm run compare:reports
 
 This view compares model-level security risk indicators with measured attack-vs-baseline performance deltas.

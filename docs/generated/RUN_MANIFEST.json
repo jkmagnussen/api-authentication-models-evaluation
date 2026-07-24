@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T20:15:34.218Z",
+  "generatedAt": "2026-07-24T11:34:49.137Z",
   "runtime": {
     "nodeVersion": "v24.14.1",
     "npmVersion": "11.12.1",
@@ -12,7 +12,7 @@
     "hostname": "JOE-PC"
   },
   "vcs": {
-    "gitCommit": "4208dc462a6e44ca6864fa0860849be51fe02214",
+    "gitCommit": "fb58fffa178637cf7ac1d89a5b15939372b04b76",
     "gitBranch": "main",
     "dirtyWorkingTree": true
   },
@@ -27,7 +27,7 @@
     "governance": {
       "mode": "exploratory",
       "claimClass": "exploratory-author-interpreted",
-      "blindInterpretationStatus": "draft-needs-finalization",
+      "blindInterpretationStatus": "finalized-pre-unblind",
       "reviewerFinalizationComplete": false
     },
     "aiSampleCount": 30,

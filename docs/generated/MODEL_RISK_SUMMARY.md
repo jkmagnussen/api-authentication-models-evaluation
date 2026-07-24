@@ -1,6 +1,6 @@
 # Model Risk Summary
 
-Generated: 2026-07-23T20:33:21.177Z
+Generated: 2026-07-24T11:08:53.848Z
 Regenerate: npm run compare:reports
 
 This summary aggregates misconfiguration impact and AI sample failure tendencies at the model level.

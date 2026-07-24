@@ -1,6 +1,6 @@
 # Sentinel Controls Report
 
-Generated: 2026-07-23T20:33:31.693Z
+Generated: 2026-07-24T11:09:04.667Z
 Regenerate: npm run objective:sentinel
 
 Sentinel Control Status: PASS

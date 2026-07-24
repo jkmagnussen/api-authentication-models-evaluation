@@ -1,6 +1,6 @@
 # Cross-Reference Synthesis
 
-Generated: 2026-07-23T21:14:36.744Z
+Generated: 2026-07-24T11:08:54.855Z
 Regenerate: npm run analysis:structural
 
 - Weighted Exploit Burden (WEB) uses $0.45 \times severity + 0.25 \times exploitability + 0.30 \times propagation$.
