@@ -2382,7 +2382,7 @@ z
  </g>
   <g id="text_footnote">
    <!-- Misconfiguration clustering analysis -->
-   <g style="fill: #262626" transform="translate(554.4 681.80) scale(1.1 1.1)">
+   <g style="fill: #262626" transform="translate(554.4 681.80) scale(1.25 1.25)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">K-means clustering: grouping of misconfiguration types by similarity in patterns and severity</text>
    </g>
   </g>
