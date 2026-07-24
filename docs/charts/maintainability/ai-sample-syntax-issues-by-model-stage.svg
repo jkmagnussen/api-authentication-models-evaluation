@@ -3093,6 +3093,9 @@ z
    </g>
   </g>
  </g>
+ <text x="55" y="380" style="font-size: 7.5px; fill: #555555; font-family: Arial, sans-serif; font-style: italic">
+  <tspan>*Unterminated template literal = AI-generated code containing an unclosed JavaScript template string (missing backtick or incomplete `${}` interpolation).</tspan>
+ </text>
  <defs>
   <clipPath id="p6ef3b25e20">
    <rect x="55.65923" y="102.531745" width="398.310673" height="255.399966"/>
