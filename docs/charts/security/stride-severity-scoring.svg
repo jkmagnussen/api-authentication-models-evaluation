@@ -1381,7 +1381,7 @@ z
   <g id="text_footnote">
    <!-- STRIDE threat model: severity scoring across authentication implementation models -->
    <g style="fill: #262626" transform="translate(310.372151 350) scale(0.95 0.95)">
-    <text x="0" y="0" style="font-family: ArialMT, Arial, sans-serif; font-size: 10px; letter-spacing: 0.5px; text-anchor: middle;">STRIDE: Spoofing, Tampering, Repudiation, Info Disclosure, DoS, Elevation | severity per threat</text>
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; text-anchor: middle;">STRIDE: Spoofing, Tampering, Repudiation, Info Disclosure, DoS, Elevation | severity per threat</text>
    </g>
   </g>
  </g>
