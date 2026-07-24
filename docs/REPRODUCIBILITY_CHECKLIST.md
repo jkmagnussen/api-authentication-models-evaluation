@@ -1,34 +1,32 @@
 # Reproducibility Checklist
 
-Use this sequence to reproduce the full evidence set in the repository.
+Use this sequence to reproduce the full repository evidence set.
 
-Execution mode: local Node.js/npm is the primary workflow. Docker is optional and intended only for cross-machine reproducibility checks.
+## Execution Mode
+
+Local Node.js/npm is the primary workflow. Docker is optional and intended only for cross-machine reproducibility checks.
 
 ## Environment Setup
 
-1. Clone the repository.
-2. Install dependencies.
-3. Configure `.env`.
-4. Run Prisma migrations.
-5. Generate Prisma client.
-6. Seed the database.
+Use the canonical setup in `README.md` (Quick Start), then return here for the full evidence pipeline.
+
+Minimum setup outcome before running this checklist:
+
+1. Repository cloned and dependencies installed.
+2. `.env` configured.
+3. Database setup complete via `npm run db:setup`.
 
 ## Commands
 
-### Primary Local Execution (No Docker)
-
-Use the setup and command sections below as the default path.
-
-### Setup
+### Recommended One-Command Offline Run
 
 ```powershell
-git clone https://github.com/jkmagnussen/api-authentication-models-evaluation.git
-cd api-authentication-models-evaluation
-npm install
-npx prisma migrate dev
-npx prisma generate
-npx ts-node prisma/seed.ts
+npm run run:all:offline
 ```
+
+This command runs database setup, tests, docs/report generation, chart generation, and freeze lock refresh/verification in one pass.
+
+### Stepwise Execution (For Granular Control)
 
 ### Optional Docker Execution (Assessor-Friendly)
 
@@ -75,7 +73,7 @@ npm run compare:reports
 npm run research:advanced
 ```
 
-Use `npm run ai:matrix` only when you intentionally want to regenerate provider samples with live APIs.
+Run `npm run ai:matrix` only when you intentionally want live provider regeneration.
 
 ### Objectivity Hardening Outputs
 
@@ -128,14 +126,6 @@ $env:ALLOW_LIVE_AI_GENERATION="true"
 ```
 
 Then unset it after regeneration.
-
-### One-Command End-to-End Offline Pipeline
-
-```powershell
-npm run run:all:offline
-```
-
-This runs database setup, tests, docs/report generation, chart generation, and freeze lock refresh/verification in one command.
 
 ## Expected Output Artifacts
 

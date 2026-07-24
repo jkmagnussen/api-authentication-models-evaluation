@@ -1,45 +1,12 @@
 # API Authentication Models Evaluation
 
-**Recommended commands:** `npm run prod` for normal startup, `npm run run:all:offline` for the full reproducible dissertation run, and `npm run prod:full` for a one-step full pipeline start.
-
-**Execution mode:** local Node.js/npm is the primary workflow; Docker is optional and intended for cross-machine reproducibility checks.
-
-**What the full offline run does:** `npm run run:all:offline` runs database generation, migration, and seeding; then tests, coverage, performance, docs/report generation, mutation testing, results indexing, Python chart generation, and offline freeze verification.
-
-**Supporting commands:** `npm run docs:check` for generated-artifact validation.
-
-**Install/setup first:** install Node.js + npm, install Python 3 (for example `winget install Python.Python.3.12`) and uv if you want chart generation, then run `npm install` in the repo before using the commands below.
-
-This repository is a dissertation-focused evaluation of three API authentication models in one controlled backend:
+This repository evaluates three API authentication models in one controlled backend:
 
 - Sessions
 - JWT
 - OAuth 2.0 (Authorization Code + PKCE)
 
-The project compares them across security behavior, controlled misconfiguration impact, performance overhead, and code/maintainability characteristics.
-Its primary contribution is methodological: a controlled, reproducible protocol that separates behavioral evidence from artifact-level evidence.
-
-## What This Project Includes
-
-1. **Secure baseline implementations** in `src/`.
-2. **Targeted misconfiguration variants** in `misconfigurations/`.
-3. **AI-generated artifact evaluation** in `ai-generated/`.
-4. **Automated evidence generation** in `scripts/`.
-5. **Dissertation-ready outputs** in `docs/`.
-
-## One-Command Full Pipeline
-
-```powershell
-npm run run:all:offline
-```
-
-This command is the full reproducible path:
-
-1. Database generate + migrate + seed
-2. Tests and focused variant checks
-3. Report and dashboard generation
-4. Python chart generation
-5. Offline freeze lock refresh and verification
+It compares security behavior, misconfiguration impact, performance overhead, and maintainability signals using a reproducible pipeline.
 
 ## Quick Start
 
@@ -47,8 +14,8 @@ This command is the full reproducible path:
 
 - Node.js + npm
 - PostgreSQL
-- Optional: Python/uv (for chart generation)
-- Optional: Docker Desktop (only if you want containerized execution)
+- Optional: Python + uv (chart regeneration)
+- Optional: Docker Desktop (containerized execution)
 
 ### Setup
 
@@ -59,78 +26,32 @@ npm install
 npm run db:setup
 ```
 
-Optional (recommended if you will regenerate charts locally):
+Optional (for chart regeneration):
 
 ```powershell
 npm run py:install
 ```
 
-### Full Reproducible Run
+### Main Commands
+
+| Purpose | Command |
+|---|---|
+| Local development | `npm run dev` |
+| Normal startup | `npm run prod` |
+| Full reproducible offline run | `npm run run:all:offline` |
+| Full pipeline + start | `npm run prod:full` |
+| Validate generated artifacts | `npm run docs:check` |
+| Docker image build (optional) | `npm run docker:build` |
+
+## One-Command Full Pipeline
 
 ```powershell
 npm run run:all:offline
 ```
 
-This run includes chart regeneration plus footer/style injection through `analysis-python/generate_charts.py` and `analysis-python/inject_footnotes.py`.
-Chart body layout tweaks should be made in `generate_charts.py`; footer formatting/placement should be made in `inject_footnotes.py` so reruns preserve the exact layout.
+This command runs database setup, tests, coverage, performance analysis, docs/report generation, mutation testing, results indexing, Python chart generation, and offline freeze verification.
 
-### Primary Local Run (No Docker)
-
-```powershell
-npm run dev
-```
-
-or:
-
-```powershell
-npm run prod
-```
-
-### Optional Docker Run (Examiner-Friendly)
-
-Use this only if Docker is installed and running.
-
-```powershell
-npm run docker:build
-docker run --rm -p 3000:3000 dissertation-backend:local
-```
-
-## Most-Used Commands
-
-| Purpose | Command |
-|---|---|
-| Normal startup | `npm run prod` |
-| Full reproducible offline run | `npm run run:all:offline` |
-| One-step full pipeline start | `npm run prod:full` |
-| Optional container image build | `npm run docker:build` |
-| Validate generated docs/artifacts | `npm run docs:check` |
-
-Primary results page: `docs/generated/RESULTS_DASHBOARD.md`
-
-## Evaluation Design
-
-### 1) Secure Baseline
-
-- Implementations in `src/`
-- Verified with unit, integration, attack, and performance tests
-
-### 2) Misconfiguration Variants
-
-- Controlled overrides in `misconfigurations/`
-- Verified with exploit-positive focused tests
-
-### 3) AI-Generated Artifacts
-
-- Prompt-derived artifacts in `ai-generated/`
-- Evaluated for complexity, omissions, and insecure patterns
-- Treated as artifact evidence (not runtime-swapped parity claims by default)
-- Interpreted as variable-quality, review-required drafts rather than deployment-ready substitutions
-
-## Interpretation Guardrails
-
-- Lower measured attack overhead does not automatically imply stronger security posture.
-- Configuration discipline is a dominant factor across Sessions, JWT, and OAuth.
-- AI artifact maintainability signals do not guarantee security completeness.
+Use `docs/REPRODUCIBILITY_CHECKLIST.md` for the full assessor-facing sequence.
 
 ## Repository Map
 
@@ -144,41 +65,13 @@ prisma/             Schema, migrations, and seed
 docs/               Dissertation-facing narrative and evidence
 ```
 
-## Key Evidence Files
+## Key Docs
 
-### Core Narrative
-
-- `docs/METHODOLOGY_AND_LIMITATIONS.md`
-- `docs/KEY_FINDINGS.md`
-- `docs/REPRODUCIBILITY_CHECKLIST.md`
-
-### Evidence and Traceability
-
-- `docs/evidence/TEST_EVIDENCE_MATRIX.md`
-- `docs/evidence/DISSERTATION_EVALUATION_TABLE.md`
-- `docs/evidence/RESEARCH_QUESTION_TRACEABILITY.md`
-- `docs/evidence/THREATS_TO_VALIDITY.md`
-- `docs/evidence/UNIFIED_COMPARISON_MATRIX.md`
-
-### Generated Outputs
-
-- `docs/generated/RESULTS_DASHBOARD.md`
-- `docs/generated/VARIANT_DIFFERENTIAL_REPORT.md`
-- `docs/generated/AI_EVALUATION_SUMMARY.md`
-- `docs/generated/FAILURE_PROPAGATION_ANALYSIS.md`
-- `docs/generated/COGNITIVE_LOAD_INDEX.md`
-- `docs/generated/CROSS_REFERENCE_SYNTHESIS.md`
-- `docs/generated/CODE_FOOTPRINT_SUMMARY.md`
-- `docs/generated/SECURITY_PERFORMANCE_TRADEOFF.md`
-- `docs/generated/MISCONFIGURATION_IMPACT_MATRIX.md`
-- `docs/generated/AI_FAILURE_TAXONOMY.md`
-- `docs/generated/RUN_MANIFEST.json`
-
-### Performance and Charts
-
-- `docs/performance-results/analysis.md`
-- `docs/charts/`
-- `docs/generated/ML_LITE_ANALYSIS_SUMMARY.md`
+- `docs/REPRODUCIBILITY_CHECKLIST.md` - canonical run sequence and final checklist
+- `CONTRIBUTING.md` - contributor preflight and CI-aligned checks
+- `docs/generated/RESULTS_DASHBOARD.md` - top-level generated results snapshot
+- `docs/performance-results/analysis.md` - generated performance summary
+- `docs/charts/README.md` - chart catalog (split into `primary/` and `supporting/` tiers)
 
 ## Offline Freeze Mode
 
@@ -197,33 +90,20 @@ npm run freeze:verify
 $env:ALLOW_LIVE_AI_GENERATION="true"
 ```
 
-## AI Evaluation Commands
+## AI Commands
 
-### Offline (report refresh from existing artifacts)
-
-```powershell
-npm run rerun:ai
-```
-
-### Live provider generation (intentional)
-
-```powershell
-npm run rerun:ai:live
-```
-
-### Cohort/confirmatory workflow
-
-```powershell
-npm run ai:matrix:cohorts
-npm run objective:confirmatory
-```
+- Offline report refresh: `npm run rerun:ai`
+- Live provider generation: `npm run rerun:ai:live`
+- Cohort + confirmatory flow: `npm run ai:matrix:cohorts` then `npm run objective:confirmatory`
 
 ## API Routes
 
-For detailed routes and request/response examples:
+For detailed routes and request/response examples, see:
 
 - `routes.md`
 - `docs/Routes.postman_collection.json`
+
+`routes.md` includes both primary comparative model routes (Sessions/JWT/OAuth) and supplementary account security routes. The supplementary account security routes are operational hardening endpoints and are not part of the primary comparative evaluation.
 
 ### Postman OAuth PKCE Flow (Automated)
 

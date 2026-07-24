@@ -10,11 +10,12 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-CHARTS_DIR = ROOT / "docs" / "charts"
+CHARTS_DIR = ROOT / "docs" / "charts" / "primary"
 CHARTS_PERF_DIR = CHARTS_DIR / "performance"
 CHARTS_SEC_DIR = CHARTS_DIR / "security"
 CHARTS_MAINT_DIR = CHARTS_DIR / "maintainability"
 CHARTS_SYNTH_DIR = CHARTS_DIR / "synthesis"
+CHARTS_SUPPORTING_SEC_DIR = ROOT / "docs" / "charts" / "supporting" / "security"
 GENERATOR_PATH = ROOT / "analysis-python" / "generate_charts.py"
 
 
@@ -182,7 +183,7 @@ def main() -> None:
         expected = Counter([f"{float(value):.2f}" for value in pivot.to_numpy().ravel()])
         heatmap_vals = [
             v
-            for v in numeric_svg_comments(CHARTS_SEC_DIR / "control-point-risk-heatmap.svg")
+            for v in numeric_svg_comments(CHARTS_SUPPORTING_SEC_DIR / "control-point-risk-heatmap.svg")
             if re.fullmatch(r"[0-9]+\.[0-9]{2}", v)
         ]
         actual = Counter(heatmap_vals[: sum(expected.values())])

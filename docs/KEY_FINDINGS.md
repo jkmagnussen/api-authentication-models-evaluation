@@ -1,47 +1,47 @@
 # Key Findings
 
-This document summarises the highest-level outcomes of the repository evidence.
+High-level outcomes from the repository evidence.
 
 ## Baseline Secure Implementation
 
-- The secure baseline passes shared unit, integration, and attack-oriented tests.
-- Coverage is strong enough to support claims of broad behavioral exercise.
-- The baseline therefore serves as a defensible reference implementation for comparison.
+- The secure baseline passes unit, integration, and attack-oriented tests.
+- Coverage supports broad behavioral exercise claims.
+- The baseline is a defensible reference for comparison.
 
 ## Misconfiguration Variants
 
 - Each misconfiguration produces a focused, security-relevant regression.
-- The exploit-proof commands show that small, targeted configuration changes can directly undermine expected controls.
-- This supports the claim that implementation correctness depends not just on model choice, but on secure configuration discipline.
+- Small configuration changes can directly undermine expected controls.
+- Secure operation depends on configuration discipline, not only model choice.
 
 ## AI-Generated Artifacts
 
-- AI-generated samples vary in both structural complexity and security completeness.
-- Some samples satisfy the local screening criteria, while others omit expected controls or encode insecure patterns.
-- The AI-generated outputs are therefore best interpreted as variable-quality artifacts rather than interchangeable production-ready implementations.
+- Samples vary in structural complexity and security completeness.
+- Some pass local screening while others omit controls or include insecure patterns.
+- Treat outputs as variable-quality artifacts, not production-ready replacements.
 
 ## Overall Interpretation
 
-- The curated secure baseline is more consistent than both targeted misconfigurations and AI-generated samples.
-- Misconfigurations demonstrate how controlled regressions break otherwise sound models.
-- AI-generated outputs demonstrate that code generation may produce artifacts with acceptable complexity but incomplete security properties.
+- The curated secure baseline is more consistent than misconfigured and AI-generated variants.
+- Misconfigurations show how targeted regressions break otherwise sound models.
+- AI-generated outputs can look structurally acceptable while still incomplete on security controls.
 
 ## Cross-Metric Synthesis (Security, Performance, Maintainability, AI)
 
 1. **Security posture and performance are not aligned by default**
-- The model with lower observed attack-overhead in a run set is not automatically the safer model.
-- Severity-ranked misconfiguration outcomes and exploit-positive tests carry the stronger security signal.
+- Lower observed attack overhead does not automatically mean stronger security.
+- Severity-ranked misconfiguration outcomes and exploit-positive tests are stronger security signals.
 
 2. **Configuration discipline dominates model branding**
 - Sessions, JWT, and OAuth all show high sensitivity to narrow configuration faults.
-- This indicates that secure operation depends more on hardening rigor and verification controls than on nominal protocol selection.
+- Hardening rigor and verification controls matter more than nominal protocol choice.
 
 3. **AI artifact maintainability signals do not guarantee security completeness**
-- Structural/code-footprint quality can appear reasonable while control omissions still occur.
-- AI outputs should therefore be treated as review-required drafts, not deployment-ready substitutions.
+- Structural/code-footprint quality can look reasonable while control omissions remain.
+- Treat AI outputs as review-required drafts.
 
 4. **Best-supported dissertation claim**
-- The strongest claim supported by this evidence set is that a controlled baseline plus explicit variant testing and reproducibility controls provides more defensible security conclusions than single-metric or model-label comparisons.
+- A controlled baseline, explicit variant testing, and reproducibility controls provide more defensible conclusions than single-metric or model-label comparisons.
 
 ## Evidence Linkage For Synthesis
 

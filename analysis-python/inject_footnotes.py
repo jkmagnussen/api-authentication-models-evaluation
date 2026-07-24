@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DOCS_DIR = ROOT / "docs"
-CHARTS_DIR = DOCS_DIR / "charts"
+CHARTS_DIR = DOCS_DIR / "charts" / "primary"
 FOOTER_LAYOUT_LOCK_FILE = DOCS_DIR / "generated" / "FOOTER_LAYOUT_LOCK.json"
 FOOTER_BAND = 90.0
 FOOTER_TEXT_COLOR = "#6b7280"
@@ -51,7 +51,7 @@ FOOTNOTES = {
     },
     "complexity-to-misconfig-regression.svg": {
         "text": "Shows the regression between cyclomatic complexity and misconfiguration density, quantifying whether more complex variants produce higher security misconfiguration rates.",
-        "directory": "maintainability",
+        "directory": "../supporting/maintainability",
         "scale": 0.95,
     },
     "complexity-vs-misconfig-frequency-regression.svg": {
@@ -77,7 +77,7 @@ FOOTNOTES = {
     },
     "performance-comparison.svg": {
         "text": "Shows side-by-side latency and throughput comparison across authentication models, providing direct performance trade-off context for architecture selection.",
-        "directory": "performance",
+        "directory": "../supporting/performance",
         "scale": 0.95,
     },
     "runtime-latency-comparison-ci.svg": {
@@ -112,7 +112,7 @@ FOOTNOTES = {
     },
     "control-point-risk-heatmap.svg": {
         "text": "Shows security control-point risk levels from vulnerability severity and control effectiveness, mapping which controls contribute most to exploitable exposure.",
-        "directory": "security",
+        "directory": "../supporting/security",
         "scale": 0.95,
         "force_three_lines": True,
         "vertical_shift": -64.0,
@@ -147,7 +147,7 @@ FOOTNOTES = {
     },
     "stride-severity-scoring.svg": {
         "text": "Shows STRIDE threat severity scoring by threat category and authentication model, clarifying which attack classes drive the observed security burden.",
-        "directory": "security",
+        "directory": "../supporting/security",
         "scale": 0.95,
         "compact_vertical_shift": -8.0,
     },
@@ -171,7 +171,7 @@ FOOTNOTES = {
     },
     "correctness-security-tradeoff.svg": {
         "text": "Shows the correctness-versus-security trade-off across AI providers, making performance on functional tests interpretable alongside security outcomes.",
-        "directory": "synthesis",
+        "directory": "../supporting/synthesis",
         "scale": 0.95,
     },
     "correctness-vs-security-provider-scatter.svg": {
@@ -200,7 +200,7 @@ FOOTNOTES = {
     },
     "provider-bias-analysis.svg": {
         "text": "Shows provider bias through comparative failure-mode distribution across AI services, highlighting skew toward specific classes of implementation errors.",
-        "directory": "synthesis",
+        "directory": "../supporting/synthesis",
         "scale": 0.95,
     },
 }

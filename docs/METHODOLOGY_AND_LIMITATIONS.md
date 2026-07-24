@@ -2,33 +2,33 @@
 
 ## Evaluation Methodology
 
-This project evaluates three authentication models under three complementary lenses:
+This project evaluates three authentication models using three complementary lenses.
 
 1. **Secure baseline assessment**
 - The implementations in `src/` are treated as the intended secure baseline.
-- They are assessed with executable unit, integration, attack, and performance tests.
+- They are evaluated with executable unit, integration, attack, and performance tests.
 
 2. **Misconfiguration assessment**
 - The implementations in `misconfigurations/` are not standalone rewrites.
 - Each variant is a targeted override applied to the secure baseline.
-- These variants are assessed behaviorally using focused exploit tests that demonstrate a changed security outcome.
+- Variants are assessed behaviorally with focused exploit tests.
 
 3. **AI-generated artifact assessment**
 - The samples in `ai-generated/` are treated as independent generated artifacts.
 - They are not runtime-swapped into the baseline application by default.
 - They are evaluated for complexity, maintainability, omissions, and insecure patterns using automated artifact-level screening.
-- Failure taxonomy interpretation includes sample-level dual-rater blinded adjudication proxies and Cohen's kappa diagnostics to reduce single-rater framing bias.
+- Failure taxonomy interpretation includes dual-rater blinded adjudication proxies and Cohen's kappa diagnostics.
 
 ## Original Contribution Of This Artefact
 
-This project's primary contribution is methodological rather than algorithmic novelty. The contribution is a controlled, reproducible evaluation design that keeps implementation context stable while comparing three authentication families across four evidence channels:
+The primary contribution is methodological. The project provides a controlled, reproducible design that keeps implementation context stable while comparing three authentication families across four evidence channels:
 
 1. **Secure baseline behavior** under executable unit, integration, attack, and performance tests.
 2. **Targeted misconfiguration deltas** that modify only specific security-relevant decisions while preserving shared runtime architecture.
 3. **AI-generated artifact analysis** that is intentionally kept separate from runtime-swapped behavioral claims to avoid confounding structural quality with execution completeness.
 4. **Submission-safe reproducibility controls** using an offline freeze lock and verification workflow to preserve generated-evidence integrity.
 
-The practical novelty is the unified protocol that allows like-for-like security, performance, and maintainability comparison while making explicit where claims are behavioral versus artifact-structural.
+The practical novelty is a unified protocol for like-for-like security, performance, and maintainability comparison with explicit claim boundaries.
 
 ## Measurement Scope
 
@@ -45,7 +45,7 @@ The practical novelty is the unified protocol that allows like-for-like security
 - Forcing them into the runtime would blur the distinction between artifact quality and executable behavior.
 - Treating them as artifacts produces a cleaner and more defensible comparison.
 
-## Transferability And Generalisation Boundaries
+## Transferability And Generalization Boundaries
 
 ### Likely portable
 
@@ -65,6 +65,8 @@ The practical novelty is the unified protocol that allows like-for-like security
 - Any metric affected by provider-side model drift or temporary API behavior changes.
 
 ## Limitations
+
+These limits bound claim strength and external validity.
 
 1. **AI heuristics are not semantic proof**
 - The AI sample test runners use pattern-based checks.
@@ -90,4 +92,4 @@ The practical novelty is the unified protocol that allows like-for-like security
 
 - Use the secure baseline to establish expected behavior.
 - Use misconfigurations to demonstrate how targeted implementation weaknesses produce measurable regressions.
-- Use AI-generated artifacts to discuss whether generated code tends to omit or weaken expected controls, and how its structural complexity compares with the curated baseline.
+- Use AI-generated artifacts to discuss whether generated code tends to omit or weaken expected controls, and how structural complexity compares with the curated baseline.

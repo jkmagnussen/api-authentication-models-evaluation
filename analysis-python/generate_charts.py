@@ -20,10 +20,16 @@ from sklearn.linear_model import LinearRegression
 ROOT = Path(__file__).resolve().parent.parent
 DOCS_DIR = ROOT / "docs"
 CHARTS_DIR = DOCS_DIR / "charts"
-CHARTS_PERF_DIR = CHARTS_DIR / "performance"
-CHARTS_SEC_DIR = CHARTS_DIR / "security"
-CHARTS_MAINT_DIR = CHARTS_DIR / "maintainability"
-CHARTS_SYNTH_DIR = CHARTS_DIR / "synthesis"
+CHARTS_PRIMARY_DIR = CHARTS_DIR / "primary"
+CHARTS_SUPPORTING_DIR = CHARTS_DIR / "supporting"
+CHARTS_PERF_DIR = CHARTS_PRIMARY_DIR / "performance"
+CHARTS_SEC_DIR = CHARTS_PRIMARY_DIR / "security"
+CHARTS_MAINT_DIR = CHARTS_PRIMARY_DIR / "maintainability"
+CHARTS_SYNTH_DIR = CHARTS_PRIMARY_DIR / "synthesis"
+CHARTS_PERF_SUPPORTING_DIR = CHARTS_SUPPORTING_DIR / "performance"
+CHARTS_SEC_SUPPORTING_DIR = CHARTS_SUPPORTING_DIR / "security"
+CHARTS_MAINT_SUPPORTING_DIR = CHARTS_SUPPORTING_DIR / "maintainability"
+CHARTS_SYNTH_SUPPORTING_DIR = CHARTS_SUPPORTING_DIR / "synthesis"
 RESULTS_DIR = ROOT / "ai-generated" / "results"
 ARMS_DIR = ROOT / "ai-generated" / "arms"
 PERF_DIR = DOCS_DIR / "performance-results"
@@ -47,7 +53,19 @@ class AnalysisSummary:
 
 
 def ensure_output_dir() -> None:
-    for d in (CHARTS_DIR, CHARTS_PERF_DIR, CHARTS_SEC_DIR, CHARTS_MAINT_DIR, CHARTS_SYNTH_DIR):
+    for d in (
+        CHARTS_DIR,
+        CHARTS_PRIMARY_DIR,
+        CHARTS_SUPPORTING_DIR,
+        CHARTS_PERF_DIR,
+        CHARTS_SEC_DIR,
+        CHARTS_MAINT_DIR,
+        CHARTS_SYNTH_DIR,
+        CHARTS_PERF_SUPPORTING_DIR,
+        CHARTS_SEC_SUPPORTING_DIR,
+        CHARTS_MAINT_SUPPORTING_DIR,
+        CHARTS_SYNTH_SUPPORTING_DIR,
+    ):
         d.mkdir(parents=True, exist_ok=True)
 
 
@@ -754,7 +772,7 @@ def chart_complexity_misconfiguration_regression(variant_df: pd.DataFrame) -> tu
     ax.set_title("Complexity to Misconfiguration Risk Regression")
     ax.set_xlabel("Cyclomatic Complexity")
     ax.set_ylabel("Risk Index (severity * exploitability)")
-    save_chart(fig, CHARTS_MAINT_DIR, "complexity-to-misconfig-regression.svg")
+    save_chart(fig, CHARTS_MAINT_SUPPORTING_DIR, "complexity-to-misconfig-regression.svg")
     return r2, slope
 
 
@@ -865,7 +883,7 @@ def chart_stride_severity_scoring(variant_df: pd.DataFrame) -> None:
             va="bottom",
             fontsize=8,
         )
-    save_chart(fig, CHARTS_SEC_DIR, "stride-severity-scoring.svg")
+    save_chart(fig, CHARTS_SEC_SUPPORTING_DIR, "stride-severity-scoring.svg")
 
 
 def chart_correctness_security_tradeoff(arm_df: pd.DataFrame, perf_df: pd.DataFrame, variant_df: pd.DataFrame) -> None:
@@ -950,7 +968,7 @@ def chart_correctness_security_tradeoff(arm_df: pd.DataFrame, perf_df: pd.DataFr
         fontsize=8,
         color="#333333",
     )
-    save_chart(fig, CHARTS_SYNTH_DIR, "correctness-security-tradeoff.svg")
+    save_chart(fig, CHARTS_SYNTH_SUPPORTING_DIR, "correctness-security-tradeoff.svg")
 
 
 def chart_cross_provider_overlap(arm_df: pd.DataFrame) -> None:
@@ -1080,7 +1098,7 @@ def chart_provider_bias_analysis(arm_df: pd.DataFrame) -> None:
     ax.set_title("Provider Bias Analysis: Failure Fingerprint by Arm")
     ax.set_xlabel("Provider Arm")
     ax.set_ylabel("Failure Category")
-    save_chart(fig, CHARTS_SYNTH_DIR, "provider-bias-analysis.svg")
+    save_chart(fig, CHARTS_SYNTH_SUPPORTING_DIR, "provider-bias-analysis.svg")
 
 
 def chart_misconfiguration_frequency_comparison(
@@ -1977,91 +1995,59 @@ def chart_baseline_context(ai_df: pd.DataFrame, perf_df: pd.DataFrame) -> None:
     ax2.set_xlabel("Model")
     ax2.set_ylabel("Average Latency (ms)")
     ax2.legend(title="")
-    save_chart(fig2, CHARTS_PERF_DIR, "performance-comparison.svg")
+    save_chart(fig2, CHARTS_PERF_SUPPORTING_DIR, "performance-comparison.svg")
 
 
 def write_chart_catalog() -> None:
     lines = [
         "# Charts Catalog",
         "",
-        "Charts are organised into four insight clusters. Each cluster maps to a distinct research dimension.",
-        "Within each cluster, charts are ordered from primary evidence to supporting context.",
+        "Charts are grouped into two tiers:",
+        "- `primary/`: main narrative charts",
+        "- `supporting/`: overlap/context charts retained for appendix use",
         "",
-        "---",
-        "",
-        "## Cluster A — Performance",
-        "",
-        "These charts establish the runtime cost of each authentication model and how that cost behaves under attack and load.",
+        "## Primary Charts",
         "",
         "| Chart | Description |",
         "|---|---|",
-        "| `performance/runtime-latency-comparison-ci.svg` | Measured baseline versus attack latency with 95% confidence intervals and delta annotation. **Primary evidence.** |",
-        "| `performance/performance-comparison.svg` | Side-by-side latency context across JWT, OAuth2, and Sessions under normal and attack conditions. |",
-        "| `performance/authentication-overhead-breakdown.svg` | Estimated latency decomposition by authentication stage (token issue, validation, refresh). |",
-        "| `performance/variance-under-load.svg` | Tail-spread and jitter across repeated runs; identifies unstable performers. |",
+        "| `primary/performance/runtime-latency-comparison-ci.svg` | Baseline versus attack latency with confidence intervals. |",
+        "| `primary/performance/authentication-overhead-breakdown.svg` | Phase-weighted authentication overhead decomposition. |",
+        "| `primary/performance/variance-under-load.svg` | Latency spread and run-to-run stability under load. |",
+        "| `primary/security/ai-vs-human-severity-gap-ci.svg` | Severity-weighted AI risk gap with bootstrap intervals. |",
+        "| `primary/security/security-critical-control-risk-density.svg` | Weighted risk density at critical control points. |",
+        "| `primary/security/normalized-failure-density.svg` | Failure density normalized by code footprint. |",
+        "| `primary/security/misconfiguration-frequency-comparison.svg` | Misconfiguration frequency by model and source. |",
+        "| `primary/security/misconfiguration-severity-heatmap.svg` | Severity intensity by misconfiguration type and model. |",
+        "| `primary/security/ai-failure-rates.svg` | AI-generated implementation failure rates by model. |",
+        "| `primary/security/ai-vs-human-dominance-heatmap.svg` | Dominance view of baseline versus AI safety outcomes. |",
+        "| `primary/security/token-lifecycle-fragility.svg` | Fragility across token/session lifecycle phases. |",
+        "| `primary/maintainability/ai-sample-syntax-issues-by-model-stage.svg` | Syntax and structural issue rates by stage/model. |",
+        "| `primary/maintainability/code-footprint-deltas.svg` | Relative code-footprint deltas versus baseline. |",
+        "| `primary/maintainability/complexity-vs-misconfig-frequency-regression.svg` | Complexity versus misconfiguration-frequency regression. |",
+        "| `primary/maintainability/failure-points-vs-chars.svg` | Failure concentration relative to code size. |",
+        "| `primary/maintainability/maintainability-difficulty-index.svg` | Normalized maintainability difficulty index by model. |",
+        "| `primary/synthesis/correctness-vs-security-provider-scatter.svg` | Correctness-security trade-off positioning by provider. |",
+        "| `primary/synthesis/cross-provider-overlap-venn.svg` | Shared versus unique failure categories by provider. |",
+        "| `primary/synthesis/ai-determinism-variance.svg` | Stability variance across provider prompt arms. |",
+        "| `primary/synthesis/error-diversity-entropy.svg` | Entropy of failure diversity by provider arm. |",
+        "| `primary/synthesis/misconfiguration-clustering-kmeans.svg` | K-means grouping of misconfiguration profiles. |",
+        "| `primary/synthesis/calibration-and-agreement-controls.svg` | Calibration and checker agreement controls. |",
         "",
-        "**Cluster A interpretation:** JWT consistently shows the lowest absolute latency and the tightest CI, confirming its advantage for high-throughput paths. OAuth2 carries the highest overhead but distributes it predictably across clearly defined stages. Session-based auth shows the widest variance under load, making it the least suitable for latency-sensitive deployments. AI-generated implementations add a small but consistent overhead multiplier even when functionally correct, suggesting the cost of AI code is not purely in security failures.",
+        "## Supporting Charts",
         "",
-        "---",
-        "",
-        "## Cluster B — Security Behaviour",
-        "",
-        "These charts document how misconfigurations and AI-generated code affect security outcomes, mapped through the STRIDE framework and attack evidence.",
-        "",
-        "| Chart | Description |",
+        "| Chart | Why Supporting |",
         "|---|---|",
-        "| `security/ai-vs-human-severity-gap-ci.svg` | Severity-weighted AI risk gap with 95% bootstrap confidence intervals. **Primary evidence.** |",
-        "| `security/security-critical-control-risk-density.svg` | Average weighted risk density across security-critical control points. **Primary evidence.** |",
-        "| `security/control-point-risk-heatmap.svg` | Per-control risk density map across misconfiguration and AI sources. |",
-        "| `security/normalized-failure-density.svg` | Failure events normalised by character footprint across baseline, misconfiguration, and AI slices. |",
-        "| `security/stride-severity-scoring.svg` | Average severity score by primary STRIDE category, disaggregated by model. |",
-        "| `security/misconfiguration-severity-heatmap.svg` | Severity intensity by misconfiguration type and authentication model. |",
-        "| `security/misconfiguration-frequency-comparison.svg` | Observed issue frequency across proper, misconfigured, and AI-generated sources. |",
-        "| `security/ai-failure-rates.svg` | Model-level AI failure rates as baseline context. |",
-        "| `security/ai-vs-human-dominance-heatmap.svg` | Dominance map across core safety metrics: shows where AI underperforms the human baseline. |",
-        "| `security/token-lifecycle-fragility.svg` | Fragility profile at each JWT and OAuth2 lifecycle step. |",
+        "| `supporting/performance/performance-comparison.svg` | Context summary that overlaps with CI and variance charts. |",
+        "| `supporting/security/control-point-risk-heatmap.svg` | Detailed control matrix supporting risk-density interpretation. |",
+        "| `supporting/security/stride-severity-scoring.svg` | Alternative severity framing alongside heatmap-level severity. |",
+        "| `supporting/maintainability/complexity-to-misconfig-regression.svg` | Secondary regression view similar to complexity-frequency trend. |",
+        "| `supporting/synthesis/correctness-security-tradeoff.svg` | Alternate trade-off visual for appendix-level comparison. |",
+        "| `supporting/synthesis/provider-bias-analysis.svg` | Additional provider-pattern context beyond overlap and entropy. |",
         "",
-        "**Cluster B interpretation:** AI-generated code introduces a statistically significant severity gap relative to the human baseline across all three models. OAuth2 exhibits the widest misconfiguration propagation, with a single incorrect redirect URI triggering Spoofing, Information Disclosure, and Elevation simultaneously. JWT failures cluster in Elevation of Privilege, reflecting missing claim validation rather than broad lateral propagation. Session failures are narrow in STRIDE scope but high in individual impact when triggered. The token lifecycle fragility chart confirms that the most dangerous moments are token issuance and validation, not revocation.",
-        "",
-        "---",
-        "",
-        "## Cluster C — Maintainability and Cognition",
-        "",
-        "These charts examine how code complexity, footprint, and structural choices correlate with misconfiguration frequency and developer error likelihood.",
-        "",
-        "| Chart | Description |",
-        "|---|---|",
-        "| `maintainability/ai-sample-syntax-issues-by-model-stage.svg` | Syntax, type, and complexity issue counts by model and generation stage. **Primary evidence.** |",
-        "| `maintainability/code-footprint-deltas.svg` | Percent footprint deltas across characters, lines, functions, and cyclomatic complexity relative to baseline. **Primary evidence.** |",
-        "| `maintainability/complexity-to-misconfig-regression.svg` | Regression line from cyclomatic complexity to risk index; quantifies the complexity-risk slope. |",
-        "| `maintainability/complexity-vs-misconfig-frequency-regression.svg` | Regression of complexity against observed issue frequency across all variants. |",
-        "| `maintainability/maintainability-difficulty-index.svg` | Normalised maintainability difficulty index (0-171 scale) by authentication model. |",
-        "| `maintainability/failure-points-vs-chars.svg` | Distinct failure-point concentration against character footprint; identifies high-density failure zones. |",
-        "",
-        "**Cluster C interpretation:** OAuth2 carries the highest code footprint and the steepest complexity-to-misconfiguration slope, confirming that its expressiveness comes at a direct developer-error cost. JWT has a compact footprint but a non-trivial difficulty index, reflecting how deceptively simple its API is to misuse. Session-based auth has the simplest footprint but generates the highest failure density per character when misconfigured, because its few critical control points are unforgiving. AI-generated code consistently inflates footprint metrics without a proportional gain in security outcome.",
-        "",
-        "---",
-        "",
-        "## Cluster D — Cross-Model Synthesis",
-        "",
-        "These charts synthesise comparisons across all three models and AI providers, revealing patterns that only emerge at the comparison level.",
-        "",
-        "| Chart | Description |",
-        "|---|---|",
-        "| `synthesis/correctness-vs-security-provider-scatter.svg` | Correctness-security trade-off scatter across Local, OpenAI, and Claude providers. **Primary evidence.** |",
-        "| `synthesis/correctness-security-tradeoff.svg` | Trade-off view with request latency encoded as bubble size; identifies the Pareto-efficient model. |",
-        "| `synthesis/cross-provider-overlap-venn.svg` | Shared versus unique failure categories across AI providers; quantifies provider-specific blind spots. |",
-        "| `synthesis/provider-bias-analysis.svg` | Failure fingerprint heatmap by provider arm; reveals systematic provider tendencies. |",
-        "| `synthesis/ai-determinism-variance.svg` | Failure-rate variability across provider arms and prompt modes; measures AI output stability. |",
-        "| `synthesis/error-diversity-entropy.svg` | Shannon entropy of failure category diversity by arm; higher entropy means less predictable failures. |",
-        "| `synthesis/misconfiguration-clustering-kmeans.svg` | K-means clusters of misconfiguration patterns; reveals natural groupings in the failure space. |",
-        "| `synthesis/calibration-and-agreement-controls.svg` | False-confidence calibration and independent checker agreement; methodology control chart. |",
-        "",
-        "**Cluster D interpretation:** No single AI provider dominates cleanly across both correctness and security dimensions. OpenAI shows a slight correctness advantage under the neutral prompt but loses ground on security-critical control points when compared to the security-guided prompt variant. Claude shows more consistent security behaviour across prompt modes but at the cost of higher variance in correctness. The overlap Venn confirms that roughly 60% of failure categories are shared across providers, meaning the failure modes are fundamentally architectural rather than model-specific.",
-        "",
-        "---",
-        "",
-        "*For full derivation details and sensitivity analysis, see docs/generated/FAILURE_PROPAGATION_ANALYSIS.md, docs/generated/COGNITIVE_LOAD_INDEX.md, and docs/generated/CROSS_REFERENCE_SYNTHESIS.md.*",
+        "For full derivation and sensitivity details, see:",
+        "- `docs/generated/FAILURE_PROPAGATION_ANALYSIS.md`",
+        "- `docs/generated/COGNITIVE_LOAD_INDEX.md`",
+        "- `docs/generated/CROSS_REFERENCE_SYNTHESIS.md`",
     ]
     (CHARTS_DIR / "README.md").write_text("\n".join(lines) + "\n", encoding="utf8")
 
