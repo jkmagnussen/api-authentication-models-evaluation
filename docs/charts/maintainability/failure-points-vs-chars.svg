@@ -32,8 +32,8 @@ z
    <g id="patch_2">
     <path d="M 49.729818 357.931711 
 L 456.128142 357.931711 
-L 456.128142 75 
-L 49.729818 75 
+L 456.128142 110 
+L 49.729818 110 
 z
 " style="fill: #ffffff"/>
    </g>
@@ -2392,8 +2392,8 @@ z
    <g id="patch_8">
     <path d="M 516.641676 357.931711 
 L 923.04 357.931711 
-L 923.04 75 
-L 516.641676 75 
+L 923.04 110 
+L 516.641676 110 
 z
 " style="fill: #ffffff"/>
    </g>
@@ -2928,7 +2928,7 @@ z
   </g>
   <g id="text_50">
    <!-- Failure Point Concentration Against Code Footprint -->
-   <g style="fill: #262626" transform="translate(321.235312 4.704328) scale(0.12 -0.12)">
+   <g style="fill: #262626" transform="translate(321.235312 30) scale(0.12 -0.12)">
     <defs>
      <path id="Arial-BoldMT-33" d="M 466 0 
 L 466 4581 
@@ -3094,10 +3094,10 @@ z
 
  <defs>
   <clipPath id="pe633c833dc">
-   <rect x="49.729818" y="75" width="406.398324" height="282.931711"/>
+   <rect x="49.729818" y="110" width="406.398324" height="247.931711"/>
   </clipPath>
   <clipPath id="p6b0f979f81">
-   <rect x="516.641676" y="75" width="406.398324" height="282.931711"/>
+   <rect x="516.641676" y="110" width="406.398324" height="247.931711"/>
   </clipPath>
  </defs>
 </svg>
