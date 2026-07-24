@@ -1,6 +1,6 @@
 # AI Failure Taxonomy
 
-Generated: 2026-07-23T20:33:21.178Z
+Generated: 2026-07-24T11:08:53.848Z
 Regenerate: npm run compare:reports
 
 This taxonomy groups AI sample security failures by control type to show where generated artifacts struggled most.
@@ -27,6 +27,6 @@ This taxonomy groups AI sample security failures by control type to show where g
 - Adjudicated failure tags (sample-level units): 56
 - Cohen's kappa (Rater A vs Rater B): 1.000
 - Rater blinding protocol: labels are generated from two independent mapping functions before any provider-specific decomposition is reviewed.
-- Interpretation: low kappa suggests category definitions should be tightened before confirmatory claims about failure taxonomy prevalence.
+- Interpretation: Kappa of 1.000 indicates near-perfect agreement between the two independent mapping functions. Note: because both raters are deterministic functions rather than human raters, this reflects categorical consistency of the labelling scheme, not human inter-rater reliability.
 
 Interpretation: Higher counts indicate repeated weak spots in generated samples and are useful for prompt-hardening or stricter automated guardrails.
