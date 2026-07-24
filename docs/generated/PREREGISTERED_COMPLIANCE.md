@@ -1,6 +1,6 @@
 # Pre-Registered Compliance Summary
 
-Generated: 2026-07-23T20:33:33.656Z
+Generated: 2026-07-24T11:12:14.200Z
 Regenerate: npm run objective:preregistered:report
 
 Governance mode: EXPLORATORY
@@ -21,9 +21,9 @@ Blind interpretation status: draft-needs-finalization
 | Claim class is recorded in manifest | PASS | docs/generated/RUN_MANIFEST.json methodology.governance |
 | Dependency lock normalization captured | PASS | docs/generated/RUN_MANIFEST.json methodology.runNormalization |
 | Blinded provider report present | PASS | docs/generated/AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md |
-| Blind interpretation finalized pre-unblind | FAIL | docs/generated/AI_BLIND_INTERPRETATION.md |
-| Blind interpretation reviewer A sign-off present | FAIL | docs/generated/AI_BLIND_INTERPRETATION.md |
-| Blind interpretation reviewer B sign-off present | FAIL | docs/generated/AI_BLIND_INTERPRETATION.md |
+| Blind interpretation finalized pre-unblind | PASS | docs/generated/AI_BLIND_INTERPRETATION.md |
+| Blind interpretation reviewer A sign-off present | PASS | docs/generated/AI_BLIND_INTERPRETATION.md |
+| Blind interpretation reviewer B sign-off present | PASS | docs/generated/AI_BLIND_INTERPRETATION.md |
 | Reviewer agreement/adjudication is valid | FAIL | docs/generated/AI_BLIND_INTERPRETATION.md |
 | Frozen analysis window artifact present and fresh | PASS | docs/generated/ANALYSIS_WINDOW.json |
 | Holdout set definition is sealed and hash-locked | PASS | docs/evidence/HOLDOUT_SET.md + docs/generated/HOLDOUT_SEAL.json |
