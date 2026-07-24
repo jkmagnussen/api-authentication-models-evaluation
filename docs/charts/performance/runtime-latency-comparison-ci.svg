@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="649.44pt" height="390.450469pt" viewBox="0 0 649.44 390.450469" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="649.44pt" height="406.450469pt" viewBox="0 0 649.44 406.450469" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
@@ -21,8 +21,8 @@
  </defs>
  <g id="figure_1">
   <g id="patch_1">
-   <path d="M 0 390.450469 
-L 649.44 390.450469 
+   <path d="M 0 406.450469 
+L 649.44 406.450469 
 L 649.44 0 
 L 0 0 
 z
@@ -2345,6 +2345,10 @@ z
    </g>
   </g>
  </g>
+ <text x="50" y="380" style="font-size: 8px; fill: #555555; font-family: Arial, sans-serif; font-style: italic">
+  <tspan>*Runtime latency measured in milliseconds; confidence intervals computed from n≥30 samples per authentication model.</tspan>
+ </text>
+
  <defs>
   <clipPath id="p8b1e909c6a">
    <rect x="57.88145" y="21.936328" width="584.35855" height="313.997188"/>
