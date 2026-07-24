@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="842.365608pt" height="557.424pt" viewBox="0 0 842.365608 557.424" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="842.365608pt" height="590.424pt" viewBox="0 0 842.365608 590.424" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
@@ -21,8 +21,8 @@
  </defs>
  <g id="figure_1">
   <g id="patch_1">
-   <path d="M 0 557.424 
-L 842.365608 557.424 
+   <path d="M 0 590.424 
+L 842.365608 590.424 
 L 842.365608 0 
 L 0 0 
 z
@@ -2781,7 +2781,7 @@ z
   </g>
   <g id="text_80">
    <!-- Source: security-control-points.json | heatmap cells are mean risk per 10k chars -->
-   <g style="fill: #555555" transform="translate(321.181806 548.750719) scale(0.07 -0.07)">
+   <g style="fill: #555555" transform="translate(321.181806 548.750719) scale(0.09 -0.09)">
     <defs>
      <path id="ArialMT-1d" d="M 578 2678 
 L 578 3319 
