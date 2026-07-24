@@ -1,6 +1,6 @@
 # Dissertation Results Dashboard
 
-Generated: 2026-07-24T11:34:49.843Z
+Generated: 2026-07-24T11:49:43.798Z
 Regenerate: npm run results:index
 
 ## Quick Commands
@@ -17,15 +17,15 @@ Regenerate: npm run results:index
 ## Snapshot
 
 - Focused variant proofs passing: 9/9
-- Total focused-variant runtime: 15898 ms
+- Total focused-variant runtime: 15641 ms
 
 ## Performance Delta Summary
 
 | Model | Avg Delta % | p95 Delta % | Throughput Delta % |
 |---|---:|---:|---:|
-| JWT | -1.68% | 5.41% | 1.71% |
-| OAUTH | 2.92% | 9.25% | -2.83% |
-| SESSIONS | -32.10% | -33.89% | 47.28% |
+| JWT | -2.25% | -5.03% | 2.30% |
+| OAUTH | 32.26% | 33.78% | -24.39% |
+| SESSIONS | -29.52% | -31.03% | 41.89% |
 
 ## AI Failure Rates
 

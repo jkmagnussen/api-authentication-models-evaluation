@@ -11,7 +11,7 @@
     "stride": "Spoofing / Tampering",
     "owaspCategory": "A01 Broken Access Control",
     "passed": true,
-    "durationMs": 1777
+    "durationMs": 1765
   },
   {
     "variantName": "oauth-state-misconfiguration",
@@ -25,7 +25,7 @@
     "stride": "Tampering",
     "owaspCategory": "A01 Broken Access Control",
     "passed": true,
-    "durationMs": 1773
+    "durationMs": 1760
   },
   {
     "variantName": "oauth-scope-misconfiguration",
@@ -39,7 +39,7 @@
     "stride": "Elevation of Privilege",
     "owaspCategory": "A01 Broken Access Control",
     "passed": true,
-    "durationMs": 1776
+    "durationMs": 1765
   },
   {
     "variantName": "jwt-audience-misconfiguration",
@@ -53,7 +53,7 @@
     "stride": "Spoofing",
     "owaspCategory": "A07 Identification and Authentication Failures",
     "passed": true,
-    "durationMs": 1717
+    "durationMs": 1704
   },
   {
     "variantName": "jwt-algorithm-misconfiguration",
@@ -67,7 +67,7 @@
     "stride": "Spoofing / Tampering",
     "owaspCategory": "A08 Software and Data Integrity Failures",
     "passed": true,
-    "durationMs": 1754
+    "durationMs": 1689
   },
   {
     "variantName": "jwt-expiry-misconfiguration",
@@ -81,7 +81,7 @@
     "stride": "Repudiation",
     "owaspCategory": "A07 Identification and Authentication Failures",
     "passed": true,
-    "durationMs": 1804
+    "durationMs": 1758
   },
   {
     "variantName": "sessions-fixation-misconfiguration",
@@ -95,7 +95,7 @@
     "stride": "Spoofing",
     "owaspCategory": "A07 Identification and Authentication Failures",
     "passed": true,
-    "durationMs": 1765
+    "durationMs": 1740
   },
   {
     "variantName": "sessions-cookie-flag-misconfiguration",
@@ -109,7 +109,7 @@
     "stride": "Information Disclosure",
     "owaspCategory": "A05 Security Misconfiguration",
     "passed": true,
-    "durationMs": 1746
+    "durationMs": 1732
   },
   {
     "variantName": "sessions-logout-misconfiguration",
@@ -123,6 +123,6 @@
     "stride": "Spoofing",
     "owaspCategory": "A07 Identification and Authentication Failures",
     "passed": true,
-    "durationMs": 1786
+    "durationMs": 1728
   }
 ]

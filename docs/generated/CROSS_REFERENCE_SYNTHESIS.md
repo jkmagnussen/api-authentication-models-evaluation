@@ -1,6 +1,6 @@
 # Cross-Reference Synthesis
 
-Generated: 2026-07-24T11:08:54.855Z
+Generated: 2026-07-24T11:49:22.825Z
 Regenerate: npm run analysis:structural
 
 - Weighted Exploit Burden (WEB) uses $0.45 \times severity + 0.25 \times exploitability + 0.30 \times propagation$.
@@ -32,9 +32,9 @@ Regenerate: npm run analysis:structural
 
 | Model | Avg Latency Delta % | Throughput Delta % | Weighted Exploit Burden | Pareto Reading |
 |---|---:|---:|---:|---|
-| OAuth2 | 2.92 | -2.83 | 6.70 | Highest boundary complexity with modest measured latency overhead, indicating structural burden is not captured by latency alone. |
-| JWT | -1.68 | 1.71 | 6.60 | Fastest execution profile, but high validation fragility means small mistakes remain costly. |
-| Session | -32.10 | 47.28 | 6.45 | Lower measured attack latency overhead does not imply lower structural risk; browser-coupled failures still propagate sharply. |
+| OAuth2 | 32.26 | -24.39 | 6.70 | Highest boundary complexity with modest measured latency overhead, indicating structural burden is not captured by latency alone. |
+| JWT | -2.25 | 2.30 | 6.60 | Fastest execution profile, but high validation fragility means small mistakes remain costly. |
+| Session | -29.52 | 41.89 | 6.45 | Lower measured attack latency overhead does not imply lower structural risk; browser-coupled failures still propagate sharply. |
 
 ## 4) Lifecycle Complexity vs Developer Error Likelihood
 

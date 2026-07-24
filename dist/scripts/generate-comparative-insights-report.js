@@ -364,7 +364,14 @@ function writeAiFailureTaxonomy(aiRows) {
     lines.push(`- Adjudicated failure tags (sample-level units): ${adjudicationRows.length}`);
     lines.push(`- Cohen's kappa (Rater A vs Rater B): ${kappa === null ? "n/a" : format(kappa, 3)}`);
     lines.push("- Rater blinding protocol: labels are generated from two independent mapping functions before any provider-specific decomposition is reviewed.");
-    lines.push("- Interpretation: low kappa suggests category definitions should be tightened before confirmatory claims about failure taxonomy prevalence.");
+    const kappaInterp = kappa === null
+        ? "Kappa could not be computed (insufficient data)."
+        : kappa >= 0.8
+            ? `Kappa of ${format(kappa, 3)} indicates near-perfect agreement between the two independent mapping functions. Note: because both raters are deterministic functions rather than human raters, this reflects categorical consistency of the labelling scheme, not human inter-rater reliability.`
+            : kappa >= 0.6
+                ? `Kappa of ${format(kappa, 3)} indicates substantial agreement. Category definitions are sufficiently stable for exploratory reporting; confirmatory claims would benefit from human rater validation.`
+                : `Kappa of ${format(kappa, 3)} indicates moderate or lower agreement. Category definitions should be tightened before confirmatory claims about failure taxonomy prevalence.`;
+    lines.push(`- Interpretation: ${kappaInterp}`);
     lines.push("");
     lines.push("Interpretation: Higher counts indicate repeated weak spots in generated samples and are useful for prompt-hardening or stricter automated guardrails.");
     fs_1.default.writeFileSync(path_1.default.join(process.cwd(), report_paths_1.GENERATED_FILES.aiFailureTaxonomy), `${lines.join("\n")}\n`);
