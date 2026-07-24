@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="936pt" height="403.2pt" viewBox="0 0 936 403.2" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="936pt" height="458.2pt" viewBox="0 0 936 458.2" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
@@ -21,8 +21,8 @@
  </defs>
  <g id="figure_1">
   <g id="patch_1">
-   <path d="M 0 403.2 
-L 936 403.2 
+   <path d="M 0 458.2 
+L 936 458.2 
 L 936 0 
 L 0 0 
 z
@@ -3088,6 +3088,10 @@ z
    </g>
   </g>
  </g>
+ <text x="55" y="445" style="font-size: 8px; fill: #555555; font-family: Arial, sans-serif; font-style: italic">
+  <tspan>*Unterminated template literal = AI-generated code containing an unclosed JavaScript template string (missing backtick or incomplete `${}` interpolation).</tspan>
+ </text>
+
  <defs>
   <clipPath id="pe633c833dc">
    <rect x="49.729818" y="51.244563" width="406.398324" height="306.687147"/>
