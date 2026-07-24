@@ -1442,7 +1442,7 @@ L 561.792248 165.955709
    </g>
   </g>
  </g>
- <text x="50" y="342" style="font-size: 8px; fill: #555555; font-family: Arial, sans-serif; font-style: italic">
+ <text x="50" y="355" style="font-size: 8px; fill: #555555; font-family: Arial, sans-serif; font-style: italic">
   <tspan>*Risk Index = severity of misconfiguration × exploitability score; regression line shows correlation with code complexity.</tspan>
  </text>
 
