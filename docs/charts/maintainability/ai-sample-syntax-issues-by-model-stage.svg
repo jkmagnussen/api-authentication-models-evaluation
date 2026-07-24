@@ -3093,7 +3093,7 @@ z
    </g>
   </g>
  </g>
- <text x="55" y="390" style="font-size: 7.5px; fill: #555555; font-family: Arial, sans-serif; font-style: italic">
+ <text x="55" y="402" style="font-size: 7.5px; fill: #555555; font-family: Arial, sans-serif; font-style: italic">
   <tspan>*Unterminated template literal = AI-generated code containing an unclosed JavaScript template string (missing backtick or incomplete `${}` interpolation).</tspan>
  </text>
  <defs>
