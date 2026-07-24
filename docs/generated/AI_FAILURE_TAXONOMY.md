@@ -1,6 +1,6 @@
 # AI Failure Taxonomy
 
-Generated: 2026-07-24T11:49:21.800Z
+Generated: 2026-07-24T18:13:33.163Z
 Regenerate: npm run compare:reports
 
 This taxonomy groups AI sample security failures by control type to show where generated artifacts struggled most.

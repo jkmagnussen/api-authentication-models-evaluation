@@ -1,15 +1,15 @@
 # Security Performance Tradeoff
 
-Generated: 2026-07-24T11:49:21.801Z
+Generated: 2026-07-24T18:13:33.164Z
 Regenerate: npm run compare:reports
 
 This view compares model-level security risk indicators with measured attack-vs-baseline performance deltas.
 
 | Model | Avg Misconfig Severity | AI Failure Rate | Avg Latency Delta % (Attack vs Baseline) | Throughput Delta % | Tradeoff Reading |
 |---|---:|---:|---:|---:|---|
-| OAUTH | 4.00 | 90.00% | 32.26% | -24.39% | High security scrutiny needed even if measured performance overhead is modest. |
-| JWT | 4.33 | 10.00% | -2.25% | 2.30% | Misconfiguration impact is severe; prioritize hardening and control validation. |
-| SESSIONS | 4.33 | 13.33% | -29.52% | 41.89% | Misconfiguration impact is severe; prioritize hardening and control validation. |
+| OAUTH | 4.00 | 90.00% | 55.94% | -35.87% | High security scrutiny needed even if measured performance overhead is modest. |
+| JWT | 4.33 | 10.00% | 53.38% | -34.80% | Misconfiguration impact is severe; prioritize hardening and control validation. |
+| SESSIONS | 4.33 | 13.33% | 10.55% | -9.54% | Misconfiguration impact is severe; prioritize hardening and control validation. |
 
 Note: Negative latency delta percentages indicate attack tests were faster in this run set; interpret with workload context, not as security strength.
 

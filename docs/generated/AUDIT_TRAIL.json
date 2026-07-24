@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-07-24T11:49:39.758Z",
-  "signedAt": "2026-07-24T11:49:39.758Z",
-  "signatureSha256": "50c57c4b07eb595a54c3886a0564cb82e8a817255ad64d4218c4ee3c7d0116b5",
+  "generatedAt": "2026-07-24T18:13:50.834Z",
+  "signedAt": "2026-07-24T18:13:50.834Z",
+  "signatureSha256": "f47eaa9c669740267c10659274ba6067b112800fb2faae0257f284febf7cd99f",
   "entries": [
     {
       "label": "protocol-seal",
@@ -11,27 +11,27 @@
     {
       "label": "power-analysis-seal",
       "path": "docs/generated/POWER_ANALYSIS_SEAL.json",
-      "sha256": "b53511263186930693d830f650c761e3758b955b0dfd85555f69153ef82b6087"
+      "sha256": "16c922869eff6d7b954987cc64791ebc7c96841fdd3f6ac782ab88cae31ae4cb"
     },
     {
       "label": "blind-interpretation",
       "path": "docs/generated/AI_BLIND_INTERPRETATION.md",
-      "sha256": "1362b733a1e8a753e5f5343e8f846701b772ae60f07decae07930acc2c763feb"
+      "sha256": "062977c3b006aea79183d4e627fdb26694134994b9a68b719d861aa7fbffada1"
     },
     {
       "label": "analysis-window",
       "path": "docs/generated/ANALYSIS_WINDOW.json",
-      "sha256": "cee8795d44317106b3c7be0c17855cc39fbcfecfd2cfe32716cb65569c595c42"
+      "sha256": "4f3c471ae9d65873660bd4dae309fee3eb3bc8f44006242f6c24770056536d22"
     },
     {
       "label": "holdout-seal",
       "path": "docs/generated/HOLDOUT_SEAL.json",
-      "sha256": "f16be8af533e4f73dd6d81f9616d8466b0cdcc23337c8b0cdfdd1b4883808a96"
+      "sha256": "3a3db45dd047c8cab0c31b4fa31444201e616b851c346f3d4af263c6f9a9fd64"
     },
     {
       "label": "preregistered-compliance",
       "path": "docs/generated/PREREGISTERED_COMPLIANCE.md",
-      "sha256": "d80256b4736194bbf6ee2cecce4bc9b9e3ad523071b80e58105977d2bdd5f7ae"
+      "sha256": "ddb7e3f3e7f43df72e861a8e19767493b9bbd5e4f18d5e74e0ff09058225e336"
     }
   ]
 }

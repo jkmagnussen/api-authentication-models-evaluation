@@ -1,0 +1,209 @@
+{
+  "global": {
+    "compact": true,
+    "defaultCompactVerticalShift": -10.0,
+    "footerBand": 90.0,
+    "fontFamily": "Arial",
+    "fontSize": 10,
+    "fontStyle": "italic",
+    "textColor": "#6b7280"
+  },
+  "charts": {
+    "ai-sample-syntax-issues-by-model-stage.svg": {
+      "directory": "maintainability",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "code-footprint-deltas.svg": {
+      "directory": "maintainability",
+      "compactVerticalShift": -18.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "complexity-to-misconfig-regression.svg": {
+      "directory": "maintainability",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "complexity-vs-misconfig-frequency-regression.svg": {
+      "directory": "maintainability",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "failure-points-vs-chars.svg": {
+      "directory": "maintainability",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "maintainability-difficulty-index.svg": {
+      "directory": "maintainability",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "authentication-overhead-breakdown.svg": {
+      "directory": "performance",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "performance-comparison.svg": {
+      "directory": "performance",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "runtime-latency-comparison-ci.svg": {
+      "directory": "performance",
+      "compactVerticalShift": -22.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "variance-under-load.svg": {
+      "directory": "performance",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "ai-failure-rates.svg": {
+      "directory": "security",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "ai-vs-human-dominance-heatmap.svg": {
+      "directory": "security",
+      "compactVerticalShift": -20.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "ai-vs-human-severity-gap-ci.svg": {
+      "directory": "security",
+      "compactVerticalShift": -50.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "control-point-risk-heatmap.svg": {
+      "directory": "security",
+      "compactVerticalShift": -65.0,
+      "verticalShift": -64.0,
+      "forceTwoLines": false,
+      "forceThreeLines": true
+    },
+    "misconfiguration-frequency-comparison.svg": {
+      "directory": "security",
+      "compactVerticalShift": -55.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "misconfiguration-severity-heatmap.svg": {
+      "directory": "security",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "normalized-failure-density.svg": {
+      "directory": "security",
+      "compactVerticalShift": -55.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "security-critical-control-risk-density.svg": {
+      "directory": "security",
+      "compactVerticalShift": -60.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "stride-severity-scoring.svg": {
+      "directory": "security",
+      "compactVerticalShift": -8.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "token-lifecycle-fragility.svg": {
+      "directory": "security",
+      "compactVerticalShift": -8.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "ai-determinism-variance.svg": {
+      "directory": "synthesis",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "calibration-and-agreement-controls.svg": {
+      "directory": "synthesis",
+      "compactVerticalShift": -6.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "correctness-security-tradeoff.svg": {
+      "directory": "synthesis",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "correctness-vs-security-provider-scatter.svg": {
+      "directory": "synthesis",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "cross-provider-overlap-venn.svg": {
+      "directory": "synthesis",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "error-diversity-entropy.svg": {
+      "directory": "synthesis",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    },
+    "misconfiguration-clustering-kmeans.svg": {
+      "directory": "synthesis",
+      "compactVerticalShift": -35.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": true,
+      "forceThreeLines": false
+    },
+    "provider-bias-analysis.svg": {
+      "directory": "synthesis",
+      "compactVerticalShift": -10.0,
+      "verticalShift": 0.0,
+      "forceTwoLines": false,
+      "forceThreeLines": false
+    }
+  }
+}
