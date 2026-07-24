@@ -1908,7 +1908,7 @@ z
  </g>
  <g id="text_footnote">
   <!-- Severity ratings by misconfiguration type and authentication model -->
-  <g style="fill: #555555" transform="translate(210.181806 415) scale(0.12 0.12)">
+  <g style="fill: #555555" transform="translate(210.181806 415) scale(0.18 0.18)">
    <defs>
     <path id="note-period" d="M 578 0 L 578 641 L 1219 641 L 1219 0 L 578 0 z" transform="scale(0.015625)"/>
    </defs>
