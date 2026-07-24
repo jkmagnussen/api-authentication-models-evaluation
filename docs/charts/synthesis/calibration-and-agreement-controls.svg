@@ -1769,7 +1769,7 @@ z
    </g>
    <g id="text_36">
     <!-- Control-set agreement: 100.0% | kappa=1.000 -->
-    <g style="fill: #262626" transform="translate(436.075901 305.227336) scale(0.11 -0.11)">
+    <g style="fill: #262626" transform="translate(436.075901 291.227336) scale(0.10 -0.10)">
      <defs>
       <path id="ArialMT-1d" d="M 578 2678 
 L 578 3319 
@@ -1961,7 +1961,7 @@ z
   </g>
   <g id="text_39">
    <!-- Source: ai-vs-human-advanced-comparisons.json + checker-agreement-summary.json | left = false-confidence calibration | right = checker agreement/raw agreement -->
-   <g style="fill: #555555" transform="translate(127.695703 340.958719) scale(0.07 -0.07)">
+   <g style="fill: #555555" transform="translate(127.695703 345.958719) scale(0.08 -0.08)">
     <defs>
      <path id="ArialMT-4d" d="M 419 3928 
 L 419 4581 
