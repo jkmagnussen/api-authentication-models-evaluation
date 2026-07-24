@@ -46,7 +46,7 @@ L 278.457341 21.936328
      </g>
      <g id="text_1">
       <!-- Session -->
-      <g style="fill: #262626" transform="translate(258.891091 381.264582) scale(0.12 0.12)">
+      <g style="fill: #262626" transform="translate(258.891091 381.264582) scale(0.11 -0.11)">
        <defs>
         <path id="ArialMT-36" d="M 288 1472 
 L 859 1522 
@@ -222,7 +222,7 @@ L 404.646242 21.936328
      </g>
      <g id="text_2">
       <!-- JWT -->
-      <g style="fill: #262626" transform="translate(393.34546 381.264582) scale(0.12 0.12)">
+      <g style="fill: #262626" transform="translate(393.34546 381.264582) scale(0.11 -0.11)">
        <defs>
         <path id="ArialMT-2d" d="M 184 1300 
 L 731 1375 
@@ -289,7 +289,7 @@ L 530.835142 21.936328
      </g>
      <g id="text_3">
       <!-- OAuth2 -->
-      <g style="fill: #262626" transform="translate(512.184986 381.270812) scale(0.12 0.12)">
+      <g style="fill: #262626" transform="translate(512.184986 381.270812) scale(0.11 -0.11)">
        <defs>
         <path id="ArialMT-32" d="M 309 2231 
 Q 309 3372 921 4017 
@@ -576,6 +576,12 @@ z
       <use xlink:href="#ArialMT-47" transform="translate(800.4375 0)"/>
       <use xlink:href="#ArialMT-48" transform="translate(856.046875 0)"/>
       <use xlink:href="#ArialMT-4f" transform="translate(911.65625 0)"/>
+     </g>
+    </g>
+    <g id="text_auth_footnote">
+     <!-- Authentication Model footnote -->
+     <g style="fill: #666666" transform="translate(348.613742 410) scale(0.08 -0.08)">
+      <text x="0" y="0" style="font-family: Arial; font-size: 8px;">three authentication protocols</text>
      </g>
     </g>
    </g>
