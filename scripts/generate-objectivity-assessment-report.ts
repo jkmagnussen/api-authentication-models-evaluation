@@ -191,7 +191,7 @@ function buildReport(): string {
   lines.push("- Reproducibility controls: generated artifacts are validated by docs checks and drift checks.");
   lines.push("- Stability controls: run-to-run arm variance is tracked in AI_STABILITY_REPORT.md using archived matrix snapshots.");
   lines.push("- Statistical grounding for performance: effect size, confidence intervals, and Welch significance output.");
-  lines.push("- Pre-registration control: confirmatory endpoints and corrections are defined in docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md.");
+  lines.push("- Governance control: confirmatory endpoints and corrections are reflected in generated governance artifacts.");
   lines.push("");
 
   lines.push("## AI Matrix Policy Compliance");

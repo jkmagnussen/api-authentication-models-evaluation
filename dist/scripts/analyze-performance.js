@@ -7,7 +7,6 @@ const fs_1 = __importDefault(require("fs"));
 const report_paths_1 = require("./report-paths");
 const { jStat } = require("jstat");
 const MODELS = ["jwt", "oauth", "sessions"];
-const METRICS = ["avg", "p95", "p99", "throughput"];
 function mean(values) {
     return values.reduce((a, b) => a + b, 0) / values.length;
 }

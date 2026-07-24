@@ -28,7 +28,6 @@ describe("JWT – Forgery Attack Tests", () => {
     test("Tampered payload should be rejected", async () => {
         const parts = validToken.split(".");
         const header = parts[0];
-        const payload = parts[1];
         const signature = parts[2];
         const tamperedPayload = Buffer.from(JSON.stringify({ userId: "attacker" })).toString("base64url");
         const tamperedToken = `${header}.${tamperedPayload}.${signature}`;

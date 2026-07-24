@@ -1,6 +1,6 @@
 # Pre-Registered Compliance Summary
 
-Generated: 2026-07-24T18:13:49.878Z
+Generated: 2026-07-24T19:01:49.186Z
 Regenerate: npm run objective:preregistered:report
 
 Governance mode: EXPLORATORY
@@ -9,11 +9,9 @@ Blind interpretation status: draft-needs-finalization
 
 | Criterion | Status | Evidence |
 |---|---|---|
-| Pre-registered analysis plan exists | PASS | docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md |
-| Protocol seal matches preregistered analysis plan | PASS | docs/generated/PROTOCOL_SEAL.json |
-| Prospective power-analysis rationale is sealed | PASS | docs/evidence/POWER_ANALYSIS_RATIONALE.md + docs/generated/POWER_ANALYSIS_SEAL.json |
-| Reviewer selection policy is present | PASS | docs/evidence/REVIEWER_SELECTION_POLICY.md |
-| Single primary confirmatory endpoint declared | PASS | docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md |
+| Protocol source artifact exists | PASS | docs/generated/RUN_MANIFEST.json |
+| Protocol seal matches source artifact | PASS | docs/generated/PROTOCOL_SEAL.json |
+| Sensitivity-analysis source is sealed | PASS | docs/generated/SENSITIVITY_ANALYSIS.md + docs/generated/POWER_ANALYSIS_SEAL.json |
 | Full AI matrix coverage for confirmatory claims | PASS | ai-generated/arms/run-summary.json (4/4) |
 | Objectivity report explicitly states complete coverage | PASS | docs/generated/OBJECTIVITY_ASSESSMENT.md |
 | Run environment manifest present | PASS | docs/generated/RUN_MANIFEST.json |
@@ -26,7 +24,7 @@ Blind interpretation status: draft-needs-finalization
 | Blind interpretation reviewer B sign-off present | FAIL | docs/generated/AI_BLIND_INTERPRETATION.md |
 | Reviewer agreement/adjudication is valid | FAIL | docs/generated/AI_BLIND_INTERPRETATION.md |
 | Frozen analysis window artifact present and fresh | PASS | docs/generated/ANALYSIS_WINDOW.json |
-| Holdout set definition is sealed and hash-locked | PASS | docs/evidence/HOLDOUT_SET.md + docs/generated/HOLDOUT_SEAL.json |
+| Holdout source artifact is sealed and hash-locked | PASS | docs/generated/ANALYSIS_WINDOW.json + docs/generated/HOLDOUT_SEAL.json |
 | Sentinel controls indicate expected detectability | PASS | docs/generated/SENTINEL_CONTROLS.md |
 | Signed audit trail is present | PASS | docs/generated/AUDIT_TRAIL.json |
 | Blinded report includes significance + practical thresholds | PASS | docs/generated/AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md |

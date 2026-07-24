@@ -14,14 +14,6 @@ type Arm = {
   promptMode: PromptMode;
 };
 
-type FailureRateRow = {
-  label: string;
-  totalSamples: number;
-  passedSamples: number;
-  failedSamples: number;
-  failureRatePct: number;
-};
-
 type ArmSnapshotMetadata = {
   provider: Provider;
   promptMode: PromptMode;

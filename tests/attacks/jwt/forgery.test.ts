@@ -1,7 +1,6 @@
 import request from "supertest";
 import app from "../../../src/app";
 import { prisma } from "../../../src/db";
-import jwt from "jsonwebtoken";
 import { resetDatabase } from "../../setup";
 
 let validToken: string;
@@ -31,7 +30,6 @@ describe("JWT – Forgery Attack Tests", () => {
   test("Tampered payload should be rejected", async () => {
     const parts = validToken.split(".");
     const header = parts[0];
-    const payload = parts[1];
     const signature = parts[2];
 
     const tamperedPayload = Buffer.from(

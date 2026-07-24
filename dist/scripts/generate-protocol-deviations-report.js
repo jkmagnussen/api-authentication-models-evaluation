@@ -55,26 +55,26 @@ function main() {
         observed: String(allowPartial),
         impact: "Partial matrix coverage disallows confirmatory AI interpretation.",
     });
-    const powerAnalysisPath = path_1.default.join(root, "docs", "evidence", "POWER_ANALYSIS_RATIONALE.md");
+    const powerAnalysisPath = path_1.default.join(root, report_paths_1.GENERATED_FILES.sensitivityAnalysis);
     const powerAnalysisSealPath = path_1.default.join(root, report_paths_1.GENERATED_FILES.powerAnalysisSeal);
     const powerAnalysisValid = fs_1.default.existsSync(powerAnalysisPath) && fs_1.default.existsSync(powerAnalysisSealPath);
     deviations.push({
         id: "POWER_ANALYSIS_SEAL",
         severity: "Major",
         status: powerAnalysisValid ? "None" : "Present",
-        expected: "sealed prospective power analysis rationale",
+        expected: "sealed sensitivity-analysis artifact",
         observed: powerAnalysisValid ? "sealed" : "missing",
-        impact: "Unsealed power rationale weakens the prospective sample-size justification.",
+        impact: "Unsealed sensitivity artifact weakens the reproducibility guardrail chain.",
     });
-    const reviewerPolicyPath = path_1.default.join(root, "docs", "evidence", "REVIEWER_SELECTION_POLICY.md");
-    const reviewerPolicyValid = fs_1.default.existsSync(reviewerPolicyPath);
+    const holdoutSourcePath = path_1.default.join(root, report_paths_1.GENERATED_FILES.analysisWindow);
+    const holdoutSourceValid = fs_1.default.existsSync(holdoutSourcePath);
     deviations.push({
-        id: "REVIEWER_SELECTION_POLICY",
+        id: "HOLDOUT_SOURCE_ARTIFACT",
         severity: "Major",
-        status: reviewerPolicyValid ? "None" : "Present",
-        expected: "reviewer selection policy present",
-        observed: reviewerPolicyValid ? "present" : "missing",
-        impact: "Missing reviewer selection policy weakens interpretive independence guardrails.",
+        status: holdoutSourceValid ? "None" : "Present",
+        expected: "analysis window artifact present",
+        observed: holdoutSourceValid ? "present" : "missing",
+        impact: "Missing holdout source artifact weakens the seal linkage for confirmatory governance.",
     });
     const completedArms = (runManifest.methodology?.aiMatrix?.arms ?? []).filter((arm) => arm.status === "completed");
     for (const arm of completedArms) {

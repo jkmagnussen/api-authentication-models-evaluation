@@ -19,12 +19,6 @@ function hashToken(token) {
     return crypto_1.default.createHash("sha256").update(token).digest("hex");
 }
 /**
- * Helper to compute expiry timestamps
- */
-function expiresIn(minutes) {
-    return new Date(Date.now() + minutes * 60 * 1000);
-}
-/**
  * Exchange an authorization code for an access token.
  * PKCE validation is handled in the controller.
  */

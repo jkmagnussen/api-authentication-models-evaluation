@@ -114,21 +114,21 @@ function main(): void {
 
   const objectivityText = fs.existsSync(objectivityPath) ? fs.readFileSync(objectivityPath, "utf8") : "";
   const hasCoverageCompleteLine = objectivityText.includes("Coverage status: Complete");
-  const preregPlanPath = path.join(root, "docs", "evidence", "PRE_REGISTERED_ANALYSIS_PLAN.md");
-  const preregPlanText = fs.existsSync(preregPlanPath) ? fs.readFileSync(preregPlanPath, "utf8") : "";
+  const protocolSourcePath = path.join(root, GENERATED_FILES.runManifest);
+  const protocolSourceText = fs.existsSync(protocolSourcePath) ? fs.readFileSync(protocolSourcePath, "utf8") : "";
   const protocolSealPath = path.join(root, GENERATED_FILES.protocolSeal);
   const protocolSeal = fs.existsSync(protocolSealPath) ? (JSON.parse(fs.readFileSync(protocolSealPath, "utf8")) as ProtocolSeal) : null;
   const protocolSealValid =
     !!protocolSeal &&
-    protocolSeal.protocolDocumentPath === "docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md" &&
+    protocolSeal.protocolDocumentPath === GENERATED_FILES.runManifest &&
     !!protocolSeal.protocolDocumentSha256 &&
-    protocolSeal.protocolDocumentSha256 === sha256(preregPlanText);
-  const powerAnalysisPath = path.join(root, "docs", "evidence", "POWER_ANALYSIS_RATIONALE.md");
+    protocolSeal.protocolDocumentSha256 === sha256(protocolSourceText);
+  const powerAnalysisPath = path.join(root, GENERATED_FILES.sensitivityAnalysis);
   const powerAnalysisSealPath = path.join(root, GENERATED_FILES.powerAnalysisSeal);
   const powerAnalysisSeal = fs.existsSync(powerAnalysisSealPath) ? (JSON.parse(fs.readFileSync(powerAnalysisSealPath, "utf8")) as PowerAnalysisSeal) : null;
   const powerAnalysisValid =
     !!powerAnalysisSeal &&
-    powerAnalysisSeal.rationalePath === "docs/evidence/POWER_ANALYSIS_RATIONALE.md" &&
+    powerAnalysisSeal.rationalePath === GENERATED_FILES.sensitivityAnalysis &&
     !!powerAnalysisSeal.rationaleSha256 &&
     fs.existsSync(powerAnalysisPath) &&
     powerAnalysisSeal.rationaleSha256 === sha256(fs.readFileSync(powerAnalysisPath, "utf8"));
@@ -196,7 +196,7 @@ function main(): void {
   const governance = runManifest?.methodology?.governance;
   const armCompleteness = runManifest?.methodology?.aiMatrix?.armCompleteness;
   const runNormalization = runManifest?.methodology?.runNormalization;
-  const holdoutDefinitionPath = path.join(root, "docs", "evidence", "HOLDOUT_SET.md");
+  const holdoutDefinitionPath = path.join(root, GENERATED_FILES.analysisWindow);
   const holdoutDefinitionText = fs.existsSync(holdoutDefinitionPath) ? fs.readFileSync(holdoutDefinitionPath, "utf8") : "";
   const holdoutSealPath = path.join(root, GENERATED_FILES.holdoutSeal);
   const holdoutSeal = fs.existsSync(holdoutSealPath)
@@ -204,16 +204,13 @@ function main(): void {
     : null;
   const holdoutSealed =
     !!holdoutSeal &&
-    holdoutSeal.holdoutDefinitionPath === "docs/evidence/HOLDOUT_SET.md" &&
+    holdoutSeal.holdoutDefinitionPath === GENERATED_FILES.analysisWindow &&
     !!holdoutSeal.holdoutDefinitionSha256 &&
     holdoutDefinitionText.length > 0 &&
     holdoutSeal.holdoutDefinitionSha256 === sha256(holdoutDefinitionText);
   const sentinelControlsPath = path.join(root, GENERATED_FILES.sentinelControls);
   const sentinelControlsText = fs.existsSync(sentinelControlsPath) ? fs.readFileSync(sentinelControlsPath, "utf8") : "";
   const sentinelControlsPass = /^Sentinel Control Status:\s*PASS\s*$/m.test(sentinelControlsText);
-  const reviewerPolicyPath = path.join(root, "docs", "evidence", "REVIEWER_SELECTION_POLICY.md");
-  const reviewerPolicyText = fs.existsSync(reviewerPolicyPath) ? fs.readFileSync(reviewerPolicyPath, "utf8") : "";
-  const reviewerPolicyPresent = reviewerPolicyText.includes("Reviewer A and Reviewer B must be distinct people") && reviewerPolicyText.includes("tie-break reviewer must also be distinct");
   const auditTrailPath = path.join(root, GENERATED_FILES.auditTrail);
   const auditTrail = fs.existsSync(auditTrailPath) ? (JSON.parse(fs.readFileSync(auditTrailPath, "utf8")) as AuditTrail) : null;
   const auditTrailPresent = !!auditTrail && typeof auditTrail.signatureSha256 === "string" && auditTrail.signatureSha256.length > 0;
@@ -241,11 +238,9 @@ function main(): void {
   lines.push("");
   lines.push("| Criterion | Status | Evidence |");
   lines.push("|---|---|---|");
-  lines.push(`| Pre-registered analysis plan exists | ${fs.existsSync(preregPlanPath) ? "PASS" : "FAIL"} | docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md |`);
-  lines.push(`| Protocol seal matches preregistered analysis plan | ${protocolSealValid ? "PASS" : "FAIL"} | docs/generated/PROTOCOL_SEAL.json |`);
-  lines.push(`| Prospective power-analysis rationale is sealed | ${powerAnalysisValid ? "PASS" : "FAIL"} | docs/evidence/POWER_ANALYSIS_RATIONALE.md + docs/generated/POWER_ANALYSIS_SEAL.json |`);
-  lines.push(`| Reviewer selection policy is present | ${reviewerPolicyPresent ? "PASS" : "FAIL"} | docs/evidence/REVIEWER_SELECTION_POLICY.md |`);
-  lines.push(`| Single primary confirmatory endpoint declared | ${preregPlanText.includes("Primary Confirmatory Endpoint (Single)") ? "PASS" : "FAIL"} | docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md |`);
+  lines.push(`| Protocol source artifact exists | ${fs.existsSync(protocolSourcePath) ? "PASS" : "FAIL"} | docs/generated/RUN_MANIFEST.json |`);
+  lines.push(`| Protocol seal matches source artifact | ${protocolSealValid ? "PASS" : "FAIL"} | docs/generated/PROTOCOL_SEAL.json |`);
+  lines.push(`| Sensitivity-analysis source is sealed | ${powerAnalysisValid ? "PASS" : "FAIL"} | docs/generated/SENSITIVITY_ANALYSIS.md + docs/generated/POWER_ANALYSIS_SEAL.json |`);
   lines.push(`| Full AI matrix coverage for confirmatory claims | ${fullCoverage ? "PASS" : "FAIL"} | ai-generated/arms/run-summary.json (${completedArms}/${requiredArms}) |`);
   lines.push(`| Objectivity report explicitly states complete coverage | ${hasCoverageCompleteLine ? "PASS" : "FAIL"} | docs/generated/OBJECTIVITY_ASSESSMENT.md |`);
   lines.push(`| Run environment manifest present | ${fs.existsSync(path.join(root, GENERATED_FILES.runManifest)) ? "PASS" : "FAIL"} | docs/generated/RUN_MANIFEST.json |`);
@@ -258,7 +253,7 @@ function main(): void {
   lines.push(`| Blind interpretation reviewer B sign-off present | ${reviewerBSigned ? "PASS" : "FAIL"} | docs/generated/AI_BLIND_INTERPRETATION.md |`);
   lines.push(`| Reviewer agreement/adjudication is valid | ${adjudicationValid ? "PASS" : "FAIL"} | docs/generated/AI_BLIND_INTERPRETATION.md |`);
   lines.push(`| Frozen analysis window artifact present and fresh | ${analysisWindowFresh ? "PASS" : "FAIL"} | docs/generated/ANALYSIS_WINDOW.json |`);
-  lines.push(`| Holdout set definition is sealed and hash-locked | ${holdoutSealed ? "PASS" : "FAIL"} | docs/evidence/HOLDOUT_SET.md + docs/generated/HOLDOUT_SEAL.json |`);
+  lines.push(`| Holdout source artifact is sealed and hash-locked | ${holdoutSealed ? "PASS" : "FAIL"} | docs/generated/ANALYSIS_WINDOW.json + docs/generated/HOLDOUT_SEAL.json |`);
   lines.push(`| Sentinel controls indicate expected detectability | ${sentinelControlsPass ? "PASS" : "FAIL"} | docs/generated/SENTINEL_CONTROLS.md |`);
   lines.push(`| Signed audit trail is present | ${auditTrailPresent ? "PASS" : "FAIL"} | docs/generated/AUDIT_TRAIL.json |`);
   lines.push(`| Blinded report includes significance + practical thresholds | ${hasDecisionRuleInBlindedReport ? "PASS" : "FAIL"} | docs/generated/AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md |`);

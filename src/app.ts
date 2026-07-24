@@ -85,7 +85,7 @@ app.use(session({
   },
 }));
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.send("API running");
 });
 

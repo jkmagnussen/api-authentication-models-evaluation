@@ -68,7 +68,6 @@ docs/               Dissertation-facing narrative and evidence
 ## Key Docs
 
 - `docs/REPRODUCIBILITY_CHECKLIST.md` - canonical run sequence and final checklist
-- `CONTRIBUTING.md` - contributor preflight and CI-aligned checks
 - `docs/generated/RESULTS_DASHBOARD.md` - top-level generated results snapshot
 - `docs/performance-results/analysis.md` - generated performance summary
 - `docs/charts/README.md` - chart catalog (split into `primary/` and `supporting/` tiers)
@@ -101,7 +100,7 @@ $env:ALLOW_LIVE_AI_GENERATION="true"
 For detailed routes and request/response examples, see:
 
 - `routes.md`
-- `docs/Routes.postman_collection.json`
+- `postman.json`
 
 `routes.md` includes both primary comparative model routes (Sessions/JWT/OAuth) and supplementary account security routes. The supplementary account security routes are operational hardening endpoints and are not part of the primary comparative evaluation.
 

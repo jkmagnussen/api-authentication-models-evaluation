@@ -14,13 +14,6 @@ function hashToken(token: string) {
 }
 
 /**
- * Helper to compute expiry timestamps
- */
-function expiresIn(minutes: number) {
-  return new Date(Date.now() + minutes * 60 * 1000);
-}
-
-/**
  * Exchange an authorization code for an access token.
  * PKCE validation is handled in the controller.
  */

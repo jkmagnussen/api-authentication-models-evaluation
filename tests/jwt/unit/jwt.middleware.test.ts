@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { jwtAuth } from "../../../src/jwt/jwt.middleware";
 
 describe("JWT Middleware – Unit Tests", () => {

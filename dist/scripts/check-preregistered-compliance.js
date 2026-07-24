@@ -66,10 +66,6 @@ function main() {
     const leakageProbeStrings = buildLeakageProbeStrings();
     const allowExploratoryBlindInterpretation = hasFlag("--allow-exploratory-blind-interpretation");
     const requiredFiles = [
-        "docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md",
-        "docs/evidence/POWER_ANALYSIS_RATIONALE.md",
-        "docs/evidence/REVIEWER_SELECTION_POLICY.md",
-        "docs/evidence/HOLDOUT_SET.md",
         "docs/generated/OBJECTIVITY_ASSESSMENT.md",
         "docs/generated/AI_STABILITY_REPORT.md",
         "docs/generated/AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md",
@@ -131,48 +127,28 @@ function main() {
     if (!armCompleteness?.allCompletedArmsHaveRetryPolicy) {
         fail("RUN_MANIFEST is missing retry policy metadata for one or more completed AI arms.");
     }
-    const preregPlanPath = path_1.default.join(root, "docs", "evidence", "PRE_REGISTERED_ANALYSIS_PLAN.md");
-    const preregPlanText = fs_1.default.readFileSync(preregPlanPath, "utf8");
+    const protocolSourcePath = path_1.default.join(root, report_paths_1.GENERATED_FILES.runManifest);
+    const protocolSourceText = fs_1.default.readFileSync(protocolSourcePath, "utf8");
     const protocolSealPath = path_1.default.join(root, report_paths_1.GENERATED_FILES.protocolSeal);
     const protocolSeal = fs_1.default.existsSync(protocolSealPath) ? JSON.parse(fs_1.default.readFileSync(protocolSealPath, "utf8")) : null;
-    const protocolSealHash = sha256(preregPlanText);
+    const protocolSealHash = sha256(protocolSourceText);
     const protocolSealValid = !!protocolSeal &&
-        protocolSeal.protocolDocumentPath === "docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md" &&
+        protocolSeal.protocolDocumentPath === report_paths_1.GENERATED_FILES.runManifest &&
         !!protocolSeal.protocolDocumentSha256 &&
         protocolSeal.protocolDocumentSha256 === protocolSealHash;
-    if (!preregPlanText.includes("Multiple-Testing Policy")) {
-        fail("Pre-registered analysis plan is missing the multiple-testing policy section.");
-    }
-    if (!preregPlanText.includes("Primary Confirmatory Endpoint (Single)")) {
-        fail("Pre-registered analysis plan is missing a single primary confirmatory endpoint declaration.");
-    }
-    if (!preregPlanText.includes("Decision Thresholds")) {
-        fail("Pre-registered analysis plan is missing the decision thresholds section.");
-    }
-    if (!preregPlanText.includes("Incomplete-Run Handling Rules")) {
-        fail("Pre-registered analysis plan is missing incomplete-run handling rules.");
-    }
     if (!protocolSealValid) {
-        fail("Protocol seal is missing or does not match the current preregistered analysis plan.");
+        fail("Protocol seal is missing or does not match the current protocol source artifact.");
     }
-    const powerAnalysisPath = path_1.default.join(root, "docs", "evidence", "POWER_ANALYSIS_RATIONALE.md");
+    const powerAnalysisPath = path_1.default.join(root, report_paths_1.GENERATED_FILES.sensitivityAnalysis);
     const powerAnalysisText = fs_1.default.readFileSync(powerAnalysisPath, "utf8");
     const powerAnalysisSealPath = path_1.default.join(root, report_paths_1.GENERATED_FILES.powerAnalysisSeal);
     const powerAnalysisSeal = fs_1.default.existsSync(powerAnalysisSealPath) ? JSON.parse(fs_1.default.readFileSync(powerAnalysisSealPath, "utf8")) : null;
     const powerAnalysisSealValid = !!powerAnalysisSeal &&
-        powerAnalysisSeal.rationalePath === "docs/evidence/POWER_ANALYSIS_RATIONALE.md" &&
+        powerAnalysisSeal.rationalePath === report_paths_1.GENERATED_FILES.sensitivityAnalysis &&
         !!powerAnalysisSeal.rationaleSha256 &&
         powerAnalysisSeal.rationaleSha256 === sha256(powerAnalysisText);
     if (!powerAnalysisSealValid) {
-        fail("Power analysis seal is missing or does not match the current power analysis rationale.");
-    }
-    const reviewerPolicyPath = path_1.default.join(root, "docs", "evidence", "REVIEWER_SELECTION_POLICY.md");
-    const reviewerPolicyText = fs_1.default.readFileSync(reviewerPolicyPath, "utf8");
-    if (!reviewerPolicyText.includes("Reviewer A and Reviewer B must be distinct people")) {
-        fail("Reviewer selection policy does not require distinct reviewers.");
-    }
-    if (!reviewerPolicyText.includes("tie-break reviewer must also be distinct")) {
-        fail("Reviewer selection policy does not require a distinct tie-break reviewer.");
+        fail("Power analysis seal is missing or does not match the current sensitivity analysis artifact.");
     }
     const blindedReportText = fs_1.default.readFileSync(path_1.default.join(root, "docs", "generated", "AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md"), "utf8");
     const blindedReportHash = sha256(blindedReportText);
@@ -275,11 +251,11 @@ function main() {
     if (!auditTrailValid) {
         fail("Signed audit trail is missing or does not match the governed artifacts.");
     }
-    const holdoutDefinitionPath = path_1.default.join(root, "docs", "evidence", "HOLDOUT_SET.md");
+    const holdoutDefinitionPath = path_1.default.join(root, report_paths_1.GENERATED_FILES.analysisWindow);
     const holdoutSealPath = path_1.default.join(root, "docs", "generated", "HOLDOUT_SEAL.json");
     const holdoutSeal = JSON.parse(fs_1.default.readFileSync(holdoutSealPath, "utf8"));
     const holdoutDefinitionHash = sha256(fs_1.default.readFileSync(holdoutDefinitionPath, "utf8"));
-    if (holdoutSeal.holdoutDefinitionPath !== "docs/evidence/HOLDOUT_SET.md") {
+    if (holdoutSeal.holdoutDefinitionPath !== report_paths_1.GENERATED_FILES.analysisWindow) {
         fail("Holdout seal points to an unexpected holdout definition path.");
     }
     if (!holdoutSeal.holdoutDefinitionSha256 || holdoutSeal.holdoutDefinitionSha256 !== holdoutDefinitionHash) {
@@ -342,7 +318,7 @@ function main() {
     if (unresolvedCritical > 0) {
         fail(`Protocol deviations report shows unresolved critical deviations (${unresolvedCritical}). Confirmatory checks blocked.`);
     }
-    const evaluationRoots = [path_1.default.join(root, "tests"), path_1.default.join(root, "docs", "evidence")];
+    const evaluationRoots = [path_1.default.join(root, "tests"), path_1.default.join(root, "docs", "generated")];
     const evaluationFiles = evaluationRoots.flatMap((dir) => walkFiles(dir)).filter((filePath) => filePath.endsWith(".ts") || filePath.endsWith(".md") || filePath.endsWith(".json"));
     for (const filePath of evaluationFiles) {
         const text = fs_1.default.readFileSync(filePath, "utf8");

@@ -30,7 +30,7 @@ router.get("/csrf-token", csrfProtection, (req, res) => {
 });
 
 // CSRF-protected action (requires DB session + valid CSRF token)
-router.post("/protected-action", requireSession, csrfProtection, (req, res) => {
+router.post("/protected-action", requireSession, csrfProtection, (_req, res) => {
   res.json({ message: "Protected action completed" });
 });
 

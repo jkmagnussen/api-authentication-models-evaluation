@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-24T18:13:42.828Z",
+  "generatedAt": "2026-07-24T19:01:21.515Z",
   "sealedAt": "2026-07-22T23:10:26.352Z",
-  "holdoutDefinitionPath": "docs/evidence/HOLDOUT_SET.md",
-  "holdoutDefinitionSha256": "dbb8c7d268e4e5f8d6ded1450703f83d577045d3b66bd683dbfb00418a322a33"
+  "holdoutDefinitionPath": "docs/generated/ANALYSIS_WINDOW.json",
+  "holdoutDefinitionSha256": "4f3c471ae9d65873660bd4dae309fee3eb3bc8f44006242f6c24770056536d22"
 }

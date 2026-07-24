@@ -12,12 +12,12 @@ function sha256(text) {
 }
 function main() {
     const root = process.cwd();
-    const rationalePath = path_1.default.join(root, "docs", "evidence", "POWER_ANALYSIS_RATIONALE.md");
+    const rationalePath = path_1.default.join(root, report_paths_1.GENERATED_FILES.sensitivityAnalysis);
     const outputPath = path_1.default.join(root, report_paths_1.GENERATED_FILES.powerAnalysisSeal);
     const shouldRefresh = process.argv.includes("--refresh");
     const now = new Date().toISOString();
     if (!fs_1.default.existsSync(rationalePath)) {
-        throw new Error("Missing power analysis rationale: docs/evidence/POWER_ANALYSIS_RATIONALE.md");
+        throw new Error(`Missing sensitivity analysis source: ${report_paths_1.GENERATED_FILES.sensitivityAnalysis}`);
     }
     const rationaleText = fs_1.default.readFileSync(rationalePath, "utf8");
     const rationaleSha256 = sha256(rationaleText);
@@ -26,6 +26,7 @@ function main() {
         const preserved = {
             ...existing,
             generatedAt: now,
+            rationalePath: report_paths_1.GENERATED_FILES.sensitivityAnalysis,
             rationaleSha256,
         };
         fs_1.default.writeFileSync(outputPath, JSON.stringify(preserved, null, 2));
@@ -35,7 +36,7 @@ function main() {
     const payload = {
         generatedAt: now,
         sealedAt: now,
-        rationalePath: "docs/evidence/POWER_ANALYSIS_RATIONALE.md",
+        rationalePath: report_paths_1.GENERATED_FILES.sensitivityAnalysis,
         rationaleSha256,
     };
     fs_1.default.writeFileSync(outputPath, JSON.stringify(payload, null, 2));

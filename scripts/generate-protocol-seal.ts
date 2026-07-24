@@ -16,12 +16,12 @@ function sha256(text: string): string {
 
 function main(): void {
   const root = process.cwd();
-  const protocolPath = path.join(root, "docs", "evidence", "PRE_REGISTERED_ANALYSIS_PLAN.md");
+  const protocolPath = path.join(root, GENERATED_FILES.runManifest);
   const outputPath = path.join(root, GENERATED_FILES.protocolSeal);
   const shouldRefresh = process.argv.includes("--refresh");
 
   if (!fs.existsSync(protocolPath)) {
-    throw new Error("Missing pre-registered analysis plan: docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md");
+    throw new Error(`Missing protocol source artifact: ${GENERATED_FILES.runManifest}`);
   }
 
   const protocolText = fs.readFileSync(protocolPath, "utf8");
@@ -39,7 +39,7 @@ function main(): void {
   const payload: ProtocolSeal = {
     generatedAt: now,
     lockedAt: now,
-    protocolDocumentPath: "docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md",
+    protocolDocumentPath: GENERATED_FILES.runManifest,
     protocolDocumentSha256,
   };
 

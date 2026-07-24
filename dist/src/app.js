@@ -76,7 +76,7 @@ app.use((0, express_session_1.default)({
         maxAge: config_1.default.cookie.maxAgeMs,
     },
 }));
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
     res.send("API running");
 });
 app.get("/health/live", (_req, res) => {

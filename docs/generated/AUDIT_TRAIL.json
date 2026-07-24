@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-07-24T18:13:50.834Z",
-  "signedAt": "2026-07-24T18:13:50.834Z",
-  "signatureSha256": "f47eaa9c669740267c10659274ba6067b112800fb2faae0257f284febf7cd99f",
+  "generatedAt": "2026-07-24T19:09:53.910Z",
+  "signedAt": "2026-07-24T19:09:53.910Z",
+  "signatureSha256": "c6233b51e1b2c997647ce9460dd5fe7d581e1524d4fb5a29f60e612b15ed8608",
   "entries": [
     {
       "label": "protocol-seal",
       "path": "docs/generated/PROTOCOL_SEAL.json",
-      "sha256": "2c2858a9c29764b524d878c4834ab1b7edb454c92de17efbeb8d8279d03b5638"
+      "sha256": "6cbb8e5c61365cab6493851adb4a2d9b5fb45fc04f6e4b3483de6121237a3726"
     },
     {
       "label": "power-analysis-seal",
       "path": "docs/generated/POWER_ANALYSIS_SEAL.json",
-      "sha256": "16c922869eff6d7b954987cc64791ebc7c96841fdd3f6ac782ab88cae31ae4cb"
+      "sha256": "e1d1c4e2cf637f3726560e1f7f2ac3803aad8aa85f3c3a6f63fef0b7755c2e3a"
     },
     {
       "label": "blind-interpretation",
@@ -26,12 +26,12 @@
     {
       "label": "holdout-seal",
       "path": "docs/generated/HOLDOUT_SEAL.json",
-      "sha256": "3a3db45dd047c8cab0c31b4fa31444201e616b851c346f3d4af263c6f9a9fd64"
+      "sha256": "c44af3914fd1aa1a9c5fb3bab4e21653dd684faa7b754b4103a766bf11f5c9b1"
     },
     {
       "label": "preregistered-compliance",
       "path": "docs/generated/PREREGISTERED_COMPLIANCE.md",
-      "sha256": "ddb7e3f3e7f43df72e861a8e19767493b9bbd5e4f18d5e74e0ff09058225e336"
+      "sha256": "98e7b71f9331c5fc315452cab21f3f792428dac3a7147e2ec1123a3780f7aa16"
     }
   ]
 }

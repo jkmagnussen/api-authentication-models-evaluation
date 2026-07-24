@@ -12,9 +12,6 @@ function main(): void {
 
   const text = fs.readFileSync(interpretationPath, "utf8");
   const hasAgreement = /^Reviewer Agreement:\s*AGREE\s*$/m.test(text);
-  const hasTieBreakReviewer = /^Tie-break Reviewer:\s*(.*)$/m.test(text);
-  const hasTieBreakDecision = /^Tie-break Decision:\s*(.*)$/m.test(text);
-  const hasTieBreakSignedAt = /^Tie-break Signed At:\s*(.*)$/m.test(text);
 
   if (!hasAgreement) {
     console.log("[objective:blind:disagreement] Current interpretation is not in AGREE mode; no simulation needed.");

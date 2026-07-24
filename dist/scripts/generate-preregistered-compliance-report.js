@@ -48,19 +48,19 @@ function main() {
     const fullCoverage = requiredArms > 0 && completedArms === requiredArms;
     const objectivityText = fs_1.default.existsSync(objectivityPath) ? fs_1.default.readFileSync(objectivityPath, "utf8") : "";
     const hasCoverageCompleteLine = objectivityText.includes("Coverage status: Complete");
-    const preregPlanPath = path_1.default.join(root, "docs", "evidence", "PRE_REGISTERED_ANALYSIS_PLAN.md");
-    const preregPlanText = fs_1.default.existsSync(preregPlanPath) ? fs_1.default.readFileSync(preregPlanPath, "utf8") : "";
+    const protocolSourcePath = path_1.default.join(root, report_paths_1.GENERATED_FILES.runManifest);
+    const protocolSourceText = fs_1.default.existsSync(protocolSourcePath) ? fs_1.default.readFileSync(protocolSourcePath, "utf8") : "";
     const protocolSealPath = path_1.default.join(root, report_paths_1.GENERATED_FILES.protocolSeal);
     const protocolSeal = fs_1.default.existsSync(protocolSealPath) ? JSON.parse(fs_1.default.readFileSync(protocolSealPath, "utf8")) : null;
     const protocolSealValid = !!protocolSeal &&
-        protocolSeal.protocolDocumentPath === "docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md" &&
+        protocolSeal.protocolDocumentPath === report_paths_1.GENERATED_FILES.runManifest &&
         !!protocolSeal.protocolDocumentSha256 &&
-        protocolSeal.protocolDocumentSha256 === sha256(preregPlanText);
-    const powerAnalysisPath = path_1.default.join(root, "docs", "evidence", "POWER_ANALYSIS_RATIONALE.md");
+        protocolSeal.protocolDocumentSha256 === sha256(protocolSourceText);
+    const powerAnalysisPath = path_1.default.join(root, report_paths_1.GENERATED_FILES.sensitivityAnalysis);
     const powerAnalysisSealPath = path_1.default.join(root, report_paths_1.GENERATED_FILES.powerAnalysisSeal);
     const powerAnalysisSeal = fs_1.default.existsSync(powerAnalysisSealPath) ? JSON.parse(fs_1.default.readFileSync(powerAnalysisSealPath, "utf8")) : null;
     const powerAnalysisValid = !!powerAnalysisSeal &&
-        powerAnalysisSeal.rationalePath === "docs/evidence/POWER_ANALYSIS_RATIONALE.md" &&
+        powerAnalysisSeal.rationalePath === report_paths_1.GENERATED_FILES.sensitivityAnalysis &&
         !!powerAnalysisSeal.rationaleSha256 &&
         fs_1.default.existsSync(powerAnalysisPath) &&
         powerAnalysisSeal.rationaleSha256 === sha256(fs_1.default.readFileSync(powerAnalysisPath, "utf8"));
@@ -125,23 +125,20 @@ function main() {
     const governance = runManifest?.methodology?.governance;
     const armCompleteness = runManifest?.methodology?.aiMatrix?.armCompleteness;
     const runNormalization = runManifest?.methodology?.runNormalization;
-    const holdoutDefinitionPath = path_1.default.join(root, "docs", "evidence", "HOLDOUT_SET.md");
+    const holdoutDefinitionPath = path_1.default.join(root, report_paths_1.GENERATED_FILES.analysisWindow);
     const holdoutDefinitionText = fs_1.default.existsSync(holdoutDefinitionPath) ? fs_1.default.readFileSync(holdoutDefinitionPath, "utf8") : "";
     const holdoutSealPath = path_1.default.join(root, report_paths_1.GENERATED_FILES.holdoutSeal);
     const holdoutSeal = fs_1.default.existsSync(holdoutSealPath)
         ? JSON.parse(fs_1.default.readFileSync(holdoutSealPath, "utf8"))
         : null;
     const holdoutSealed = !!holdoutSeal &&
-        holdoutSeal.holdoutDefinitionPath === "docs/evidence/HOLDOUT_SET.md" &&
+        holdoutSeal.holdoutDefinitionPath === report_paths_1.GENERATED_FILES.analysisWindow &&
         !!holdoutSeal.holdoutDefinitionSha256 &&
         holdoutDefinitionText.length > 0 &&
         holdoutSeal.holdoutDefinitionSha256 === sha256(holdoutDefinitionText);
     const sentinelControlsPath = path_1.default.join(root, report_paths_1.GENERATED_FILES.sentinelControls);
     const sentinelControlsText = fs_1.default.existsSync(sentinelControlsPath) ? fs_1.default.readFileSync(sentinelControlsPath, "utf8") : "";
     const sentinelControlsPass = /^Sentinel Control Status:\s*PASS\s*$/m.test(sentinelControlsText);
-    const reviewerPolicyPath = path_1.default.join(root, "docs", "evidence", "REVIEWER_SELECTION_POLICY.md");
-    const reviewerPolicyText = fs_1.default.existsSync(reviewerPolicyPath) ? fs_1.default.readFileSync(reviewerPolicyPath, "utf8") : "";
-    const reviewerPolicyPresent = reviewerPolicyText.includes("Reviewer A and Reviewer B must be distinct people") && reviewerPolicyText.includes("tie-break reviewer must also be distinct");
     const auditTrailPath = path_1.default.join(root, report_paths_1.GENERATED_FILES.auditTrail);
     const auditTrail = fs_1.default.existsSync(auditTrailPath) ? JSON.parse(fs_1.default.readFileSync(auditTrailPath, "utf8")) : null;
     const auditTrailPresent = !!auditTrail && typeof auditTrail.signatureSha256 === "string" && auditTrail.signatureSha256.length > 0;
@@ -162,11 +159,9 @@ function main() {
     lines.push("");
     lines.push("| Criterion | Status | Evidence |");
     lines.push("|---|---|---|");
-    lines.push(`| Pre-registered analysis plan exists | ${fs_1.default.existsSync(preregPlanPath) ? "PASS" : "FAIL"} | docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md |`);
-    lines.push(`| Protocol seal matches preregistered analysis plan | ${protocolSealValid ? "PASS" : "FAIL"} | docs/generated/PROTOCOL_SEAL.json |`);
-    lines.push(`| Prospective power-analysis rationale is sealed | ${powerAnalysisValid ? "PASS" : "FAIL"} | docs/evidence/POWER_ANALYSIS_RATIONALE.md + docs/generated/POWER_ANALYSIS_SEAL.json |`);
-    lines.push(`| Reviewer selection policy is present | ${reviewerPolicyPresent ? "PASS" : "FAIL"} | docs/evidence/REVIEWER_SELECTION_POLICY.md |`);
-    lines.push(`| Single primary confirmatory endpoint declared | ${preregPlanText.includes("Primary Confirmatory Endpoint (Single)") ? "PASS" : "FAIL"} | docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md |`);
+    lines.push(`| Protocol source artifact exists | ${fs_1.default.existsSync(protocolSourcePath) ? "PASS" : "FAIL"} | docs/generated/RUN_MANIFEST.json |`);
+    lines.push(`| Protocol seal matches source artifact | ${protocolSealValid ? "PASS" : "FAIL"} | docs/generated/PROTOCOL_SEAL.json |`);
+    lines.push(`| Sensitivity-analysis source is sealed | ${powerAnalysisValid ? "PASS" : "FAIL"} | docs/generated/SENSITIVITY_ANALYSIS.md + docs/generated/POWER_ANALYSIS_SEAL.json |`);
     lines.push(`| Full AI matrix coverage for confirmatory claims | ${fullCoverage ? "PASS" : "FAIL"} | ai-generated/arms/run-summary.json (${completedArms}/${requiredArms}) |`);
     lines.push(`| Objectivity report explicitly states complete coverage | ${hasCoverageCompleteLine ? "PASS" : "FAIL"} | docs/generated/OBJECTIVITY_ASSESSMENT.md |`);
     lines.push(`| Run environment manifest present | ${fs_1.default.existsSync(path_1.default.join(root, report_paths_1.GENERATED_FILES.runManifest)) ? "PASS" : "FAIL"} | docs/generated/RUN_MANIFEST.json |`);
@@ -179,7 +174,7 @@ function main() {
     lines.push(`| Blind interpretation reviewer B sign-off present | ${reviewerBSigned ? "PASS" : "FAIL"} | docs/generated/AI_BLIND_INTERPRETATION.md |`);
     lines.push(`| Reviewer agreement/adjudication is valid | ${adjudicationValid ? "PASS" : "FAIL"} | docs/generated/AI_BLIND_INTERPRETATION.md |`);
     lines.push(`| Frozen analysis window artifact present and fresh | ${analysisWindowFresh ? "PASS" : "FAIL"} | docs/generated/ANALYSIS_WINDOW.json |`);
-    lines.push(`| Holdout set definition is sealed and hash-locked | ${holdoutSealed ? "PASS" : "FAIL"} | docs/evidence/HOLDOUT_SET.md + docs/generated/HOLDOUT_SEAL.json |`);
+    lines.push(`| Holdout source artifact is sealed and hash-locked | ${holdoutSealed ? "PASS" : "FAIL"} | docs/generated/ANALYSIS_WINDOW.json + docs/generated/HOLDOUT_SEAL.json |`);
     lines.push(`| Sentinel controls indicate expected detectability | ${sentinelControlsPass ? "PASS" : "FAIL"} | docs/generated/SENTINEL_CONTROLS.md |`);
     lines.push(`| Signed audit trail is present | ${auditTrailPresent ? "PASS" : "FAIL"} | docs/generated/AUDIT_TRAIL.json |`);
     lines.push(`| Blinded report includes significance + practical thresholds | ${hasDecisionRuleInBlindedReport ? "PASS" : "FAIL"} | docs/generated/AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md |`);

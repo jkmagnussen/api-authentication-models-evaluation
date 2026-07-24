@@ -1,6 +1,5 @@
 export const DOCS_DIR = "docs";
 export const DOCS_GENERATED_DIR = `${DOCS_DIR}/generated`;
-export const DOCS_EVIDENCE_DIR = `${DOCS_DIR}/evidence`;
 export const DOCS_PERFORMANCE_DIR = `${DOCS_DIR}/performance-results`;
 
 export const GENERATED_FILES = {

@@ -7,7 +7,6 @@
 // types/express-session-augment.ts
 
 import "express-session";
-import { Request } from "express";
 
 // Extend Express Request with userId (used by session auth)
 declare module "express-serve-static-core" {

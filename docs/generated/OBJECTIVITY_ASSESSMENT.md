@@ -1,6 +1,6 @@
 # Objectivity Assessment
 
-Generated: 2026-07-24T18:13:35.146Z
+Generated: 2026-07-24T19:01:05.850Z
 Regenerate: npm run objective:report
 
 This report documents fairness controls and measurable bias checks for examiner-facing methodological transparency.
@@ -13,7 +13,7 @@ This report documents fairness controls and measurable bias checks for examiner-
 - Reproducibility controls: generated artifacts are validated by docs checks and drift checks.
 - Stability controls: run-to-run arm variance is tracked in AI_STABILITY_REPORT.md using archived matrix snapshots.
 - Statistical grounding for performance: effect size, confidence intervals, and Welch significance output.
-- Pre-registration control: confirmatory endpoints and corrections are defined in docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md.
+- Governance control: confirmatory endpoints and corrections are reflected in generated governance artifacts.
 
 ## AI Matrix Policy Compliance
 

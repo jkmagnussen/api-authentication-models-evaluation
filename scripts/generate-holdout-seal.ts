@@ -17,12 +17,12 @@ function sha256(text: string): string {
 function main(): void {
   const root = process.cwd();
   const outputPath = path.join(root, GENERATED_FILES.holdoutSeal);
-  const holdoutDefinitionPath = path.join(root, "docs", "evidence", "HOLDOUT_SET.md");
+  const holdoutDefinitionPath = path.join(root, GENERATED_FILES.analysisWindow);
   const shouldRefresh = process.argv.includes("--refresh");
   const now = new Date().toISOString();
 
   if (!fs.existsSync(holdoutDefinitionPath)) {
-    throw new Error("Missing holdout definition: docs/evidence/HOLDOUT_SET.md");
+    throw new Error(`Missing holdout source artifact: ${GENERATED_FILES.analysisWindow}`);
   }
 
   const holdoutText = fs.readFileSync(holdoutDefinitionPath, "utf8");
@@ -33,6 +33,7 @@ function main(): void {
     const preserved: HoldoutSeal = {
       ...existing,
       generatedAt: now,
+      holdoutDefinitionPath: GENERATED_FILES.analysisWindow,
       holdoutDefinitionSha256: holdoutHash,
     };
     fs.writeFileSync(outputPath, JSON.stringify(preserved, null, 2));
@@ -43,7 +44,7 @@ function main(): void {
   const payload: HoldoutSeal = {
     generatedAt: now,
     sealedAt: now,
-    holdoutDefinitionPath: "docs/evidence/HOLDOUT_SET.md",
+    holdoutDefinitionPath: GENERATED_FILES.analysisWindow,
     holdoutDefinitionSha256: holdoutHash,
   };
 

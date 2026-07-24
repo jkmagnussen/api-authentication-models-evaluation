@@ -3,8 +3,7 @@ import app from "../../../src/app";
 import { resetDatabase } from "../../setup";   // ⭐ Use global reset
 import { prisma } from "../../../src/db";
 import {
-  exchangeCodeForToken,
-  validateAccessToken
+  exchangeCodeForToken
 } from "../../../src/oauth/oauth.service";
 
 const validUUID = "123e4567-e89b-12d3-a456-426614174000";

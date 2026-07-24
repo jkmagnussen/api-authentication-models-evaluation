@@ -129,9 +129,6 @@ Then unset it after regeneration.
 
 ## Expected Output Artifacts
 
-- `docs/evidence/RUN_HEALTH_APPENDIX.md`
-- `docs/evidence/TEST_EVIDENCE_MATRIX.md`
-- `docs/evidence/DISSERTATION_EVALUATION_TABLE.md`
 - `docs/generated/VARIANT_DIFFERENTIAL_REPORT.md`
 - `docs/generated/AI_EVALUATION_SUMMARY.md`
 - `docs/generated/FAILURE_PROPAGATION_ANALYSIS.md`
@@ -148,7 +145,6 @@ Then unset it after regeneration.
 - `docs/generated/PREREGISTERED_COMPLIANCE.md`
 - `docs/generated/ML_LITE_ANALYSIS_SUMMARY.md`
 - `docs/generated/RUN_MANIFEST.json`
-- `docs/evidence/UNIFIED_COMPARISON_MATRIX.md`
 - `docs/performance-results/analysis.md`
 - `docs/performance-results/statistical-summary.csv`
 - `ai-generated/results/*.json`
@@ -174,7 +170,7 @@ Use this section as a final pre-submission gate so required capstone components 
 
 Recommended evidence pointers:
 
-- Proposal and ethics process context: `docs/evidence/PRE_REGISTERED_ANALYSIS_PLAN.md`
+- Governance context: `docs/generated/PREREGISTERED_COMPLIANCE.md`
 - Reproducibility command chain: this checklist and `README.md`
 - Consolidated run outputs: `docs/generated/RUN_MANIFEST.json` and `docs/generated/RESULTS_DASHBOARD.md`
 - Artifact-quality and tradeoff summaries: `docs/generated/AI_EVALUATION_SUMMARY.md` and `docs/generated/SECURITY_PERFORMANCE_TRADEOFF.md`

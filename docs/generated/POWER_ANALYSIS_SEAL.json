@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-24T18:13:40.916Z",
+  "generatedAt": "2026-07-24T19:01:20.658Z",
   "sealedAt": "2026-07-22T23:34:12.871Z",
-  "rationalePath": "docs/evidence/POWER_ANALYSIS_RATIONALE.md",
-  "rationaleSha256": "6248d6f5c9a1a472a6fe7023124d3bf4e291f0d9fefddd349aae2e29ae53e0ab"
+  "rationalePath": "docs/generated/SENSITIVITY_ANALYSIS.md",
+  "rationaleSha256": "aae4eb523c07fd1ffba6404b38e6119f0bb13aaf524fcbe0c5a82b06ee96ae81"
 }

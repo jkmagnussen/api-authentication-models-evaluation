@@ -18,8 +18,6 @@ type PerfStats = {
   errorRate?: number;
 };
 
-type Metric = "avg" | "p95" | "p99" | "throughput";
-
 type RunSample = {
   runId: string;
   stats: PerfStats;
@@ -49,7 +47,6 @@ type SummaryRow = {
 };
 
 const MODELS = ["jwt", "oauth", "sessions"];
-const METRICS: Metric[] = ["avg", "p95", "p99", "throughput"];
 
 function mean(values: number[]) {
   return values.reduce((a, b) => a + b, 0) / values.length;
