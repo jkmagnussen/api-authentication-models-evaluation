@@ -2536,7 +2536,6 @@ z
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Frequency comparison: occurrence rate of each misconfiguration type across Session, JWT, and OAuth2 models</text>
    </g>
   </g>
- </g>
  <defs>
   <clipPath id="pf52b2dfb05">
    <rect x="53.646156" y="50.37264" width="581.393844" height="225.018042"/>

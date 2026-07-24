@@ -1508,7 +1508,6 @@ z
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Overhead breakdown: CPU time attributed to cryptographic operations, validation logic, and token processing</text>
    </g>
   </g>
- </g>
  <defs>
   <clipPath id="p77c91e68ca">
    <rect x="53.368984" y="21.943125" width="453.587907" height="313.019953"/>
