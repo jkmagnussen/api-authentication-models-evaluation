@@ -5,14 +5,15 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
 CHARTS_DIR = ROOT / "docs" / "charts"
 
 charts_to_check = [
-    CHARTS_DIR / "security" / "misconfiguration-frequency-comparison.svg",
-    CHARTS_DIR / "performance" / "performance-comparison.svg",
-    CHARTS_DIR / "synthesis" / "error-diversity-entropy.svg",
-    CHARTS_DIR / "maintainability" / "code-footprint-deltas.svg",
-    CHARTS_DIR / "security" / "stride-severity-scoring.svg",
+    CHARTS_DIR / "primary" / "security" / "misconfiguration-frequency-comparison.svg",
+    CHARTS_DIR / "supporting" / "performance" / "performance-comparison.svg",
+    CHARTS_DIR / "primary" / "synthesis" / "error-diversity-entropy.svg",
+    CHARTS_DIR / "primary" / "maintainability" / "code-footprint-deltas.svg",
+    CHARTS_DIR / "supporting" / "security" / "stride-severity-scoring.svg",
 ]
 
 ns = {'svg': 'http://www.w3.org/2000/svg'}

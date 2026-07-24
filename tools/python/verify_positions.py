@@ -1,19 +1,21 @@
 from pathlib import Path
 import re
 
+ROOT = Path(__file__).resolve().parents[2]
+
 checks = [
-    ('security/misconfiguration-frequency-comparison.svg', 358.8),
-    ('security/normalized-failure-density.svg', 373.2),
-    ('security/ai-vs-human-severity-gap-ci.svg', 330.0),
-    ('security/security-critical-control-risk-density.svg', 358.8),
-    ('security/control-point-risk-heatmap.svg', 590.4),
-    ('synthesis/error-diversity-entropy.svg', 299.6),
+    ('primary/security/misconfiguration-frequency-comparison.svg', 358.8),
+    ('primary/security/normalized-failure-density.svg', 373.2),
+    ('primary/security/ai-vs-human-severity-gap-ci.svg', 330.0),
+    ('primary/security/security-critical-control-risk-density.svg', 358.8),
+    ('supporting/security/control-point-risk-heatmap.svg', 590.4),
+    ('primary/synthesis/error-diversity-entropy.svg', 299.6),
 ]
 
 print('Verifying optimized footnote Y positions:\n')
 
 for path, target_y in checks:
-    full_path = Path('docs/charts') / path
+    full_path = ROOT / 'docs/charts' / path
     content = full_path.read_text()
     
     # Find the footnote element and get its translate Y coordinate
@@ -36,6 +38,6 @@ for path, target_y in checks:
 
 print('\n✓ All optimized positions updated successfully!' if all(
     abs(float(re.search(r'id="text_footnote">.*?translate\(([0-9.]+) ([0-9.]+)\)', 
-                       (Path('docs/charts') / path).read_text(), re.DOTALL).group(2)) - target_y) < 0.2
+                       (ROOT / 'docs/charts' / path).read_text(), re.DOTALL).group(2)) - target_y) < 0.2
     for path, target_y in checks
 ) else '\n✗ Some positions not updated correctly')

@@ -1,6 +1,8 @@
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
-tree = ET.parse('docs/charts/synthesis/error-diversity-entropy.svg')
+ROOT = Path(__file__).resolve().parents[2]
+tree = ET.parse(ROOT / 'docs/charts/primary/synthesis/error-diversity-entropy.svg')
 root = tree.getroot()
 
 # Find the text_footnote group

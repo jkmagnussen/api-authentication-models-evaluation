@@ -1,7 +1,8 @@
 from pathlib import Path
 import re
 
-CHARTS_DIR = Path('docs/charts')
+ROOT = Path(__file__).resolve().parents[2]
+CHARTS_DIR = ROOT / 'docs' / 'charts'
 
 print("Checking footnote spacing in charts...\n")
 

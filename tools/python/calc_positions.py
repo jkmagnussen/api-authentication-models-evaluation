@@ -3,16 +3,17 @@
 from pathlib import Path
 import re
 
-CHARTS_DIR = Path('docs/charts')
+ROOT = Path(__file__).resolve().parents[2]
+CHARTS_DIR = ROOT / 'docs' / 'charts'
 
 # Charts that need adjustment (from audit)
 charts_to_adjust = {
-    'misconfiguration-frequency-comparison.svg': 'security',
-    'normalized-failure-density.svg': 'security',
-    'ai-vs-human-severity-gap-ci.svg': 'security',
-    'security-critical-control-risk-density.svg': 'security',
-    'control-point-risk-heatmap.svg': 'security',
-    'error-diversity-entropy.svg': 'synthesis',
+    'misconfiguration-frequency-comparison.svg': 'primary/security',
+    'normalized-failure-density.svg': 'primary/security',
+    'ai-vs-human-severity-gap-ci.svg': 'primary/security',
+    'security-critical-control-risk-density.svg': 'primary/security',
+    'control-point-risk-heatmap.svg': 'supporting/security',
+    'error-diversity-entropy.svg': 'primary/synthesis',
 }
 
 TARGET_SPACE_BELOW = 30  # Target 30pt of space below footnote

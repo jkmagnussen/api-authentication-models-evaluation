@@ -2,9 +2,9 @@ import xml.etree.ElementTree as ET
 import subprocess
 
 files = [
-    ('HEAD~2:docs/charts/performance/authentication-overhead-breakdown.svg', 'v2'),
-    ('HEAD~1:docs/charts/performance/authentication-overhead-breakdown.svg', 'v1'),
-    ('HEAD:docs/charts/performance/authentication-overhead-breakdown.svg', 'current'),
+    ('HEAD~2:docs/charts/primary/performance/authentication-overhead-breakdown.svg', 'v2'),
+    ('HEAD~1:docs/charts/primary/performance/authentication-overhead-breakdown.svg', 'v1'),
+    ('HEAD:docs/charts/primary/performance/authentication-overhead-breakdown.svg', 'current'),
 ]
 
 for git_ref, label in files:

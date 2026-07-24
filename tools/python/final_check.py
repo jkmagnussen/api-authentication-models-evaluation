@@ -12,37 +12,51 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 import re
 
+ROOT = Path(__file__).resolve().parents[2]
+
 ENHANCED_CHARTS = {
-    'security': [
-        'control-point-risk-heatmap.svg',
+    'primary/security': [
         'misconfiguration-severity-heatmap.svg',
-        'stride-severity-scoring.svg',
         'token-lifecycle-fragility.svg',
         'ai-failure-rates.svg',
         'security-critical-control-risk-density.svg',
         'normalized-failure-density.svg',
         'ai-vs-human-severity-gap-ci.svg',
+        'ai-vs-human-dominance-heatmap.svg',
+        'misconfiguration-frequency-comparison.svg',
     ],
-    'performance': [
+    'supporting/security': [
+        'control-point-risk-heatmap.svg',
+        'stride-severity-scoring.svg',
+    ],
+    'primary/performance': [
         'authentication-overhead-breakdown.svg',
         'runtime-latency-comparison-ci.svg',
         'variance-under-load.svg',
+    ],
+    'supporting/performance': [
         'performance-comparison.svg',
     ],
-    'maintainability': [
+    'primary/maintainability': [
         'ai-sample-syntax-issues-by-model-stage.svg',
-        'complexity-to-misconfig-regression.svg',
         'complexity-vs-misconfig-frequency-regression.svg',
         'failure-points-vs-chars.svg',
         'maintainability-difficulty-index.svg',
+        'code-footprint-deltas.svg',
     ],
-    'synthesis': [
+    'supporting/maintainability': [
+        'complexity-to-misconfig-regression.svg',
+    ],
+    'primary/synthesis': [
         'ai-determinism-variance.svg',
-        'correctness-security-tradeoff.svg',
         'correctness-vs-security-provider-scatter.svg',
         'cross-provider-overlap-venn.svg',
         'error-diversity-entropy.svg',
         'misconfiguration-clustering-kmeans.svg',
+        'calibration-and-agreement-controls.svg',
+    ],
+    'supporting/synthesis': [
+        'correctness-security-tradeoff.svg',
         'provider-bias-analysis.svg',
     ],
 }
@@ -143,7 +157,7 @@ def main():
     print("FINAL COMPREHENSIVE CHECK OF ENHANCED CHARTS")
     print("=" * 90)
     
-    base_path = Path('docs/charts')
+    base_path = ROOT / 'docs' / 'charts'
     total = 0
     passed = 0
     failed = 0
