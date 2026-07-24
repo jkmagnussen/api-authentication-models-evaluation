@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="842.365608pt" height="590.424pt" viewBox="0 0 842.365608 590.424" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="842.365608pt" height="620.424pt" viewBox="0 0 842.365608 620.424" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
@@ -2903,6 +2903,12 @@ z
     <use xlink:href="#ArialMT-44" transform="translate(3388.359375 0)"/>
     <use xlink:href="#ArialMT-55" transform="translate(3443.96875 0)"/>
     <use xlink:href="#ArialMT-56" transform="translate(3477.265625 0)"/>
+   </g>
+  </g>
+  <g id="text_footnote">
+   <!-- Control point risk assessment -->
+   <g style="fill: #262626" transform="translate(435.330182 595.424) scale(0.95 0.95)">
+    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Control point risk assessment: authentication severity and exposure at critical implementation checkpoints</text>
    </g>
   </g>
  </g>
