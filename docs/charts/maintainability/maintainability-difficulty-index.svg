@@ -1364,7 +1364,7 @@ z
  </g>
   <g id="text_footnote">
    <!-- Maintainability difficulty index -->
-   <g style="fill: #262626" transform="translate(282.419843 325) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(282.419843 339.04) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Difficulty index: composite score of code complexity, error rate, and maintenance burden by model</text>
    </g>
   </g>

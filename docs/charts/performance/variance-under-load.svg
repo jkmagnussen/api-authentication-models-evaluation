@@ -1201,7 +1201,7 @@ z
  </g>
   <g id="text_footnote">
    <!-- Performance variance analysis -->
-   <g style="fill: #262626" transform="translate(296.819844 340) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(296.819844 353.44) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Variance: latency distribution and standard deviation under increasing authentication request loads</text>
    </g>
   </g>

@@ -1444,7 +1444,7 @@ L 561.792248 165.955709
  </g>
   <g id="text_footnote">
    <!-- Complexity to misconfiguration regression -->
-   <g style="fill: #262626" transform="translate(296.819844 345) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(296.819844 353.43) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Regression analysis: relationship between code complexity metrics and misconfiguration incidence rates</text>
    </g>
   </g>

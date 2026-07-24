@@ -3095,7 +3095,7 @@ z
  </g>
   <g id="text_footnote">
    <!-- AI sample syntax issues by model stage -->
-   <g style="fill: #262626" transform="translate(468 400) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(468 408.20) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Syntax issues: code generation errors detected across different AI model stages and model providers</text>
    </g>
   </g>

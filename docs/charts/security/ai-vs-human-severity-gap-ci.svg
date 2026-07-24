@@ -3429,7 +3429,7 @@ z
  </g>
   <g id="text_footnote">
    <!-- AI vs Human severity gap analysis -->
-   <g style="fill: #262626" transform="translate(324 360) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(324 365.00) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Severity gap: differences in AI vs. human assessments with 95% confidence intervals | positive gap indicates AI overestimation</text>
    </g>
   </g>

@@ -1504,7 +1504,7 @@ z
  </g>
   <g id="text_footnote">
    <!-- Authentication overhead breakdown -->
-   <g style="fill: #262626" transform="translate(318.714637 370) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(318.714637 382.25) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Overhead breakdown: CPU time attributed to cryptographic operations, validation logic, and token processing</text>
    </g>
   </g>

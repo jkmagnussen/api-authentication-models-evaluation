@@ -2036,7 +2036,7 @@ L 616.26943 98.170195
  </g>
   <g id="text_footnote">
    <!-- AI determinism and variance analysis -->
-   <g style="fill: #262626" transform="translate(340.1149495 370) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(340.1149495 382.24) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Determinism variance: consistency of AI-generated outputs across multiple runs and providers</text>
    </g>
   </g>

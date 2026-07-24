@@ -2170,7 +2170,7 @@ z
  </g>
   <g id="text_footnote">
    <!-- Provider bias analysis -->
-   <g style="fill: #262626" transform="translate(341.6511685 400) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(341.6511685 411.04) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Provider bias: systematic differences and preferences in generated implementations across AI providers</text>
    </g>
   </g>

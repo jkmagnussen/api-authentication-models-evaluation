@@ -1596,7 +1596,7 @@ z
  </g>
   <g id="text_footnote">
    <!-- Correctness vs security provider scatter -->
-   <g style="fill: #262626" transform="translate(311.196188 360) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(311.196188 367.83) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Provider comparison: correctness and security metrics scatter plot by AI provider</text>
    </g>
   </g>

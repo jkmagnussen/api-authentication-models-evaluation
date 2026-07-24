@@ -2532,7 +2532,7 @@ z
  </g>
   <g id="text_footnote">
    <!-- Misconfiguration frequency analysis -->
-   <g style="fill: #262626" transform="translate(324 370) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(324 393.80) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Frequency comparison: occurrence rate of each misconfiguration type across Session, JWT, and OAuth2 models</text>
    </g>
   </g>

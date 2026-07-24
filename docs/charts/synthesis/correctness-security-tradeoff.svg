@@ -1689,7 +1689,7 @@ z
  </g>
   <g id="text_footnote">
    <!-- Correctness vs security tradeoff -->
-   <g style="fill: #262626" transform="translate(311.3605585 345) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(311.3605585 353.43) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Tradeoff analysis: relationship between functional correctness and security robustness across implementations</text>
    </g>
   </g>

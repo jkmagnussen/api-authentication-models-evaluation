@@ -2119,7 +2119,7 @@ z
  </g>
   <g id="text_footnote">
    <!-- Cross-provider overlap venn diagram -->
-   <g style="fill: #262626" transform="translate(419.2654595 370) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(419.2654595 382.25) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Venn diagram: overlapping code patterns and architectural choices across AI providers</text>
    </g>
   </g>

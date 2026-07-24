@@ -3090,7 +3090,7 @@ z
  </g>
   <g id="text_footnote">
    <!-- Failure points vs characters analysis -->
-   <g style="fill: #262626" transform="translate(468 400) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(468 408.20) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Failure analysis: correlation between implementation length and number of failure points across models</text>
    </g>
   </g>

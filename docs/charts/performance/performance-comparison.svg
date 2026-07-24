@@ -1207,7 +1207,7 @@ z
  </g>
   <g id="text_footnote">
    <!-- Overall performance comparison -->
-   <g style="fill: #262626" transform="translate(282.5592695 325) scale(0.95 0.95)">
+   <g style="fill: #262626" transform="translate(282.5592695 339.04) scale(0.95 0.95)">
     <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px; font-style: italic; text-anchor: middle;">Performance comparison: integrated metrics across latency, throughput, and resource utilization</text>
    </g>
   </g>
