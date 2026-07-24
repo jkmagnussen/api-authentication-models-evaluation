@@ -1908,7 +1908,7 @@ z
  </g>
  <g id="text_footnote">
   <!-- Scale: 1=low severity → 5=critical | cells show mean severity per misconfiguration -->
-  <g style="fill: #555555" transform="translate(210.181806 415) scale(0.80 0.80)">
+  <g style="fill: #555555" transform="translate(210.181806 415) scale(0.95 0.95)">
    <text x="0" y="0" style="font-family: Arial; font-size: 10px; letter-spacing: 0.5px;">Scale: 1=low severity → 5=critical | cells show mean severity</text>
   </g>
  </g>
