@@ -22,7 +22,7 @@
 - Regression slope: -0.019
 - Average AI failure variance (std dev): 0.366
 - Mean error diversity entropy: 2.216
-- Mean attack-overhead share: 0.009
+- Mean attack-overhead share: 0.081
 - Mean load-variance index: 43.932
 
 ## Notes
