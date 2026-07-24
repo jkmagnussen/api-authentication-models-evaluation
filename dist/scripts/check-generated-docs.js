@@ -8,13 +8,13 @@ const report_paths_1 = require("./report-paths");
 function main() {
     const missing = report_paths_1.EXPECTED_GENERATED_DOC_FILES.filter((file) => !fs_1.default.existsSync(file));
     if (missing.length > 0) {
-        console.error("Missing generated artifacts:");
+        console.error('Missing generated artifacts:');
         for (const file of missing) {
             console.error(`- ${file}`);
         }
-        console.error("Run: npm run docs:generate");
+        console.error('Run: npm run docs:generate');
         process.exit(1);
     }
-    console.log("All expected generated artifacts are present.");
+    console.log('All expected generated artifacts are present.');
 }
 main();

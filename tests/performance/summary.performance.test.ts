@@ -1,19 +1,23 @@
-import fs from "fs";
+import fs from 'fs';
 
-describe("Performance Summary", () => {
-  test("Combined results", () => {
-    const jwt = JSON.parse(fs.readFileSync("docs/performance-results/baseline/jwt.json", "utf8"));
-    const oauth = JSON.parse(fs.readFileSync("docs/performance-results/baseline/oauth.json", "utf8"));
-    const sessions = JSON.parse(fs.readFileSync("docs/performance-results/baseline/sessions.json", "utf8"));
+describe('Performance Summary', () => {
+  test('Combined results', () => {
+    const jwt = JSON.parse(fs.readFileSync('docs/performance-results/baseline/jwt.json', 'utf8'));
+    const oauth = JSON.parse(
+      fs.readFileSync('docs/performance-results/baseline/oauth.json', 'utf8')
+    );
+    const sessions = JSON.parse(
+      fs.readFileSync('docs/performance-results/baseline/sessions.json', 'utf8')
+    );
 
     const jwtAttack = JSON.parse(
-      fs.readFileSync("docs/performance-results/attacks/jwt.json", "utf8")
+      fs.readFileSync('docs/performance-results/attacks/jwt.json', 'utf8')
     );
     const oauthAttack = JSON.parse(
-      fs.readFileSync("docs/performance-results/attacks/oauth.json", "utf8")
+      fs.readFileSync('docs/performance-results/attacks/oauth.json', 'utf8')
     );
     const sessionsAttack = JSON.parse(
-      fs.readFileSync("docs/performance-results/attacks/sessions.json", "utf8")
+      fs.readFileSync('docs/performance-results/attacks/sessions.json', 'utf8')
     );
 
     console.log(`

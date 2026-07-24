@@ -1,4 +1,4 @@
-export const DOCS_DIR = "docs";
+export const DOCS_DIR = 'docs';
 export const DOCS_GENERATED_DIR = `${DOCS_DIR}/generated`;
 export const DOCS_PERFORMANCE_DIR = `${DOCS_DIR}/performance-results`;
 
@@ -98,6 +98,6 @@ export const EXPECTED_GENERATED_DOC_FILES: string[] = [
 
 export const DRIFT_CHECK_PATHS: string[] = [
   ...EXPECTED_GENERATED_DOC_FILES,
-  "ai-generated/results/ai-samples-summary.csv",
-  "ai-generated/results/ai-samples-failure-rates.csv",
+  'ai-generated/results/ai-samples-summary.csv',
+  'ai-generated/results/ai-samples-failure-rates.csv',
 ];

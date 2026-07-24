@@ -1,8 +1,16 @@
-import fs from "fs";
-import path from "path";
-import { analyseSource, countClasses, countFunctions, RESULTS_DIR, SAMPLE_COUNT, readSample, writeResult } from "./common";
+import fs from 'fs';
+import path from 'path';
+import {
+  analyseSource,
+  countClasses,
+  countFunctions,
+  RESULTS_DIR,
+  SAMPLE_COUNT,
+  readSample,
+  writeResult,
+} from './common';
 
-const models = ["oauth", "jwt", "sessions"];
+const models = ['oauth', 'jwt', 'sessions'];
 
 for (const model of models) {
   for (let index = 1; index <= SAMPLE_COUNT; index += 1) {
@@ -47,8 +55,8 @@ for (const model of models) {
 }
 
 fs.writeFileSync(
-  path.join(RESULTS_DIR, "analysis-summary.json"),
+  path.join(RESULTS_DIR, 'analysis-summary.json'),
   JSON.stringify({ generatedAt: new Date().toISOString(), models }, null, 2)
 );
 
-console.log("Analysed AI-generated samples.");
+console.log('Analysed AI-generated samples.');

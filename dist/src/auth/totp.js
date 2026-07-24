@@ -8,11 +8,11 @@ exports.buildOtpAuthUrl = buildOtpAuthUrl;
 exports.verifyTotp = verifyTotp;
 exports.generateCurrentTotp = generateCurrentTotp;
 const crypto_1 = __importDefault(require("crypto"));
-const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 function toBase32(buffer) {
     let bits = 0;
     let value = 0;
-    let output = "";
+    let output = '';
     for (const byte of buffer) {
         value = (value << 8) | byte;
         bits += 8;
@@ -27,14 +27,14 @@ function toBase32(buffer) {
     return output;
 }
 function fromBase32(input) {
-    const normalized = input.replace(/=+$/g, "").toUpperCase();
+    const normalized = input.replace(/=+$/g, '').toUpperCase();
     let bits = 0;
     let value = 0;
     const bytes = [];
     for (const char of normalized) {
         const index = BASE32_ALPHABET.indexOf(char);
         if (index === -1) {
-            throw new Error("Invalid base32 secret");
+            throw new Error('Invalid base32 secret');
         }
         value = (value << 5) | index;
         bits += 5;
@@ -52,13 +52,13 @@ function generateTotp(secret, offset = 0) {
     counterBuffer.writeUInt32BE(Math.floor(counter / 0x100000000), 0);
     counterBuffer.writeUInt32BE(counter % 0x100000000, 4);
     const key = fromBase32(secret);
-    const hmac = crypto_1.default.createHmac("sha1", key).update(counterBuffer).digest();
+    const hmac = crypto_1.default.createHmac('sha1', key).update(counterBuffer).digest();
     const dynamicOffset = hmac[hmac.length - 1] & 0x0f;
-    const code = ((hmac[dynamicOffset] & 0x7f) << 24)
-        | ((hmac[dynamicOffset + 1] & 0xff) << 16)
-        | ((hmac[dynamicOffset + 2] & 0xff) << 8)
-        | (hmac[dynamicOffset + 3] & 0xff);
-    return String(code % 1000000).padStart(6, "0");
+    const code = ((hmac[dynamicOffset] & 0x7f) << 24) |
+        ((hmac[dynamicOffset + 1] & 0xff) << 16) |
+        ((hmac[dynamicOffset + 2] & 0xff) << 8) |
+        (hmac[dynamicOffset + 3] & 0xff);
+    return String(code % 1000000).padStart(6, '0');
 }
 function generateTotpSecret() {
     return toBase32(crypto_1.default.randomBytes(20));

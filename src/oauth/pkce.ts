@@ -1,4 +1,4 @@
-import pkceChallenge from "pkce-challenge";
+import pkceChallenge from 'pkce-challenge';
 
 export async function createPkcePair() {
   const { code_verifier, code_challenge } = await pkceChallenge();

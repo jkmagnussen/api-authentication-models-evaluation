@@ -6,11 +6,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const report_paths_1 = require("./report-paths");
-const ARM_KEYS = ["openai-neutral", "openai-security-guided", "claude-neutral", "claude-security-guided"];
-const ARMS_ROOT = path_1.default.join(process.cwd(), "ai-generated", "arms");
+const ARM_KEYS = [
+    'openai-neutral',
+    'openai-security-guided',
+    'claude-neutral',
+    'claude-security-guided',
+];
+const ARMS_ROOT = path_1.default.join(process.cwd(), 'ai-generated', 'arms');
 function parseCsvLine(line) {
     const values = [];
-    let current = "";
+    let current = '';
     let inQuotes = false;
     for (let i = 0; i < line.length; i += 1) {
         const char = line[i];
@@ -24,9 +29,9 @@ function parseCsvLine(line) {
             }
             continue;
         }
-        if (char === "," && !inQuotes) {
+        if (char === ',' && !inQuotes) {
             values.push(current);
-            current = "";
+            current = '';
             continue;
         }
         current += char;
@@ -35,10 +40,7 @@ function parseCsvLine(line) {
     return values;
 }
 function parseFailureRateCsv(csvText) {
-    const rows = csvText
-        .trim()
-        .split(/\r?\n/)
-        .map(parseCsvLine);
+    const rows = csvText.trim().split(/\r?\n/).map(parseCsvLine);
     if (rows.length <= 1)
         return [];
     return rows.slice(1).map((row) => ({
@@ -53,15 +55,15 @@ function rowByLabel(rows, label) {
     return rows.find((row) => row.label.toUpperCase() === label.toUpperCase());
 }
 function loadArmData(armKey) {
-    const csvPath = path_1.default.join(ARMS_ROOT, armKey, "results", "ai-samples-failure-rates.csv");
+    const csvPath = path_1.default.join(ARMS_ROOT, armKey, 'results', 'ai-samples-failure-rates.csv');
     if (!fs_1.default.existsSync(csvPath))
         return null;
-    const csvText = fs_1.default.readFileSync(csvPath, "utf8");
+    const csvText = fs_1.default.readFileSync(csvPath, 'utf8');
     return { key: armKey, rows: parseFailureRateCsv(csvText) };
 }
 function fmt(value, digits = 2) {
     if (!Number.isFinite(value))
-        return "n/a";
+        return 'n/a';
     return value.toFixed(digits);
 }
 function normalCdf(x) {
@@ -146,16 +148,16 @@ function main() {
     const outputPath = path_1.default.join(process.cwd(), report_paths_1.GENERATED_FILES.aiProviderPromptComparisonBlinded);
     const loaded = ARM_KEYS.map(loadArmData).filter((entry) => entry !== null);
     const lines = [];
-    lines.push("# AI Provider/Prompt Comparison (Blinded)");
-    lines.push("");
+    lines.push('# AI Provider/Prompt Comparison (Blinded)');
+    lines.push('');
     lines.push(`Generated: ${new Date().toISOString()}`);
-    lines.push("Regenerate: npm run compare:reports");
-    lines.push("");
-    lines.push("This blinded view hides provider and prompt-condition labels (Arm A-D) to reduce interpretation anchoring bias.");
-    lines.push("");
+    lines.push('Regenerate: npm run compare:reports');
+    lines.push('');
+    lines.push('This blinded view hides provider and prompt-condition labels (Arm A-D) to reduce interpretation anchoring bias.');
+    lines.push('');
     if (loaded.length === 0) {
-        lines.push("No arm results found. Run npm run ai:matrix first.");
-        fs_1.default.writeFileSync(outputPath, `${lines.join("\n")}\n`);
+        lines.push('No arm results found. Run npm run ai:matrix first.');
+        fs_1.default.writeFileSync(outputPath, `${lines.join('\n')}\n`);
         console.log(`Wrote ${outputPath}`);
         return;
     }
@@ -165,18 +167,18 @@ function main() {
         armId: String.fromCharCode(65 + index),
         rows: entry.rows,
     }));
-    lines.push("## Blinded Arm Metrics");
-    lines.push("");
-    lines.push("| Arm | OAUTH Failure % | JWT Failure % | SESSIONS Failure % | Overall Failure % | Overall 95% CI | Overall Samples |");
-    lines.push("|---|---:|---:|---:|---:|---|---:|");
+    lines.push('## Blinded Arm Metrics');
+    lines.push('');
+    lines.push('| Arm | OAUTH Failure % | JWT Failure % | SESSIONS Failure % | Overall Failure % | Overall 95% CI | Overall Samples |');
+    lines.push('|---|---:|---:|---:|---:|---|---:|');
     const overallArms = [];
     for (const arm of blinded) {
-        const oauth = rowByLabel(arm.rows, "OAUTH");
-        const jwt = rowByLabel(arm.rows, "JWT");
-        const sessions = rowByLabel(arm.rows, "SESSIONS");
-        const overall = rowByLabel(arm.rows, "OVERALL");
+        const oauth = rowByLabel(arm.rows, 'OAUTH');
+        const jwt = rowByLabel(arm.rows, 'JWT');
+        const sessions = rowByLabel(arm.rows, 'SESSIONS');
+        const overall = rowByLabel(arm.rows, 'OVERALL');
         const overallCi = overall ? wilson95(overall.failedSamples, overall.totalSamples) : null;
-        const ciText = overallCi ? `[${fmt(overallCi[0] * 100)}, ${fmt(overallCi[1] * 100)}]%` : "n/a";
+        const ciText = overallCi ? `[${fmt(overallCi[0] * 100)}, ${fmt(overallCi[1] * 100)}]%` : 'n/a';
         if (overall && overall.totalSamples > 0) {
             overallArms.push({
                 armId: arm.armId,
@@ -185,16 +187,16 @@ function main() {
                 failureRatePct: overall.failureRatePct,
             });
         }
-        lines.push(`| Arm ${arm.armId} | ${fmt(oauth?.failureRatePct ?? Number.NaN)} | ${fmt(jwt?.failureRatePct ?? Number.NaN)} | ${fmt(sessions?.failureRatePct ?? Number.NaN)} | ${fmt(overall?.failureRatePct ?? Number.NaN)} | ${ciText} | ${overall?.totalSamples ?? "n/a"} |`);
+        lines.push(`| Arm ${arm.armId} | ${fmt(oauth?.failureRatePct ?? Number.NaN)} | ${fmt(jwt?.failureRatePct ?? Number.NaN)} | ${fmt(sessions?.failureRatePct ?? Number.NaN)} | ${fmt(overall?.failureRatePct ?? Number.NaN)} | ${ciText} | ${overall?.totalSamples ?? 'n/a'} |`);
     }
-    const minPracticalEffectPct = Number(process.env.AI_MIN_PRACTICAL_EFFECT_PCT ?? "3");
-    lines.push("");
-    lines.push("## Blinded Pairwise Arm Contrasts");
-    lines.push("");
+    const minPracticalEffectPct = Number(process.env.AI_MIN_PRACTICAL_EFFECT_PCT ?? '3');
+    lines.push('');
+    lines.push('## Blinded Pairwise Arm Contrasts');
+    lines.push('');
     lines.push(`Decision rule: significance requires Holm-adjusted p <= 0.05 and practical effect requires |delta| >= ${fmt(minPracticalEffectPct)} percentage points.`);
-    lines.push("");
-    lines.push("| Arm A | Arm B | Delta Failure % (A-B) | 95% Bootstrap CI | Raw p | Holm-adjusted p | Practical Effect | Significant | Confirmatory-Eligible Contrast |");
-    lines.push("|---|---|---:|---|---:|---:|---|---|---|");
+    lines.push('');
+    lines.push('| Arm A | Arm B | Delta Failure % (A-B) | 95% Bootstrap CI | Raw p | Holm-adjusted p | Practical Effect | Significant | Confirmatory-Eligible Contrast |');
+    lines.push('|---|---|---:|---|---:|---:|---|---|---|');
     const pairs = [];
     for (let i = 0; i < overallArms.length; i += 1) {
         for (let j = i + 1; j < overallArms.length; j += 1) {
@@ -214,21 +216,21 @@ function main() {
         const deltaCi = bootstrapDelta95(pair.a, pair.b);
         const practical = Math.abs(delta) >= minPracticalEffectPct;
         if (pair.rawP === null) {
-            lines.push(`| Arm ${pair.a.armId} | Arm ${pair.b.armId} | ${fmt(delta)} | [${fmt(deltaCi[0])}, ${fmt(deltaCi[1])}] | n/a | n/a | ${practical ? "Yes" : "No"} | n/a | No |`);
+            lines.push(`| Arm ${pair.a.armId} | Arm ${pair.b.armId} | ${fmt(delta)} | [${fmt(deltaCi[0])}, ${fmt(deltaCi[1])}] | n/a | n/a | ${practical ? 'Yes' : 'No'} | n/a | No |`);
             continue;
         }
         const holm = adjusted[adjustedIndex];
         adjustedIndex += 1;
         const significant = holm <= 0.05;
         const eligible = significant && practical;
-        lines.push(`| Arm ${pair.a.armId} | Arm ${pair.b.armId} | ${fmt(delta)} | [${fmt(deltaCi[0])}, ${fmt(deltaCi[1])}] | ${fmt(pair.rawP, 4)} | ${fmt(holm, 4)} | ${practical ? "Yes" : "No"} | ${significant ? "Yes" : "No"} | ${eligible ? "Yes" : "No"} |`);
+        lines.push(`| Arm ${pair.a.armId} | Arm ${pair.b.armId} | ${fmt(delta)} | [${fmt(deltaCi[0])}, ${fmt(deltaCi[1])}] | ${fmt(pair.rawP, 4)} | ${fmt(holm, 4)} | ${practical ? 'Yes' : 'No'} | ${significant ? 'Yes' : 'No'} | ${eligible ? 'Yes' : 'No'} |`);
     }
-    lines.push("");
-    lines.push("## Usage");
-    lines.push("");
-    lines.push("- Use this report for first-pass interpretation before viewing unblinded provider labels.");
-    lines.push("- After blind interpretation, compare with docs/generated/AI_PROVIDER_PROMPT_COMPARISON.md for arm identities.");
-    fs_1.default.writeFileSync(outputPath, `${lines.join("\n")}\n`);
+    lines.push('');
+    lines.push('## Usage');
+    lines.push('');
+    lines.push('- Use this report for first-pass interpretation before viewing unblinded provider labels.');
+    lines.push('- After blind interpretation, compare with docs/generated/AI_PROVIDER_PROMPT_COMPARISON.md for arm identities.');
+    fs_1.default.writeFileSync(outputPath, `${lines.join('\n')}\n`);
     console.log(`Wrote ${outputPath}`);
 }
 main();

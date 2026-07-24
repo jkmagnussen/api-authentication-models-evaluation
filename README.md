@@ -1,19 +1,31 @@
 # API Authentication Models Evaluation
 
-This repository evaluates three API authentication models in one controlled backend:
+This project evaluates three API authentication models in one controlled backend:
 
 - Sessions
 - JWT
 - OAuth 2.0 (Authorization Code + PKCE)
 
-It compares security behavior, misconfiguration impact, performance overhead, and maintainability signals using a reproducible pipeline.
+You can use it to compare security behavior, misconfiguration impact, performance overhead, and maintainability signals through one reproducible pipeline.
 
 ## Quick Start
+
+### First-Time Setup (Recommended)
+
+For the first run, do this in order:
+
+1. Install Node.js (includes npm) and PostgreSQL.
+2. Clone this repository and run `npm install`.
+3. Configure `.env` with at least a valid `DATABASE_URL` for your local PostgreSQL instance.
+4. Run `npm run db:setup` to apply schema and seed data.
+5. Install Postman and import `postman.json` from the repository root.
+6. (Optional Extra) install Python tooling for chart regeneration via `npm run py:install`.
 
 ### Prerequisites
 
 - Node.js + npm
 - PostgreSQL
+- Postman (for request collection testing)
 - Optional: Python + uv (chart regeneration)
 - Optional: Docker Desktop (containerized execution)
 
@@ -34,14 +46,14 @@ npm run py:install
 
 ### Main Commands
 
-| Purpose | Command |
-|---|---|
-| Local development | `npm run dev` |
-| Normal startup | `npm run prod` |
+| Purpose                       | Command                   |
+| ----------------------------- | ------------------------- |
+| Local development             | `npm run dev`             |
+| Normal startup                | `npm run prod`            |
 | Full reproducible offline run | `npm run run:all:offline` |
-| Full pipeline + start | `npm run prod:full` |
-| Validate generated artifacts | `npm run docs:check` |
-| Docker image build (optional) | `npm run docker:build` |
+| Full pipeline + start         | `npm run prod:full`       |
+| Validate generated artifacts  | `npm run docs:check`      |
+| Docker image build (optional) | `npm run docker:build`    |
 
 ## One-Command Full Pipeline
 
@@ -49,9 +61,9 @@ npm run py:install
 npm run run:all:offline
 ```
 
-This command runs database setup, tests, coverage, performance analysis, docs/report generation, mutation testing, results indexing, Python chart generation, and offline freeze verification.
+This run covers database setup, tests, coverage, performance analysis, docs/report generation, mutation testing, results indexing, Python chart generation, and offline freeze verification.
 
-Use `docs/REPRODUCIBILITY_CHECKLIST.md` for the full assessor-facing sequence.
+For the full assessor-facing sequence, use `docs/REPRODUCIBILITY_CHECKLIST.md`.
 
 ## Repository Map
 
@@ -102,11 +114,11 @@ For detailed routes and request/response examples, see:
 - `routes.md`
 - `postman.json`
 
-`routes.md` includes both primary comparative model routes (Sessions/JWT/OAuth) and supplementary account security routes. The supplementary account security routes are operational hardening endpoints and are not part of the primary comparative evaluation.
+`routes.md` includes both the primary comparative model routes (Sessions/JWT/OAuth) and supplementary account security routes. The supplementary account security routes are hardening endpoints, not part of the core comparative evaluation.
 
 ### Postman OAuth PKCE Flow (Automated)
 
-The collection now auto-generates PKCE for OAuth and stores values between requests.
+The collection auto-generates PKCE for OAuth and stores values between requests.
 
 Run requests in this order:
 
@@ -122,13 +134,13 @@ What is automated:
 ### Postman Base URL And Account Security
 
 - Change `base_url` in the collection variables when switching between local dev/prod targets.
-- The collection now includes `Password Reset Request`, `Password Reset Confirm`, `MFA Enroll`, and `MFA Verify` requests under `Supplementary Account Security`.
+- The collection includes `Password Reset Request`, `Password Reset Confirm`, `MFA Enroll`, and `MFA Verify` requests under `Supplementary Account Security`.
 - These routes live under `/auth/security/*` because they harden user-account operations across JWT, Sessions, and OAuth rather than belonging to one auth model.
 - Treat this section as supplementary production hardening rather than part of the primary OAuth vs JWT vs Sessions comparative evaluation.
 
 ## PKCE Startup Helper
 
-The server does not print a PKCE `code_challenge` and `code_verifier` on startup by default.
+By default, the server does not print a PKCE `code_challenge` and `code_verifier` on startup.
 
 - Optional opt-in in any environment:
 
@@ -136,15 +148,29 @@ The server does not print a PKCE `code_challenge` and `code_verifier` on startup
 $env:LOG_PKCE_STARTUP="true"
 ```
 
-## Notes For Submission Readiness
+## Dual Reviewer Confirmation Gates
 
-Before submission, ensure:
+Before I submit, two independent reviewers sign off:
 
-1. `npm run run:all:offline` completes successfully.
-2. `npm run docs:check` passes.
-3. `npm run freeze:verify` passes.
-4. Required dissertation appendices are present (proposal, ethics, specification/design).
-5. IT artifact access path and video demo path are confirmed.
+- **Reviewer 1** – Checks that AI integration didn't corrupt the baseline methodology
+- **Reviewer 2** – Validates the statistics, attack coverage, and reproducibility
+
+Both must approve before I lock down the evidence.
+
+See [docs/Two-Reviewer_Requirements.md](docs/Two-Reviewer_Requirements.md) for the full sign-off criteria and what each reviewer checks.
+
+Once approved, I run `npm run freeze:offline` to lock the evidence for submission.
+
+## Ready to Submit?
+
+Before I push this to the committee:
+
+1. ✓ `npm run run:all:offline` completes end-to-end
+2. ✓ `npm run docs:check` passes
+3. ✓ `npm run freeze:verify` confirms the lock is solid
+4. ✓ Both reviewers have signed off (see Dual Reviewer Confirmation Gates)
+5. ✓ Dissertation appendices are in place (proposal, ethics, design spec)
+6. ✓ IT storage path and demo video URL are set
 
 ## License
 

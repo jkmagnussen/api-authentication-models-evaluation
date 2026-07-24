@@ -1,9 +1,9 @@
-import { spawnSync } from "node:child_process";
+import { spawnSync } from 'node:child_process';
 
 function run(command: string, args: string[]): boolean {
   const result = spawnSync(command, args, {
-    stdio: "inherit",
-    shell: process.platform === "win32",
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
   });
 
   return (result.status ?? 1) === 0;
@@ -12,14 +12,14 @@ function run(command: string, args: string[]): boolean {
 function main(): void {
   const attempts: Array<{ command: string; args: string[]; label: string }> = [
     {
-      command: "python",
-      args: ["analysis-python/generate_charts.py"],
-      label: "python",
+      command: 'python',
+      args: ['analysis-python/generate_charts.py'],
+      label: 'python',
     },
     {
-      command: "py",
-      args: ["analysis-python/generate_charts.py"],
-      label: "py",
+      command: 'py',
+      args: ['analysis-python/generate_charts.py'],
+      label: 'py',
     },
   ];
 
@@ -31,12 +31,8 @@ function main(): void {
     }
   }
 
-  console.warn(
-    "[py:charts:optional] Skipping chart generation: Python interpreter was not found."
-  );
-  console.warn(
-    "[py:charts:optional] Install Python to enable docs/charts SVG generation."
-  );
+  console.warn('[py:charts:optional] Skipping chart generation: Python interpreter was not found.');
+  console.warn('[py:charts:optional] Install Python to enable docs/charts SVG generation.');
 }
 
 main();

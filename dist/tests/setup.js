@@ -16,8 +16,8 @@ async function safeDeleteMany(model) {
     }
 }
 async function resetDatabase() {
-    rateLimiter_1.authLimiter.resetKey("127.0.0.1");
-    rateLimiter_1.authLimiter.resetKey("::ffff:127.0.0.1");
+    rateLimiter_1.authLimiter.resetKey('127.0.0.1');
+    rateLimiter_1.authLimiter.resetKey('::ffff:127.0.0.1');
     await safeDeleteMany(db_1.prisma.oAuthAccessToken);
     await safeDeleteMany(db_1.prisma.oAuthAuthorizationCode);
     await safeDeleteMany(db_1.prisma.passwordResetToken);
@@ -30,31 +30,31 @@ async function resetDatabase() {
         // Recreate clients used in tests.
         await oauthClient.create({
             data: {
-                id: "client-basic",
-                name: "Basic Client",
-                secret: "basic-secret",
+                id: 'client-basic',
+                name: 'Basic Client',
+                secret: 'basic-secret',
             },
         });
         await oauthClient.create({
             data: {
-                id: "client-privileged",
-                name: "Privileged Client",
-                secret: "privileged-secret",
+                id: 'client-privileged',
+                name: 'Privileged Client',
+                secret: 'privileged-secret',
             },
         });
         await oauthClient.create({
             data: {
-                id: "client-admin",
-                name: "Admin Client",
-                secret: "admin-secret",
+                id: 'client-admin',
+                name: 'Admin Client',
+                secret: 'admin-secret',
             },
         });
         // Legacy client used by older tests.
         await oauthClient.create({
             data: {
-                id: "client-123",
-                name: "Legacy Test Client",
-                secret: "legacy-secret",
+                id: 'client-123',
+                name: 'Legacy Test Client',
+                secret: 'legacy-secret',
             },
         });
     }

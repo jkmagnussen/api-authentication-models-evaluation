@@ -1,5 +1,5 @@
-import { prisma } from "../src/db";
-import { authLimiter } from "../src/middleware/rateLimiter";
+import { prisma } from '../src/db';
+import { authLimiter } from '../src/middleware/rateLimiter';
 
 async function safeDeleteMany(model: any) {
   if (!model?.deleteMany) return;
@@ -13,8 +13,8 @@ async function safeDeleteMany(model: any) {
 export { safeDeleteMany };
 
 export async function resetDatabase() {
-  authLimiter.resetKey("127.0.0.1");
-  authLimiter.resetKey("::ffff:127.0.0.1");
+  authLimiter.resetKey('127.0.0.1');
+  authLimiter.resetKey('::ffff:127.0.0.1');
 
   await safeDeleteMany((prisma as any).oAuthAccessToken);
   await safeDeleteMany((prisma as any).oAuthAuthorizationCode);
@@ -30,34 +30,34 @@ export async function resetDatabase() {
     // Recreate clients used in tests.
     await oauthClient.create({
       data: {
-        id: "client-basic",
-        name: "Basic Client",
-        secret: "basic-secret",
+        id: 'client-basic',
+        name: 'Basic Client',
+        secret: 'basic-secret',
       },
     });
 
     await oauthClient.create({
       data: {
-        id: "client-privileged",
-        name: "Privileged Client",
-        secret: "privileged-secret",
+        id: 'client-privileged',
+        name: 'Privileged Client',
+        secret: 'privileged-secret',
       },
     });
 
     await oauthClient.create({
       data: {
-        id: "client-admin",
-        name: "Admin Client",
-        secret: "admin-secret",
+        id: 'client-admin',
+        name: 'Admin Client',
+        secret: 'admin-secret',
       },
     });
 
     // Legacy client used by older tests.
     await oauthClient.create({
       data: {
-        id: "client-123",
-        name: "Legacy Test Client",
-        secret: "legacy-secret",
+        id: 'client-123',
+        name: 'Legacy Test Client',
+        secret: 'legacy-secret',
       },
     });
   }

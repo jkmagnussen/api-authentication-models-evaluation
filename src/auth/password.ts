@@ -1,5 +1,5 @@
-import bcrypt from "bcryptjs";
-import { BCRYPT_SALT_ROUNDS } from "../config";
+import bcrypt from 'bcrypt';
+import { BCRYPT_SALT_ROUNDS } from '../config';
 
 export async function hashPassword(value: string) {
   return bcrypt.hash(value, BCRYPT_SALT_ROUNDS);

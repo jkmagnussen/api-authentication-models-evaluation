@@ -1,5 +1,28 @@
 {
-    "chat.restoreLastPanelSession": false,
-    "python.terminal.useEnvFile": true,
-    "python.envFile": "${workspaceFolder}/.env"
+  "chat.restoreLastPanelSession": false,
+  "python.terminal.activateEnvironment": false,
+  "python.terminal.useEnvFile": false,
+  "python.envFile": "${workspaceFolder}/.env",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "files.associations": {
+    "reports/mutation/*.html": "plaintext"
+  },
+  "html.validate.scripts": false,
+  "eslint.validate": ["typescript", "typescriptreact"],
+  "prettier.semi": true,
+  "prettier.singleQuote": true
 }

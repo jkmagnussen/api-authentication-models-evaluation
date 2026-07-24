@@ -10,7 +10,7 @@ const checks_secondary_1 = require("./checks-secondary");
 const controlSamples = {
     oauth: [
         {
-            label: "positive-control-oauth",
+            label: 'positive-control-oauth',
             expectedPass: true,
             sourceText: `const allowedRedirects = ["https://example.com/callback"];
 const allowedScopes = ["read"];
@@ -25,7 +25,7 @@ function authorize(req, res) {
 }`,
         },
         {
-            label: "negative-control-oauth",
+            label: 'negative-control-oauth',
             expectedPass: false,
             sourceText: `function authorize(req, res) {
   return res.status(200).json({ scope: "admin" });
@@ -34,13 +34,13 @@ function authorize(req, res) {
     ],
     jwt: [
         {
-            label: "positive-control-jwt",
+            label: 'positive-control-jwt',
             expectedPass: true,
             sourceText: `function jwtAuth(token) { return verify(token, { audience: "api-auth-eval", issuer: "api-auth-service", algorithms: ["HS256"] }); }
 function signToken(userId) { return sign({ userId }, secret, { audience: "api-auth-eval", issuer: "api-auth-service", algorithm: "HS256", expiresIn: "1h" }); }`,
         },
         {
-            label: "negative-control-jwt",
+            label: 'negative-control-jwt',
             expectedPass: false,
             sourceText: `function jwtAuth(token) { return verify(token, { algorithms: ["none"] }); }
 function signToken(userId) { return sign({ userId }, null, { algorithm: "none", expiresIn: "999y" }); }`,
@@ -48,13 +48,13 @@ function signToken(userId) { return sign({ userId }, null, { algorithm: "none", 
     ],
     sessions: [
         {
-            label: "positive-control-sessions",
+            label: 'positive-control-sessions',
             expectedPass: true,
             sourceText: `function login(req, res) { req.session.regenerate(() => { res.cookie("sid", "1", { httpOnly: true, secure: true, sameSite: "lax" }); }); }
 function logout(req, res) { req.session.destroy(() => res.clearCookie("sid")); }`,
         },
         {
-            label: "negative-control-sessions",
+            label: 'negative-control-sessions',
             expectedPass: false,
             sourceText: `function login(req, res) { res.cookie("sid", "1", { secure: false, sameSite: "none" }); }
 function logout(req, res) { return res.status(200).json({ ok: true }); }`,
@@ -123,7 +123,7 @@ function runAgreementAudit() {
             controlPairs.push({ primary: primaryPass ? 1 : 0, secondary: secondaryPass ? 1 : 0 });
         }
     }
-    for (const model of ["oauth", "jwt", "sessions"]) {
+    for (const model of ['oauth', 'jwt', 'sessions']) {
         const runPrimary = runners[model];
         const runSecondary = secondaryRunners[model];
         for (let index = 1; index <= common_1.SAMPLE_COUNT; index += 1) {
@@ -133,7 +133,10 @@ function runAgreementAudit() {
             const sourceText = (0, common_1.readSample)(model, index);
             const primaryPass = runPrimary(sourceText).every((check) => check.passed);
             const secondaryPass = runSecondary(sourceText).every((check) => check.passed);
-            samplePairsByModel[model].push({ primary: primaryPass ? 1 : 0, secondary: secondaryPass ? 1 : 0 });
+            samplePairsByModel[model].push({
+                primary: primaryPass ? 1 : 0,
+                secondary: secondaryPass ? 1 : 0,
+            });
         }
     }
     const allSamplePairs = [
@@ -141,7 +144,7 @@ function runAgreementAudit() {
         ...samplePairsByModel.jwt,
         ...samplePairsByModel.sessions,
     ];
-    (0, common_1.writeResult)("checker-agreement-summary.json", {
+    (0, common_1.writeResult)('checker-agreement-summary.json', {
         generatedAt: new Date().toISOString(),
         controlAgreement: {
             observations: controlPairs.length,
@@ -199,4 +202,4 @@ for (const [model, samples] of Object.entries(controlSamples)) {
     }
 }
 runAgreementAudit();
-console.log("Validated AI heuristic controls and checker agreement.");
+console.log('Validated AI heuristic controls and checker agreement.');

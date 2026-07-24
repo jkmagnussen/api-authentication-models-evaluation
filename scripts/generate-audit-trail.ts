@@ -1,7 +1,7 @@
-import fs from "fs";
-import path from "path";
-import { createHash } from "crypto";
-import { GENERATED_FILES } from "./report-paths";
+import fs from 'fs';
+import path from 'path';
+import { createHash } from 'crypto';
+import { GENERATED_FILES } from './report-paths';
 
 type AuditTrailEntry = {
   label: string;
@@ -17,56 +17,58 @@ type AuditTrail = {
 };
 
 function sha256(text: string): string {
-  return createHash("sha256").update(text).digest("hex");
+  return createHash('sha256').update(text).digest('hex');
 }
 
 function readText(filePath: string): string {
   if (!fs.existsSync(filePath)) {
     throw new Error(`Missing audit-trail input: ${path.relative(process.cwd(), filePath)}`);
   }
-  return fs.readFileSync(filePath, "utf8");
+  return fs.readFileSync(filePath, 'utf8');
 }
 
 function main(): void {
   const root = process.cwd();
   const outputPath = path.join(root, GENERATED_FILES.auditTrail);
-  const shouldRefresh = process.argv.includes("--refresh");
+  const shouldRefresh = process.argv.includes('--refresh');
   const now = new Date().toISOString();
 
   const entries: AuditTrailEntry[] = [
     {
-      label: "protocol-seal",
+      label: 'protocol-seal',
       path: GENERATED_FILES.protocolSeal,
       sha256: sha256(readText(path.join(root, GENERATED_FILES.protocolSeal))),
     },
     {
-      label: "power-analysis-seal",
+      label: 'power-analysis-seal',
       path: GENERATED_FILES.powerAnalysisSeal,
       sha256: sha256(readText(path.join(root, GENERATED_FILES.powerAnalysisSeal))),
     },
     {
-      label: "blind-interpretation",
+      label: 'blind-interpretation',
       path: GENERATED_FILES.aiBlindInterpretation,
       sha256: sha256(readText(path.join(root, GENERATED_FILES.aiBlindInterpretation))),
     },
     {
-      label: "analysis-window",
+      label: 'analysis-window',
       path: GENERATED_FILES.analysisWindow,
       sha256: sha256(readText(path.join(root, GENERATED_FILES.analysisWindow))),
     },
     {
-      label: "holdout-seal",
+      label: 'holdout-seal',
       path: GENERATED_FILES.holdoutSeal,
       sha256: sha256(readText(path.join(root, GENERATED_FILES.holdoutSeal))),
     },
     {
-      label: "preregistered-compliance",
+      label: 'preregistered-compliance',
       path: GENERATED_FILES.preregCompliance,
       sha256: sha256(readText(path.join(root, GENERATED_FILES.preregCompliance))),
     },
   ];
 
-  const signatureSource = entries.map((entry) => `${entry.label}:${entry.path}:${entry.sha256}`).join("\n");
+  const signatureSource = entries
+    .map((entry) => `${entry.label}:${entry.path}:${entry.sha256}`)
+    .join('\n');
   const payload: AuditTrail = {
     generatedAt: now,
     signedAt: now,
@@ -75,7 +77,7 @@ function main(): void {
   };
 
   if (fs.existsSync(outputPath) && !shouldRefresh) {
-    const existing = JSON.parse(fs.readFileSync(outputPath, "utf8")) as AuditTrail;
+    const existing = JSON.parse(fs.readFileSync(outputPath, 'utf8')) as AuditTrail;
     if (existing.signatureSha256 === payload.signatureSha256) {
       fs.writeFileSync(outputPath, JSON.stringify({ ...existing, generatedAt: now }, null, 2));
       console.log(`Preserved audit trail: ${outputPath}`);
@@ -84,7 +86,7 @@ function main(): void {
   }
 
   fs.writeFileSync(outputPath, JSON.stringify(payload, null, 2));
-  console.log(`${shouldRefresh ? "Refreshed" : "Signed"} audit trail: ${outputPath}`);
+  console.log(`${shouldRefresh ? 'Refreshed' : 'Signed'} audit trail: ${outputPath}`);
 }
 
 try {

@@ -7,10 +7,10 @@ const supertest_1 = __importDefault(require("supertest"));
 const app_1 = __importDefault(require("../../../src/app"));
 const setup_1 = require("../../setup");
 const utils_1 = require("../utils");
-describe("JWT – Attack Performance Test", () => {
+describe('JWT – Attack Performance Test', () => {
     const ITERATIONS = 1000;
     // Use an intentionally invalid / expired / forged token
-    const invalidToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.INVALID.ATTACKTOKEN";
+    const invalidToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.INVALID.ATTACKTOKEN';
     beforeAll(async () => {
         await (0, setup_1.resetDatabase)();
     });
@@ -20,8 +20,8 @@ describe("JWT – Attack Performance Test", () => {
         for (let i = 0; i < ITERATIONS; i++) {
             const start = performance.now();
             const res = await (0, supertest_1.default)(app_1.default)
-                .get("/jwt/protected")
-                .set("Authorization", `Bearer ${invalidToken}`);
+                .get('/jwt/protected')
+                .set('Authorization', `Bearer ${invalidToken}`);
             const end = performance.now();
             times.push(end - start);
             if (res.status !== 200)
@@ -33,6 +33,6 @@ describe("JWT – Attack Performance Test", () => {
             ...stats,
             errorRate: errors / ITERATIONS,
         };
-        (0, utils_1.writePerformanceResult)("attacks", "jwt", attackStats);
+        (0, utils_1.writePerformanceResult)('attacks', 'jwt', attackStats);
     });
 });

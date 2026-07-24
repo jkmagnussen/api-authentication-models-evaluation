@@ -1,8 +1,8 @@
-import { spawnSync } from "child_process";
+import { spawnSync } from 'child_process';
 
 export function runAllTests() {
-  const result = spawnSync("npx", ["jest", "--runInBand"], {
-    stdio: "inherit",
+  const result = spawnSync('npx', ['jest', '--runInBand'], {
+    stdio: 'inherit',
     shell: true,
     env: process.env,
   });

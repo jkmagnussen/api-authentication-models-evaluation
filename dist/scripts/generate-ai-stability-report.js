@@ -15,7 +15,7 @@ function seededLcg(seed) {
 }
 function fmt(value, digits = 2) {
     if (!Number.isFinite(value))
-        return "n/a";
+        return 'n/a';
     return value.toFixed(digits);
 }
 function mean(values) {
@@ -54,13 +54,13 @@ function loadSnapshots(historyDir) {
         return [];
     const files = fs_1.default
         .readdirSync(historyDir)
-        .filter((file) => file.endsWith(".json"))
+        .filter((file) => file.endsWith('.json'))
         .sort();
     const snapshots = [];
     for (const fileName of files) {
         const filePath = path_1.default.join(historyDir, fileName);
         try {
-            const parsed = JSON.parse(fs_1.default.readFileSync(filePath, "utf8"));
+            const parsed = JSON.parse(fs_1.default.readFileSync(filePath, 'utf8'));
             snapshots.push(parsed);
         }
         catch {
@@ -73,7 +73,7 @@ function buildArmSeries(snapshots) {
     const seriesByArm = new Map();
     for (const snapshot of snapshots) {
         for (const provider of snapshot.providers ?? []) {
-            if (provider.status !== "completed")
+            if (provider.status !== 'completed')
                 continue;
             if (!Number.isFinite(provider.overallFailureRatePct))
                 continue;
@@ -88,37 +88,37 @@ function buildArmSeries(snapshots) {
 }
 function main() {
     const root = process.cwd();
-    const historyDir = path_1.default.join(root, "ai-generated", "arms", "history");
+    const historyDir = path_1.default.join(root, 'ai-generated', 'arms', 'history');
     const snapshots = loadSnapshots(historyDir);
     const armSeries = buildArmSeries(snapshots);
-    const maxAllowedSpreadPct = Number(process.env.AI_STABILITY_MAX_SPREAD_PCT ?? "10");
-    const minCohorts = Number(process.env.AI_STABILITY_MIN_COHORTS ?? "2");
-    const confirmatoryMinCohorts = Number(process.env.AI_CONFIRMATORY_MIN_COHORTS ?? "3");
+    const maxAllowedSpreadPct = Number(process.env.AI_STABILITY_MAX_SPREAD_PCT ?? '10');
+    const minCohorts = Number(process.env.AI_STABILITY_MIN_COHORTS ?? '2');
+    const confirmatoryMinCohorts = Number(process.env.AI_CONFIRMATORY_MIN_COHORTS ?? '3');
     const lines = [];
-    lines.push("# AI Stability Report");
-    lines.push("");
+    lines.push('# AI Stability Report');
+    lines.push('');
     lines.push(`Generated: ${new Date().toISOString()}`);
-    lines.push("Regenerate: npm run objective:stability");
-    lines.push("");
-    lines.push("This report quantifies run-to-run stability for AI provider/prompt arms to reduce stochastic bias in interpretation.");
-    lines.push("");
-    lines.push("## Configuration");
-    lines.push("");
+    lines.push('Regenerate: npm run objective:stability');
+    lines.push('');
+    lines.push('This report quantifies run-to-run stability for AI provider/prompt arms to reduce stochastic bias in interpretation.');
+    lines.push('');
+    lines.push('## Configuration');
+    lines.push('');
     lines.push(`- Minimum cohorts for stability interpretation: ${minCohorts}`);
     lines.push(`- Minimum cohorts for confirmatory power check: ${confirmatoryMinCohorts}`);
     lines.push(`- Maximum allowed spread (max-min) for stable label: ${fmt(maxAllowedSpreadPct, 2)}%`);
     lines.push(`- Historical snapshots found: ${snapshots.length}`);
-    lines.push("");
+    lines.push('');
     if (snapshots.length === 0 || armSeries.length === 0) {
-        lines.push("No historical run snapshots found. Run `npm run ai:matrix` multiple times to build stability evidence.");
-        fs_1.default.writeFileSync(path_1.default.join(root, report_paths_1.GENERATED_FILES.aiStabilityReport), `${lines.join("\n")}\n`);
+        lines.push('No historical run snapshots found. Run `npm run ai:matrix` multiple times to build stability evidence.');
+        fs_1.default.writeFileSync(path_1.default.join(root, report_paths_1.GENERATED_FILES.aiStabilityReport), `${lines.join('\n')}\n`);
         console.log(`Wrote ${path_1.default.join(root, report_paths_1.GENERATED_FILES.aiStabilityReport)}`);
         return;
     }
-    lines.push("## Run-to-Run Stability by Arm");
-    lines.push("");
-    lines.push("| Arm | Cohorts | Mean Failure % | Mean 95% CI | Std Dev | Min | Max | Spread | Stability Label | Power-Ready |");
-    lines.push("|---|---:|---:|---|---:|---:|---:|---:|---|---|");
+    lines.push('## Run-to-Run Stability by Arm');
+    lines.push('');
+    lines.push('| Arm | Cohorts | Mean Failure % | Mean 95% CI | Std Dev | Min | Max | Spread | Stability Label | Power-Ready |');
+    lines.push('|---|---:|---:|---|---:|---:|---:|---:|---|---|');
     for (const arm of armSeries) {
         const armMean = mean(arm.values);
         const armStd = stddev(arm.values);
@@ -126,29 +126,29 @@ function main() {
         const max = Math.max(...arm.values);
         const spread = max - min;
         const meanCi = bootstrapMean95(arm.values, arm.key);
-        const meanCiText = meanCi ? `[${fmt(meanCi[0])}, ${fmt(meanCi[1])}]` : "n/a";
-        const powerReady = arm.values.length >= confirmatoryMinCohorts ? "Yes" : "No";
-        let stabilityLabel = "Insufficient cohorts";
+        const meanCiText = meanCi ? `[${fmt(meanCi[0])}, ${fmt(meanCi[1])}]` : 'n/a';
+        const powerReady = arm.values.length >= confirmatoryMinCohorts ? 'Yes' : 'No';
+        let stabilityLabel = 'Insufficient cohorts';
         if (arm.values.length >= minCohorts) {
-            stabilityLabel = spread <= maxAllowedSpreadPct ? "Stable" : "Unstable";
+            stabilityLabel = spread <= maxAllowedSpreadPct ? 'Stable' : 'Unstable';
         }
         lines.push(`| ${arm.key} | ${arm.values.length} | ${fmt(armMean)} | ${meanCiText} | ${fmt(armStd)} | ${fmt(min)} | ${fmt(max)} | ${fmt(spread)} | ${stabilityLabel} | ${powerReady} |`);
     }
-    lines.push("");
+    lines.push('');
     const interpretableArms = armSeries.filter((arm) => arm.values.length >= minCohorts);
     const stableArms = interpretableArms.filter((arm) => {
         const spread = Math.max(...arm.values) - Math.min(...arm.values);
         return spread <= maxAllowedSpreadPct;
     });
     const powerReadyArms = armSeries.filter((arm) => arm.values.length >= confirmatoryMinCohorts);
-    lines.push("## Summary");
-    lines.push("");
+    lines.push('## Summary');
+    lines.push('');
     lines.push(`- Arms with interpretable cohort counts: ${interpretableArms.length}/${armSeries.length}`);
     lines.push(`- Arms currently labelled stable: ${stableArms.length}/${interpretableArms.length || 1}`);
     lines.push(`- Arms meeting confirmatory cohort threshold: ${powerReadyArms.length}/${armSeries.length}`);
     lines.push(`- Confirmatory stability gate passes only when every completed arm is both power-ready and within ${fmt(maxAllowedSpreadPct, 2)} percentage points of spread.`);
-    lines.push("- Recommendation: treat AI headline deltas as confirmatory only when all required arms meet the minimum cohort count and stability threshold.");
-    fs_1.default.writeFileSync(path_1.default.join(root, report_paths_1.GENERATED_FILES.aiStabilityReport), `${lines.join("\n")}\n`);
+    lines.push('- Recommendation: treat AI headline deltas as confirmatory only when all required arms meet the minimum cohort count and stability threshold.');
+    fs_1.default.writeFileSync(path_1.default.join(root, report_paths_1.GENERATED_FILES.aiStabilityReport), `${lines.join('\n')}\n`);
     console.log(`Wrote ${path_1.default.join(root, report_paths_1.GENERATED_FILES.aiStabilityReport)}`);
 }
 main();

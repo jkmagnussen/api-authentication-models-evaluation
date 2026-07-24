@@ -1,6 +1,6 @@
-import fs from "fs";
-import path from "path";
-import { createHash } from "crypto";
+import fs from 'fs';
+import path from 'path';
+import { createHash } from 'crypto';
 
 type FrozenFileRecord = {
   path: string;
@@ -14,24 +14,24 @@ type OfflineFreezeLock = {
 };
 
 const ROOT = process.cwd();
-const LOCK_PATH = path.join(ROOT, "docs", "generated", "OFFLINE_FREEZE_LOCK.json");
+const LOCK_PATH = path.join(ROOT, 'docs', 'generated', 'OFFLINE_FREEZE_LOCK.json');
 
 function normalizePath(filePath: string): string {
-  return filePath.split(path.sep).join("/");
+  return filePath.split(path.sep).join('/');
 }
 
 function hashFile(filePath: string): string {
-  const hash = createHash("sha256");
+  const hash = createHash('sha256');
   hash.update(fs.readFileSync(filePath));
-  return hash.digest("hex");
+  return hash.digest('hex');
 }
 
 function main(): void {
   if (!fs.existsSync(LOCK_PATH)) {
-    throw new Error("Offline freeze lock is missing. Run: npm run freeze:offline");
+    throw new Error('Offline freeze lock is missing. Run: npm run freeze:offline');
   }
 
-  const lock = JSON.parse(fs.readFileSync(LOCK_PATH, "utf8")) as OfflineFreezeLock;
+  const lock = JSON.parse(fs.readFileSync(LOCK_PATH, 'utf8')) as OfflineFreezeLock;
   const expectedByPath = new Map(lock.files.map((entry) => [entry.path, entry]));
   const actualPaths = new Set<string>();
   const errors: string[] = [];
@@ -49,7 +49,9 @@ function main(): void {
     const actualSha = hashFile(absolute);
 
     if (actualBytes !== expected.bytes) {
-      errors.push(`Size mismatch: ${expected.path} expected=${expected.bytes} actual=${actualBytes}`);
+      errors.push(
+        `Size mismatch: ${expected.path} expected=${expected.bytes} actual=${actualBytes}`
+      );
     }
 
     if (actualSha !== expected.sha256) {
@@ -78,7 +80,7 @@ function main(): void {
         }
 
         const relative = normalizePath(path.relative(ROOT, absolutePath));
-        if (relative === "docs/generated/OFFLINE_FREEZE_LOCK.json") {
+        if (relative === 'docs/generated/OFFLINE_FREEZE_LOCK.json') {
           continue;
         }
         if (!expectedByPath.has(relative)) {
@@ -89,7 +91,7 @@ function main(): void {
   }
 
   if (errors.length > 0) {
-    console.error("Offline freeze verification failed:");
+    console.error('Offline freeze verification failed:');
     for (const error of errors) {
       console.error(`- ${error}`);
     }

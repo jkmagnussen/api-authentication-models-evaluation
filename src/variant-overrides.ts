@@ -1,6 +1,6 @@
-import { Algorithm } from "jsonwebtoken";
+import { Algorithm } from 'jsonwebtoken';
 
-export type SessionCookieSameSite = "lax" | "strict" | "none";
+export type SessionCookieSameSite = 'lax' | 'strict' | 'none';
 
 export type VariantOverrides = {
   oauth?: {
@@ -11,7 +11,7 @@ export type VariantOverrides = {
   jwt?: {
     audience?: string;
     issuer?: string;
-    algorithm?: Algorithm | "none";
+    algorithm?: Algorithm | 'none';
     expiry?: string;
   };
   sessions?: {

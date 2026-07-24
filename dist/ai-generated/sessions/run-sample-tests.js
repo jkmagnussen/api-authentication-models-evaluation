@@ -7,13 +7,13 @@ const path_1 = __importDefault(require("path"));
 const common_1 = require("../common");
 const checks_1 = require("../checks");
 for (let index = 1; index <= common_1.SAMPLE_COUNT; index += 1) {
-    const sourceText = (0, common_1.readSample)("sessions", index);
+    const sourceText = (0, common_1.readSample)('sessions', index);
     const checks = (0, checks_1.runSessionChecks)(sourceText);
     const failedChecks = checks.filter((check) => !check.passed).map((check) => check.name);
     (0, common_1.writeResult)(`sessions-sample${index}-tests.json`, {
-        model: "sessions",
+        model: 'sessions',
         sample: `sample${index}`,
-        samplePath: path_1.default.join("ai-generated", "sessions", `sample${index}.ts`),
+        samplePath: path_1.default.join('ai-generated', 'sessions', `sample${index}.ts`),
         passed: failedChecks.length === 0,
         checks,
         correctnessFailures: failedChecks,
@@ -21,4 +21,4 @@ for (let index = 1; index <= common_1.SAMPLE_COUNT; index += 1) {
         misconfigurationDetections: failedChecks,
     });
 }
-console.log("Executed session AI sample tests.");
+console.log('Executed session AI sample tests.');

@@ -16,21 +16,21 @@ const password_1 = require("./password");
 const audit_service_1 = require("../security/audit.service");
 const totp_1 = require("./totp");
 function hashResetToken(token) {
-    return crypto_1.default.createHash("sha256").update(token).digest("hex");
+    return crypto_1.default.createHash('sha256').update(token).digest('hex');
 }
 async function requestPasswordReset(email, context) {
     const user = await (0, user_1.findUserByEmail)(email);
     if (!user) {
         await (0, audit_service_1.writeAuditEvent)({
-            eventType: "password_reset.request",
-            outcome: "failure",
+            eventType: 'password_reset.request',
+            outcome: 'failure',
             ipAddress: context.ipAddress,
             userAgent: context.userAgent,
             metadata: { email },
         });
         return null;
     }
-    const token = crypto_1.default.randomBytes(32).toString("base64url");
+    const token = crypto_1.default.randomBytes(32).toString('base64url');
     const tokenHash = hashResetToken(token);
     await db_1.prisma.passwordResetToken.create({
         data: {
@@ -41,8 +41,8 @@ async function requestPasswordReset(email, context) {
     });
     await (0, audit_service_1.writeAuditEvent)({
         userId: user.id,
-        eventType: "password_reset.request",
-        outcome: "success",
+        eventType: 'password_reset.request',
+        outcome: 'success',
         ipAddress: context.ipAddress,
         userAgent: context.userAgent,
     });
@@ -56,8 +56,8 @@ async function confirmPasswordReset(token, newPassword, context) {
     });
     if (!record || record.usedAt || record.expiresAt < new Date()) {
         await (0, audit_service_1.writeAuditEvent)({
-            eventType: "password_reset.confirm",
-            outcome: "failure",
+            eventType: 'password_reset.confirm',
+            outcome: 'failure',
             ipAddress: context.ipAddress,
             userAgent: context.userAgent,
         });
@@ -76,8 +76,8 @@ async function confirmPasswordReset(token, newPassword, context) {
     ]);
     await (0, audit_service_1.writeAuditEvent)({
         userId: record.userId,
-        eventType: "password_reset.confirm",
-        outcome: "success",
+        eventType: 'password_reset.confirm',
+        outcome: 'success',
         ipAddress: context.ipAddress,
         userAgent: context.userAgent,
     });
@@ -87,8 +87,8 @@ async function startMfaEnrollment(email, password, context) {
     const user = await (0, user_1.findUserByEmail)(email);
     if (!user || !(await (0, password_1.isValidPassword)(password, user.password))) {
         await (0, audit_service_1.writeAuditEvent)({
-            eventType: "mfa.enroll",
-            outcome: "failure",
+            eventType: 'mfa.enroll',
+            outcome: 'failure',
             ipAddress: context.ipAddress,
             userAgent: context.userAgent,
             metadata: { email },
@@ -96,7 +96,7 @@ async function startMfaEnrollment(email, password, context) {
         return null;
     }
     const secret = (0, totp_1.generateTotpSecret)();
-    const issuer = process.env.MFA_ISSUER ?? "API Auth Evaluation";
+    const issuer = process.env.MFA_ISSUER ?? 'API Auth Evaluation';
     const otpauthUrl = (0, totp_1.buildOtpAuthUrl)(user.email, issuer, secret);
     await db_1.prisma.user.update({
         where: { id: user.id },
@@ -107,8 +107,8 @@ async function startMfaEnrollment(email, password, context) {
     });
     await (0, audit_service_1.writeAuditEvent)({
         userId: user.id,
-        eventType: "mfa.enroll",
-        outcome: "success",
+        eventType: 'mfa.enroll',
+        outcome: 'success',
         ipAddress: context.ipAddress,
         userAgent: context.userAgent,
     });
@@ -121,8 +121,8 @@ async function verifyMfaEnrollment(email, code, context) {
     const user = await (0, user_1.findUserByEmail)(email);
     if (!user?.mfaSecret) {
         await (0, audit_service_1.writeAuditEvent)({
-            eventType: "mfa.verify",
-            outcome: "failure",
+            eventType: 'mfa.verify',
+            outcome: 'failure',
             ipAddress: context.ipAddress,
             userAgent: context.userAgent,
             metadata: { email },
@@ -133,8 +133,8 @@ async function verifyMfaEnrollment(email, code, context) {
     if (!valid) {
         await (0, audit_service_1.writeAuditEvent)({
             userId: user.id,
-            eventType: "mfa.verify",
-            outcome: "failure",
+            eventType: 'mfa.verify',
+            outcome: 'failure',
             ipAddress: context.ipAddress,
             userAgent: context.userAgent,
         });
@@ -146,8 +146,8 @@ async function verifyMfaEnrollment(email, code, context) {
     });
     await (0, audit_service_1.writeAuditEvent)({
         userId: user.id,
-        eventType: "mfa.verify",
-        outcome: "success",
+        eventType: 'mfa.verify',
+        outcome: 'success',
         ipAddress: context.ipAddress,
         userAgent: context.userAgent,
     });

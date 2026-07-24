@@ -1,9 +1,9 @@
-import fs from "fs";
-import path from "path";
-import { GENERATED_FILES } from "./report-paths";
+import fs from 'fs';
+import path from 'path';
+import { GENERATED_FILES } from './report-paths';
 
 type RunSummary = {
-  providers?: Array<{ key: string; status: "completed" | "skipped" | "failed" }>;
+  providers?: Array<{ key: string; status: 'completed' | 'skipped' | 'failed' }>;
 };
 
 type FailureRateRow = {
@@ -16,7 +16,7 @@ type FailureRateRow = {
 
 function parseCsvLine(line: string): string[] {
   const values: string[] = [];
-  let current = "";
+  let current = '';
   let inQuotes = false;
 
   for (let i = 0; i < line.length; i += 1) {
@@ -31,9 +31,9 @@ function parseCsvLine(line: string): string[] {
       continue;
     }
 
-    if (char === "," && !inQuotes) {
+    if (char === ',' && !inQuotes) {
       values.push(current);
-      current = "";
+      current = '';
       continue;
     }
 
@@ -45,10 +45,7 @@ function parseCsvLine(line: string): string[] {
 }
 
 function parseFailureRateCsv(csvText: string): FailureRateRow[] {
-  const rows = csvText
-    .trim()
-    .split(/\r?\n/)
-    .map(parseCsvLine);
+  const rows = csvText.trim().split(/\r?\n/).map(parseCsvLine);
 
   if (rows.length <= 1) return [];
 
@@ -68,28 +65,37 @@ function rowByLabel(rows: FailureRateRow[], label: string): FailureRateRow | und
 function main(): void {
   const root = process.cwd();
   const outputPath = path.join(root, GENERATED_FILES.sentinelControls);
-  const summaryPath = path.join(root, "ai-generated", "arms", "run-summary.json");
+  const summaryPath = path.join(root, 'ai-generated', 'arms', 'run-summary.json');
 
   if (!fs.existsSync(summaryPath)) {
-    throw new Error("Missing ai-generated/arms/run-summary.json. Run npm run ai:matrix first.");
+    throw new Error('Missing ai-generated/arms/run-summary.json. Run npm run ai:matrix first.');
   }
 
-  const summary = JSON.parse(fs.readFileSync(summaryPath, "utf8")) as RunSummary;
+  const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8')) as RunSummary;
   const completedArms = (summary.providers ?? [])
-    .filter((provider) => provider.status === "completed")
+    .filter((provider) => provider.status === 'completed')
     .map((provider) => provider.key);
 
   if (completedArms.length === 0) {
-    throw new Error("No completed AI arms found in run summary.");
+    throw new Error('No completed AI arms found in run summary.');
   }
 
   const perArmRows = completedArms.map((armKey) => {
-    const csvPath = path.join(root, "ai-generated", "arms", armKey, "results", "ai-samples-failure-rates.csv");
+    const csvPath = path.join(
+      root,
+      'ai-generated',
+      'arms',
+      armKey,
+      'results',
+      'ai-samples-failure-rates.csv'
+    );
     if (!fs.existsSync(csvPath)) {
-      throw new Error(`Missing arm failure-rate CSV: ai-generated/arms/${armKey}/results/ai-samples-failure-rates.csv`);
+      throw new Error(
+        `Missing arm failure-rate CSV: ai-generated/arms/${armKey}/results/ai-samples-failure-rates.csv`
+      );
     }
-    const rows = parseFailureRateCsv(fs.readFileSync(csvPath, "utf8"));
-    const overall = rowByLabel(rows, "OVERALL");
+    const rows = parseFailureRateCsv(fs.readFileSync(csvPath, 'utf8'));
+    const overall = rowByLabel(rows, 'OVERALL');
     if (!overall) {
       throw new Error(`Missing OVERALL row in ${csvPath}`);
     }
@@ -101,35 +107,41 @@ function main(): void {
 
   const positiveControlTriggered = perArmRows.every((arm) => arm.overall.failedSamples > 0);
   const negativeControlObserved = perArmRows.every((arm) => arm.overall.passedSamples > 0);
-  const sentinelStatus = positiveControlTriggered && negativeControlObserved ? "PASS" : "FAIL";
+  const sentinelStatus = positiveControlTriggered && negativeControlObserved ? 'PASS' : 'FAIL';
 
   const lines: string[] = [];
-  lines.push("# Sentinel Controls Report");
-  lines.push("");
+  lines.push('# Sentinel Controls Report');
+  lines.push('');
   lines.push(`Generated: ${new Date().toISOString()}`);
-  lines.push("Regenerate: npm run objective:sentinel");
-  lines.push("");
-  lines.push("Sentinel Control Status: " + sentinelStatus);
-  lines.push("");
-  lines.push("Definitions:");
-  lines.push("- Positive sentinel trigger: each completed arm must have at least one failed sample (known-flawed pattern remains detectable).");
-  lines.push("- Negative sentinel trigger: each completed arm must have at least one passed sample (known-secure pattern remains detectable).");
-  lines.push("");
-  lines.push("| Arm | Passed Samples (OVERALL) | Failed Samples (OVERALL) | Positive Sentinel | Negative Sentinel |\n|---|---:|---:|---|---|");
+  lines.push('Regenerate: npm run objective:sentinel');
+  lines.push('');
+  lines.push('Sentinel Control Status: ' + sentinelStatus);
+  lines.push('');
+  lines.push('Definitions:');
+  lines.push(
+    '- Positive sentinel trigger: each completed arm must have at least one failed sample (known-flawed pattern remains detectable).'
+  );
+  lines.push(
+    '- Negative sentinel trigger: each completed arm must have at least one passed sample (known-secure pattern remains detectable).'
+  );
+  lines.push('');
+  lines.push(
+    '| Arm | Passed Samples (OVERALL) | Failed Samples (OVERALL) | Positive Sentinel | Negative Sentinel |\n|---|---:|---:|---|---|'
+  );
 
   for (const arm of perArmRows) {
     lines.push(
       `| ${arm.armKey} | ${arm.overall.passedSamples} | ${arm.overall.failedSamples} | ${
-        arm.overall.failedSamples > 0 ? "PASS" : "FAIL"
-      } | ${arm.overall.passedSamples > 0 ? "PASS" : "FAIL"} |`
+        arm.overall.failedSamples > 0 ? 'PASS' : 'FAIL'
+      } | ${arm.overall.passedSamples > 0 ? 'PASS' : 'FAIL'} |`
     );
   }
 
-  lines.push("");
-  lines.push(`Overall positive sentinel: ${positiveControlTriggered ? "PASS" : "FAIL"}`);
-  lines.push(`Overall negative sentinel: ${negativeControlObserved ? "PASS" : "FAIL"}`);
+  lines.push('');
+  lines.push(`Overall positive sentinel: ${positiveControlTriggered ? 'PASS' : 'FAIL'}`);
+  lines.push(`Overall negative sentinel: ${negativeControlObserved ? 'PASS' : 'FAIL'}`);
 
-  fs.writeFileSync(outputPath, `${lines.join("\n")}\n`);
+  fs.writeFileSync(outputPath, `${lines.join('\n')}\n`);
   console.log(`Wrote ${outputPath}`);
 }
 

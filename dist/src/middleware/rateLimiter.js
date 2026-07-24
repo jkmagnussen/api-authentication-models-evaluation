@@ -13,7 +13,7 @@ const authLimiter = (0, express_rate_limit_1.default)({
     legacyHeaders: false,
     skipSuccessfulRequests: false,
     message: {
-        error: "Too many auth attempts from this IP, please try again later.",
+        error: 'Too many auth attempts from this IP, please try again later.',
     },
 });
 exports.authLimiter = authLimiter;

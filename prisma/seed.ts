@@ -1,21 +1,21 @@
-import { prisma } from "../src/db";
-import bcrypt from "bcrypt";
+import { prisma } from '../src/db';
+import bcrypt from 'bcrypt';
 
 // npx ts-node prisma/seed.ts
 
 async function main() {
   // Seed main user with fixed ID
-  const passwordHash = await bcrypt.hash("password123", 10);
-  const basicSecretHash = await bcrypt.hash("basic-secret", 10);
-  const privilegedSecretHash = await bcrypt.hash("privileged-secret", 10);
-  const adminSecretHash = await bcrypt.hash("admin-secret", 10);
+  const passwordHash = await bcrypt.hash('password123', 10);
+  const basicSecretHash = await bcrypt.hash('basic-secret', 10);
+  const privilegedSecretHash = await bcrypt.hash('privileged-secret', 10);
+  const adminSecretHash = await bcrypt.hash('admin-secret', 10);
 
   await prisma.user.upsert({
-    where: { id: "d9c7dba3-3f97-4418-9f7b-f89d8fa5d925" },
+    where: { id: 'd9c7dba3-3f97-4418-9f7b-f89d8fa5d925' },
     update: {},
     create: {
-      id: "d9c7dba3-3f97-4418-9f7b-f89d8fa5d925",
-      email: "main@example.com",
+      id: 'd9c7dba3-3f97-4418-9f7b-f89d8fa5d925',
+      email: 'main@example.com',
       password: passwordHash,
     },
   });
@@ -24,12 +24,12 @@ async function main() {
   // BASIC CLIENT (read-only)
   // -----------------------------
   await prisma.oAuthClient.upsert({
-    where: { id: "client-basic" },
+    where: { id: 'client-basic' },
     update: {},
     create: {
-      id: "client-basic",
+      id: 'client-basic',
       secret: basicSecretHash,
-      name: "Basic Client",
+      name: 'Basic Client',
     },
   });
 
@@ -37,12 +37,12 @@ async function main() {
   // PRIVILEGED CLIENT (read + write)
   // -----------------------------
   await prisma.oAuthClient.upsert({
-    where: { id: "client-privileged" },
+    where: { id: 'client-privileged' },
     update: {},
     create: {
-      id: "client-privileged",
+      id: 'client-privileged',
       secret: privilegedSecretHash,
-      name: "Privileged Client",
+      name: 'Privileged Client',
     },
   });
 
@@ -50,16 +50,16 @@ async function main() {
   // ADMIN CLIENT (read + write + admin)
   // -----------------------------
   await prisma.oAuthClient.upsert({
-    where: { id: "client-admin" },
+    where: { id: 'client-admin' },
     update: {},
     create: {
-      id: "client-admin",
+      id: 'client-admin',
       secret: adminSecretHash,
-      name: "Admin Client",
+      name: 'Admin Client',
     },
   });
 
-  console.log("Seed complete.");
+  console.log('Seed complete.');
 }
 
 main().finally(() => process.exit(0));

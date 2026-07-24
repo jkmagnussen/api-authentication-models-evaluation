@@ -1,14 +1,14 @@
-import { spawnSync } from "child_process";
-import { DRIFT_CHECK_PATHS } from "./report-paths";
+import { spawnSync } from 'child_process';
+import { DRIFT_CHECK_PATHS } from './report-paths';
 
 function main() {
-  const strictUntracked = process.argv.includes("--strict-untracked");
+  const strictUntracked = process.argv.includes('--strict-untracked');
 
-  const trackedArgs = ["diff", "--name-only", "--", ...DRIFT_CHECK_PATHS];
-  const trackedResult = spawnSync("git", trackedArgs, { encoding: "utf8" });
+  const trackedArgs = ['diff', '--name-only', '--', ...DRIFT_CHECK_PATHS];
+  const trackedResult = spawnSync('git', trackedArgs, { encoding: 'utf8' });
 
   if (trackedResult.status !== 0) {
-    console.error("Failed to run git drift check.");
+    console.error('Failed to run git drift check.');
     if (trackedResult.error) {
       console.error(trackedResult.error.message);
     }
@@ -18,13 +18,13 @@ function main() {
     process.exit(trackedResult.status ?? 2);
   }
 
-  const trackedOutput = trackedResult.stdout?.trim() ?? "";
+  const trackedOutput = trackedResult.stdout?.trim() ?? '';
 
-  const untrackedArgs = ["ls-files", "--others", "--exclude-standard", "--", ...DRIFT_CHECK_PATHS];
-  const untrackedResult = spawnSync("git", untrackedArgs, { encoding: "utf8" });
+  const untrackedArgs = ['ls-files', '--others', '--exclude-standard', '--', ...DRIFT_CHECK_PATHS];
+  const untrackedResult = spawnSync('git', untrackedArgs, { encoding: 'utf8' });
 
   if (untrackedResult.status !== 0) {
-    console.error("Failed to check untracked generated artifacts.");
+    console.error('Failed to check untracked generated artifacts.');
     if (untrackedResult.error) {
       console.error(untrackedResult.error.message);
     }
@@ -34,27 +34,27 @@ function main() {
     process.exit(untrackedResult.status ?? 2);
   }
 
-  const untrackedOutput = untrackedResult.stdout?.trim() ?? "";
+  const untrackedOutput = untrackedResult.stdout?.trim() ?? '';
 
   if (!trackedOutput && (!strictUntracked || !untrackedOutput)) {
     if (untrackedOutput && !strictUntracked) {
-      console.warn("Untracked generated artifacts detected (non-blocking in default mode):");
+      console.warn('Untracked generated artifacts detected (non-blocking in default mode):');
       console.warn(untrackedOutput);
-      console.warn("Use: npm run docs:drift:strict to fail on untracked artifacts.");
+      console.warn('Use: npm run docs:drift:strict to fail on untracked artifacts.');
     }
-    console.log("No generated artifact drift detected.");
+    console.log('No generated artifact drift detected.');
     return;
   }
 
-  console.error("Generated artifact drift detected.");
-  console.error("Run: npm run docs:generate");
-  console.error("Then review and commit intended generated artifact updates.");
+  console.error('Generated artifact drift detected.');
+  console.error('Run: npm run docs:generate');
+  console.error('Then review and commit intended generated artifact updates.');
   if (trackedOutput) {
-    console.error("Tracked changes:");
+    console.error('Tracked changes:');
     console.error(trackedOutput);
   }
   if (strictUntracked && untrackedOutput) {
-    console.error("Untracked changes:");
+    console.error('Untracked changes:');
     console.error(untrackedOutput);
   }
   process.exit(1);

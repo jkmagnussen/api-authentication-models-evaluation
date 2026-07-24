@@ -7,20 +7,20 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const crypto_1 = require("crypto");
 const ROOT = process.cwd();
-const LOCK_PATH = path_1.default.join(ROOT, "docs", "generated", "OFFLINE_FREEZE_LOCK.json");
+const LOCK_PATH = path_1.default.join(ROOT, 'docs', 'generated', 'OFFLINE_FREEZE_LOCK.json');
 function normalizePath(filePath) {
-    return filePath.split(path_1.default.sep).join("/");
+    return filePath.split(path_1.default.sep).join('/');
 }
 function hashFile(filePath) {
-    const hash = (0, crypto_1.createHash)("sha256");
+    const hash = (0, crypto_1.createHash)('sha256');
     hash.update(fs_1.default.readFileSync(filePath));
-    return hash.digest("hex");
+    return hash.digest('hex');
 }
 function main() {
     if (!fs_1.default.existsSync(LOCK_PATH)) {
-        throw new Error("Offline freeze lock is missing. Run: npm run freeze:offline");
+        throw new Error('Offline freeze lock is missing. Run: npm run freeze:offline');
     }
-    const lock = JSON.parse(fs_1.default.readFileSync(LOCK_PATH, "utf8"));
+    const lock = JSON.parse(fs_1.default.readFileSync(LOCK_PATH, 'utf8'));
     const expectedByPath = new Map(lock.files.map((entry) => [entry.path, entry]));
     const actualPaths = new Set();
     const errors = [];
@@ -59,7 +59,7 @@ function main() {
                     continue;
                 }
                 const relative = normalizePath(path_1.default.relative(ROOT, absolutePath));
-                if (relative === "docs/generated/OFFLINE_FREEZE_LOCK.json") {
+                if (relative === 'docs/generated/OFFLINE_FREEZE_LOCK.json') {
                     continue;
                 }
                 if (!expectedByPath.has(relative)) {
@@ -69,7 +69,7 @@ function main() {
         }
     }
     if (errors.length > 0) {
-        console.error("Offline freeze verification failed:");
+        console.error('Offline freeze verification failed:');
         for (const error of errors) {
             console.error(`- ${error}`);
         }

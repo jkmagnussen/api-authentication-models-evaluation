@@ -7,10 +7,10 @@ const supertest_1 = __importDefault(require("supertest"));
 const app_1 = __importDefault(require("../../../src/app"));
 const setup_1 = require("../../setup");
 const utils_1 = require("../utils");
-describe("Sessions – Attack Performance Test", () => {
+describe('Sessions – Attack Performance Test', () => {
     const ITERATIONS = 1000;
     // Intentionally invalid / expired / forged session cookie
-    const invalidSessionCookie = "session=INVALID_ATTACK_COOKIE";
+    const invalidSessionCookie = 'session=INVALID_ATTACK_COOKIE';
     beforeAll(async () => {
         await (0, setup_1.resetDatabase)();
     });
@@ -19,9 +19,7 @@ describe("Sessions – Attack Performance Test", () => {
         let errors = 0;
         for (let i = 0; i < ITERATIONS; i++) {
             const start = performance.now();
-            const res = await (0, supertest_1.default)(app_1.default)
-                .get("/sessions/protected")
-                .set("Cookie", invalidSessionCookie);
+            const res = await (0, supertest_1.default)(app_1.default).get('/sessions/protected').set('Cookie', invalidSessionCookie);
             const end = performance.now();
             times.push(end - start);
             if (res.status !== 200)
@@ -32,6 +30,6 @@ describe("Sessions – Attack Performance Test", () => {
             ...stats,
             errorRate: errors / ITERATIONS,
         };
-        (0, utils_1.writePerformanceResult)("attacks", "sessions", attackStats);
+        (0, utils_1.writePerformanceResult)('attacks', 'sessions', attackStats);
     });
 });

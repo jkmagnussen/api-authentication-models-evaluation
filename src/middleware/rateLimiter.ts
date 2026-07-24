@@ -1,5 +1,5 @@
-import rateLimit from "express-rate-limit";
-import { APP_CONFIG } from "../config";
+import rateLimit from 'express-rate-limit';
+import { APP_CONFIG } from '../config';
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -8,7 +8,7 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: false,
   message: {
-    error: "Too many auth attempts from this IP, please try again later.",
+    error: 'Too many auth attempts from this IP, please try again later.',
   },
 });
 

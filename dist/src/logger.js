@@ -9,7 +9,7 @@ const levelWeight = {
     error: 40,
 };
 function shouldLog(level) {
-    const configuredLevel = config_1.APP_CONFIG.observability.logLevel || "info";
+    const configuredLevel = config_1.APP_CONFIG.observability.logLevel || 'info';
     return levelWeight[level] >= levelWeight[configuredLevel];
 }
 function log(level, message, extra = {}) {
@@ -22,11 +22,11 @@ function log(level, message, extra = {}) {
         ...extra,
     };
     const line = JSON.stringify(payload);
-    if (level === "error") {
+    if (level === 'error') {
         console.error(line);
         return;
     }
-    if (level === "warn") {
+    if (level === 'warn') {
         console.warn(line);
         return;
     }

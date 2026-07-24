@@ -13,20 +13,20 @@ const router = (0, express_1.Router)();
 // Cookie-based CSRF protection
 const csrfProtection = (0, csurf_1.default)({ cookie: true });
 // Login (no CSRF needed)
-router.post("/login", rateLimiter_1.authLimiter, validateLogin_1.validateLogin, sessions_controller_1.loginWithSession);
+router.post('/login', rateLimiter_1.authLimiter, validateLogin_1.validateLogin, sessions_controller_1.loginWithSession);
 // Protected route (DB-backed session)
-router.get("/protected", sessions_middleware_1.requireSession, sessions_controller_1.getSessionProtected);
+router.get('/protected', sessions_middleware_1.requireSession, sessions_controller_1.getSessionProtected);
 // Logout (no CSRF needed)
-router.post("/logout", sessions_controller_1.logoutSession);
+router.post('/logout', sessions_controller_1.logoutSession);
 // These final two routes are intended for frontend/browser use.
 // Postman does not automatically handle cookies or CSRF tokens,
 // so these endpoints are not used during backend API testing.
 // CSRF token endpoint (frontend would call this)
-router.get("/csrf-token", csrfProtection, (req, res) => {
+router.get('/csrf-token', csrfProtection, (req, res) => {
     res.json({ csrfToken: req.csrfToken() });
 });
 // CSRF-protected action (requires DB session + valid CSRF token)
-router.post("/protected-action", sessions_middleware_1.requireSession, csrfProtection, (_req, res) => {
-    res.json({ message: "Protected action completed" });
+router.post('/protected-action', sessions_middleware_1.requireSession, csrfProtection, (_req, res) => {
+    res.json({ message: 'Protected action completed' });
 });
 exports.default = router;

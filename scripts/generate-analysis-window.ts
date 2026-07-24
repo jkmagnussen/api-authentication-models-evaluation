@@ -1,6 +1,6 @@
-import fs from "fs";
-import path from "path";
-import { GENERATED_FILES } from "./report-paths";
+import fs from 'fs';
+import path from 'path';
+import { GENERATED_FILES } from './report-paths';
 
 type HistorySnapshot = {
   generatedAt?: string;
@@ -18,7 +18,7 @@ function getLatestHistoryGeneratedAt(historyDir: string): { latest: string | nul
 
   const files = fs
     .readdirSync(historyDir)
-    .filter((file) => file.endsWith(".json"))
+    .filter((file) => file.endsWith('.json'))
     .sort();
 
   let latest: string | null = null;
@@ -27,7 +27,7 @@ function getLatestHistoryGeneratedAt(historyDir: string): { latest: string | nul
   for (const fileName of files) {
     const filePath = path.join(historyDir, fileName);
     try {
-      const snapshot = JSON.parse(fs.readFileSync(filePath, "utf8")) as HistorySnapshot;
+      const snapshot = JSON.parse(fs.readFileSync(filePath, 'utf8')) as HistorySnapshot;
       if (snapshot.generatedAt && (!latest || snapshot.generatedAt > latest)) {
         latest = snapshot.generatedAt;
       }
@@ -43,12 +43,12 @@ function getLatestHistoryGeneratedAt(historyDir: string): { latest: string | nul
 function main(): void {
   const root = process.cwd();
   const outputPath = path.join(root, GENERATED_FILES.analysisWindow);
-  const historyDir = path.join(root, "ai-generated", "arms", "history");
-  const shouldRefresh = process.argv.includes("--refresh");
+  const historyDir = path.join(root, 'ai-generated', 'arms', 'history');
+  const shouldRefresh = process.argv.includes('--refresh');
   const now = new Date().toISOString();
 
   if (fs.existsSync(outputPath) && !shouldRefresh) {
-    const existing = JSON.parse(fs.readFileSync(outputPath, "utf8")) as AnalysisWindow;
+    const existing = JSON.parse(fs.readFileSync(outputPath, 'utf8')) as AnalysisWindow;
     const preserved: AnalysisWindow = {
       ...existing,
       generatedAt: now,
@@ -67,7 +67,7 @@ function main(): void {
   };
 
   fs.writeFileSync(outputPath, JSON.stringify(payload, null, 2));
-  console.log(`${shouldRefresh ? "Refreshed" : "Locked"} analysis window: ${outputPath}`);
+  console.log(`${shouldRefresh ? 'Refreshed' : 'Locked'} analysis window: ${outputPath}`);
 }
 
 main();

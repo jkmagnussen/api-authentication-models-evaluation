@@ -7,9 +7,9 @@ function errorHandler(err, req, res, next) {
         return next(err);
     }
     const status = err.status || 500;
-    const message = err.message || "Internal Server Error";
+    const message = err.message || 'Internal Server Error';
     if (status >= 500) {
-        (0, logger_1.log)("error", "Unhandled request error", {
+        (0, logger_1.log)('error', 'Unhandled request error', {
             method: req.method,
             path: req.originalUrl,
             status,

@@ -3,20 +3,19 @@
 // - Adds PKCE + token fields to SessionData for OAuth2 flows.
 // This file must be imported once at startup so TS merges the types globally.
 
-
 // types/express-session-augment.ts
 
-import "express-session";
+import 'express-session';
 
 // Extend Express Request with userId (used by session auth)
-declare module "express-serve-static-core" {
+declare module 'express-serve-static-core' {
   interface Request {
     userId?: string;
   }
 }
 
 // Extend SessionData with fields used by OAuth2 PKCE + tokens
-declare module "express-session" {
+declare module 'express-session' {
   interface SessionData {
     email?: string;
     code_verifier?: string;

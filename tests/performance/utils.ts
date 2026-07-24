@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs from 'fs';
 
 export function calculateStats(times: number[]) {
   times.sort((a, b) => a - b);
@@ -14,9 +14,13 @@ export function calculateStats(times: number[]) {
   return { avg, p95, p99, throughput };
 }
 
-type PerfKind = "baseline" | "attacks";
+type PerfKind = 'baseline' | 'attacks';
 
-export function writePerformanceResult(kind: PerfKind, model: string, stats: Record<string, number>) {
+export function writePerformanceResult(
+  kind: PerfKind,
+  model: string,
+  stats: Record<string, number>
+) {
   const outputDir = `docs/performance-results/${kind}`;
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
@@ -44,9 +48,9 @@ export function writePerformanceResult(kind: PerfKind, model: string, stats: Rec
       nodeVersion: process.version,
       platform: process.platform,
       arch: process.arch,
-      hostname: process.env.COMPUTERNAME || "unknown",
-      warmup: "none",
-      notes: "Generated from Jest performance tests"
+      hostname: process.env.COMPUTERNAME || 'unknown',
+      warmup: 'none',
+      notes: 'Generated from Jest performance tests',
     };
 
     fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));

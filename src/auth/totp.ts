@@ -1,11 +1,11 @@
-import crypto from "crypto";
+import crypto from 'crypto';
 
-const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
 function toBase32(buffer: Buffer) {
   let bits = 0;
   let value = 0;
-  let output = "";
+  let output = '';
 
   for (const byte of buffer) {
     value = (value << 8) | byte;
@@ -25,7 +25,7 @@ function toBase32(buffer: Buffer) {
 }
 
 function fromBase32(input: string) {
-  const normalized = input.replace(/=+$/g, "").toUpperCase();
+  const normalized = input.replace(/=+$/g, '').toUpperCase();
   let bits = 0;
   let value = 0;
   const bytes: number[] = [];
@@ -33,7 +33,7 @@ function fromBase32(input: string) {
   for (const char of normalized) {
     const index = BASE32_ALPHABET.indexOf(char);
     if (index === -1) {
-      throw new Error("Invalid base32 secret");
+      throw new Error('Invalid base32 secret');
     }
 
     value = (value << 5) | index;
@@ -56,14 +56,15 @@ function generateTotp(secret: string, offset = 0) {
   counterBuffer.writeUInt32BE(counter % 0x100000000, 4);
 
   const key = fromBase32(secret);
-  const hmac = crypto.createHmac("sha1", key).update(counterBuffer).digest();
+  const hmac = crypto.createHmac('sha1', key).update(counterBuffer).digest();
   const dynamicOffset = hmac[hmac.length - 1] & 0x0f;
-  const code = ((hmac[dynamicOffset] & 0x7f) << 24)
-    | ((hmac[dynamicOffset + 1] & 0xff) << 16)
-    | ((hmac[dynamicOffset + 2] & 0xff) << 8)
-    | (hmac[dynamicOffset + 3] & 0xff);
+  const code =
+    ((hmac[dynamicOffset] & 0x7f) << 24) |
+    ((hmac[dynamicOffset + 1] & 0xff) << 16) |
+    ((hmac[dynamicOffset + 2] & 0xff) << 8) |
+    (hmac[dynamicOffset + 3] & 0xff);
 
-  return String(code % 1_000_000).padStart(6, "0");
+  return String(code % 1_000_000).padStart(6, '0');
 }
 
 export function generateTotpSecret() {

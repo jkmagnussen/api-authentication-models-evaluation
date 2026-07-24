@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+.next/
+out/
+build/
+ai-generated/**/sample*.ts
+ai-generated/arms/**/samples/**/*.ts
+docs/generated/
+docs/performance-results/

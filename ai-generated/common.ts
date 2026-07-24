@@ -1,8 +1,8 @@
-import fs from "fs";
-import path from "path";
-import ts from "typescript";
+import fs from 'fs';
+import path from 'path';
+import ts from 'typescript';
 
-const escomplex = require("escomplex");
+const escomplex = require('escomplex');
 
 const DEFAULT_SAMPLE_COUNT = 30;
 
@@ -10,7 +10,7 @@ function parseSampleCountArg(): number | null {
   const args = process.argv.slice(2);
   for (let index = 0; index < args.length; index += 1) {
     const current = args[index];
-    if ((current === "--samples" || current === "-n") && args[index + 1]) {
+    if ((current === '--samples' || current === '-n') && args[index + 1]) {
       const parsed = Number(args[index + 1]);
       if (Number.isInteger(parsed) && parsed > 0) {
         return parsed;
@@ -25,7 +25,7 @@ function resolveSampleCount(): number {
   const fromArg = parseSampleCountArg();
   if (fromArg) return fromArg;
 
-  const fromEnv = Number(process.env.AI_SAMPLE_COUNT ?? "");
+  const fromEnv = Number(process.env.AI_SAMPLE_COUNT ?? '');
   if (Number.isInteger(fromEnv) && fromEnv > 0) {
     return fromEnv;
   }
@@ -34,7 +34,7 @@ function resolveSampleCount(): number {
 }
 
 export const SAMPLE_COUNT = resolveSampleCount();
-export const RESULTS_DIR = path.join(process.cwd(), "ai-generated", "results");
+export const RESULTS_DIR = path.join(process.cwd(), 'ai-generated', 'results');
 
 export function ensureDirectory(dirPath: string) {
   if (!fs.existsSync(dirPath)) {
@@ -43,7 +43,7 @@ export function ensureDirectory(dirPath: string) {
 }
 
 export function getModelDirectory(model: string) {
-  return path.join(process.cwd(), "ai-generated", model);
+  return path.join(process.cwd(), 'ai-generated', model);
 }
 
 export function getSamplePath(model: string, index: number) {
@@ -75,11 +75,17 @@ export function expandTemplateSamples(templates: string[], sampleCount = SAMPLE_
 }
 
 export function readSample(model: string, index: number) {
-  return fs.readFileSync(getSamplePath(model, index), "utf8");
+  return fs.readFileSync(getSamplePath(model, index), 'utf8');
 }
 
 export function countFunctions(sourceText: string) {
-  const sourceFile = ts.createSourceFile("sample.ts", sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const sourceFile = ts.createSourceFile(
+    'sample.ts',
+    sourceText,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS
+  );
   let functionCount = 0;
 
   function visit(node: ts.Node) {
@@ -100,7 +106,13 @@ export function countFunctions(sourceText: string) {
 }
 
 export function countClasses(sourceText: string) {
-  const sourceFile = ts.createSourceFile("sample.ts", sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const sourceFile = ts.createSourceFile(
+    'sample.ts',
+    sourceText,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS
+  );
   let classCount = 0;
 
   function visit(node: ts.Node) {

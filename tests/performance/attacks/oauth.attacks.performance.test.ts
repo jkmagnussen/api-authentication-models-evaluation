@@ -1,13 +1,13 @@
-import request from "supertest";
-import app from "../../../src/app";
-import { resetDatabase } from "../../setup";
-import { calculateStats, writePerformanceResult } from "../utils";
+import request from 'supertest';
+import app from '../../../src/app';
+import { resetDatabase } from '../../setup';
+import { calculateStats, writePerformanceResult } from '../utils';
 
-describe("OAuth – Attack Performance Test", () => {
+describe('OAuth – Attack Performance Test', () => {
   const ITERATIONS = 1000;
 
   // Intentionally invalid / replayed authorization code
-  const invalidCode = "REPLAYED_OR_INVALID_CODE";
+  const invalidCode = 'REPLAYED_OR_INVALID_CODE';
 
   beforeAll(async () => {
     await resetDatabase();
@@ -20,13 +20,11 @@ describe("OAuth – Attack Performance Test", () => {
     for (let i = 0; i < ITERATIONS; i++) {
       const start = performance.now();
 
-      const res = await request(app)
-        .post("/oauth/token")
-        .send({
-          code: invalidCode,
-          client_id: "clientA",
-          redirect_uri: "http://localhost/callback"
-        });
+      const res = await request(app).post('/oauth/token').send({
+        code: invalidCode,
+        client_id: 'clientA',
+        redirect_uri: 'http://localhost/callback',
+      });
 
       const end = performance.now();
       times.push(end - start);
@@ -41,6 +39,6 @@ describe("OAuth – Attack Performance Test", () => {
       errorRate: errors / ITERATIONS,
     };
 
-    writePerformanceResult("attacks", "oauth", attackStats);
+    writePerformanceResult('attacks', 'oauth', attackStats);
   });
 });

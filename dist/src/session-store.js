@@ -21,20 +21,20 @@ function ensureRedisClient() {
                 },
             },
         });
-        redisClient.on("error", (error) => {
-            (0, logger_1.log)("error", "Redis client error", {
+        redisClient.on('error', (error) => {
+            (0, logger_1.log)('error', 'Redis client error', {
                 error: error instanceof Error ? error.message : String(error),
             });
         });
-        redisClient.on("ready", () => {
-            (0, logger_1.log)("info", "Redis session store ready");
+        redisClient.on('ready', () => {
+            (0, logger_1.log)('info', 'Redis session store ready');
         });
     }
     if (!redisConnectStarted) {
         redisConnectStarted = true;
         void redisClient.connect().catch((error) => {
             redisConnectStarted = false;
-            (0, logger_1.log)("error", "Failed to connect Redis session store", {
+            (0, logger_1.log)('error', 'Failed to connect Redis session store', {
                 error: error instanceof Error ? error.message : String(error),
             });
         });
@@ -48,12 +48,12 @@ function buildSessionStore() {
     }
     return new connect_redis_1.RedisStore({
         client,
-        prefix: "api-auth:sess:",
+        prefix: 'api-auth:sess:',
         ttl: config_1.APP_CONFIG.session.ttlSeconds,
     });
 }
 function getRedisStatus() {
     if (!redisClient)
-        return config_1.APP_CONFIG.session.redisUrl ? "configured" : "disabled";
-    return redisClient.isReady ? "ready" : "connecting";
+        return config_1.APP_CONFIG.session.redisUrl ? 'configured' : 'disabled';
+    return redisClient.isReady ? 'ready' : 'connecting';
 }

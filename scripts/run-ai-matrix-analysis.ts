@@ -1,12 +1,12 @@
-import dotenv from "dotenv";
-import fs from "fs";
-import path from "path";
-import { spawnSync } from "node:child_process";
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { spawnSync } from 'node:child_process';
 
 dotenv.config({ override: true });
 
-type Provider = "openai" | "claude";
-type PromptMode = "neutral" | "security-guided";
+type Provider = 'openai' | 'claude';
+type PromptMode = 'neutral' | 'security-guided';
 
 type Arm = {
   key: string;
@@ -28,7 +28,10 @@ type ArmSnapshotMetadata = {
   promptFingerprints?: {
     promptMode?: string;
     systemPromptSha256?: string;
-    modelPromptFingerprints?: Record<string, { promptSha256: string; systemPromptSha256: string; combinedPromptSha256: string }>;
+    modelPromptFingerprints?: Record<
+      string,
+      { promptSha256: string; systemPromptSha256: string; combinedPromptSha256: string }
+    >;
   };
   retryPolicy?: {
     maxProviderAttempts?: number;
@@ -57,32 +60,32 @@ function getArgValue(name: string): string | null {
 }
 
 const ARMS: Arm[] = [
-  { key: "openai-neutral", provider: "openai", promptMode: "neutral" },
-  { key: "openai-security-guided", provider: "openai", promptMode: "security-guided" },
-  { key: "claude-neutral", provider: "claude", promptMode: "neutral" },
-  { key: "claude-security-guided", provider: "claude", promptMode: "security-guided" },
+  { key: 'openai-neutral', provider: 'openai', promptMode: 'neutral' },
+  { key: 'openai-security-guided', provider: 'openai', promptMode: 'security-guided' },
+  { key: 'claude-neutral', provider: 'claude', promptMode: 'neutral' },
+  { key: 'claude-security-guided', provider: 'claude', promptMode: 'security-guided' },
 ];
 
 function parseTargetArmKey(): string | null {
-  const fromFlag = getArgValue("--arm");
-  const fromEnv = process.env.AI_ARM?.trim() ?? "";
+  const fromFlag = getArgValue('--arm');
+  const fromEnv = process.env.AI_ARM?.trim() ?? '';
   const value = (fromFlag ?? fromEnv).trim();
   return value.length > 0 ? value : null;
 }
 
 function parseAllowPartial(): boolean {
-  const fromFlag = getArgValue("--allow-partial");
+  const fromFlag = getArgValue('--allow-partial');
   if (fromFlag) {
-    return ["1", "true", "yes"].includes(fromFlag.toLowerCase());
+    return ['1', 'true', 'yes'].includes(fromFlag.toLowerCase());
   }
 
-  const fromEnv = (process.env.AI_ALLOW_PARTIAL_MATRIX ?? "").trim().toLowerCase();
-  return ["1", "true", "yes"].includes(fromEnv);
+  const fromEnv = (process.env.AI_ALLOW_PARTIAL_MATRIX ?? '').trim().toLowerCase();
+  return ['1', 'true', 'yes'].includes(fromEnv);
 }
 
 function run(command: string, envOverrides: Record<string, string> = {}): boolean {
   const result = spawnSync(command, {
-    stdio: "inherit",
+    stdio: 'inherit',
     shell: true,
     env: {
       ...process.env,
@@ -95,7 +98,7 @@ function run(command: string, envOverrides: Record<string, string> = {}): boolea
 
 function parseCsvLine(line: string): string[] {
   const values: string[] = [];
-  let current = "";
+  let current = '';
   let inQuotes = false;
 
   for (let i = 0; i < line.length; i += 1) {
@@ -110,9 +113,9 @@ function parseCsvLine(line: string): string[] {
       continue;
     }
 
-    if (char === "," && !inQuotes) {
+    if (char === ',' && !inQuotes) {
       values.push(current);
-      current = "";
+      current = '';
       continue;
     }
 
@@ -123,18 +126,14 @@ function parseCsvLine(line: string): string[] {
   return values;
 }
 
-function loadOverallFailure(root: string): ArmSnapshotMetadata["overallFailure"] | null {
-  const csvPath = path.join(root, "ai-generated", "results", "ai-samples-failure-rates.csv");
+function loadOverallFailure(root: string): ArmSnapshotMetadata['overallFailure'] | null {
+  const csvPath = path.join(root, 'ai-generated', 'results', 'ai-samples-failure-rates.csv');
   if (!fs.existsSync(csvPath)) return null;
 
-  const lines = fs
-    .readFileSync(csvPath, "utf8")
-    .trim()
-    .split(/\r?\n/)
-    .map(parseCsvLine);
+  const lines = fs.readFileSync(csvPath, 'utf8').trim().split(/\r?\n/).map(parseCsvLine);
 
   if (lines.length <= 1) return null;
-  const overall = lines.slice(1).find((row) => row[0]?.toUpperCase() === "OVERALL");
+  const overall = lines.slice(1).find((row) => row[0]?.toUpperCase() === 'OVERALL');
   if (!overall) return null;
 
   return {
@@ -182,22 +181,22 @@ function clearDirectory(dirPath: string): void {
 }
 
 function providerReady(provider: Provider): { ready: boolean; reason?: string } {
-  if (provider === "openai") {
+  if (provider === 'openai') {
     if (!process.env.OPENAI_API_KEY) {
-      return { ready: false, reason: "Missing OPENAI_API_KEY." };
+      return { ready: false, reason: 'Missing OPENAI_API_KEY.' };
     }
     return { ready: true };
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {
-    return { ready: false, reason: "Missing ANTHROPIC_API_KEY." };
+    return { ready: false, reason: 'Missing ANTHROPIC_API_KEY.' };
   }
 
   return { ready: true };
 }
 
 function getGenerationCommand(arm: Arm): string {
-  if (arm.provider === "openai") {
+  if (arm.provider === 'openai') {
     return `npm run ai:generate:openai -- --prompt-mode ${arm.promptMode}`;
   }
 
@@ -209,11 +208,11 @@ function runArm(arm: Arm): boolean {
 
   const steps = [
     getGenerationCommand(arm),
-    "npm run ai:test:oauth",
-    "npm run ai:test:jwt",
-    "npm run ai:test:sessions",
-    "npm run ai:analyse",
-    "npm run ai:report",
+    'npm run ai:test:oauth',
+    'npm run ai:test:jwt',
+    'npm run ai:test:sessions',
+    'npm run ai:analyse',
+    'npm run ai:report',
   ];
 
   for (const step of steps) {
@@ -229,9 +228,9 @@ function runArm(arm: Arm): boolean {
 
 function snapshotArm(arm: Arm): ArmSnapshotMetadata {
   const root = process.cwd();
-  const armDir = path.join(root, "ai-generated", "arms", arm.key);
-  const sampleTarget = path.join(armDir, "samples");
-  const resultsTarget = path.join(armDir, "results");
+  const armDir = path.join(root, 'ai-generated', 'arms', arm.key);
+  const sampleTarget = path.join(armDir, 'samples');
+  const resultsTarget = path.join(armDir, 'results');
 
   ensureDir(armDir);
   clearDirectory(sampleTarget);
@@ -240,15 +239,20 @@ function snapshotArm(arm: Arm): ArmSnapshotMetadata {
   ensureDir(sampleTarget);
   ensureDir(resultsTarget);
 
-  for (const model of ["oauth", "jwt", "sessions"]) {
-    copyDirectory(path.join(root, "ai-generated", model), path.join(sampleTarget, model));
+  for (const model of ['oauth', 'jwt', 'sessions']) {
+    copyDirectory(path.join(root, 'ai-generated', model), path.join(sampleTarget, model));
   }
 
-  copyDirectory(path.join(root, "ai-generated", "results"), resultsTarget);
+  copyDirectory(path.join(root, 'ai-generated', 'results'), resultsTarget);
 
-  const generationMetadataPath = path.join(root, "ai-generated", "results", "generation-metadata.json");
+  const generationMetadataPath = path.join(
+    root,
+    'ai-generated',
+    'results',
+    'generation-metadata.json'
+  );
   const generationMetadata = fs.existsSync(generationMetadataPath)
-    ? (JSON.parse(fs.readFileSync(generationMetadataPath, "utf8")) as ArmSnapshotMetadata)
+    ? (JSON.parse(fs.readFileSync(generationMetadataPath, 'utf8')) as ArmSnapshotMetadata)
     : null;
 
   const overallFailure = loadOverallFailure(root);
@@ -267,10 +271,7 @@ function snapshotArm(arm: Arm): ArmSnapshotMetadata {
     overallFailure: overallFailure ?? undefined,
   };
 
-  fs.writeFileSync(
-    path.join(armDir, "metadata.json"),
-    JSON.stringify(metadata, null, 2)
-  );
+  fs.writeFileSync(path.join(armDir, 'metadata.json'), JSON.stringify(metadata, null, 2));
 
   return metadata;
 }
@@ -278,7 +279,7 @@ function snapshotArm(arm: Arm): ArmSnapshotMetadata {
 function main(): void {
   const runSummary: Array<
     Arm & {
-      status: "completed" | "skipped" | "failed";
+      status: 'completed' | 'skipped' | 'failed';
       reason?: string;
       providerModelIdentifier?: string;
       promptFingerprint?: string;
@@ -292,34 +293,38 @@ function main(): void {
   const armsToRun = targetArmKey ? ARMS.filter((arm) => arm.key === targetArmKey) : ARMS;
 
   if (targetArmKey && armsToRun.length === 0) {
-    console.error(`[ai-matrix] Unknown arm: ${targetArmKey}. Use one of: ${ARMS.map((arm) => arm.key).join(", ")}`);
+    console.error(
+      `[ai-matrix] Unknown arm: ${targetArmKey}. Use one of: ${ARMS.map((arm) => arm.key).join(', ')}`
+    );
     process.exit(1);
   }
 
   for (const arm of armsToRun) {
     const readiness = providerReady(arm.provider);
     if (!readiness.ready) {
-      const reason = readiness.reason ?? "Provider credentials unavailable.";
+      const reason = readiness.reason ?? 'Provider credentials unavailable.';
       if (allowPartial) {
         console.warn(`[ai-matrix] Skipping ${arm.key.toUpperCase()}: ${reason}`);
-        runSummary.push({ ...arm, status: "skipped", reason });
+        runSummary.push({ ...arm, status: 'skipped', reason });
       } else {
-        console.error(`[ai-matrix] ${arm.key.toUpperCase()} is required but unavailable: ${reason}`);
-        runSummary.push({ ...arm, status: "failed", reason });
+        console.error(
+          `[ai-matrix] ${arm.key.toUpperCase()} is required but unavailable: ${reason}`
+        );
+        runSummary.push({ ...arm, status: 'failed', reason });
       }
       continue;
     }
 
     const ok = runArm(arm);
     if (!ok) {
-      runSummary.push({ ...arm, status: "failed", reason: "One or more pipeline steps failed." });
+      runSummary.push({ ...arm, status: 'failed', reason: 'One or more pipeline steps failed.' });
       continue;
     }
 
     const snapshotMetadata = snapshotArm(arm);
     runSummary.push({
       ...arm,
-      status: "completed",
+      status: 'completed',
       providerModelIdentifier: snapshotMetadata.providerModelIdentifier,
       promptFingerprint: snapshotMetadata.promptFingerprints?.systemPromptSha256,
       overallFailureRatePct: snapshotMetadata.overallFailure?.failureRatePct,
@@ -330,32 +335,34 @@ function main(): void {
 
   const summaryPayload = {
     generatedAt: new Date().toISOString(),
-    sampleCount: Number(process.env.AI_SAMPLE_COUNT ?? "30"),
+    sampleCount: Number(process.env.AI_SAMPLE_COUNT ?? '30'),
     allowPartial,
     requiredArms: armsToRun.map((arm) => arm.key),
     providers: runSummary,
   };
 
   fs.writeFileSync(
-    path.join(process.cwd(), "ai-generated", "arms", "run-summary.json"),
+    path.join(process.cwd(), 'ai-generated', 'arms', 'run-summary.json'),
     JSON.stringify(summaryPayload, null, 2)
   );
 
-  const historyDir = path.join(process.cwd(), "ai-generated", "arms", "history");
+  const historyDir = path.join(process.cwd(), 'ai-generated', 'arms', 'history');
   ensureDir(historyDir);
-  const historyFileName = `${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+  const historyFileName = `${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
   fs.writeFileSync(path.join(historyDir, historyFileName), JSON.stringify(summaryPayload, null, 2));
 
-  const completedCount = runSummary.filter((entry) => entry.status === "completed").length;
+  const completedCount = runSummary.filter((entry) => entry.status === 'completed').length;
   const requiredCount = armsToRun.length;
 
   if (allowPartial) {
     if (completedCount === 0) {
-      console.error("[ai-matrix] No AI provider arm completed. Configure provider credentials and try again.");
+      console.error(
+        '[ai-matrix] No AI provider arm completed. Configure provider credentials and try again.'
+      );
       process.exit(1);
     }
 
-    console.log("[ai-matrix] Completed available provider-condition arms and archived outputs.");
+    console.log('[ai-matrix] Completed available provider-condition arms and archived outputs.');
     return;
   }
 
@@ -366,7 +373,7 @@ function main(): void {
     process.exit(1);
   }
 
-  console.log("[ai-matrix] Completed full provider-condition matrix and archived outputs.");
+  console.log('[ai-matrix] Completed full provider-condition matrix and archived outputs.');
 }
 
 main();

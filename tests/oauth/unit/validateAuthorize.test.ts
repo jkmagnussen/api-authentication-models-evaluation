@@ -1,9 +1,9 @@
-import { validateAuthorize } from "../../../src/oauth/oauth.middleware";
-import { prisma } from "../../../src/db";
-import { Request, Response } from "express";
+import { validateAuthorize } from '../../../src/oauth/oauth.middleware';
+import { prisma } from '../../../src/db';
+import { Request, Response } from 'express';
 
 // Mock ONLY the Prisma calls used by the middleware
-jest.mock("../../../src/db", () => ({
+jest.mock('../../../src/db', () => ({
   prisma: {
     user: {
       findUnique: jest.fn(),
@@ -18,8 +18,8 @@ function mockResponse(): Response {
   return res as Response;
 }
 
-describe("validateAuthorize", () => {
-  it("rejects missing userId", async () => {
+describe('validateAuthorize', () => {
+  it('rejects missing userId', async () => {
     const req = { body: {} } as Request;
     const res = mockResponse();
     const next = jest.fn();
@@ -30,8 +30,8 @@ describe("validateAuthorize", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("rejects numeric userId", async () => {
-    const req = { body: { userId: "123" } } as Request;
+  it('rejects numeric userId', async () => {
+    const req = { body: { userId: '123' } } as Request;
     const res = mockResponse();
     const next = jest.fn();
 
@@ -41,8 +41,8 @@ describe("validateAuthorize", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("rejects invalid UUID format", async () => {
-    const req = { body: { userId: "abc" } } as Request;
+  it('rejects invalid UUID format', async () => {
+    const req = { body: { userId: 'abc' } } as Request;
     const res = mockResponse();
     const next = jest.fn();
 
@@ -52,10 +52,10 @@ describe("validateAuthorize", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("rejects non-existent user", async () => {
+  it('rejects non-existent user', async () => {
     (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
 
-    const req = { body: { userId: "b255a7cd-37a8-4784-98e1-dae9ffdc15ec" } } as Request;
+    const req = { body: { userId: 'b255a7cd-37a8-4784-98e1-dae9ffdc15ec' } } as Request;
     const res = mockResponse();
     const next = jest.fn();
 
@@ -65,12 +65,12 @@ describe("validateAuthorize", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("accepts valid user", async () => {
+  it('accepts valid user', async () => {
     (prisma.user.findUnique as jest.Mock).mockResolvedValue({
-      id: "b255a7cd-37a8-4784-98e1-dae9ffdc15ec",
+      id: 'b255a7cd-37a8-4784-98e1-dae9ffdc15ec',
     });
 
-    const req = { body: { userId: "b255a7cd-37a8-4784-98e1-dae9ffdc15ec" } } as Request;
+    const req = { body: { userId: 'b255a7cd-37a8-4784-98e1-dae9ffdc15ec' } } as Request;
     const res = mockResponse();
     const next = jest.fn();
 

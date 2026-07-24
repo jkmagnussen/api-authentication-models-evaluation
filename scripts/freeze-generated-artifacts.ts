@@ -1,6 +1,6 @@
-import fs from "fs";
-import path from "path";
-import { createHash } from "crypto";
+import fs from 'fs';
+import path from 'path';
+import { createHash } from 'crypto';
 
 type FrozenFileRecord = {
   path: string;
@@ -10,11 +10,11 @@ type FrozenFileRecord = {
 
 type OfflineFreezeLock = {
   generatedAt: string;
-  mode: "offline-freeze";
+  mode: 'offline-freeze';
   notes: string;
   lockVersion: 1;
   blockLiveProviderGeneration: true;
-  allowOverrideEnvVar: "ALLOW_LIVE_AI_GENERATION";
+  allowOverrideEnvVar: 'ALLOW_LIVE_AI_GENERATION';
   protectedRoots: string[];
   fileCount: number;
   totalBytes: number;
@@ -22,17 +22,17 @@ type OfflineFreezeLock = {
 };
 
 const ROOT = process.cwd();
-const LOCK_PATH = path.join(ROOT, "docs", "generated", "OFFLINE_FREEZE_LOCK.json");
+const LOCK_PATH = path.join(ROOT, 'docs', 'generated', 'OFFLINE_FREEZE_LOCK.json');
 const PROTECTED_ROOTS = [
-  "docs/generated",
-  "docs/charts",
-  "docs/performance-results",
-  "ai-generated/results",
-  "ai-generated/arms",
+  'docs/generated',
+  'docs/charts',
+  'docs/performance-results',
+  'ai-generated/results',
+  'ai-generated/arms',
 ];
 
 function normalizePath(filePath: string): string {
-  return filePath.split(path.sep).join("/");
+  return filePath.split(path.sep).join('/');
 }
 
 function listFilesRecursively(baseDir: string): string[] {
@@ -59,9 +59,9 @@ function listFilesRecursively(baseDir: string): string[] {
 }
 
 function hashFile(filePath: string): string {
-  const hash = createHash("sha256");
+  const hash = createHash('sha256');
   hash.update(fs.readFileSync(filePath));
-  return hash.digest("hex");
+  return hash.digest('hex');
 }
 
 function ensureParentDirectory(filePath: string): void {
@@ -72,14 +72,16 @@ function ensureParentDirectory(filePath: string): void {
 }
 
 function main(): void {
-  const allFiles = PROTECTED_ROOTS.flatMap((relativeRoot) => listFilesRecursively(path.join(ROOT, relativeRoot)));
+  const allFiles = PROTECTED_ROOTS.flatMap((relativeRoot) =>
+    listFilesRecursively(path.join(ROOT, relativeRoot))
+  );
   const filtered = allFiles
     .map((absolutePath) => ({
       absolutePath,
       relativePath: normalizePath(path.relative(ROOT, absolutePath)),
       bytes: fs.statSync(absolutePath).size,
     }))
-    .filter((item) => item.relativePath !== "docs/generated/OFFLINE_FREEZE_LOCK.json")
+    .filter((item) => item.relativePath !== 'docs/generated/OFFLINE_FREEZE_LOCK.json')
     .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
 
   const files: FrozenFileRecord[] = filtered.map((item) => ({
@@ -90,12 +92,12 @@ function main(): void {
 
   const lock: OfflineFreezeLock = {
     generatedAt: new Date().toISOString(),
-    mode: "offline-freeze",
+    mode: 'offline-freeze',
     notes:
-      "Live provider generation is blocked while this lock file exists. Remove it intentionally or set ALLOW_LIVE_AI_GENERATION=true to override.",
+      'Live provider generation is blocked while this lock file exists. Remove it intentionally or set ALLOW_LIVE_AI_GENERATION=true to override.',
     lockVersion: 1,
     blockLiveProviderGeneration: true,
-    allowOverrideEnvVar: "ALLOW_LIVE_AI_GENERATION",
+    allowOverrideEnvVar: 'ALLOW_LIVE_AI_GENERATION',
     protectedRoots: PROTECTED_ROOTS,
     fileCount: files.length,
     totalBytes: files.reduce((sum, entry) => sum + entry.bytes, 0),
@@ -103,7 +105,7 @@ function main(): void {
   };
 
   ensureParentDirectory(LOCK_PATH);
-  fs.writeFileSync(LOCK_PATH, `${JSON.stringify(lock, null, 2)}\n`, "utf8");
+  fs.writeFileSync(LOCK_PATH, `${JSON.stringify(lock, null, 2)}\n`, 'utf8');
 
   console.log(`Offline freeze lock written: ${normalizePath(path.relative(ROOT, LOCK_PATH))}`);
   console.log(`Protected files: ${lock.fileCount}`);

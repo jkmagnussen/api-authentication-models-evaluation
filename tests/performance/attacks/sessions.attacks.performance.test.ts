@@ -1,13 +1,13 @@
-import request from "supertest";
-import app from "../../../src/app";
-import { resetDatabase } from "../../setup";
-import { calculateStats, writePerformanceResult } from "../utils";
+import request from 'supertest';
+import app from '../../../src/app';
+import { resetDatabase } from '../../setup';
+import { calculateStats, writePerformanceResult } from '../utils';
 
-describe("Sessions – Attack Performance Test", () => {
+describe('Sessions – Attack Performance Test', () => {
   const ITERATIONS = 1000;
 
   // Intentionally invalid / expired / forged session cookie
-  const invalidSessionCookie = "session=INVALID_ATTACK_COOKIE";
+  const invalidSessionCookie = 'session=INVALID_ATTACK_COOKIE';
 
   beforeAll(async () => {
     await resetDatabase();
@@ -20,9 +20,7 @@ describe("Sessions – Attack Performance Test", () => {
     for (let i = 0; i < ITERATIONS; i++) {
       const start = performance.now();
 
-      const res = await request(app)
-        .get("/sessions/protected")
-        .set("Cookie", invalidSessionCookie);
+      const res = await request(app).get('/sessions/protected').set('Cookie', invalidSessionCookie);
 
       const end = performance.now();
       times.push(end - start);
@@ -37,6 +35,6 @@ describe("Sessions – Attack Performance Test", () => {
       errorRate: errors / ITERATIONS,
     };
 
-    writePerformanceResult("attacks", "sessions", attackStats);
+    writePerformanceResult('attacks', 'sessions', attackStats);
   });
 });

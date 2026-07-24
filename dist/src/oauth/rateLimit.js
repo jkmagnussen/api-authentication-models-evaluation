@@ -11,7 +11,7 @@ exports.oauthLimiter = (0, express_rate_limit_1.default)({
     standardHeaders: true,
     legacyHeaders: false,
     message: {
-        error: "rate_limited",
-        error_description: "Too many OAuth requests, slow down."
-    }
+        error: 'rate_limited',
+        error_description: 'Too many OAuth requests, slow down.',
+    },
 });

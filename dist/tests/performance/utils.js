@@ -38,9 +38,9 @@ function writePerformanceResult(kind, model, stats) {
             nodeVersion: process.version,
             platform: process.platform,
             arch: process.arch,
-            hostname: process.env.COMPUTERNAME || "unknown",
-            warmup: "none",
-            notes: "Generated from Jest performance tests"
+            hostname: process.env.COMPUTERNAME || 'unknown',
+            warmup: 'none',
+            notes: 'Generated from Jest performance tests',
         };
         fs_1.default.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
     }

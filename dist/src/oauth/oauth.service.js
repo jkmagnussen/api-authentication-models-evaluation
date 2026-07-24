@@ -13,10 +13,10 @@ const config_1 = __importDefault(require("../config"));
  * Generate a secure random token
  */
 function generateToken() {
-    return crypto_1.default.randomBytes(48).toString("base64url");
+    return crypto_1.default.randomBytes(48).toString('base64url');
 }
 function hashToken(token) {
-    return crypto_1.default.createHash("sha256").update(token).digest("hex");
+    return crypto_1.default.createHash('sha256').update(token).digest('hex');
 }
 /**
  * Exchange an authorization code for an access token.

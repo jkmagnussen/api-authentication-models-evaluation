@@ -1,12 +1,11 @@
-import request from "supertest";
-import app from "../../../src/app";
-import { prisma } from "../../../src/db";
-import { resetDatabase } from "../../setup";   // ⭐ Use global reset
+import request from 'supertest';
+import app from '../../../src/app';
+import { prisma } from '../../../src/db';
+import { resetDatabase } from '../../setup'; // ⭐ Use global reset
 
-const validUUID = "123e4567-e89b-12d3-a456-426614174000";
+const validUUID = '123e4567-e89b-12d3-a456-426614174000';
 
-describe("OAuth Integration Flow", () => {
-
+describe('OAuth Integration Flow', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -17,8 +16,8 @@ describe("OAuth Integration Flow", () => {
     await prisma.user.create({
       data: {
         id: validUUID,
-        email: "test@example.com",
-        password: "hashed-password",
+        email: 'test@example.com',
+        password: 'hashed-password',
       },
     });
   });
@@ -26,14 +25,12 @@ describe("OAuth Integration Flow", () => {
   // -----------------------------------------------------
   // AUTHORIZE → RETURNS CODE
   // -----------------------------------------------------
-  it("POST /oauth/authorize → returns authorization code for valid user", async () => {
-    const res = await request(app)
-      .post("/oauth/authorize")
-      .send({
-        userId: validUUID,
-        clientId: "client-basic",
-        scope: "read"
-      });
+  it('POST /oauth/authorize → returns authorization code for valid user', async () => {
+    const res = await request(app).post('/oauth/authorize').send({
+      userId: validUUID,
+      clientId: 'client-basic',
+      scope: 'read',
+    });
 
     expect(res.status).toBe(200);
 
@@ -48,69 +45,64 @@ describe("OAuth Integration Flow", () => {
   // -----------------------------------------------------
   // TOKEN → RETURNS JWT
   // -----------------------------------------------------
-  it("POST /oauth/token → returns JWT for valid authorization code", async () => {
+  it('POST /oauth/token → returns JWT for valid authorization code', async () => {
     // Step 1: generate code
-    await request(app)
-      .post("/oauth/authorize")
-      .send({
-        userId: validUUID,
-        clientId: "client-basic",
-        scope: "read"  
-      });
+    await request(app).post('/oauth/authorize').send({
+      userId: validUUID,
+      clientId: 'client-basic',
+      scope: 'read',
+    });
 
     const stored = await prisma.oAuthAuthorizationCode.findFirst();
 
     // Step 2: exchange code
-    const res = await request(app)
-      .post("/oauth/token")
-      .send({ code: stored?.code });
+    const res = await request(app).post('/oauth/token').send({ code: stored?.code });
 
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty("access_token");
-    expect(res.body).toHaveProperty("refresh_token");
-    expect(res.body).toHaveProperty("token_type", "Bearer");
-    expect(res.body).toHaveProperty("expires_in");
+    expect(res.body).toHaveProperty('access_token');
+    expect(res.body).toHaveProperty('refresh_token');
+    expect(res.body).toHaveProperty('token_type', 'Bearer');
+    expect(res.body).toHaveProperty('expires_in');
   });
 
   // -----------------------------------------------------
   // PROTECTED ROUTE → MISSING HEADER
   // -----------------------------------------------------
-  it("GET /oauth/protected → rejects missing Authorization header", async () => {
-    const res = await request(app).get("/oauth/protected");
+  it('GET /oauth/protected → rejects missing Authorization header', async () => {
+    const res = await request(app).get('/oauth/protected');
 
     expect(res.status).toBe(401);
-    expect(res.body).toEqual({ error: "Missing Authorization header" });
+    expect(res.body).toEqual({ error: 'Missing Authorization header' });
   });
 
   // -----------------------------------------------------
   // PROTECTED ROUTE → INVALID JWT
   // -----------------------------------------------------
-  it("GET /oauth/protected → rejects invalid JWT", async () => {
+  it('GET /oauth/protected → rejects invalid JWT', async () => {
     const res = await request(app)
-      .get("/oauth/protected")
-      .set("Authorization", "Bearer invalid.jwt.token");
+      .get('/oauth/protected')
+      .set('Authorization', 'Bearer invalid.jwt.token');
 
     expect(res.status).toBe(401);
-    expect(res.body).toEqual({ error: "Invalid or expired token" });
+    expect(res.body).toEqual({ error: 'Invalid or expired token' });
   });
 
   // -----------------------------------------------------
   // PROTECTED ROUTE → VALID JWT
   // -----------------------------------------------------
-  it("GET /oauth/protected → accepts valid JWT", async () => {
+  it('GET /oauth/protected → accepts valid JWT', async () => {
     jest
-      .spyOn(require("../../../src/oauth/oauth.service"), "validateAccessToken")
+      .spyOn(require('../../../src/oauth/oauth.service'), 'validateAccessToken')
       .mockResolvedValue({ userId: validUUID });
 
     const res = await request(app)
-      .get("/oauth/protected")
-      .set("Authorization", "Bearer valid.jwt.token");
+      .get('/oauth/protected')
+      .set('Authorization', 'Bearer valid.jwt.token');
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
-      message: "Protected resource accessed",
+      message: 'Protected resource accessed',
       user_id: validUUID,
     });
   });
-
 });

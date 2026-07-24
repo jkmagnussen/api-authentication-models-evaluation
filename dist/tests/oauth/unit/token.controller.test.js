@@ -37,7 +37,7 @@ const oauth_controller_1 = require("../../../src/oauth/oauth.controller");
 const db_1 = require("../../../src/db");
 const oauthService = __importStar(require("../../../src/oauth/oauth.service"));
 // Mock ONLY the Prisma + service calls used by the controller
-jest.mock("../../../src/db", () => ({
+jest.mock('../../../src/db', () => ({
     prisma: {
         oAuthAuthorizationCode: {
             findUnique: jest.fn(),
@@ -48,40 +48,40 @@ jest.mock("../../../src/db", () => ({
         },
     },
 }));
-jest.mock("../../../src/oauth/oauth.service", () => ({
+jest.mock('../../../src/oauth/oauth.service', () => ({
     __esModule: true,
     exchangeCodeForToken: jest.fn(),
 }));
-describe("token controller", () => {
-    it("returns access token for valid code", async () => {
+describe('token controller', () => {
+    it('returns access token for valid code', async () => {
         // Mock lookup of authorization code
         db_1.prisma.oAuthAuthorizationCode.findUnique.mockResolvedValue({
-            code: "auth-code",
-            userId: "user-123",
-            clientId: "client-basic",
+            code: 'auth-code',
+            userId: 'user-123',
+            clientId: 'client-basic',
             expiresAt: new Date(Date.now() + 60000),
             used: false,
         });
         // Mock marking the code as used
         db_1.prisma.oAuthAuthorizationCode.update.mockResolvedValue({
-            code: "auth-code",
+            code: 'auth-code',
             used: true,
         });
         // Mock OAuth client lookup
         db_1.prisma.oAuthClient.findUnique.mockResolvedValue({
-            id: "client-basic",
-            name: "Test Client",
-            secret: "test-secret",
+            id: 'client-basic',
+            name: 'Test Client',
+            secret: 'test-secret',
         });
         // Mock token generation
         oauthService.exchangeCodeForToken.mockResolvedValue({
-            accessToken: "jwt-token",
-            refreshToken: "refresh-token",
-            scope: "read",
+            accessToken: 'jwt-token',
+            refreshToken: 'refresh-token',
+            scope: 'read',
         });
-        const basicAuth = Buffer.from("client-basic:test-secret").toString("base64");
+        const basicAuth = Buffer.from('client-basic:test-secret').toString('base64');
         const req = {
-            body: { code: "auth-code" },
+            body: { code: 'auth-code' },
             headers: { authorization: `Basic ${basicAuth}` }, // ⭐ FIXED
         };
         const res = {
@@ -91,9 +91,9 @@ describe("token controller", () => {
         await (0, oauth_controller_1.token)(req, res);
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith({
-            access_token: "jwt-token",
-            refresh_token: "refresh-token",
-            token_type: "Bearer",
+            access_token: 'jwt-token',
+            refresh_token: 'refresh-token',
+            token_type: 'Bearer',
             expires_in: 3600,
         });
     });

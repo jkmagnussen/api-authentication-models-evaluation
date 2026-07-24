@@ -6,16 +6,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.hashPassword = hashPassword;
 exports.matchesStoredHashOrValue = matchesStoredHashOrValue;
 exports.isValidPassword = isValidPassword;
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const config_1 = require("../config");
 async function hashPassword(value) {
-    return bcryptjs_1.default.hash(value, config_1.BCRYPT_SALT_ROUNDS);
+    return bcrypt_1.default.hash(value, config_1.BCRYPT_SALT_ROUNDS);
 }
 async function matchesStoredHashOrValue(candidate, stored) {
     if (candidate === stored)
         return true;
     try {
-        return await bcryptjs_1.default.compare(candidate, stored);
+        return await bcrypt_1.default.compare(candidate, stored);
     }
     catch {
         return false;

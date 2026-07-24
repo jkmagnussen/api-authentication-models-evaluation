@@ -1,17 +1,17 @@
-import crypto from "crypto";
-import { prisma } from "../db";
-import { APP_CONFIG } from "../config";
-import { findUserByEmail } from "./user";
-import { hashPassword, isValidPassword } from "./password";
-import { writeAuditEvent } from "../security/audit.service";
-import { buildOtpAuthUrl, generateTotpSecret, verifyTotp } from "./totp";
+import crypto from 'crypto';
+import { prisma } from '../db';
+import { APP_CONFIG } from '../config';
+import { findUserByEmail } from './user';
+import { hashPassword, isValidPassword } from './password';
+import { writeAuditEvent } from '../security/audit.service';
+import { buildOtpAuthUrl, generateTotpSecret, verifyTotp } from './totp';
 type RequestContext = {
   ipAddress?: string | null;
   userAgent?: string | null;
 };
 
 function hashResetToken(token: string) {
-  return crypto.createHash("sha256").update(token).digest("hex");
+  return crypto.createHash('sha256').update(token).digest('hex');
 }
 
 export async function requestPasswordReset(email: string, context: RequestContext) {
@@ -19,8 +19,8 @@ export async function requestPasswordReset(email: string, context: RequestContex
 
   if (!user) {
     await writeAuditEvent({
-      eventType: "password_reset.request",
-      outcome: "failure",
+      eventType: 'password_reset.request',
+      outcome: 'failure',
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
       metadata: { email },
@@ -28,7 +28,7 @@ export async function requestPasswordReset(email: string, context: RequestContex
     return null;
   }
 
-  const token = crypto.randomBytes(32).toString("base64url");
+  const token = crypto.randomBytes(32).toString('base64url');
   const tokenHash = hashResetToken(token);
 
   await prisma.passwordResetToken.create({
@@ -41,8 +41,8 @@ export async function requestPasswordReset(email: string, context: RequestContex
 
   await writeAuditEvent({
     userId: user.id,
-    eventType: "password_reset.request",
-    outcome: "success",
+    eventType: 'password_reset.request',
+    outcome: 'success',
     ipAddress: context.ipAddress,
     userAgent: context.userAgent,
   });
@@ -50,7 +50,11 @@ export async function requestPasswordReset(email: string, context: RequestContex
   return APP_CONFIG.isProduction ? null : token;
 }
 
-export async function confirmPasswordReset(token: string, newPassword: string, context: RequestContext) {
+export async function confirmPasswordReset(
+  token: string,
+  newPassword: string,
+  context: RequestContext
+) {
   const tokenHash = hashResetToken(token);
   const record = await prisma.passwordResetToken.findUnique({
     where: { tokenHash },
@@ -59,8 +63,8 @@ export async function confirmPasswordReset(token: string, newPassword: string, c
 
   if (!record || record.usedAt || record.expiresAt < new Date()) {
     await writeAuditEvent({
-      eventType: "password_reset.confirm",
-      outcome: "failure",
+      eventType: 'password_reset.confirm',
+      outcome: 'failure',
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
     });
@@ -82,8 +86,8 @@ export async function confirmPasswordReset(token: string, newPassword: string, c
 
   await writeAuditEvent({
     userId: record.userId,
-    eventType: "password_reset.confirm",
-    outcome: "success",
+    eventType: 'password_reset.confirm',
+    outcome: 'success',
     ipAddress: context.ipAddress,
     userAgent: context.userAgent,
   });
@@ -96,8 +100,8 @@ export async function startMfaEnrollment(email: string, password: string, contex
 
   if (!user || !(await isValidPassword(password, user.password))) {
     await writeAuditEvent({
-      eventType: "mfa.enroll",
-      outcome: "failure",
+      eventType: 'mfa.enroll',
+      outcome: 'failure',
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
       metadata: { email },
@@ -106,7 +110,7 @@ export async function startMfaEnrollment(email: string, password: string, contex
   }
 
   const secret = generateTotpSecret();
-  const issuer = process.env.MFA_ISSUER ?? "API Auth Evaluation";
+  const issuer = process.env.MFA_ISSUER ?? 'API Auth Evaluation';
   const otpauthUrl = buildOtpAuthUrl(user.email, issuer, secret);
 
   await prisma.user.update({
@@ -119,8 +123,8 @@ export async function startMfaEnrollment(email: string, password: string, contex
 
   await writeAuditEvent({
     userId: user.id,
-    eventType: "mfa.enroll",
-    outcome: "success",
+    eventType: 'mfa.enroll',
+    outcome: 'success',
     ipAddress: context.ipAddress,
     userAgent: context.userAgent,
   });
@@ -136,8 +140,8 @@ export async function verifyMfaEnrollment(email: string, code: string, context: 
 
   if (!user?.mfaSecret) {
     await writeAuditEvent({
-      eventType: "mfa.verify",
-      outcome: "failure",
+      eventType: 'mfa.verify',
+      outcome: 'failure',
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
       metadata: { email },
@@ -150,8 +154,8 @@ export async function verifyMfaEnrollment(email: string, code: string, context: 
   if (!valid) {
     await writeAuditEvent({
       userId: user.id,
-      eventType: "mfa.verify",
-      outcome: "failure",
+      eventType: 'mfa.verify',
+      outcome: 'failure',
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
     });
@@ -165,8 +169,8 @@ export async function verifyMfaEnrollment(email: string, code: string, context: 
 
   await writeAuditEvent({
     userId: user.id,
-    eventType: "mfa.verify",
-    outcome: "success",
+    eventType: 'mfa.verify',
+    outcome: 'success',
     ipAddress: context.ipAddress,
     userAgent: context.userAgent,
   });

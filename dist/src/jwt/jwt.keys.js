@@ -12,10 +12,10 @@ const config_1 = __importDefault(require("../config"));
 let generatedKeyPair = null;
 function getGeneratedKeyPair() {
     if (!generatedKeyPair) {
-        const pair = crypto_1.default.generateKeyPairSync("rsa", {
+        const pair = crypto_1.default.generateKeyPairSync('rsa', {
             modulusLength: 2048,
-            privateKeyEncoding: { type: "pkcs8", format: "pem" },
-            publicKeyEncoding: { type: "spki", format: "pem" },
+            privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+            publicKeyEncoding: { type: 'spki', format: 'pem' },
         });
         generatedKeyPair = {
             privateKey: pair.privateKey,
@@ -31,7 +31,7 @@ function loadPrivateKeyFromConfig() {
         return privateKeyPem;
     }
     if (privateKeyPath) {
-        return fs_1.default.readFileSync(privateKeyPath, "utf8");
+        return fs_1.default.readFileSync(privateKeyPath, 'utf8');
     }
     return getGeneratedKeyPair().privateKey;
 }
@@ -42,7 +42,10 @@ function loadPublicKeysFromConfig() {
         return JSON.parse(publicKeysJson);
     }
     const privateKey = loadPrivateKeyFromConfig();
-    const publicKey = crypto_1.default.createPublicKey(privateKey).export({ type: "spki", format: "pem" }).toString();
+    const publicKey = crypto_1.default
+        .createPublicKey(privateKey)
+        .export({ type: 'spki', format: 'pem' })
+        .toString();
     return {
         [activeKeyId]: publicKey,
     };
@@ -54,24 +57,29 @@ function getJwtAlgorithm(variantAlgorithm) {
     if (process.env.JWT_ALGORITHM) {
         return process.env.JWT_ALGORITHM;
     }
-    if (process.env.JWT_PRIVATE_KEY_PEM || process.env.JWT_PRIVATE_KEY_PATH || process.env.JWT_PUBLIC_KEYS_JSON || config_1.default.jwt.privateKeyPem || config_1.default.jwt.privateKeyPath || config_1.default.jwt.publicKeysJson) {
-        return "RS256";
+    if (process.env.JWT_PRIVATE_KEY_PEM ||
+        process.env.JWT_PRIVATE_KEY_PATH ||
+        process.env.JWT_PUBLIC_KEYS_JSON ||
+        config_1.default.jwt.privateKeyPem ||
+        config_1.default.jwt.privateKeyPath ||
+        config_1.default.jwt.publicKeysJson) {
+        return 'RS256';
     }
     if (process.env.JWT_SECRET || config_1.default.jwt.legacySecret) {
-        return "HS256";
+        return 'HS256';
     }
-    return "RS256";
+    return 'RS256';
 }
 function getJwtSignContext(variantAlgorithm) {
     const algorithm = getJwtAlgorithm(variantAlgorithm);
-    if (algorithm === "none") {
+    if (algorithm === 'none') {
         return {
             algorithm,
             signingKey: null,
             keyId: undefined,
         };
     }
-    if (algorithm.startsWith("HS")) {
+    if (algorithm.startsWith('HS')) {
         return {
             algorithm,
             signingKey: process.env.JWT_SECRET ?? config_1.default.jwt.legacySecret ?? config_1.default.session.secret,
@@ -85,10 +93,10 @@ function getJwtSignContext(variantAlgorithm) {
     };
 }
 function getJwtVerifyKey(algorithm, keyId) {
-    if (algorithm === "none") {
+    if (algorithm === 'none') {
         return null;
     }
-    if (algorithm.startsWith("HS")) {
+    if (algorithm.startsWith('HS')) {
         return process.env.JWT_SECRET ?? config_1.default.jwt.legacySecret ?? config_1.default.session.secret;
     }
     const publicKeys = loadPublicKeysFromConfig();

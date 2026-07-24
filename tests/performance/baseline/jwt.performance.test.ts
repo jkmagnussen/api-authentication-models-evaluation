@@ -1,9 +1,9 @@
-import request from "supertest";
-import app from "../../../src/app";
-import { resetDatabase } from "../../setup";
-import { calculateStats, writePerformanceResult } from "../utils";
+import request from 'supertest';
+import app from '../../../src/app';
+import { resetDatabase } from '../../setup';
+import { calculateStats, writePerformanceResult } from '../utils';
 
-describe("JWT – Performance Test", () => {
+describe('JWT – Performance Test', () => {
   const ITERATIONS = 1000;
   let token: string;
 
@@ -11,8 +11,8 @@ describe("JWT – Performance Test", () => {
     await resetDatabase();
 
     const res = await request(app)
-      .post("/jwt/login")
-      .send({ email: "test@example.com", password: "password" });
+      .post('/jwt/login')
+      .send({ email: 'test@example.com', password: 'password' });
 
     token = res.body.token;
   });
@@ -23,15 +23,13 @@ describe("JWT – Performance Test", () => {
     for (let i = 0; i < ITERATIONS; i++) {
       const start = performance.now();
 
-      await request(app)
-        .get("/jwt/protected")
-        .set("Authorization", `Bearer ${token}`);
+      await request(app).get('/jwt/protected').set('Authorization', `Bearer ${token}`);
 
       const end = performance.now();
       times.push(end - start);
     }
 
     const stats = calculateStats(times);
-    writePerformanceResult("baseline", "jwt", stats);
+    writePerformanceResult('baseline', 'jwt', stats);
   });
 });

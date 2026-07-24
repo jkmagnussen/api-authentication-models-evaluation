@@ -1,20 +1,20 @@
-import fs from "fs";
-import path from "path";
-import ts from "typescript";
-import { GENERATED_FILES } from "./report-paths";
+import fs from 'fs';
+import path from 'path';
+import ts from 'typescript';
+import { GENERATED_FILES } from './report-paths';
 
-const escomplex = require("escomplex");
+const escomplex = require('escomplex');
 
 type SyntaxIssue = {
   filePath: string;
-  stage: "typescript" | "complexity";
+  stage: 'typescript' | 'complexity';
   message: string;
 };
 
-const MODELS = ["oauth", "jwt", "sessions"] as const;
+const MODELS = ['oauth', 'jwt', 'sessions'] as const;
 
 function listSampleFiles(model: (typeof MODELS)[number]): string[] {
-  const dir = path.join(process.cwd(), "ai-generated", model);
+  const dir = path.join(process.cwd(), 'ai-generated', model);
   if (!fs.existsSync(dir)) return [];
 
   return fs
@@ -25,17 +25,27 @@ function listSampleFiles(model: (typeof MODELS)[number]): string[] {
       const bNum = Number(b.match(/\d+/)?.[0] ?? 0);
       return aNum - bNum;
     })
-    .map((name) => path.join("ai-generated", model, name).replace(/\\/g, "/"));
+    .map((name) => path.join('ai-generated', model, name).replace(/\\/g, '/'));
 }
 
 function collectTypescriptDiagnostics(filePath: string, sourceText: string): string[] {
-  const sourceFile = ts.createSourceFile(filePath, sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const sourceFile = ts.createSourceFile(
+    filePath,
+    sourceText,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS
+  );
   const parseDiagnostics: readonly ts.DiagnosticWithLocation[] =
-    ((sourceFile as unknown as { parseDiagnostics?: readonly ts.DiagnosticWithLocation[] }).parseDiagnostics ?? []);
+    (sourceFile as unknown as { parseDiagnostics?: readonly ts.DiagnosticWithLocation[] })
+      .parseDiagnostics ?? [];
 
   return parseDiagnostics.map((diagnostic: ts.DiagnosticWithLocation) => {
-    const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, " ");
-    const position = diagnostic.start !== undefined ? sourceFile.getLineAndCharacterOfPosition(diagnostic.start) : null;
+    const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, ' ');
+    const position =
+      diagnostic.start !== undefined
+        ? sourceFile.getLineAndCharacterOfPosition(diagnostic.start)
+        : null;
     if (!position) return message;
     return `L${position.line + 1}:C${position.character + 1} ${message}`;
   });
@@ -63,39 +73,44 @@ function main(): void {
 
   for (const relativePath of files) {
     const absolutePath = path.join(process.cwd(), relativePath);
-    const sourceText = fs.readFileSync(absolutePath, "utf8");
+    const sourceText = fs.readFileSync(absolutePath, 'utf8');
 
     for (const message of collectTypescriptDiagnostics(relativePath, sourceText)) {
-      issues.push({ filePath: relativePath, stage: "typescript", message });
+      issues.push({ filePath: relativePath, stage: 'typescript', message });
     }
 
     const complexityError = collectComplexityDiagnostic(sourceText);
     if (complexityError) {
-      issues.push({ filePath: relativePath, stage: "complexity", message: complexityError });
+      issues.push({ filePath: relativePath, stage: 'complexity', message: complexityError });
     }
   }
 
   const markdown: string[] = [];
-  markdown.push("# AI Sample Syntax Report");
-  markdown.push("");
+  markdown.push('# AI Sample Syntax Report');
+  markdown.push('');
   markdown.push(`Generated: ${new Date().toISOString()}`);
-  markdown.push("Regenerate: npm run ai:samples:syntax:check");
-  markdown.push("");
+  markdown.push('Regenerate: npm run ai:samples:syntax:check');
+  markdown.push('');
   markdown.push(`Files scanned: ${files.length}`);
   markdown.push(`Issues found: ${issues.length}`);
-  markdown.push("");
+  markdown.push('');
 
   if (issues.length > 0) {
-    markdown.push("| File | Stage | Message |");
-    markdown.push("|---|---|---|");
+    markdown.push('| File | Stage | Message |');
+    markdown.push('|---|---|---|');
     for (const issue of issues) {
-      markdown.push(`| ${issue.filePath} | ${issue.stage} | ${issue.message.replace(/\|/g, "\\|")} |`);
+      markdown.push(
+        `| ${issue.filePath} | ${issue.stage} | ${issue.message.replace(/\|/g, '\\|')} |`
+      );
     }
   } else {
-    markdown.push("No syntax or complexity-parser issues detected in AI sample files.");
+    markdown.push('No syntax or complexity-parser issues detected in AI sample files.');
   }
 
-  fs.writeFileSync(path.join(process.cwd(), GENERATED_FILES.aiSampleSyntaxReport), `${markdown.join("\n")}\n`);
+  fs.writeFileSync(
+    path.join(process.cwd(), GENERATED_FILES.aiSampleSyntaxReport),
+    `${markdown.join('\n')}\n`
+  );
   fs.writeFileSync(
     path.join(process.cwd(), GENERATED_FILES.aiSampleSyntaxReportJson),
     `${JSON.stringify({ generatedAt: new Date().toISOString(), fileCount: files.length, issueCount: issues.length, issues }, null, 2)}\n`
@@ -105,11 +120,13 @@ function main(): void {
   console.log(`Wrote ${GENERATED_FILES.aiSampleSyntaxReportJson}`);
 
   if (issues.length > 0) {
-    console.error("AI sample syntax pre-check failed. Repair or regenerate malformed samples before running strict footprint analysis.");
+    console.error(
+      'AI sample syntax pre-check failed. Repair or regenerate malformed samples before running strict footprint analysis.'
+    );
     process.exit(1);
   }
 
-  console.log("AI sample syntax pre-check passed.");
+  console.log('AI sample syntax pre-check passed.');
 }
 
 main();

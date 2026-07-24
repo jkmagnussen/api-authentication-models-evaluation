@@ -1,7 +1,7 @@
-import fs from "fs";
-import { spawnSync } from "child_process";
-import { variantTestMap, VariantName } from "../misconfigurations/variant-test-map";
-import { GENERATED_FILES } from "./report-paths";
+import fs from 'fs';
+import { spawnSync } from 'child_process';
+import { variantTestMap, VariantName } from '../misconfigurations/variant-test-map';
+import { GENERATED_FILES } from './report-paths';
 
 type VariantResult = {
   variantName: VariantName;
@@ -22,18 +22,14 @@ function runFocusedVariantTest(variantName: VariantName): VariantResult {
   const variantInfo = variantTestMap[variantName];
   const startTime = Date.now();
 
-  const result = spawnSync(
-    "npx",
-    ["jest", "--runInBand", variantInfo.focusedTest],
-    {
-      stdio: "inherit",
-      shell: true,
-      env: {
-        ...process.env,
-        APP_VARIANT: variantName,
-      },
-    }
-  );
+  const result = spawnSync('npx', ['jest', '--runInBand', variantInfo.focusedTest], {
+    stdio: 'inherit',
+    shell: true,
+    env: {
+      ...process.env,
+      APP_VARIANT: variantName,
+    },
+  });
 
   return {
     variantName,
@@ -53,22 +49,24 @@ function runFocusedVariantTest(variantName: VariantName): VariantResult {
 
 function writeSummary(results: VariantResult[]) {
   const markdownLines: string[] = [];
-  markdownLines.push("# Variant Focused Test Summary");
-  markdownLines.push("");
+  markdownLines.push('# Variant Focused Test Summary');
+  markdownLines.push('');
   markdownLines.push(`Generated: ${new Date().toISOString()}`);
-  markdownLines.push("Regenerate: npm run test:variants:focused");
-  markdownLines.push("");
-  markdownLines.push("| Variant | Category | Severity | Exploitability (0-10) | Focused Test | Expected Regression | Result | Duration (ms) | Command |");
-  markdownLines.push("|---|---|---|---:|---|---|---|---:|---|");
+  markdownLines.push('Regenerate: npm run test:variants:focused');
+  markdownLines.push('');
+  markdownLines.push(
+    '| Variant | Category | Severity | Exploitability (0-10) | Focused Test | Expected Regression | Result | Duration (ms) | Command |'
+  );
+  markdownLines.push('|---|---|---|---:|---|---|---|---:|---|');
 
   for (const result of results) {
     markdownLines.push(
-      `| ${result.variantName} | ${result.category.toUpperCase()} | ${result.severityClass} (${result.severityScore}) | ${result.exploitabilityScore10} | ${result.focusedTest} | ${result.regression} | ${result.passed ? "PASS" : "FAIL"} | ${result.durationMs} | ${result.command} |`
+      `| ${result.variantName} | ${result.category.toUpperCase()} | ${result.severityClass} (${result.severityScore}) | ${result.exploitabilityScore10} | ${result.focusedTest} | ${result.regression} | ${result.passed ? 'PASS' : 'FAIL'} | ${result.durationMs} | ${result.command} |`
     );
   }
 
   const outputPath = GENERATED_FILES.variantFocusedSummary;
-  fs.writeFileSync(outputPath, `${markdownLines.join("\n")}\n`);
+  fs.writeFileSync(outputPath, `${markdownLines.join('\n')}\n`);
 
   const jsonOutputPath = GENERATED_FILES.variantFocusedJson;
   fs.writeFileSync(jsonOutputPath, JSON.stringify(results, null, 2));

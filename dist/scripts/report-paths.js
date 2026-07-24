@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DRIFT_CHECK_PATHS = exports.EXPECTED_GENERATED_DOC_FILES = exports.PERFORMANCE_FILES = exports.GENERATED_FILES = exports.DOCS_PERFORMANCE_DIR = exports.DOCS_GENERATED_DIR = exports.DOCS_DIR = void 0;
-exports.DOCS_DIR = "docs";
+exports.DOCS_DIR = 'docs';
 exports.DOCS_GENERATED_DIR = `${exports.DOCS_DIR}/generated`;
 exports.DOCS_PERFORMANCE_DIR = `${exports.DOCS_DIR}/performance-results`;
 exports.GENERATED_FILES = {
@@ -97,6 +97,6 @@ exports.EXPECTED_GENERATED_DOC_FILES = [
 ];
 exports.DRIFT_CHECK_PATHS = [
     ...exports.EXPECTED_GENERATED_DOC_FILES,
-    "ai-generated/results/ai-samples-summary.csv",
-    "ai-generated/results/ai-samples-failure-rates.csv",
+    'ai-generated/results/ai-samples-summary.csv',
+    'ai-generated/results/ai-samples-failure-rates.csv',
 ];

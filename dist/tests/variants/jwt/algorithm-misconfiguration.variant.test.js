@@ -7,18 +7,16 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const supertest_1 = __importDefault(require("supertest"));
 const load_variant_app_1 = require("../load-variant-app");
 const app = (0, load_variant_app_1.loadVariantApp)();
-describe("JWT algorithm misconfiguration exploit", () => {
-    it("accepts unsigned alg=none token", async () => {
-        const token = jsonwebtoken_1.default.sign({ userId: "user-123" }, null, {
-            algorithm: "none",
-            expiresIn: "1h",
-            audience: "api-auth-eval",
-            issuer: "api-auth-service",
+describe('JWT algorithm misconfiguration exploit', () => {
+    it('accepts unsigned alg=none token', async () => {
+        const token = jsonwebtoken_1.default.sign({ userId: 'user-123' }, null, {
+            algorithm: 'none',
+            expiresIn: '1h',
+            audience: 'api-auth-eval',
+            issuer: 'api-auth-service',
         });
-        const res = await (0, supertest_1.default)(app)
-            .get("/jwt/protected")
-            .set("Authorization", `Bearer ${token}`);
+        const res = await (0, supertest_1.default)(app).get('/jwt/protected').set('Authorization', `Bearer ${token}`);
         expect(res.status).toBe(200);
-        expect(res.body.userId).toBe("user-123");
+        expect(res.body.userId).toBe('user-123');
     });
 });

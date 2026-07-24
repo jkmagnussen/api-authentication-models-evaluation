@@ -7,27 +7,27 @@ const supertest_1 = __importDefault(require("supertest"));
 const app_1 = __importDefault(require("../../../src/app"));
 const setup_1 = require("../../setup");
 const db_1 = require("../../../src/db");
-describe("JWT Authentication – Invalid Tokens", () => {
+describe('JWT Authentication – Invalid Tokens', () => {
     beforeEach(async () => {
         await (0, setup_1.resetDatabase)();
         await db_1.prisma.user.create({
             data: {
-                id: "user-123",
-                email: "test@example.com",
-                password: "password"
-            }
+                id: 'user-123',
+                email: 'test@example.com',
+                password: 'password',
+            },
         });
     });
-    test("Missing JWT returns 401", async () => {
-        const res = await (0, supertest_1.default)(app_1.default).get("/jwt/protected");
+    test('Missing JWT returns 401', async () => {
+        const res = await (0, supertest_1.default)(app_1.default).get('/jwt/protected');
         expect(res.status).toBe(401);
-        expect(res.body.message).toBe("No token provided");
+        expect(res.body.message).toBe('No token provided');
     });
-    test("Invalid JWT returns 401", async () => {
+    test('Invalid JWT returns 401', async () => {
         const res = await (0, supertest_1.default)(app_1.default)
-            .get("/jwt/protected")
-            .set("Authorization", "Bearer invalid.token.here");
+            .get('/jwt/protected')
+            .set('Authorization', 'Bearer invalid.token.here');
         expect(res.status).toBe(401);
-        expect(res.body.message).toBe("Invalid token");
+        expect(res.body.message).toBe('Invalid token');
     });
 });

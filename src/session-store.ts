@@ -1,8 +1,8 @@
-import session from "express-session";
-import { RedisStore } from "connect-redis";
-import { createClient, type RedisClientType } from "redis";
-import { APP_CONFIG } from "./config";
-import { log } from "./logger";
+import session from 'express-session';
+import { RedisStore } from 'connect-redis';
+import { createClient, type RedisClientType } from 'redis';
+import { APP_CONFIG } from './config';
+import { log } from './logger';
 
 let redisClient: RedisClientType | null = null;
 let redisConnectStarted = false;
@@ -22,14 +22,14 @@ function ensureRedisClient() {
       },
     });
 
-    redisClient.on("error", (error) => {
-      log("error", "Redis client error", {
+    redisClient.on('error', (error) => {
+      log('error', 'Redis client error', {
         error: error instanceof Error ? error.message : String(error),
       });
     });
 
-    redisClient.on("ready", () => {
-      log("info", "Redis session store ready");
+    redisClient.on('ready', () => {
+      log('info', 'Redis session store ready');
     });
   }
 
@@ -37,7 +37,7 @@ function ensureRedisClient() {
     redisConnectStarted = true;
     void redisClient.connect().catch((error) => {
       redisConnectStarted = false;
-      log("error", "Failed to connect Redis session store", {
+      log('error', 'Failed to connect Redis session store', {
         error: error instanceof Error ? error.message : String(error),
       });
     });
@@ -55,12 +55,12 @@ export function buildSessionStore(): session.Store | undefined {
 
   return new RedisStore({
     client,
-    prefix: "api-auth:sess:",
+    prefix: 'api-auth:sess:',
     ttl: APP_CONFIG.session.ttlSeconds,
   });
 }
 
 export function getRedisStatus() {
-  if (!redisClient) return APP_CONFIG.session.redisUrl ? "configured" : "disabled";
-  return redisClient.isReady ? "ready" : "connecting";
+  if (!redisClient) return APP_CONFIG.session.redisUrl ? 'configured' : 'disabled';
+  return redisClient.isReady ? 'ready' : 'connecting';
 }

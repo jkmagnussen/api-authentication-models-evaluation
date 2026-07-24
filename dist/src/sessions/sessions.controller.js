@@ -22,18 +22,37 @@ async function loginWithSession(req, res, next) {
         const { email, password, mfaCode } = req.body;
         const user = await (0, user_1.findUserByEmail)(email);
         if (!user) {
-            await (0, audit_service_1.writeAuditEvent)({ eventType: "session.login", outcome: "failure", ipAddress: req.ip, userAgent: req.get("user-agent"), metadata: { email } });
-            return res.status(401).json({ message: "Invalid credentials" });
+            await (0, audit_service_1.writeAuditEvent)({
+                eventType: 'session.login',
+                outcome: 'failure',
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+                metadata: { email },
+            });
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
         const match = await (0, password_1.isValidPassword)(password, user.password);
         if (!match) {
-            await (0, audit_service_1.writeAuditEvent)({ userId: user.id, eventType: "session.login", outcome: "failure", ipAddress: req.ip, userAgent: req.get("user-agent") });
-            return res.status(401).json({ message: "Invalid credentials" });
+            await (0, audit_service_1.writeAuditEvent)({
+                userId: user.id,
+                eventType: 'session.login',
+                outcome: 'failure',
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+            });
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
         const mfaValid = await (0, account_security_service_1.validateMfaForUser)(user.id, mfaCode);
         if (!mfaValid) {
-            await (0, audit_service_1.writeAuditEvent)({ userId: user.id, eventType: "session.login", outcome: "failure", ipAddress: req.ip, userAgent: req.get("user-agent"), metadata: { reason: "mfa" } });
-            return res.status(401).json({ message: "MFA required or invalid code" });
+            await (0, audit_service_1.writeAuditEvent)({
+                userId: user.id,
+                eventType: 'session.login',
+                outcome: 'failure',
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+                metadata: { reason: 'mfa' },
+            });
+            return res.status(401).json({ message: 'MFA required or invalid code' });
         }
         const existingSessionId = req.cookies?.sessionId;
         if (existingSessionId && regenerateOnLogin) {
@@ -42,16 +61,22 @@ async function loginWithSession(req, res, next) {
         const session = existingSessionId && !regenerateOnLogin
             ? await (0, session_service_2.createSessionWithId)(user.id, existingSessionId)
             : await (0, session_service_1.createSession)(user.id);
-        res.cookie("sessionId", session.id, {
+        res.cookie('sessionId', session.id, {
             httpOnly: sessionCookieOverride?.httpOnly ?? config_1.default.cookie.httpOnly,
             secure: sessionCookieOverride?.secure ?? config_1.default.cookie.secure,
             sameSite: sessionCookieOverride?.sameSite ?? config_1.default.cookie.sameSite,
             domain: config_1.default.cookie.domain,
             maxAge: config_1.default.cookie.maxAgeMs,
         });
-        await (0, audit_service_1.writeAuditEvent)({ userId: user.id, eventType: "session.login", outcome: "success", ipAddress: req.ip, userAgent: req.get("user-agent") });
+        await (0, audit_service_1.writeAuditEvent)({
+            userId: user.id,
+            eventType: 'session.login',
+            outcome: 'success',
+            ipAddress: req.ip,
+            userAgent: req.get('user-agent'),
+        });
         return res.status(200).json({
-            message: "Session created",
+            message: 'Session created',
             user: { id: user.id, email: user.email },
         });
     }
@@ -66,18 +91,23 @@ async function logoutSession(req, res) {
     if (sessionId && invalidateSessionOnLogout) {
         await (0, session_service_2.deleteSession)(sessionId); // delete from DB
     }
-    res.clearCookie("sessionId", {
+    res.clearCookie('sessionId', {
         httpOnly: config_1.default.cookie.httpOnly,
         secure: config_1.default.cookie.secure,
         sameSite: config_1.default.cookie.sameSite,
         domain: config_1.default.cookie.domain,
     }); // remove cookie
-    await (0, audit_service_1.writeAuditEvent)({ eventType: "session.logout", outcome: "success", ipAddress: req.ip, userAgent: req.get("user-agent") });
-    return res.json({ message: "Logged out" });
+    await (0, audit_service_1.writeAuditEvent)({
+        eventType: 'session.logout',
+        outcome: 'success',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+    });
+    return res.json({ message: 'Logged out' });
 }
 function getSessionProtected(req, res) {
     return res.json({
-        message: "Protected route accessed",
+        message: 'Protected route accessed',
         userId: req.userId, // set by requireSession middleware
     });
 }

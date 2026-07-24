@@ -1,11 +1,11 @@
-import { Prisma } from "@prisma/client";
-import { prisma } from "../db";
-import { log } from "../logger";
+import { Prisma } from '@prisma/client';
+import { prisma } from '../db';
+import { log } from '../logger';
 
 type AuditEventInput = {
   userId?: string | null;
   eventType: string;
-  outcome: "success" | "failure";
+  outcome: 'success' | 'failure';
   ipAddress?: string | null;
   userAgent?: string | null;
   metadata?: Record<string, unknown>;
@@ -24,7 +24,7 @@ export async function writeAuditEvent(event: AuditEventInput) {
       },
     });
   } catch (error) {
-    log("error", "audit.write.failed", {
+    log('error', 'audit.write.failed', {
       eventType: event.eventType,
       error: error instanceof Error ? error.message : String(error),
     });

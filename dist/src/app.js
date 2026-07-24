@@ -22,16 +22,16 @@ const app = (0, express_1.default)();
 const variantOverrides = (0, variant_overrides_1.getVariantOverrides)();
 const sessionCookieOverride = variantOverrides.sessions?.cookie;
 const allowedCorsOrigins = new Set(config_1.default.corsOrigins);
-app.disable("x-powered-by");
+app.disable('x-powered-by');
 if (config_1.default.trustProxy) {
-    app.set("trust proxy", 1);
+    app.set('trust proxy', 1);
 }
 app.use((req, res, next) => {
     const startedAt = Date.now();
-    res.on("finish", () => {
-        if (req.path.startsWith("/health"))
+    res.on('finish', () => {
+        if (req.path.startsWith('/health'))
             return;
-        (0, logger_1.log)("info", "request.completed", {
+        (0, logger_1.log)('info', 'request.completed', {
             method: req.method,
             path: req.originalUrl,
             status: res.statusCode,
@@ -52,17 +52,17 @@ app.use((0, cors_1.default)({
             callback(null, true);
             return;
         }
-        callback(new Error("Origin not allowed by CORS"));
+        callback(new Error('Origin not allowed by CORS'));
     },
     credentials: true,
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
 }));
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
 // Session middleware
 app.use((0, express_session_1.default)({
-    name: "appSessionId",
+    name: 'appSessionId',
     secret: config_1.default.session.secret,
     resave: false,
     saveUninitialized: false,
@@ -76,37 +76,37 @@ app.use((0, express_session_1.default)({
         maxAge: config_1.default.cookie.maxAgeMs,
     },
 }));
-app.get("/", (_req, res) => {
-    res.send("API running");
+app.get('/', (_req, res) => {
+    res.send('API running');
 });
-app.get("/health/live", (_req, res) => {
-    res.json({ status: "ok" });
+app.get('/health/live', (_req, res) => {
+    res.json({ status: 'ok' });
 });
-app.get("/health/ready", async (_req, res) => {
+app.get('/health/ready', async (_req, res) => {
     try {
-        await db_1.prisma.$queryRawUnsafe("SELECT 1");
+        await db_1.prisma.$queryRawUnsafe('SELECT 1');
         res.json({
-            status: "ready",
+            status: 'ready',
             services: {
-                database: "ready",
+                database: 'ready',
                 redis: (0, session_store_1.getRedisStatus)(),
             },
         });
     }
     catch (error) {
-        (0, logger_1.log)("error", "health.ready.failed", {
+        (0, logger_1.log)('error', 'health.ready.failed', {
             error: error instanceof Error ? error.message : String(error),
         });
         res.status(503).json({
-            status: "degraded",
+            status: 'degraded',
             services: {
-                database: "error",
+                database: 'error',
                 redis: (0, session_store_1.getRedisStatus)(),
             },
         });
     }
 });
-app.get("/metrics", (_req, res) => {
+app.get('/metrics', (_req, res) => {
     res.json({
         uptimeSeconds: Math.round(process.uptime()),
         memoryRssBytes: process.memoryUsage().rss,
@@ -115,9 +115,9 @@ app.get("/metrics", (_req, res) => {
     });
 });
 // Routes
-app.use("/oauth", oauth_routes_1.default);
-app.use("/sessions", sessions_routes_1.default);
-app.use("/jwt", jwt_routes_1.default);
-app.use("/auth/security", account_security_routes_1.default);
+app.use('/oauth', oauth_routes_1.default);
+app.use('/sessions', sessions_routes_1.default);
+app.use('/jwt', jwt_routes_1.default);
+app.use('/auth/security', account_security_routes_1.default);
 app.use(errorHandler_1.errorHandler);
 exports.default = app;

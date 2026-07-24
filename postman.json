@@ -74,10 +74,7 @@
             },
             "url": {
               "raw": "{{base_url}}/sessions/login",
-              "path": [
-                "sessions",
-                "login"
-              ]
+              "path": ["sessions", "login"]
             }
           },
           "response": []
@@ -163,10 +160,7 @@
             },
             "url": {
               "raw": "{{base_url}}/jwt/login",
-              "path": [
-                "jwt",
-                "login"
-              ]
+              "path": ["jwt", "login"]
             }
           },
           "response": []
@@ -224,10 +218,7 @@
             },
             "url": {
               "raw": "{{base_url}}/oauth/authorize",
-              "path": [
-                "oauth",
-                "authorize"
-              ]
+              "path": ["oauth", "authorize"]
             }
           },
           "response": []
@@ -283,10 +274,7 @@
             },
             "url": {
               "raw": "{{base_url}}/oauth/token",
-              "path": [
-                "oauth",
-                "token"
-              ]
+              "path": ["oauth", "token"]
             }
           },
           "response": []
@@ -329,12 +317,7 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/security/password-reset/request",
-              "path": [
-                "auth",
-                "security",
-                "password-reset",
-                "request"
-              ]
+              "path": ["auth", "security", "password-reset", "request"]
             }
           },
           "response": []
@@ -355,12 +338,7 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/security/password-reset/confirm",
-              "path": [
-                "auth",
-                "security",
-                "password-reset",
-                "confirm"
-              ]
+              "path": ["auth", "security", "password-reset", "confirm"]
             }
           },
           "response": []
@@ -400,12 +378,7 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/security/mfa/enroll",
-              "path": [
-                "auth",
-                "security",
-                "mfa",
-                "enroll"
-              ]
+              "path": ["auth", "security", "mfa", "enroll"]
             }
           },
           "response": []
@@ -475,12 +448,7 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/security/mfa/verify",
-              "path": [
-                "auth",
-                "security",
-                "mfa",
-                "verify"
-              ]
+              "path": ["auth", "security", "mfa", "verify"]
             }
           },
           "response": []
@@ -506,10 +474,7 @@
             },
             "url": {
               "raw": "{{base_url}}/sessions/logout",
-              "path": [
-                "sessions",
-                "logout"
-              ]
+              "path": ["sessions", "logout"]
             }
           },
           "response": []
@@ -526,10 +491,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/sessions/protected",
-              "path": [
-                "sessions",
-                "protected"
-              ]
+              "path": ["sessions", "protected"]
             },
             "description": "Uses the session cookie established by the session login request."
           },
@@ -548,10 +510,7 @@
             ],
             "url": {
               "raw": "{{base_url}}/jwt/protected",
-              "path": [
-                "jwt",
-                "protected"
-              ]
+              "path": ["jwt", "protected"]
             }
           },
           "response": []
@@ -569,10 +528,7 @@
             ],
             "url": {
               "raw": "{{base_url}}/oauth/protected",
-              "path": [
-                "oauth",
-                "protected"
-              ]
+              "path": ["oauth", "protected"]
             }
           },
           "response": []

@@ -1,6 +1,4 @@
-import { prisma } from "../db";
-
-
+import { prisma } from '../db';
 
 export async function createSession(userId: string) {
   return prisma.session.create({

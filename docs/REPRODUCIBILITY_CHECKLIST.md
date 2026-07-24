@@ -18,7 +18,7 @@ Minimum setup outcome before running this checklist:
 
 ## Commands
 
-### Recommended One-Command Offline Run
+### Fast Path (Offline, Single Command)
 
 ```powershell
 npm run run:all:offline
@@ -26,16 +26,18 @@ npm run run:all:offline
 
 This command runs database setup, tests, docs/report generation, chart generation, and freeze lock refresh/verification in one pass.
 
-### Stepwise Execution (For Granular Control)
-
 ### Optional Docker Execution (Assessor-Friendly)
 
-Use this only if Docker Desktop is installed and running.
+Use this only when Docker Desktop is installed and running.
 
 ```powershell
 npm run docker:build
 docker run --rm -p 3000:3000 dissertation-backend:local
 ```
+
+### Stepwise Execution (Granular Control)
+
+Run the following phases in order when you want explicit control over each evidence stage.
 
 ### Baseline Secure Evidence
 
@@ -91,6 +93,8 @@ npm run objective:preregistered:check
 ```
 
 ### Footprint And Unified Comparison
+
+If `npm run compare:reports` was already run in the AI artifact phase, rerun only if you need a refreshed unified comparison snapshot.
 
 ```powershell
 npm run code:footprint

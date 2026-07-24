@@ -15,28 +15,28 @@ function getArgValue(name) {
     return process.argv[index + 1] ?? null;
 }
 const ARMS = [
-    { key: "openai-neutral", provider: "openai", promptMode: "neutral" },
-    { key: "openai-security-guided", provider: "openai", promptMode: "security-guided" },
-    { key: "claude-neutral", provider: "claude", promptMode: "neutral" },
-    { key: "claude-security-guided", provider: "claude", promptMode: "security-guided" },
+    { key: 'openai-neutral', provider: 'openai', promptMode: 'neutral' },
+    { key: 'openai-security-guided', provider: 'openai', promptMode: 'security-guided' },
+    { key: 'claude-neutral', provider: 'claude', promptMode: 'neutral' },
+    { key: 'claude-security-guided', provider: 'claude', promptMode: 'security-guided' },
 ];
 function parseTargetArmKey() {
-    const fromFlag = getArgValue("--arm");
-    const fromEnv = process.env.AI_ARM?.trim() ?? "";
+    const fromFlag = getArgValue('--arm');
+    const fromEnv = process.env.AI_ARM?.trim() ?? '';
     const value = (fromFlag ?? fromEnv).trim();
     return value.length > 0 ? value : null;
 }
 function parseAllowPartial() {
-    const fromFlag = getArgValue("--allow-partial");
+    const fromFlag = getArgValue('--allow-partial');
     if (fromFlag) {
-        return ["1", "true", "yes"].includes(fromFlag.toLowerCase());
+        return ['1', 'true', 'yes'].includes(fromFlag.toLowerCase());
     }
-    const fromEnv = (process.env.AI_ALLOW_PARTIAL_MATRIX ?? "").trim().toLowerCase();
-    return ["1", "true", "yes"].includes(fromEnv);
+    const fromEnv = (process.env.AI_ALLOW_PARTIAL_MATRIX ?? '').trim().toLowerCase();
+    return ['1', 'true', 'yes'].includes(fromEnv);
 }
 function run(command, envOverrides = {}) {
     const result = (0, node_child_process_1.spawnSync)(command, {
-        stdio: "inherit",
+        stdio: 'inherit',
         shell: true,
         env: {
             ...process.env,
@@ -47,7 +47,7 @@ function run(command, envOverrides = {}) {
 }
 function parseCsvLine(line) {
     const values = [];
-    let current = "";
+    let current = '';
     let inQuotes = false;
     for (let i = 0; i < line.length; i += 1) {
         const char = line[i];
@@ -61,9 +61,9 @@ function parseCsvLine(line) {
             }
             continue;
         }
-        if (char === "," && !inQuotes) {
+        if (char === ',' && !inQuotes) {
             values.push(current);
-            current = "";
+            current = '';
             continue;
         }
         current += char;
@@ -72,17 +72,13 @@ function parseCsvLine(line) {
     return values;
 }
 function loadOverallFailure(root) {
-    const csvPath = path_1.default.join(root, "ai-generated", "results", "ai-samples-failure-rates.csv");
+    const csvPath = path_1.default.join(root, 'ai-generated', 'results', 'ai-samples-failure-rates.csv');
     if (!fs_1.default.existsSync(csvPath))
         return null;
-    const lines = fs_1.default
-        .readFileSync(csvPath, "utf8")
-        .trim()
-        .split(/\r?\n/)
-        .map(parseCsvLine);
+    const lines = fs_1.default.readFileSync(csvPath, 'utf8').trim().split(/\r?\n/).map(parseCsvLine);
     if (lines.length <= 1)
         return null;
-    const overall = lines.slice(1).find((row) => row[0]?.toUpperCase() === "OVERALL");
+    const overall = lines.slice(1).find((row) => row[0]?.toUpperCase() === 'OVERALL');
     if (!overall)
         return null;
     return {
@@ -124,19 +120,19 @@ function clearDirectory(dirPath) {
     }
 }
 function providerReady(provider) {
-    if (provider === "openai") {
+    if (provider === 'openai') {
         if (!process.env.OPENAI_API_KEY) {
-            return { ready: false, reason: "Missing OPENAI_API_KEY." };
+            return { ready: false, reason: 'Missing OPENAI_API_KEY.' };
         }
         return { ready: true };
     }
     if (!process.env.ANTHROPIC_API_KEY) {
-        return { ready: false, reason: "Missing ANTHROPIC_API_KEY." };
+        return { ready: false, reason: 'Missing ANTHROPIC_API_KEY.' };
     }
     return { ready: true };
 }
 function getGenerationCommand(arm) {
-    if (arm.provider === "openai") {
+    if (arm.provider === 'openai') {
         return `npm run ai:generate:openai -- --prompt-mode ${arm.promptMode}`;
     }
     return `npm run ai:generate:claude -- --prompt-mode ${arm.promptMode}`;
@@ -145,11 +141,11 @@ function runArm(arm) {
     console.log(`[ai-matrix] Starting ${arm.key.toUpperCase()} arm...`);
     const steps = [
         getGenerationCommand(arm),
-        "npm run ai:test:oauth",
-        "npm run ai:test:jwt",
-        "npm run ai:test:sessions",
-        "npm run ai:analyse",
-        "npm run ai:report",
+        'npm run ai:test:oauth',
+        'npm run ai:test:jwt',
+        'npm run ai:test:sessions',
+        'npm run ai:analyse',
+        'npm run ai:report',
     ];
     for (const step of steps) {
         const ok = run(step);
@@ -162,21 +158,21 @@ function runArm(arm) {
 }
 function snapshotArm(arm) {
     const root = process.cwd();
-    const armDir = path_1.default.join(root, "ai-generated", "arms", arm.key);
-    const sampleTarget = path_1.default.join(armDir, "samples");
-    const resultsTarget = path_1.default.join(armDir, "results");
+    const armDir = path_1.default.join(root, 'ai-generated', 'arms', arm.key);
+    const sampleTarget = path_1.default.join(armDir, 'samples');
+    const resultsTarget = path_1.default.join(armDir, 'results');
     ensureDir(armDir);
     clearDirectory(sampleTarget);
     clearDirectory(resultsTarget);
     ensureDir(sampleTarget);
     ensureDir(resultsTarget);
-    for (const model of ["oauth", "jwt", "sessions"]) {
-        copyDirectory(path_1.default.join(root, "ai-generated", model), path_1.default.join(sampleTarget, model));
+    for (const model of ['oauth', 'jwt', 'sessions']) {
+        copyDirectory(path_1.default.join(root, 'ai-generated', model), path_1.default.join(sampleTarget, model));
     }
-    copyDirectory(path_1.default.join(root, "ai-generated", "results"), resultsTarget);
-    const generationMetadataPath = path_1.default.join(root, "ai-generated", "results", "generation-metadata.json");
+    copyDirectory(path_1.default.join(root, 'ai-generated', 'results'), resultsTarget);
+    const generationMetadataPath = path_1.default.join(root, 'ai-generated', 'results', 'generation-metadata.json');
     const generationMetadata = fs_1.default.existsSync(generationMetadataPath)
-        ? JSON.parse(fs_1.default.readFileSync(generationMetadataPath, "utf8"))
+        ? JSON.parse(fs_1.default.readFileSync(generationMetadataPath, 'utf8'))
         : null;
     const overallFailure = loadOverallFailure(root);
     const metadata = {
@@ -192,7 +188,7 @@ function snapshotArm(arm) {
         retrySummary: generationMetadata?.retrySummary,
         overallFailure: overallFailure ?? undefined,
     };
-    fs_1.default.writeFileSync(path_1.default.join(armDir, "metadata.json"), JSON.stringify(metadata, null, 2));
+    fs_1.default.writeFileSync(path_1.default.join(armDir, 'metadata.json'), JSON.stringify(metadata, null, 2));
     return metadata;
 }
 function main() {
@@ -201,32 +197,32 @@ function main() {
     const allowPartial = parseAllowPartial();
     const armsToRun = targetArmKey ? ARMS.filter((arm) => arm.key === targetArmKey) : ARMS;
     if (targetArmKey && armsToRun.length === 0) {
-        console.error(`[ai-matrix] Unknown arm: ${targetArmKey}. Use one of: ${ARMS.map((arm) => arm.key).join(", ")}`);
+        console.error(`[ai-matrix] Unknown arm: ${targetArmKey}. Use one of: ${ARMS.map((arm) => arm.key).join(', ')}`);
         process.exit(1);
     }
     for (const arm of armsToRun) {
         const readiness = providerReady(arm.provider);
         if (!readiness.ready) {
-            const reason = readiness.reason ?? "Provider credentials unavailable.";
+            const reason = readiness.reason ?? 'Provider credentials unavailable.';
             if (allowPartial) {
                 console.warn(`[ai-matrix] Skipping ${arm.key.toUpperCase()}: ${reason}`);
-                runSummary.push({ ...arm, status: "skipped", reason });
+                runSummary.push({ ...arm, status: 'skipped', reason });
             }
             else {
                 console.error(`[ai-matrix] ${arm.key.toUpperCase()} is required but unavailable: ${reason}`);
-                runSummary.push({ ...arm, status: "failed", reason });
+                runSummary.push({ ...arm, status: 'failed', reason });
             }
             continue;
         }
         const ok = runArm(arm);
         if (!ok) {
-            runSummary.push({ ...arm, status: "failed", reason: "One or more pipeline steps failed." });
+            runSummary.push({ ...arm, status: 'failed', reason: 'One or more pipeline steps failed.' });
             continue;
         }
         const snapshotMetadata = snapshotArm(arm);
         runSummary.push({
             ...arm,
-            status: "completed",
+            status: 'completed',
             providerModelIdentifier: snapshotMetadata.providerModelIdentifier,
             promptFingerprint: snapshotMetadata.promptFingerprints?.systemPromptSha256,
             overallFailureRatePct: snapshotMetadata.overallFailure?.failureRatePct,
@@ -236,30 +232,30 @@ function main() {
     }
     const summaryPayload = {
         generatedAt: new Date().toISOString(),
-        sampleCount: Number(process.env.AI_SAMPLE_COUNT ?? "30"),
+        sampleCount: Number(process.env.AI_SAMPLE_COUNT ?? '30'),
         allowPartial,
         requiredArms: armsToRun.map((arm) => arm.key),
         providers: runSummary,
     };
-    fs_1.default.writeFileSync(path_1.default.join(process.cwd(), "ai-generated", "arms", "run-summary.json"), JSON.stringify(summaryPayload, null, 2));
-    const historyDir = path_1.default.join(process.cwd(), "ai-generated", "arms", "history");
+    fs_1.default.writeFileSync(path_1.default.join(process.cwd(), 'ai-generated', 'arms', 'run-summary.json'), JSON.stringify(summaryPayload, null, 2));
+    const historyDir = path_1.default.join(process.cwd(), 'ai-generated', 'arms', 'history');
     ensureDir(historyDir);
-    const historyFileName = `${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+    const historyFileName = `${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
     fs_1.default.writeFileSync(path_1.default.join(historyDir, historyFileName), JSON.stringify(summaryPayload, null, 2));
-    const completedCount = runSummary.filter((entry) => entry.status === "completed").length;
+    const completedCount = runSummary.filter((entry) => entry.status === 'completed').length;
     const requiredCount = armsToRun.length;
     if (allowPartial) {
         if (completedCount === 0) {
-            console.error("[ai-matrix] No AI provider arm completed. Configure provider credentials and try again.");
+            console.error('[ai-matrix] No AI provider arm completed. Configure provider credentials and try again.');
             process.exit(1);
         }
-        console.log("[ai-matrix] Completed available provider-condition arms and archived outputs.");
+        console.log('[ai-matrix] Completed available provider-condition arms and archived outputs.');
         return;
     }
     if (completedCount !== requiredCount) {
         console.error(`[ai-matrix] Incomplete provider matrix coverage (${completedCount}/${requiredCount}). Re-run after configuring all required providers or pass --allow-partial true.`);
         process.exit(1);
     }
-    console.log("[ai-matrix] Completed full provider-condition matrix and archived outputs.");
+    console.log('[ai-matrix] Completed full provider-condition matrix and archived outputs.');
 }
 main();

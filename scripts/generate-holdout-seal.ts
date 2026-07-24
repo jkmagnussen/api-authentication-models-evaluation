@@ -1,7 +1,7 @@
-import fs from "fs";
-import path from "path";
-import { createHash } from "crypto";
-import { GENERATED_FILES } from "./report-paths";
+import fs from 'fs';
+import path from 'path';
+import { createHash } from 'crypto';
+import { GENERATED_FILES } from './report-paths';
 
 type HoldoutSeal = {
   generatedAt: string;
@@ -11,25 +11,25 @@ type HoldoutSeal = {
 };
 
 function sha256(text: string): string {
-  return createHash("sha256").update(text).digest("hex");
+  return createHash('sha256').update(text).digest('hex');
 }
 
 function main(): void {
   const root = process.cwd();
   const outputPath = path.join(root, GENERATED_FILES.holdoutSeal);
   const holdoutDefinitionPath = path.join(root, GENERATED_FILES.analysisWindow);
-  const shouldRefresh = process.argv.includes("--refresh");
+  const shouldRefresh = process.argv.includes('--refresh');
   const now = new Date().toISOString();
 
   if (!fs.existsSync(holdoutDefinitionPath)) {
     throw new Error(`Missing holdout source artifact: ${GENERATED_FILES.analysisWindow}`);
   }
 
-  const holdoutText = fs.readFileSync(holdoutDefinitionPath, "utf8");
+  const holdoutText = fs.readFileSync(holdoutDefinitionPath, 'utf8');
   const holdoutHash = sha256(holdoutText);
 
   if (fs.existsSync(outputPath) && !shouldRefresh) {
-    const existing = JSON.parse(fs.readFileSync(outputPath, "utf8")) as HoldoutSeal;
+    const existing = JSON.parse(fs.readFileSync(outputPath, 'utf8')) as HoldoutSeal;
     const preserved: HoldoutSeal = {
       ...existing,
       generatedAt: now,
@@ -49,7 +49,7 @@ function main(): void {
   };
 
   fs.writeFileSync(outputPath, JSON.stringify(payload, null, 2));
-  console.log(`${shouldRefresh ? "Refreshed" : "Sealed"} holdout definition: ${outputPath}`);
+  console.log(`${shouldRefresh ? 'Refreshed' : 'Sealed'} holdout definition: ${outputPath}`);
 }
 
 try {

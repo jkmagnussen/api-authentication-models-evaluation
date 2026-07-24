@@ -5,29 +5,29 @@ const jwt_service_1 = require("./jwt.service");
 function jwtAuth(req, res, next) {
     const header = req.headers.authorization;
     if (!header) {
-        return res.status(401).json({ message: "No token provided" });
+        return res.status(401).json({ message: 'No token provided' });
     }
-    const token = header.split(" ")[1];
+    const token = header.split(' ')[1];
     try {
         const decoded = (0, jwt_service_1.verifyJwt)(token);
-        if (!decoded?.userId || typeof decoded.userId !== "string") {
-            return res.status(401).json({ message: "Invalid token" });
+        if (!decoded?.userId || typeof decoded.userId !== 'string') {
+            return res.status(401).json({ message: 'Invalid token' });
         }
         const expectedAudience = (0, jwt_service_1.getJwtAudience)();
         const expectedIssuer = (0, jwt_service_1.getJwtIssuer)();
         if (decoded.aud && decoded.aud !== expectedAudience) {
-            return res.status(401).json({ message: "Invalid token" });
+            return res.status(401).json({ message: 'Invalid token' });
         }
         if (decoded.iss && decoded.iss !== expectedIssuer) {
-            return res.status(401).json({ message: "Invalid token" });
+            return res.status(401).json({ message: 'Invalid token' });
         }
         req.userId = decoded.userId;
         return next();
     }
     catch (err) {
-        if (err?.name === "TokenExpiredError") {
-            return res.status(401).json({ message: "Token expired" });
+        if (err?.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'Token expired' });
         }
-        return res.status(401).json({ message: "Invalid token" });
+        return res.status(401).json({ message: 'Invalid token' });
     }
 }

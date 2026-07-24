@@ -1,16 +1,16 @@
-import { prisma } from "../db";
-import crypto from "crypto";
-import APP_CONFIG from "../config";
+import { prisma } from '../db';
+import crypto from 'crypto';
+import APP_CONFIG from '../config';
 
 /**
  * Generate a secure random token
  */
 function generateToken() {
-  return crypto.randomBytes(48).toString("base64url");
+  return crypto.randomBytes(48).toString('base64url');
 }
 
 function hashToken(token: string) {
-  return crypto.createHash("sha256").update(token).digest("hex");
+  return crypto.createHash('sha256').update(token).digest('hex');
 }
 
 /**

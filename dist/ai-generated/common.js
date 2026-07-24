@@ -18,13 +18,13 @@ exports.writeResult = writeResult;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const typescript_1 = __importDefault(require("typescript"));
-const escomplex = require("escomplex");
+const escomplex = require('escomplex');
 const DEFAULT_SAMPLE_COUNT = 30;
 function parseSampleCountArg() {
     const args = process.argv.slice(2);
     for (let index = 0; index < args.length; index += 1) {
         const current = args[index];
-        if ((current === "--samples" || current === "-n") && args[index + 1]) {
+        if ((current === '--samples' || current === '-n') && args[index + 1]) {
             const parsed = Number(args[index + 1]);
             if (Number.isInteger(parsed) && parsed > 0) {
                 return parsed;
@@ -37,21 +37,21 @@ function resolveSampleCount() {
     const fromArg = parseSampleCountArg();
     if (fromArg)
         return fromArg;
-    const fromEnv = Number(process.env.AI_SAMPLE_COUNT ?? "");
+    const fromEnv = Number(process.env.AI_SAMPLE_COUNT ?? '');
     if (Number.isInteger(fromEnv) && fromEnv > 0) {
         return fromEnv;
     }
     return DEFAULT_SAMPLE_COUNT;
 }
 exports.SAMPLE_COUNT = resolveSampleCount();
-exports.RESULTS_DIR = path_1.default.join(process.cwd(), "ai-generated", "results");
+exports.RESULTS_DIR = path_1.default.join(process.cwd(), 'ai-generated', 'results');
 function ensureDirectory(dirPath) {
     if (!fs_1.default.existsSync(dirPath)) {
         fs_1.default.mkdirSync(dirPath, { recursive: true });
     }
 }
 function getModelDirectory(model) {
-    return path_1.default.join(process.cwd(), "ai-generated", model);
+    return path_1.default.join(process.cwd(), 'ai-generated', model);
 }
 function getSamplePath(model, index) {
     return path_1.default.join(getModelDirectory(model), `sample${index}.ts`);
@@ -76,10 +76,10 @@ function expandTemplateSamples(templates, sampleCount = exports.SAMPLE_COUNT) {
     return expanded;
 }
 function readSample(model, index) {
-    return fs_1.default.readFileSync(getSamplePath(model, index), "utf8");
+    return fs_1.default.readFileSync(getSamplePath(model, index), 'utf8');
 }
 function countFunctions(sourceText) {
-    const sourceFile = typescript_1.default.createSourceFile("sample.ts", sourceText, typescript_1.default.ScriptTarget.Latest, true, typescript_1.default.ScriptKind.TS);
+    const sourceFile = typescript_1.default.createSourceFile('sample.ts', sourceText, typescript_1.default.ScriptTarget.Latest, true, typescript_1.default.ScriptKind.TS);
     let functionCount = 0;
     function visit(node) {
         if (typescript_1.default.isFunctionDeclaration(node) ||
@@ -94,7 +94,7 @@ function countFunctions(sourceText) {
     return functionCount;
 }
 function countClasses(sourceText) {
-    const sourceFile = typescript_1.default.createSourceFile("sample.ts", sourceText, typescript_1.default.ScriptTarget.Latest, true, typescript_1.default.ScriptKind.TS);
+    const sourceFile = typescript_1.default.createSourceFile('sample.ts', sourceText, typescript_1.default.ScriptTarget.Latest, true, typescript_1.default.ScriptKind.TS);
     let classCount = 0;
     function visit(node) {
         if (typescript_1.default.isClassDeclaration(node)) {

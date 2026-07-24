@@ -1,6 +1,52 @@
+# Environment files
 .env
+.env.local
+.env.*.local
+
+# Generated files
 /src/generated/prisma
+dist/
+coverage/
+lcov-report/
+
+# Dependencies
 node_modules/
+package-lock.json
+.venv/
+.venv-analysis/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Generated artifacts
+docs/generated/
+docs/performance-results/
+ai-generated/results/
+ai-generated/arms/
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# System
+.DS_Store
+Thumbs.db
+
+# Temporary
 tmp_spec/
-coverage/lcov-report/
+temp/
+.cache/
+
+# OS
+.env.docker
 

@@ -8,7 +8,7 @@ const path_1 = __importDefault(require("path"));
 const report_paths_1 = require("./report-paths");
 function parseCsvLine(line) {
     const values = [];
-    let current = "";
+    let current = '';
     let inQuotes = false;
     for (let i = 0; i < line.length; i += 1) {
         const char = line[i];
@@ -22,9 +22,9 @@ function parseCsvLine(line) {
             }
             continue;
         }
-        if (char === "," && !inQuotes) {
+        if (char === ',' && !inQuotes) {
             values.push(current);
-            current = "";
+            current = '';
             continue;
         }
         current += char;
@@ -33,48 +33,51 @@ function parseCsvLine(line) {
     return values;
 }
 function readCsv(filePath) {
-    const text = fs_1.default.readFileSync(filePath, "utf8").trim();
+    const text = fs_1.default.readFileSync(filePath, 'utf8').trim();
     if (!text)
         return [];
     return text.split(/\r?\n/).map(parseCsvLine);
 }
 function normalizeModelName(label) {
     const s = label.toLowerCase();
-    if (s.startsWith("oauth"))
-        return "oauth";
-    if (s.startsWith("jwt"))
-        return "jwt";
-    return "sessions";
+    if (s.startsWith('oauth'))
+        return 'oauth';
+    if (s.startsWith('jwt'))
+        return 'jwt';
+    return 'sessions';
 }
 function displayModelName(model) {
-    return model === "oauth" ? "OAuth2" : model === "jwt" ? "JWT" : "Session";
+    return model === 'oauth' ? 'OAuth2' : model === 'jwt' ? 'JWT' : 'Session';
 }
 function splitTags(raw) {
-    return raw.split("|").map((tag) => tag.trim()).filter(Boolean);
+    return raw
+        .split('|')
+        .map((tag) => tag.trim())
+        .filter(Boolean);
 }
 function categorizeFailureTag(tag) {
     const lower = tag.toLowerCase();
-    if (lower.includes("state"))
-        return "OAuth state integrity";
-    if (lower.includes("redirect"))
-        return "OAuth redirect validation";
-    if (lower.includes("scope"))
-        return "OAuth scope control";
-    if (lower.includes("audience") || lower.includes("issuer"))
-        return "JWT claim validation";
-    if (lower.includes("algorithm") || lower.includes("alg"))
-        return "JWT algorithm enforcement";
-    if (lower.includes("expiry") || lower.includes("expire"))
-        return "JWT token lifetime";
-    if (lower.includes("regeneration") || lower.includes("fixation"))
-        return "Session fixation resistance";
-    if (lower.includes("cookie") || lower.includes("httponly"))
-        return "Session cookie hardening";
-    if (lower.includes("logout") || lower.includes("invalidation"))
-        return "Session invalidation";
-    if (lower.includes("admin") || lower.includes("privilege"))
-        return "Privilege boundary";
-    return "Other security control";
+    if (lower.includes('state'))
+        return 'OAuth state integrity';
+    if (lower.includes('redirect'))
+        return 'OAuth redirect validation';
+    if (lower.includes('scope'))
+        return 'OAuth scope control';
+    if (lower.includes('audience') || lower.includes('issuer'))
+        return 'JWT claim validation';
+    if (lower.includes('algorithm') || lower.includes('alg'))
+        return 'JWT algorithm enforcement';
+    if (lower.includes('expiry') || lower.includes('expire'))
+        return 'JWT token lifetime';
+    if (lower.includes('regeneration') || lower.includes('fixation'))
+        return 'Session fixation resistance';
+    if (lower.includes('cookie') || lower.includes('httponly'))
+        return 'Session cookie hardening';
+    if (lower.includes('logout') || lower.includes('invalidation'))
+        return 'Session invalidation';
+    if (lower.includes('admin') || lower.includes('privilege'))
+        return 'Privilege boundary';
+    return 'Other security control';
 }
 function density(numerator, denominator, scale) {
     if (!Number.isFinite(denominator) || denominator <= 0)
@@ -87,18 +90,18 @@ function average(values) {
     return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 function readFootprintJson() {
-    return JSON.parse(fs_1.default.readFileSync(path_1.default.join(process.cwd(), report_paths_1.GENERATED_FILES.codeFootprintJson), "utf8"));
+    return JSON.parse(fs_1.default.readFileSync(path_1.default.join(process.cwd(), report_paths_1.GENERATED_FILES.codeFootprintJson), 'utf8'));
 }
 function readVariantResults() {
-    return JSON.parse(fs_1.default.readFileSync(path_1.default.join(process.cwd(), report_paths_1.GENERATED_FILES.variantFocusedJson), "utf8"));
+    return JSON.parse(fs_1.default.readFileSync(path_1.default.join(process.cwd(), report_paths_1.GENERATED_FILES.variantFocusedJson), 'utf8'));
 }
 function readAiRows() {
-    const rows = readCsv(path_1.default.join(process.cwd(), "ai-generated", "results", "ai-samples-summary.csv"));
+    const rows = readCsv(path_1.default.join(process.cwd(), 'ai-generated', 'results', 'ai-samples-summary.csv'));
     const [, ...body] = rows;
     return body.map((row) => ({
         model: row[0],
-        passed: row[2] === "true",
-        securityFailures: row[13] ?? "",
+        passed: row[2] === 'true',
+        securityFailures: row[13] ?? '',
     }));
 }
 function buildRows() {
@@ -112,7 +115,7 @@ function buildRows() {
         rows.push({
             model,
             modelLabel: displayModelName(model),
-            source: "baseline",
+            source: 'baseline',
             sliceLabel: metric.label,
             characters: metric.characters,
             lines: metric.lines,
@@ -126,7 +129,7 @@ function buildRows() {
             failurePointsPer10kChars: 0,
         });
     }
-    for (const model of ["oauth", "jwt", "sessions"]) {
+    for (const model of ['oauth', 'jwt', 'sessions']) {
         const modelVariants = variants.filter((variant) => variant.category === model);
         const modelFootprints = footprint.variantMetrics.filter((metric) => normalizeModelName(metric.label) === model);
         const perVariantDensities = modelFootprints.map((metric) => {
@@ -154,7 +157,7 @@ function buildRows() {
         rows.push({
             model,
             modelLabel: displayModelName(model),
-            source: "misconfiguration",
+            source: 'misconfiguration',
             sliceLabel: `${displayModelName(model)} Misconfiguration Variants`,
             characters: avgChars,
             lines: avgLines,
@@ -176,7 +179,7 @@ function buildRows() {
         rows.push({
             model,
             modelLabel: displayModelName(model),
-            source: "ai",
+            source: 'ai',
             sliceLabel: metric.label,
             characters: metric.characters,
             lines: metric.lines,
@@ -198,41 +201,41 @@ function writeJson(payload) {
 function writeMarkdown(payload) {
     const generatedAt = new Date().toISOString();
     const lines = [];
-    lines.push("# Normalized Failure Density");
-    lines.push("");
+    lines.push('# Normalized Failure Density');
+    lines.push('');
     lines.push(`Generated: ${generatedAt}`);
-    lines.push("Regenerate: npm run code:footprint:tolerant");
-    lines.push("");
-    lines.push("This exploratory report normalizes observed security failures against implementation footprint to compare baseline, misconfiguration, and AI-generated slices without over-weighting raw size alone.");
-    lines.push("");
-    lines.push("## Interpretation Rules");
-    lines.push("");
-    lines.push("- Baseline rows show zero observed security failures by design; they provide denominator context only.");
+    lines.push('Regenerate: npm run code:footprint:tolerant');
+    lines.push('');
+    lines.push('This exploratory report normalizes observed security failures against implementation footprint to compare baseline, misconfiguration, and AI-generated slices without over-weighting raw size alone.');
+    lines.push('');
+    lines.push('## Interpretation Rules');
+    lines.push('');
+    lines.push('- Baseline rows show zero observed security failures by design; they provide denominator context only.');
     lines.push("- Misconfiguration rows use the mean effective footprint across the model's intentional variants, with failure events counted from exploit-positive focused proof passes.");
-    lines.push("- AI rows use aggregate AI sample footprint and observed failed samples from ai-samples-summary.csv.");
-    lines.push("- Failure points count distinct independent failure/control categories, not literal code branches.");
-    lines.push("");
-    lines.push("## Model-Level Density Summary");
-    lines.push("");
-    lines.push("| Model | Source | Chars | Lines | Functions | Cyclomatic | Failure Events | Failure Points | Failures / 10k Chars | Failures / 100 LOC | Failures / 10 Functions | Failure Points / 10k Chars |");
-    lines.push("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|");
+    lines.push('- AI rows use aggregate AI sample footprint and observed failed samples from ai-samples-summary.csv.');
+    lines.push('- Failure points count distinct independent failure/control categories, not literal code branches.');
+    lines.push('');
+    lines.push('## Model-Level Density Summary');
+    lines.push('');
+    lines.push('| Model | Source | Chars | Lines | Functions | Cyclomatic | Failure Events | Failure Points | Failures / 10k Chars | Failures / 100 LOC | Failures / 10 Functions | Failure Points / 10k Chars |');
+    lines.push('|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|');
     for (const row of payload.rows) {
         lines.push(`| ${row.modelLabel} | ${row.source} | ${Math.round(row.characters)} | ${Math.round(row.lines)} | ${Math.round(row.functions)} | ${Math.round(row.cyclomaticComplexity)} | ${row.failureEvents} | ${row.failurePoints} | ${row.failuresPer10kChars.toFixed(3)} | ${row.failuresPer100Lines.toFixed(3)} | ${row.failuresPer10Functions.toFixed(3)} | ${row.failurePointsPer10kChars.toFixed(3)} |`);
     }
-    lines.push("");
-    lines.push("## Variant-Level Density Detail");
-    lines.push("");
-    lines.push("| Variant | Model | Chars | Lines | Functions | Cyclomatic | Failure Event | Failures / 10k Chars | Failures / 100 LOC |");
-    lines.push("|---|---|---:|---:|---:|---:|---:|---:|---:|");
+    lines.push('');
+    lines.push('## Variant-Level Density Detail');
+    lines.push('');
+    lines.push('| Variant | Model | Chars | Lines | Functions | Cyclomatic | Failure Event | Failures / 10k Chars | Failures / 100 LOC |');
+    lines.push('|---|---|---:|---:|---:|---:|---:|---:|---:|');
     for (const row of payload.variantRows) {
         lines.push(`| ${row.variantName} | ${row.model.toUpperCase()} | ${row.characters} | ${row.lines} | ${row.functions} | ${row.cyclomaticComplexity} | ${row.failureEvents} | ${row.failuresPer10kChars.toFixed(3)} | ${row.failuresPer100Lines.toFixed(3)} |`);
     }
-    lines.push("");
-    lines.push("## Notes");
-    lines.push("");
-    lines.push("- Use these density figures as exploratory normalization aids, not confirmatory causal estimates.");
-    lines.push("- A higher density indicates more observed failures relative to footprint, not necessarily stronger exploit severity.");
-    fs_1.default.writeFileSync(path_1.default.join(process.cwd(), report_paths_1.GENERATED_FILES.normalizedFootprintSummary), `${lines.join("\n")}\n`);
+    lines.push('');
+    lines.push('## Notes');
+    lines.push('');
+    lines.push('- Use these density figures as exploratory normalization aids, not confirmatory causal estimates.');
+    lines.push('- A higher density indicates more observed failures relative to footprint, not necessarily stronger exploit severity.');
+    fs_1.default.writeFileSync(path_1.default.join(process.cwd(), report_paths_1.GENERATED_FILES.normalizedFootprintSummary), `${lines.join('\n')}\n`);
 }
 function main() {
     const payload = buildRows();

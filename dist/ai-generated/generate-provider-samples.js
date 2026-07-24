@@ -10,24 +10,24 @@ const path_1 = __importDefault(require("path"));
 const common_1 = require("./common");
 const generator_prompts_1 = require("./generator-prompts");
 dotenv_1.default.config({ override: true });
-const MODELS = ["oauth", "jwt", "sessions"];
+const MODELS = ['oauth', 'jwt', 'sessions'];
 const MAX_PROVIDER_ATTEMPTS = 5;
 const BASE_RETRY_DELAY_MS = 750;
 const MAX_RETRY_JITTER_MS = 250;
-const REQUEST_TIMEOUT_MS = Number(process.env.AI_PROVIDER_REQUEST_TIMEOUT_MS ?? "120000");
-const SAMPLE_TIMEOUT_MS = Number(process.env.AI_PROVIDER_SAMPLE_TIMEOUT_MS ?? "180000");
+const REQUEST_TIMEOUT_MS = Number(process.env.AI_PROVIDER_REQUEST_TIMEOUT_MS ?? '120000');
+const SAMPLE_TIMEOUT_MS = Number(process.env.AI_PROVIDER_SAMPLE_TIMEOUT_MS ?? '180000');
 const RETRYABLE_STATUS_CODES = new Set([408, 409, 429, 500, 502, 503, 504, 529]);
-const OFFLINE_FREEZE_LOCK_PATH = path_1.default.join(process.cwd(), "docs", "generated", "OFFLINE_FREEZE_LOCK.json");
+const OFFLINE_FREEZE_LOCK_PATH = path_1.default.join(process.cwd(), 'docs', 'generated', 'OFFLINE_FREEZE_LOCK.json');
 class RequestTimeoutError extends Error {
     constructor(message) {
         super(message);
-        this.name = "RequestTimeoutError";
+        this.name = 'RequestTimeoutError';
     }
 }
 class SampleTimeoutError extends Error {
     constructor(message) {
         super(message);
-        this.name = "SampleTimeoutError";
+        this.name = 'SampleTimeoutError';
     }
 }
 function getArgValue(name) {
@@ -37,31 +37,33 @@ function getArgValue(name) {
     return process.argv[index + 1] ?? null;
 }
 function parseProvider() {
-    const fromFlag = getArgValue("--provider");
-    const fromPosition = process.argv.slice(2).find((value) => value === "openai" || value === "claude");
-    const value = (fromFlag ?? fromPosition ?? process.env.AI_PROVIDER ?? "").toLowerCase();
-    if (value === "openai" || value === "claude") {
+    const fromFlag = getArgValue('--provider');
+    const fromPosition = process.argv
+        .slice(2)
+        .find((value) => value === 'openai' || value === 'claude');
+    const value = (fromFlag ?? fromPosition ?? process.env.AI_PROVIDER ?? '').toLowerCase();
+    if (value === 'openai' || value === 'claude') {
         return value;
     }
-    throw new Error("Missing provider. Use --provider openai or --provider claude.");
+    throw new Error('Missing provider. Use --provider openai or --provider claude.');
 }
 function parseModels() {
-    const fromFlag = getArgValue("--model");
-    const raw = (fromFlag ?? process.env.AI_MODEL ?? "all").toLowerCase();
-    if (raw === "all")
+    const fromFlag = getArgValue('--model');
+    const raw = (fromFlag ?? process.env.AI_MODEL ?? 'all').toLowerCase();
+    if (raw === 'all')
         return MODELS;
-    if (raw === "oauth" || raw === "jwt" || raw === "sessions") {
+    if (raw === 'oauth' || raw === 'jwt' || raw === 'sessions') {
         return [raw];
     }
-    throw new Error("Invalid model. Use --model oauth | jwt | sessions | all.");
+    throw new Error('Invalid model. Use --model oauth | jwt | sessions | all.');
 }
 function parsePromptMode() {
-    const fromFlag = getArgValue("--prompt-mode");
-    const raw = (fromFlag ?? process.env.AI_PROMPT_MODE ?? "security-guided").toLowerCase();
-    if (raw === "neutral" || raw === "security-guided") {
+    const fromFlag = getArgValue('--prompt-mode');
+    const raw = (fromFlag ?? process.env.AI_PROMPT_MODE ?? 'security-guided').toLowerCase();
+    if (raw === 'neutral' || raw === 'security-guided') {
         return raw;
     }
-    throw new Error("Invalid prompt mode. Use --prompt-mode neutral or --prompt-mode security-guided.");
+    throw new Error('Invalid prompt mode. Use --prompt-mode neutral or --prompt-mode security-guided.');
 }
 function normalizeCode(text) {
     const trimmed = text.trim();
@@ -72,7 +74,7 @@ function normalizeCode(text) {
     return trimmed;
 }
 function sha256(text) {
-    return (0, crypto_1.createHash)("sha256").update(text).digest("hex");
+    return (0, crypto_1.createHash)('sha256').update(text).digest('hex');
 }
 async function sleep(ms) {
     await new Promise((resolve) => setTimeout(resolve, ms));
@@ -101,7 +103,7 @@ async function fetchWithTimeout(url, init, timeoutMs, context) {
         });
     }
     catch (error) {
-        if (error instanceof Error && error.name === "AbortError") {
+        if (error instanceof Error && error.name === 'AbortError') {
             throw new RequestTimeoutError(`${context} timed out after ${timeoutMs}ms.`);
         }
         throw error;
@@ -123,7 +125,7 @@ async function readErrorMessage(response) {
         return await response.text();
     }
     catch {
-        return "Unable to read error response body.";
+        return 'Unable to read error response body.';
     }
 }
 function logRetry(provider, attempt, status, delayMs, context) {
@@ -131,33 +133,33 @@ function logRetry(provider, attempt, status, delayMs, context) {
 }
 async function generateOpenAI(prompt, systemPrompt, diagnostics) {
     const apiKey = process.env.OPENAI_API_KEY;
-    const model = process.env.OPENAI_MODEL ?? "gpt-4o";
-    const baseUrl = process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1";
+    const model = process.env.OPENAI_MODEL ?? 'gpt-4o';
+    const baseUrl = process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1';
     if (!apiKey) {
-        throw new Error("OpenAI is not configured. Set OPENAI_API_KEY.");
+        throw new Error('OpenAI is not configured. Set OPENAI_API_KEY.');
     }
-    const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+    const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     const url = `${normalizedBaseUrl}/chat/completions`;
     for (let attempt = 1; attempt <= MAX_PROVIDER_ATTEMPTS; attempt += 1) {
         diagnostics.totalAttempts += 1;
         let response;
         try {
             response = await fetchWithTimeout(url, {
-                method: "POST",
+                method: 'POST',
                 headers: {
-                    "Content-Type": "application/json",
+                    'Content-Type': 'application/json',
                     Authorization: `Bearer ${apiKey}`,
                 },
                 body: JSON.stringify({
                     model,
                     messages: [
-                        { role: "system", content: systemPrompt },
-                        { role: "user", content: prompt },
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: prompt },
                     ],
                     max_tokens: 900,
                     temperature: 0.8,
                 }),
-            }, REQUEST_TIMEOUT_MS, "OpenAI request");
+            }, REQUEST_TIMEOUT_MS, 'OpenAI request');
         }
         catch (error) {
             if (error instanceof RequestTimeoutError) {
@@ -169,7 +171,7 @@ async function generateOpenAI(prompt, systemPrompt, diagnostics) {
             if (attempt < MAX_PROVIDER_ATTEMPTS) {
                 diagnostics.retries += 1;
                 const delayMs = getRetryDelayMs(attempt);
-                process.stdout.write(`[ai:openai] Retry ${attempt}/${MAX_PROVIDER_ATTEMPTS} after ${error instanceof RequestTimeoutError ? "timeout" : "network error"}; waiting ${delayMs}ms...\n`);
+                process.stdout.write(`[ai:openai] Retry ${attempt}/${MAX_PROVIDER_ATTEMPTS} after ${error instanceof RequestTimeoutError ? 'timeout' : 'network error'}; waiting ${delayMs}ms...\n`);
                 await sleep(delayMs);
                 continue;
             }
@@ -182,7 +184,7 @@ async function generateOpenAI(prompt, systemPrompt, diagnostics) {
                 diagnostics.retries += 1;
                 diagnostics.retryableHttpFailures += 1;
                 const delayMs = getRetryDelayMs(attempt);
-                logRetry("openai", attempt, response.status, delayMs, "OpenAI generation");
+                logRetry('openai', attempt, response.status, delayMs, 'OpenAI generation');
                 await sleep(delayMs);
                 continue;
             }
@@ -192,36 +194,36 @@ async function generateOpenAI(prompt, systemPrompt, diagnostics) {
         const data = (await response.json());
         const content = data.choices?.[0]?.message?.content;
         if (!content) {
-            throw new Error("OpenAI response did not include code content.");
+            throw new Error('OpenAI response did not include code content.');
         }
         return normalizeCode(content);
     }
-    throw new Error("OpenAI request failed after retries.");
+    throw new Error('OpenAI request failed after retries.');
 }
 async function generateClaude(prompt, systemPrompt, diagnostics) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    const model = process.env.ANTHROPIC_MODEL ?? "claude-3-5-sonnet-20240620";
+    const model = process.env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-20240620';
     if (!apiKey) {
-        throw new Error("Anthropic is not configured. Set ANTHROPIC_API_KEY.");
+        throw new Error('Anthropic is not configured. Set ANTHROPIC_API_KEY.');
     }
     for (let attempt = 1; attempt <= MAX_PROVIDER_ATTEMPTS; attempt += 1) {
         diagnostics.totalAttempts += 1;
         let response;
         try {
-            response = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
-                method: "POST",
+            response = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
                 headers: {
-                    "Content-Type": "application/json",
-                    "x-api-key": apiKey,
-                    "anthropic-version": "2023-06-01",
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01',
                 },
                 body: JSON.stringify({
                     model,
                     max_tokens: 900,
                     system: systemPrompt,
-                    messages: [{ role: "user", content: prompt }],
+                    messages: [{ role: 'user', content: prompt }],
                 }),
-            }, REQUEST_TIMEOUT_MS, "Anthropic request");
+            }, REQUEST_TIMEOUT_MS, 'Anthropic request');
         }
         catch (error) {
             if (error instanceof RequestTimeoutError) {
@@ -233,7 +235,7 @@ async function generateClaude(prompt, systemPrompt, diagnostics) {
             if (attempt < MAX_PROVIDER_ATTEMPTS) {
                 diagnostics.retries += 1;
                 const delayMs = getRetryDelayMs(attempt);
-                process.stdout.write(`[ai:claude] Retry ${attempt}/${MAX_PROVIDER_ATTEMPTS} after ${error instanceof RequestTimeoutError ? "timeout" : "network error"}; waiting ${delayMs}ms...\n`);
+                process.stdout.write(`[ai:claude] Retry ${attempt}/${MAX_PROVIDER_ATTEMPTS} after ${error instanceof RequestTimeoutError ? 'timeout' : 'network error'}; waiting ${delayMs}ms...\n`);
                 await sleep(delayMs);
                 continue;
             }
@@ -246,7 +248,7 @@ async function generateClaude(prompt, systemPrompt, diagnostics) {
                 diagnostics.retries += 1;
                 diagnostics.retryableHttpFailures += 1;
                 const delayMs = getRetryDelayMs(attempt);
-                logRetry("claude", attempt, response.status, delayMs, "Claude generation");
+                logRetry('claude', attempt, response.status, delayMs, 'Claude generation');
                 await sleep(delayMs);
                 continue;
             }
@@ -255,18 +257,18 @@ async function generateClaude(prompt, systemPrompt, diagnostics) {
         diagnostics.successfulRequests += 1;
         const data = (await response.json());
         const blockText = data.content
-            ?.map((entry) => (typeof entry.text === "string" ? entry.text : ""))
+            ?.map((entry) => (typeof entry.text === 'string' ? entry.text : ''))
             .filter((value) => value.length > 0)
-            .join("\n")
+            .join('\n')
             .trim();
         const text = (blockText && blockText.length > 0 ? blockText : data.output_text)?.trim();
         if (!text) {
-            const contentTypes = data.content?.map((entry) => entry.type ?? "unknown").join(", ") ?? "none";
+            const contentTypes = data.content?.map((entry) => entry.type ?? 'unknown').join(', ') ?? 'none';
             throw new Error(`Anthropic response did not include code content. Content types: ${contentTypes}`);
         }
         return normalizeCode(text);
     }
-    throw new Error("Anthropic request failed after retries.");
+    throw new Error('Anthropic request failed after retries.');
 }
 async function generateSample(provider, model, promptMode, sampleNumber, diagnostics) {
     const modelPrompt = (0, generator_prompts_1.getGeneratorPrompt)(model, promptMode);
@@ -274,11 +276,11 @@ async function generateSample(provider, model, promptMode, sampleNumber, diagnos
     const prompt = [
         modelPrompt,
         `Generate sample ${sampleNumber} of ${common_1.SAMPLE_COUNT}.`,
-        promptMode === "security-guided"
-            ? "Vary structure and naming from prior samples while preserving secure behavior."
-            : "Vary structure and naming from prior samples while keeping the implementation plausible and internally consistent.",
-    ].join("\n");
-    if (provider === "openai") {
+        promptMode === 'security-guided'
+            ? 'Vary structure and naming from prior samples while preserving secure behavior.'
+            : 'Vary structure and naming from prior samples while keeping the implementation plausible and internally consistent.',
+    ].join('\n');
+    if (provider === 'openai') {
         return generateOpenAI(prompt, systemPrompt, diagnostics);
     }
     return generateClaude(prompt, systemPrompt, diagnostics);
@@ -304,16 +306,18 @@ async function generateForModel(provider, model, promptMode, diagnostics) {
 }
 async function main() {
     const offlineLockExists = fs_1.default.existsSync(OFFLINE_FREEZE_LOCK_PATH);
-    const allowOverride = (process.env.ALLOW_LIVE_AI_GENERATION ?? "").toLowerCase() === "true";
+    const allowOverride = (process.env.ALLOW_LIVE_AI_GENERATION ?? '').toLowerCase() === 'true';
     if (offlineLockExists && !allowOverride) {
-        throw new Error("Offline freeze lock is active at docs/generated/OFFLINE_FREEZE_LOCK.json. " +
-            "Live provider generation is blocked. Remove the lock intentionally or set ALLOW_LIVE_AI_GENERATION=true to override.");
+        throw new Error('Offline freeze lock is active at docs/generated/OFFLINE_FREEZE_LOCK.json. ' +
+            'Live provider generation is blocked. Remove the lock intentionally or set ALLOW_LIVE_AI_GENERATION=true to override.');
     }
     const provider = parseProvider();
     const models = parseModels();
     const promptMode = parsePromptMode();
     const startedAt = new Date().toISOString();
-    const providerModel = provider === "openai" ? process.env.OPENAI_MODEL ?? "gpt-4o" : process.env.ANTHROPIC_MODEL ?? "claude-3-5-sonnet-20240620";
+    const providerModel = provider === 'openai'
+        ? (process.env.OPENAI_MODEL ?? 'gpt-4o')
+        : (process.env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-20240620');
     const openAiTemperature = 0.8;
     const maxTokens = 900;
     const diagnostics = {
@@ -340,13 +344,15 @@ async function main() {
     for (const model of models) {
         await generateForModel(provider, model, promptMode, diagnostics);
     }
-    (0, common_1.writeResult)("generation-metadata.json", {
+    (0, common_1.writeResult)('generation-metadata.json', {
         generatedAt: new Date().toISOString(),
         startedAt,
         provider,
         providerModel,
         providerModelIdentifier: providerModel,
-        providerEndpoint: provider === "openai" ? process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1" : "https://api.anthropic.com/v1/messages",
+        providerEndpoint: provider === 'openai'
+            ? (process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1')
+            : 'https://api.anthropic.com/v1/messages',
         promptMode,
         models,
         sampleCount: common_1.SAMPLE_COUNT,

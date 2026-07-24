@@ -37,23 +37,21 @@ function generateJwt(userId) {
     if (keyId) {
         signOptions.keyid = keyId;
     }
-    if (algorithm === "none") {
+    if (algorithm === 'none') {
         return jsonwebtoken_1.default.sign({ userId }, null, {
             ...signOptions,
-            algorithm: "none",
+            algorithm: 'none',
         });
     }
     return jsonwebtoken_1.default.sign({ userId }, signingKey, signOptions);
 }
 function verifyJwt(token) {
     const decodedHeader = jsonwebtoken_1.default.decode(token, { complete: true });
-    const header = typeof decodedHeader === "object" && decodedHeader && "header" in decodedHeader
+    const header = typeof decodedHeader === 'object' && decodedHeader && 'header' in decodedHeader
         ? decodedHeader.header
         : undefined;
     const expectedAlgorithm = (0, jwt_keys_1.getJwtAlgorithm)((0, variant_overrides_1.getVariantOverrides)().jwt?.algorithm);
-    const verificationAlgorithm = (expectedAlgorithm === "none"
-        ? "none"
-        : (header?.alg ?? expectedAlgorithm));
+    const verificationAlgorithm = (expectedAlgorithm === 'none' ? 'none' : (header?.alg ?? expectedAlgorithm));
     const key = (0, jwt_keys_1.getJwtVerifyKey)(verificationAlgorithm, header?.kid);
     const algorithms = [verificationAlgorithm];
     return jsonwebtoken_1.default.verify(token, key, {

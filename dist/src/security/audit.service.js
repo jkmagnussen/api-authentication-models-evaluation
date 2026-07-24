@@ -17,7 +17,7 @@ async function writeAuditEvent(event) {
         });
     }
     catch (error) {
-        (0, logger_1.log)("error", "audit.write.failed", {
+        (0, logger_1.log)('error', 'audit.write.failed', {
             eventType: event.eventType,
             error: error instanceof Error ? error.message : String(error),
         });

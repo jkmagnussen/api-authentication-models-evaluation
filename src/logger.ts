@@ -1,6 +1,6 @@
-import { APP_CONFIG } from "./config";
+import { APP_CONFIG } from './config';
 
-type LogLevel = "debug" | "info" | "warn" | "error";
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 const levelWeight: Record<LogLevel, number> = {
   debug: 10,
@@ -10,7 +10,7 @@ const levelWeight: Record<LogLevel, number> = {
 };
 
 function shouldLog(level: LogLevel) {
-  const configuredLevel = (APP_CONFIG.observability.logLevel as LogLevel) || "info";
+  const configuredLevel = (APP_CONFIG.observability.logLevel as LogLevel) || 'info';
   return levelWeight[level] >= levelWeight[configuredLevel];
 }
 
@@ -26,12 +26,12 @@ export function log(level: LogLevel, message: string, extra: Record<string, unkn
 
   const line = JSON.stringify(payload);
 
-  if (level === "error") {
+  if (level === 'error') {
     console.error(line);
     return;
   }
 
-  if (level === "warn") {
+  if (level === 'warn') {
     console.warn(line);
     return;
   }

@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const common_1 = require("./common");
-const models = ["oauth", "jwt", "sessions"];
+const models = ['oauth', 'jwt', 'sessions'];
 for (const model of models) {
     for (let index = 1; index <= common_1.SAMPLE_COUNT; index += 1) {
         const sourceText = (0, common_1.readSample)(model, index);
@@ -47,5 +47,5 @@ for (const model of models) {
         }
     }
 }
-fs_1.default.writeFileSync(path_1.default.join(common_1.RESULTS_DIR, "analysis-summary.json"), JSON.stringify({ generatedAt: new Date().toISOString(), models }, null, 2));
-console.log("Analysed AI-generated samples.");
+fs_1.default.writeFileSync(path_1.default.join(common_1.RESULTS_DIR, 'analysis-summary.json'), JSON.stringify({ generatedAt: new Date().toISOString(), models }, null, 2));
+console.log('Analysed AI-generated samples.');

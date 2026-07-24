@@ -4,14 +4,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
-describe("Performance Summary", () => {
-    test("Combined results", () => {
-        const jwt = JSON.parse(fs_1.default.readFileSync("docs/performance-results/baseline/jwt.json", "utf8"));
-        const oauth = JSON.parse(fs_1.default.readFileSync("docs/performance-results/baseline/oauth.json", "utf8"));
-        const sessions = JSON.parse(fs_1.default.readFileSync("docs/performance-results/baseline/sessions.json", "utf8"));
-        const jwtAttack = JSON.parse(fs_1.default.readFileSync("docs/performance-results/attacks/jwt.json", "utf8"));
-        const oauthAttack = JSON.parse(fs_1.default.readFileSync("docs/performance-results/attacks/oauth.json", "utf8"));
-        const sessionsAttack = JSON.parse(fs_1.default.readFileSync("docs/performance-results/attacks/sessions.json", "utf8"));
+describe('Performance Summary', () => {
+    test('Combined results', () => {
+        const jwt = JSON.parse(fs_1.default.readFileSync('docs/performance-results/baseline/jwt.json', 'utf8'));
+        const oauth = JSON.parse(fs_1.default.readFileSync('docs/performance-results/baseline/oauth.json', 'utf8'));
+        const sessions = JSON.parse(fs_1.default.readFileSync('docs/performance-results/baseline/sessions.json', 'utf8'));
+        const jwtAttack = JSON.parse(fs_1.default.readFileSync('docs/performance-results/attacks/jwt.json', 'utf8'));
+        const oauthAttack = JSON.parse(fs_1.default.readFileSync('docs/performance-results/attacks/oauth.json', 'utf8'));
+        const sessionsAttack = JSON.parse(fs_1.default.readFileSync('docs/performance-results/attacks/sessions.json', 'utf8'));
         console.log(`
 ==================== PERFORMANCE SUMMARY ====================
 

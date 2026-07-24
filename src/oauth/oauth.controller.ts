@@ -1,27 +1,27 @@
-import { Request, Response } from "express";
-import { prisma } from "../db";
-import crypto from "crypto";
-import { exchangeCodeForToken, hashOpaqueToken } from "./oauth.service";
-import { clientScopes } from "./clientScopes";
-import { getVariantOverrides } from "../variant-overrides";
-import APP_CONFIG from "../config";
-import { matchesStoredHashOrValue } from "../auth/password";
-import { writeAuditEvent } from "../security/audit.service";
+import { Request, Response } from 'express';
+import { prisma } from '../db';
+import crypto from 'crypto';
+import { exchangeCodeForToken, hashOpaqueToken } from './oauth.service';
+import { clientScopes } from './clientScopes';
+import { getVariantOverrides } from '../variant-overrides';
+import APP_CONFIG from '../config';
+import { matchesStoredHashOrValue } from '../auth/password';
+import { writeAuditEvent } from '../security/audit.service';
 
-const SUPPORTED_PKCE_METHODS = new Set(["S256", "PLAIN"]);
+const SUPPORTED_PKCE_METHODS = new Set(['S256', 'PLAIN']);
 
 function getUserAgent(req: Request) {
-  if (typeof req.get === "function") {
-    return req.get("user-agent");
+  if (typeof req.get === 'function') {
+    return req.get('user-agent');
   }
 
-  const header = req.headers?.["user-agent"];
-  return typeof header === "string" ? header : undefined;
+  const header = req.headers?.['user-agent'];
+  return typeof header === 'string' ? header : undefined;
 }
 
 function getRequestedRedirectUri(req: Request) {
   const redirectUri = req.body.redirectUri ?? req.body.redirect_uri;
-  return typeof redirectUri === "string" ? redirectUri : undefined;
+  return typeof redirectUri === 'string' ? redirectUri : undefined;
 }
 
 function validateRedirectUri(redirectUri: string | undefined) {
@@ -30,7 +30,8 @@ function validateRedirectUri(redirectUri: string | undefined) {
   }
 
   const variantOverrides = getVariantOverrides();
-  const allowedRedirects = variantOverrides.oauth?.allowedRedirects ?? APP_CONFIG.oauth.allowedRedirects;
+  const allowedRedirects =
+    variantOverrides.oauth?.allowedRedirects ?? APP_CONFIG.oauth.allowedRedirects;
   const normalized = decodeURIComponent(redirectUri);
   return allowedRedirects.includes(normalized);
 }
@@ -40,19 +41,12 @@ function validateRedirectUri(redirectUri: string | undefined) {
 // ------------------------------------------------------
 export async function authorize(req: Request, res: Response) {
   const variantOverrides = getVariantOverrides();
-  const {
-    userId,
-    state,
-    scope,
-    code_challenge,
-    code_challenge_method,
-    redirectUri,
-    redirect_uri,
-  } = req.body;
+  const { userId, state, scope, code_challenge, code_challenge_method, redirectUri, redirect_uri } =
+    req.body;
   const clientId = req.body.clientId ?? req.body.client_id;
 
   if (!userId) {
-    return res.status(400).json({ error: "Missing userId" });
+    return res.status(400).json({ error: 'Missing userId' });
   }
 
   const user = await prisma.user.findUnique({
@@ -60,7 +54,7 @@ export async function authorize(req: Request, res: Response) {
   });
 
   if (!user) {
-    return res.status(400).json({ error: "User not found" });
+    return res.status(400).json({ error: 'User not found' });
   }
 
   const client = await prisma.oAuthClient.findUnique({
@@ -68,48 +62,52 @@ export async function authorize(req: Request, res: Response) {
   });
 
   if (!client) {
-    return res.status(400).json({ error: "Invalid clientId" });
+    return res.status(400).json({ error: 'Invalid clientId' });
   }
 
   if (APP_CONFIG.oauth.requirePkce && !code_challenge) {
     return res.status(400).json({
-      error: "invalid_request",
-      error_description: "Missing code_challenge",
+      error: 'invalid_request',
+      error_description: 'Missing code_challenge',
     });
   }
 
-  if (code_challenge_method && !SUPPORTED_PKCE_METHODS.has(String(code_challenge_method).toUpperCase())) {
+  if (
+    code_challenge_method &&
+    !SUPPORTED_PKCE_METHODS.has(String(code_challenge_method).toUpperCase())
+  ) {
     return res.status(400).json({
-      error: "invalid_request",
-      error_description: "Unsupported code_challenge_method",
+      error: 'invalid_request',
+      error_description: 'Unsupported code_challenge_method',
     });
   }
 
-
-    // ------------------------------------------------------
+  // ------------------------------------------------------
   // ⭐ SCOPE VALIDATION (NEW)
   // ------------------------------------------------------
-  const requestedScopes: string[] = (scope ?? "read").split(" ");
+  const requestedScopes: string[] = (scope ?? 'read').split(' ');
 
   const allowedScopes = variantOverrides.oauth?.defaultScopes ?? clientScopes[clientId] ?? [];
 
-  const invalid = requestedScopes.some(s => !allowedScopes.includes(s));
+  const invalid = requestedScopes.some((s) => !allowedScopes.includes(s));
 
   if (invalid) {
     return res.status(400).json({
-      error: "invalid_scope",
+      error: 'invalid_scope',
       error_description: `Client '${clientId}' is not allowed to request scope '${scope}'`,
     });
   }
   // ------------------------------------------------------
 
-
-
   const requestedRedirectUri = getRequestedRedirectUri(req);
-  const hasConflictingRedirectValues = redirectUri !== undefined && redirect_uri !== undefined && redirectUri !== redirect_uri;
+  const hasConflictingRedirectValues =
+    redirectUri !== undefined && redirect_uri !== undefined && redirectUri !== redirect_uri;
 
-  if ((requestedRedirectUri && !validateRedirectUri(requestedRedirectUri)) || hasConflictingRedirectValues) {
-    return res.status(400).json({ error: "Invalid redirect URI" });
+  if (
+    (requestedRedirectUri && !validateRedirectUri(requestedRedirectUri)) ||
+    hasConflictingRedirectValues
+  ) {
+    return res.status(400).json({ error: 'Invalid redirect URI' });
   }
 
   const code = crypto.randomUUID();
@@ -120,7 +118,7 @@ export async function authorize(req: Request, res: Response) {
       userId,
       clientId,
       state: state ?? null,
-      scope: scope ?? "read",
+      scope: scope ?? 'read',
       expiresAt: new Date(Date.now() + APP_CONFIG.oauth.authorizationCodeTtlSeconds * 1000),
       codeChallenge: code_challenge ?? null,
       codeChallengeMethod: code_challenge_method ?? null,
@@ -130,11 +128,11 @@ export async function authorize(req: Request, res: Response) {
 
   await writeAuditEvent({
     userId,
-    eventType: "oauth.authorize",
-    outcome: "success",
+    eventType: 'oauth.authorize',
+    outcome: 'success',
     ipAddress: req.ip,
     userAgent: getUserAgent(req),
-    metadata: { clientId, scope: scope ?? "read" },
+    metadata: { clientId, scope: scope ?? 'read' },
   });
 
   return res.status(200).json({
@@ -155,11 +153,9 @@ export async function token(req: Request, res: Response) {
   const auth = req.headers.authorization;
   let authenticatedClientId: string | undefined;
 
-  if (auth?.startsWith("Basic ")) {
-    const base64 = auth.replace("Basic ", "");
-    const [clientId, clientSecret] = Buffer.from(base64, "base64")
-      .toString("utf8")
-      .split(":");
+  if (auth?.startsWith('Basic ')) {
+    const base64 = auth.replace('Basic ', '');
+    const [clientId, clientSecret] = Buffer.from(base64, 'base64').toString('utf8').split(':');
 
     const client = await prisma.oAuthClient.findUnique({
       where: { id: clientId },
@@ -167,8 +163,8 @@ export async function token(req: Request, res: Response) {
 
     if (!client || !(await matchesStoredHashOrValue(clientSecret, client.secret))) {
       return res.status(401).json({
-        error: "invalid_client",
-        error_description: "Invalid client credentials",
+        error: 'invalid_client',
+        error_description: 'Invalid client credentials',
       });
     }
 
@@ -176,13 +172,13 @@ export async function token(req: Request, res: Response) {
   }
 
   if (!code) {
-    return res.status(400).json({ error: "Missing code" });
+    return res.status(400).json({ error: 'Missing code' });
   }
 
   if (!requestClientId && !authenticatedClientId && APP_CONFIG.isProduction) {
     return res.status(400).json({
-      error: "invalid_client",
-      error_description: "Missing client_id",
+      error: 'invalid_client',
+      error_description: 'Missing client_id',
     });
   }
 
@@ -191,29 +187,29 @@ export async function token(req: Request, res: Response) {
   });
 
   if (!stored) {
-    return res.status(400).json({ error: "Invalid authorization code" });
+    return res.status(400).json({ error: 'Invalid authorization code' });
   }
 
   if (stored.used) {
-    return res.status(400).json({ error: "Authorization code already used" });
+    return res.status(400).json({ error: 'Authorization code already used' });
   }
 
   const validateState = variantOverrides.oauth?.validateState ?? true;
   if (validateState && stored.state && stored.state !== state) {
-    return res.status(400).json({ error: "Invalid state" });
+    return res.status(400).json({ error: 'Invalid state' });
   }
 
   if (authenticatedClientId && authenticatedClientId !== stored.clientId) {
     return res.status(401).json({
-      error: "invalid_client",
-      error_description: "Client does not match authorization code",
+      error: 'invalid_client',
+      error_description: 'Client does not match authorization code',
     });
   }
 
   if (requestClientId && requestClientId !== stored.clientId) {
     return res.status(401).json({
-      error: "invalid_client",
-      error_description: "client_id does not match authorization code",
+      error: 'invalid_client',
+      error_description: 'client_id does not match authorization code',
     });
   }
 
@@ -221,20 +217,21 @@ export async function token(req: Request, res: Response) {
   if (stored.codeChallenge) {
     if (!codeVerifier) {
       return res.status(400).json({
-        error: "invalid_request",
-        error_description: "Missing code_verifier",
+        error: 'invalid_request',
+        error_description: 'Missing code_verifier',
       });
     }
 
-    const method = (stored.codeChallengeMethod ?? "plain").toUpperCase();
-    const computedChallenge = method === "S256"
-      ? crypto.createHash("sha256").update(codeVerifier).digest("base64url")
-      : codeVerifier;
+    const method = (stored.codeChallengeMethod ?? 'plain').toUpperCase();
+    const computedChallenge =
+      method === 'S256'
+        ? crypto.createHash('sha256').update(codeVerifier).digest('base64url')
+        : codeVerifier;
 
     if (computedChallenge !== stored.codeChallenge) {
       return res.status(400).json({
-        error: "invalid_grant",
-        error_description: "PKCE verification failed",
+        error: 'invalid_grant',
+        error_description: 'PKCE verification failed',
       });
     }
   }
@@ -242,13 +239,13 @@ export async function token(req: Request, res: Response) {
   const tokenResult = await exchangeCodeForToken(code);
 
   if (!tokenResult) {
-    return res.status(400).json({ error: "Invalid authorization code" });
+    return res.status(400).json({ error: 'Invalid authorization code' });
   }
 
   await writeAuditEvent({
     userId: stored.userId,
-    eventType: "oauth.token",
-    outcome: "success",
+    eventType: 'oauth.token',
+    outcome: 'success',
     ipAddress: req.ip,
     userAgent: getUserAgent(req),
     metadata: { clientId: stored.clientId },
@@ -257,7 +254,7 @@ export async function token(req: Request, res: Response) {
   return res.status(200).json({
     access_token: tokenResult.accessToken,
     refresh_token: tokenResult.refreshToken,
-    token_type: "Bearer",
+    token_type: 'Bearer',
     expires_in: 3600,
   });
 }
@@ -271,8 +268,8 @@ export async function refresh(req: Request, res: Response) {
 
   if (!refreshToken) {
     return res.status(400).json({
-      error: "invalid_request",
-      error_description: "Missing refresh_token",
+      error: 'invalid_request',
+      error_description: 'Missing refresh_token',
     });
   }
 
@@ -293,15 +290,15 @@ export async function refresh(req: Request, res: Response) {
 
   if (rotated.count !== 1) {
     return res.status(400).json({
-      error: "invalid_grant",
-      error_description: "Invalid refresh token",
+      error: 'invalid_grant',
+      error_description: 'Invalid refresh token',
     });
   }
 
   return res.json({
     access_token: newAccessToken,
     refresh_token: newRefreshToken,
-    token_type: "Bearer",
+    token_type: 'Bearer',
     expires_in: 3600,
   });
 }
@@ -314,8 +311,8 @@ export async function revoke(req: Request, res: Response) {
 
   if (!token) {
     return res.status(400).json({
-      error: "invalid_request",
-      error_description: "Missing token",
+      error: 'invalid_request',
+      error_description: 'Missing token',
     });
   }
 
@@ -349,8 +346,8 @@ export async function introspect(req: Request, res: Response) {
   if (!token) {
     return res.status(400).json({
       active: false,
-      error: "invalid_request",
-      error_description: "Missing token",
+      error: 'invalid_request',
+      error_description: 'Missing token',
     });
   }
 
@@ -368,7 +365,7 @@ export async function introspect(req: Request, res: Response) {
       client_id: access.clientId,
       user_id: access.userId,
       exp: Math.floor(access.expiresAt.getTime() / 1000),
-      token_type: "access_token",
+      token_type: 'access_token',
     });
   }
 
@@ -386,7 +383,7 @@ export async function introspect(req: Request, res: Response) {
       client_id: refresh.clientId,
       user_id: refresh.userId,
       exp: Math.floor(refresh.expiresAt.getTime() / 1000),
-      token_type: "refresh_token",
+      token_type: 'refresh_token',
     });
   }
 

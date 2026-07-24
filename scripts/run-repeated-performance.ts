@@ -1,13 +1,13 @@
-import { spawnSync } from "child_process";
+import { spawnSync } from 'child_process';
 
 const repeatCount = Number(process.argv[2] ?? 5);
 
 for (let index = 1; index <= repeatCount; index += 1) {
-  const runId = `run-${String(index).padStart(2, "0")}`;
+  const runId = `run-${String(index).padStart(2, '0')}`;
   console.log(`Starting performance repetition ${runId}`);
 
-  const result = spawnSync("npm", ["test", "--", "tests/performance"], {
-    stdio: "inherit",
+  const result = spawnSync('npm', ['test', '--', 'tests/performance'], {
+    stdio: 'inherit',
     shell: true,
     env: {
       ...process.env,
@@ -20,8 +20,8 @@ for (let index = 1; index <= repeatCount; index += 1) {
   }
 }
 
-const analyzeResult = spawnSync("npm", ["run", "perf:analyze"], {
-  stdio: "inherit",
+const analyzeResult = spawnSync('npm', ['run', 'perf:analyze'], {
+  stdio: 'inherit',
   shell: true,
   env: process.env,
 });
