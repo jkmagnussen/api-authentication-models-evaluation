@@ -24,7 +24,7 @@
       "forceThreeLines": false
     },
     "complexity-to-misconfig-regression.svg": {
-      "directory": "maintainability",
+      "directory": "../supporting/maintainability",
       "compactVerticalShift": -10.0,
       "verticalShift": 0.0,
       "forceTwoLines": false,
@@ -59,7 +59,7 @@
       "forceThreeLines": false
     },
     "performance-comparison.svg": {
-      "directory": "performance",
+      "directory": "../supporting/performance",
       "compactVerticalShift": -10.0,
       "verticalShift": 0.0,
       "forceTwoLines": false,
@@ -101,7 +101,7 @@
       "forceThreeLines": false
     },
     "control-point-risk-heatmap.svg": {
-      "directory": "security",
+      "directory": "../supporting/security",
       "compactVerticalShift": -65.0,
       "verticalShift": -64.0,
       "forceTwoLines": false,
@@ -136,7 +136,7 @@
       "forceThreeLines": false
     },
     "stride-severity-scoring.svg": {
-      "directory": "security",
+      "directory": "../supporting/security",
       "compactVerticalShift": -8.0,
       "verticalShift": 0.0,
       "forceTwoLines": false,
@@ -164,7 +164,7 @@
       "forceThreeLines": false
     },
     "correctness-security-tradeoff.svg": {
-      "directory": "synthesis",
+      "directory": "../supporting/synthesis",
       "compactVerticalShift": -10.0,
       "verticalShift": 0.0,
       "forceTwoLines": false,
@@ -199,7 +199,7 @@
       "forceThreeLines": false
     },
     "provider-bias-analysis.svg": {
-      "directory": "synthesis",
+      "directory": "../supporting/synthesis",
       "compactVerticalShift": -10.0,
       "verticalShift": 0.0,
       "forceTwoLines": false,

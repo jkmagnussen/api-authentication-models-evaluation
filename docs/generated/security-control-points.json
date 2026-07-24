@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-24T18:13:30.494Z",
+  "generatedAt": "2026-07-24T23:11:16.408Z",
   "definitions": [
     {
       "controlId": "oauth_redirect_uri_validation",
@@ -72,7 +72,7 @@
       "controlId": "oauth_redirect_uri_validation",
       "controlLabel": "OAuth redirect URI validation",
       "source": "baseline",
-      "characters": 17703,
+      "characters": 16907,
       "failureEvents": 0,
       "severity10": 9,
       "weightedRisk": 0,
@@ -85,7 +85,7 @@
       "controlId": "oauth_state_binding",
       "controlLabel": "OAuth state binding",
       "source": "baseline",
-      "characters": 17703,
+      "characters": 16907,
       "failureEvents": 0,
       "severity10": 10,
       "weightedRisk": 0,
@@ -98,7 +98,7 @@
       "controlId": "oauth_scope_enforcement",
       "controlLabel": "OAuth scope enforcement",
       "source": "baseline",
-      "characters": 17703,
+      "characters": 16907,
       "failureEvents": 0,
       "severity10": 6,
       "weightedRisk": 0,
@@ -111,7 +111,7 @@
       "controlId": "jwt_audience_issuer_validation",
       "controlLabel": "JWT audience and issuer validation",
       "source": "baseline",
-      "characters": 5934,
+      "characters": 5920,
       "failureEvents": 0,
       "severity10": 8,
       "weightedRisk": 0,
@@ -124,7 +124,7 @@
       "controlId": "jwt_algorithm_allowlist",
       "controlLabel": "JWT algorithm allowlist",
       "source": "baseline",
-      "characters": 5934,
+      "characters": 5920,
       "failureEvents": 0,
       "severity10": 10,
       "weightedRisk": 0,
@@ -137,7 +137,7 @@
       "controlId": "jwt_expiry_enforcement",
       "controlLabel": "JWT expiry enforcement",
       "source": "baseline",
-      "characters": 5934,
+      "characters": 5920,
       "failureEvents": 0,
       "severity10": 7,
       "weightedRisk": 0,
@@ -150,7 +150,7 @@
       "controlId": "session_regeneration_on_auth",
       "controlLabel": "Session regeneration on authentication",
       "source": "baseline",
-      "characters": 6974,
+      "characters": 6977,
       "failureEvents": 0,
       "severity10": 8,
       "weightedRisk": 0,
@@ -163,7 +163,7 @@
       "controlId": "session_cookie_protection",
       "controlLabel": "Session cookie protection",
       "source": "baseline",
-      "characters": 6974,
+      "characters": 6977,
       "failureEvents": 0,
       "severity10": 7,
       "weightedRisk": 0,
@@ -176,7 +176,7 @@
       "controlId": "session_invalidation_on_logout",
       "controlLabel": "Session invalidation on logout",
       "source": "baseline",
-      "characters": 6974,
+      "characters": 6977,
       "failureEvents": 0,
       "severity10": 8,
       "weightedRisk": 0,
@@ -189,12 +189,12 @@
       "controlId": "oauth_redirect_uri_validation",
       "controlLabel": "OAuth redirect URI validation",
       "source": "misconfiguration",
-      "characters": 19794,
+      "characters": 19205,
       "failureEvents": 1,
       "severity10": 9,
       "weightedRisk": 9,
-      "failuresPer10kChars": 0.505203597049611,
-      "riskPer10kChars": 4.546832373446499
+      "failuresPer10kChars": 0.5206977349648529,
+      "riskPer10kChars": 4.686279614683676
     },
     {
       "model": "oauth",
@@ -202,12 +202,12 @@
       "controlId": "oauth_state_binding",
       "controlLabel": "OAuth state binding",
       "source": "misconfiguration",
-      "characters": 19733,
+      "characters": 19100,
       "failureEvents": 1,
       "severity10": 10,
       "weightedRisk": 10,
-      "failuresPer10kChars": 0.5067653169817058,
-      "riskPer10kChars": 5.067653169817058
+      "failuresPer10kChars": 0.5235602094240838,
+      "riskPer10kChars": 5.235602094240838
     },
     {
       "model": "oauth",
@@ -215,12 +215,12 @@
       "controlId": "oauth_scope_enforcement",
       "controlLabel": "OAuth scope enforcement",
       "source": "misconfiguration",
-      "characters": 19754,
+      "characters": 19214,
       "failureEvents": 1,
       "severity10": 6,
       "weightedRisk": 6,
-      "failuresPer10kChars": 0.5062265870203503,
-      "riskPer10kChars": 3.037359522122102
+      "failuresPer10kChars": 0.5204538357447694,
+      "riskPer10kChars": 3.1227230144686167
     },
     {
       "model": "jwt",
@@ -228,12 +228,12 @@
       "controlId": "jwt_audience_issuer_validation",
       "controlLabel": "JWT audience and issuer validation",
       "source": "misconfiguration",
-      "characters": 7966,
+      "characters": 8181,
       "failureEvents": 1,
       "severity10": 8,
       "weightedRisk": 8,
-      "failuresPer10kChars": 1.2553351744915893,
-      "riskPer10kChars": 10.042681395932714
+      "failuresPer10kChars": 1.2223444566678892,
+      "riskPer10kChars": 9.778755653343113
     },
     {
       "model": "jwt",
@@ -241,12 +241,12 @@
       "controlId": "jwt_algorithm_allowlist",
       "controlLabel": "JWT algorithm allowlist",
       "source": "misconfiguration",
-      "characters": 7978,
+      "characters": 8203,
       "failureEvents": 1,
       "severity10": 10,
       "weightedRisk": 10,
-      "failuresPer10kChars": 1.25344697919278,
-      "riskPer10kChars": 12.534469791927801
+      "failuresPer10kChars": 1.2190661952944046,
+      "riskPer10kChars": 12.190661952944046
     },
     {
       "model": "jwt",
@@ -254,12 +254,12 @@
       "controlId": "jwt_expiry_enforcement",
       "controlLabel": "JWT expiry enforcement",
       "source": "misconfiguration",
-      "characters": 7953,
+      "characters": 8138,
       "failureEvents": 1,
       "severity10": 7,
       "weightedRisk": 7,
-      "failuresPer10kChars": 1.257387149503332,
-      "riskPer10kChars": 8.801710046523324
+      "failuresPer10kChars": 1.228803145736053,
+      "riskPer10kChars": 8.601622020152371
     },
     {
       "model": "sessions",
@@ -267,12 +267,12 @@
       "controlId": "session_regeneration_on_auth",
       "controlLabel": "Session regeneration on authentication",
       "source": "misconfiguration",
-      "characters": 9029,
+      "characters": 9222,
       "failureEvents": 1,
       "severity10": 8,
       "weightedRisk": 8,
-      "failuresPer10kChars": 1.1075423634954036,
-      "riskPer10kChars": 8.860338907963229
+      "failuresPer10kChars": 1.0843634786380394,
+      "riskPer10kChars": 8.674907829104315
     },
     {
       "model": "sessions",
@@ -280,12 +280,12 @@
       "controlId": "session_cookie_protection",
       "controlLabel": "Session cookie protection",
       "source": "misconfiguration",
-      "characters": 9029,
+      "characters": 9202,
       "failureEvents": 1,
       "severity10": 7,
       "weightedRisk": 7,
-      "failuresPer10kChars": 1.1075423634954036,
-      "riskPer10kChars": 7.752796544467826
+      "failuresPer10kChars": 1.0867202782003913,
+      "riskPer10kChars": 7.607041947402739
     },
     {
       "model": "sessions",
@@ -293,12 +293,12 @@
       "controlId": "session_invalidation_on_logout",
       "controlLabel": "Session invalidation on logout",
       "source": "misconfiguration",
-      "characters": 9008,
+      "characters": 9202,
       "failureEvents": 1,
       "severity10": 8,
       "weightedRisk": 8,
-      "failuresPer10kChars": 1.1101243339253997,
-      "riskPer10kChars": 8.880994671403197
+      "failuresPer10kChars": 1.0867202782003913,
+      "riskPer10kChars": 8.69376222560313
     },
     {
       "model": "oauth",
@@ -424,7 +424,7 @@
       "modelLabel": "OAuth2",
       "source": "baseline",
       "controlCount": 3,
-      "charactersMean": 17703,
+      "charactersMean": 16907,
       "failureEventsTotal": 0,
       "weightedRiskTotal": 0,
       "avgFailuresPer10kChars": 0,
@@ -435,11 +435,11 @@
       "modelLabel": "OAuth2",
       "source": "misconfiguration",
       "controlCount": 3,
-      "charactersMean": 19760.333333333332,
+      "charactersMean": 19173,
       "failureEventsTotal": 3,
       "weightedRiskTotal": 25,
-      "avgFailuresPer10kChars": 0.5060651670172224,
-      "avgRiskPer10kChars": 4.2172816884618864
+      "avgFailuresPer10kChars": 0.5215705933779021,
+      "avgRiskPer10kChars": 4.348201574464377
     },
     {
       "model": "oauth",
@@ -457,7 +457,7 @@
       "modelLabel": "JWT",
       "source": "baseline",
       "controlCount": 3,
-      "charactersMean": 5934,
+      "charactersMean": 5920,
       "failureEventsTotal": 0,
       "weightedRiskTotal": 0,
       "avgFailuresPer10kChars": 0,
@@ -468,11 +468,11 @@
       "modelLabel": "JWT",
       "source": "misconfiguration",
       "controlCount": 3,
-      "charactersMean": 7965.666666666667,
+      "charactersMean": 8174,
       "failureEventsTotal": 3,
       "weightedRiskTotal": 25,
-      "avgFailuresPer10kChars": 1.2553897677292338,
-      "avgRiskPer10kChars": 10.45962041146128
+      "avgFailuresPer10kChars": 1.2234045992327822,
+      "avgRiskPer10kChars": 10.190346542146509
     },
     {
       "model": "jwt",
@@ -490,7 +490,7 @@
       "modelLabel": "Session",
       "source": "baseline",
       "controlCount": 3,
-      "charactersMean": 6974,
+      "charactersMean": 6977,
       "failureEventsTotal": 0,
       "weightedRiskTotal": 0,
       "avgFailuresPer10kChars": 0,
@@ -501,11 +501,11 @@
       "modelLabel": "Session",
       "source": "misconfiguration",
       "controlCount": 3,
-      "charactersMean": 9022,
+      "charactersMean": 9208.666666666666,
       "failureEventsTotal": 3,
       "weightedRiskTotal": 23,
-      "avgFailuresPer10kChars": 1.1084030203054023,
-      "avgRiskPer10kChars": 8.498043374611418
+      "avgFailuresPer10kChars": 1.085934678346274,
+      "avgRiskPer10kChars": 8.325237334036728
     },
     {
       "model": "sessions",

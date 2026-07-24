@@ -1,6 +1,6 @@
 # Performance Analysis
 
-Generated: 2026-07-24T18:13:31.823Z
+Generated: 2026-07-24T23:11:17.749Z
 Regenerate: npm run perf:analyze
 
 ## Method
@@ -16,9 +16,9 @@ Regenerate: npm run perf:analyze
 
 | Model | Baseline Avg (ms) | Attack Avg (ms) | Avg Delta % | p95 Delta % | p99 Delta % | Throughput Delta % | Effect Size (d) | Welch p-value | 95% CI Avg Delta % |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| JWT | 1.5340 | 2.3528 | 53.38 | 43.79 | 27.34 | -34.80 | -0.02 | 0.9782 | [-68.27, 66.62] |
-| OAUTH | 1.4975 | 2.3353 | 55.94 | 13.86 | 39.83 | -35.87 | -0.37 | 0.5741 | [-73.68, 43.84] |
-| SESSIONS | 2.0155 | 2.2281 | 10.55 | 0.99 | -14.85 | -9.54 | -0.10 | 0.8748 | [-62.55, 54.39] |
+| JWT | 1.5689 | 1.4447 | -7.92 | -7.88 | 12.42 | 8.60 | -0.02 | 0.9782 | [-68.27, 66.62] |
+| OAUTH | 1.5974 | 1.5315 | -4.12 | 2.11 | 5.12 | 4.30 | -0.37 | 0.5741 | [-73.68, 43.84] |
+| SESSIONS | 1.9459 | 1.3055 | -32.91 | -33.29 | -44.39 | 49.06 | -0.10 | 0.8748 | [-62.55, 54.39] |
 
 ## Exploratory Outlier Screening (Repeated-Run Avg Latency)
 

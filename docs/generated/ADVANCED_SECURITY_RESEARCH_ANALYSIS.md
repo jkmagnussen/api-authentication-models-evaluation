@@ -1,6 +1,6 @@
 # Advanced Security Research Analysis
 
-Generated: 2026-07-24T18:13:47.771Z
+Generated: 2026-07-24T23:11:33.890Z
 Regenerate: npm run research:advanced
 
 This report operationalizes advanced dissertation analyses over the existing baseline, controlled misconfiguration, and AI-generated evidence layers.
@@ -51,8 +51,8 @@ Finding: recurring tags form an AI misconfiguration fingerprint, showing repeate
 
 | Layer | Complexity Density (Cyclomatic per 100 LOC) (X) | Security Burden Rate % (Y) |
 |---|---:|---:|
-| Baseline | 58.91 | 0.00 |
-| Misconfigured | 46.70 | 100.00 |
+| Baseline | 52.41 | 0.00 |
+| Misconfigured | 42.59 | 100.00 |
 | AI-generated | n/a | 37.78 |
 
 Regression line estimate: y = n/ax + n/a.
@@ -104,14 +104,14 @@ Interpretation: non-zero variance in complexity and security outcomes demonstrat
 
 | Model | Layer | Avg Chars | Avg Lines | Avg Functions | Avg Cyclomatic | Security Outcome |
 |---|---|---:|---:|---:|---:|---|
-| OAUTH | Baseline | 17703.00 | 613.00 | 19.00 | 209.00 | Secure baseline reference |
-| OAUTH | Misconfigured | 19760.33 | 692.00 | 23.00 | 221.00 | Intentional exploit proofs: 3 / 3 |
+| OAUTH | Baseline | 16907.00 | 600.00 | 18.00 | 209.00 | Secure baseline reference |
+| OAUTH | Misconfigured | 19173.00 | 684.00 | 22.00 | 221.00 | Intentional exploit proofs: 3 / 3 |
 | OAUTH | AI-generated | 2648.87 | 101.50 | 0.67 | n/a | Security failure rate: 90.00% |
-| JWT | Baseline | 5934.00 | 160.00 | 9.00 | 112.00 | Secure baseline reference |
-| JWT | Misconfigured | 7965.67 | 239.00 | 13.00 | 124.00 | Intentional exploit proofs: 3 / 3 |
+| JWT | Baseline | 5920.00 | 191.00 | 9.00 | 112.00 | Secure baseline reference |
+| JWT | Misconfigured | 8174.00 | 275.00 | 13.00 | 124.00 | Intentional exploit proofs: 3 / 3 |
 | JWT | AI-generated | 2571.37 | 96.57 | 0.60 | n/a | Security failure rate: 10.00% |
-| SESSIONS | Baseline | 6974.00 | 201.00 | 12.00 | 146.00 | Secure baseline reference |
-| SESSIONS | Misconfigured | 9022.00 | 280.67 | 16.00 | 158.00 | Intentional exploit proofs: 3 / 3 |
+| SESSIONS | Baseline | 6977.00 | 229.00 | 12.00 | 146.00 | Secure baseline reference |
+| SESSIONS | Misconfigured | 9208.67 | 313.67 | 16.00 | 158.00 | Intentional exploit proofs: 3 / 3 |
 | SESSIONS | AI-generated | 2713.43 | 105.87 | 0.97 | n/a | Security failure rate: 13.33% |
 
 ## Notes and Caveats

@@ -131,11 +131,19 @@
 <a name='L66'></a><a href='#L66'>66</a>
 <a name='L67'></a><a href='#L67'>67</a>
 <a name='L68'></a><a href='#L68'>68</a>
-<a name='L69'></a><a href='#L69'>69</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">46x</span>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">46x</span>
 <span class="cline-any cline-yes">46x</span>
 <span class="cline-any cline-yes">46x</span>
 <span class="cline-any cline-yes">46x</span>
 <span class="cline-any cline-yes">46x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">46x</span>
 <span class="cline-any cline-yes">21x</span>
@@ -174,20 +182,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">46x</span>
 <span class="cline-any cline-yes">2017x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1017x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1017x</span>
-<span class="cline-any cline-yes">1017x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1017x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1017x</span>
 <span class="cline-any cline-yes">1017x</span>
@@ -199,11 +204,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">46x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import jwt, { SignOptions } from "jsonwebtoken";
-import { findUserByEmail as findUserByEmailFromDb } from "../auth/user";
-import { getVariantOverrides } from "../variant-overrides";
-import APP_CONFIG from "../config";
-import { getJwtAlgorithm, getJwtSignContext, getJwtVerifyKey, type SupportedJwtAlgorithm } from "./jwt.keys";
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import jwt, { SignOptions } from 'jsonwebtoken';
+import { findUserByEmail as findUserByEmailFromDb } from '../auth/user';
+import { getVariantOverrides } from '../variant-overrides';
+import APP_CONFIG from '../config';
+import {
+  getJwtAlgorithm,
+  getJwtSignContext,
+  getJwtVerifyKey,
+  type SupportedJwtAlgorithm,
+} from './jwt.keys';
 &nbsp;
 export function getJwtAudience() {
   const variantOverrides = getVariantOverrides();
@@ -224,41 +235,38 @@ export function generateJwt(userId: string) {
   const variantOverrides = getVariantOverrides();
   const { algorithm, signingKey, keyId } = getJwtSignContext(variantOverrides.jwt?.algorithm);
   const signOptions: SignOptions = {
-    expiresIn: getJwtExpiry() as SignOptions["expiresIn"],
+    expiresIn: getJwtExpiry() as SignOptions['expiresIn'],
     audience: getJwtAudience(),
     issuer: getJwtIssuer(),
-    algorithm: algorithm as SignOptions["algorithm"],
+    algorithm: algorithm as SignOptions['algorithm'],
   };
 &nbsp;
   <span class="missing-if-branch" title="if path not taken" >I</span>if (keyId) {
 <span class="cstat-no" title="statement not covered" >    signOptions.keyid = keyId;</span>
   }
 &nbsp;
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (algorithm === "none") {
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (algorithm === 'none') {
 <span class="cstat-no" title="statement not covered" >    return jwt.sign({ userId }, null as any, {</span>
       ...signOptions,
-      algorithm: "none",
+      algorithm: 'none',
     });
   }
 &nbsp;
-  return jwt.sign(
-    { userId },
-    signingKey as string,
-    signOptions
-  );
+  return jwt.sign({ userId }, signingKey as string, signOptions);
 }
 &nbsp;
 export function verifyJwt(token: string) {
   const decodedHeader = jwt.decode(token, { complete: true });
-  const header = typeof decodedHeader === "object" &amp;&amp; decodedHeader &amp;&amp; "header" in decodedHeader
-    ? decodedHeader.header as { alg?: string; kid?: string }
-    : undefined;
+  const header =
+    typeof decodedHeader === 'object' &amp;&amp; decodedHeader &amp;&amp; 'header' in decodedHeader
+      ? (decodedHeader.header as { alg?: string; kid?: string })
+      : undefined;
   const expectedAlgorithm = getJwtAlgorithm(getVariantOverrides().jwt?.algorithm);
-  const verificationAlgorithm = (expectedAlgorithm === "none"
-    ? <span class="branch-0 cbranch-no" title="branch not covered" >"none"</span>
-    : (header?.alg ?? expectedAlgorithm)) as SupportedJwtAlgorithm;
+  const verificationAlgorithm = (
+    expectedAlgorithm === 'none' ? <span class="branch-0 cbranch-no" title="branch not covered" >'none' </span>: (header?.alg ?? expectedAlgorithm)
+  ) as SupportedJwtAlgorithm;
   const key = getJwtVerifyKey(verificationAlgorithm, header?.kid);
-  const algorithms = [verificationAlgorithm] as NonNullable&lt;SignOptions["algorithm"]&gt;[];
+  const algorithms = [verificationAlgorithm] as NonNullable&lt;SignOptions['algorithm']&gt;[];
 &nbsp;
   return jwt.verify(token, key as any, {
     algorithms,
@@ -267,14 +275,15 @@ export function verifyJwt(token: string) {
 &nbsp;
 export async function <span class="fstat-no" title="function not covered" >findUserByEmail(</span>email: string) {
 <span class="cstat-no" title="statement not covered" >  return findUserByEmailFromDb(email);</span>
-}</pre></td></tr></table></pre>
+}
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-24T18:12:53.592Z
+                at 2026-07-24T23:04:58.458Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

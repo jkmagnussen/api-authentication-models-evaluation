@@ -649,6 +649,66 @@ def chart_security_critical_control_risk_density() -> None:
     svg_path.write_text(svg_text, encoding="utf-8")
 
 
+def chart_control_point_risk_heatmap() -> None:
+    """Detailed control-point risk matrix for supporting security appendix charts."""
+    control_rows_df, _ = load_security_control_points()
+    if control_rows_df.empty:
+        return
+
+    controls_local = control_rows_df[control_rows_df["source"] != "baseline"].copy()
+    controls_local["column_label"] = (
+        controls_local["modelLabel"] + " (" + controls_local["source"] + ")"
+    )
+    pivot = controls_local.pivot_table(
+        index="controlLabel",
+        columns="column_label",
+        values="riskPer10kChars",
+        aggfunc="mean",
+        fill_value=0.0,
+    )
+
+    ordered_columns: list[str] = []
+    for source in ["misconfiguration", "ai"]:
+        for model in ["OAuth2", "JWT", "Session"]:
+            col = f"{model} ({source})"
+            if col in pivot.columns:
+                ordered_columns.append(col)
+    if ordered_columns:
+        pivot = pivot.reindex(columns=ordered_columns)
+
+    # Use a deterministic row order to keep annotations stable across runs.
+    pivot = pivot.sort_index()
+
+    fig, ax = plt.subplots(figsize=(10.8, 5.8))
+    sns.heatmap(
+        pivot,
+        annot=True,
+        fmt=".2f",
+        cmap="YlOrRd",
+        linewidths=0.5,
+        linecolor="white",
+        cbar_kws={"label": "Risk per 10k chars"},
+        ax=ax,
+    )
+
+    ax.set_title("Control-Point Risk Heatmap", fontsize=12, fontweight="bold")
+    ax.set_xlabel("Model and Source", fontsize=10)
+    ax.set_ylabel("Security Control Point", fontsize=10)
+    ax.tick_params(axis="x", rotation=30, labelsize=9)
+    ax.tick_params(axis="y", labelsize=9)
+
+    plt.tight_layout(rect=[0, 0.06, 1, 1])
+    save_chart(fig, CHARTS_SEC_SUPPORTING_DIR, "control-point-risk-heatmap.svg", tight=False)
+
+    svg_path = CHARTS_SEC_SUPPORTING_DIR / "control-point-risk-heatmap.svg"
+    comment_block = "\n".join(
+        f"   <!-- {float(value):.2f} -->" for value in pivot.to_numpy().ravel()
+    )
+    svg_text = svg_path.read_text(encoding="utf-8")
+    svg_text = svg_text.replace("</svg>", f"{comment_block}\n</svg>")
+    svg_path.write_text(svg_text, encoding="utf-8")
+
+
 def chart_misconfiguration_clustering(variant_df: pd.DataFrame) -> float:
     if variant_df.empty:
         return 0.0
@@ -2133,6 +2193,7 @@ def main() -> None:
     chart_ai_sample_syntax_issues()
     chart_failure_points_vs_chars()
     chart_security_critical_control_risk_density()
+    chart_control_point_risk_heatmap()
     chart_normalized_failure_density()
     chart_calibration_and_agreement_controls()
     chart_ai_vs_human_severity_gap_ci()

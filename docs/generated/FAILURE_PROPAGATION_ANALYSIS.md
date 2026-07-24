@@ -1,6 +1,6 @@
 # Failure Propagation Analysis
 
-Generated: 2026-07-24T18:13:34.154Z
+Generated: 2026-07-24T23:11:20.053Z
 Regenerate: npm run analysis:structural
 
 This report models how each controlled authentication misconfiguration propagates beyond its initial defect point into downstream components, flows, and STRIDE consequences.

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-24T18:15:33.560Z",
+  "generatedAt": "2026-07-24T23:13:50.987Z",
   "runtime": {
     "nodeVersion": "v24.14.1",
     "npmVersion": "11.12.1",
@@ -12,13 +12,13 @@
     "hostname": "JOE-PC"
   },
   "vcs": {
-    "gitCommit": "4d8aed21d7ac5c2ef2d05e400f956245ec25114d",
+    "gitCommit": "873b994ba30f9305ef5ad84b7c508d799200a6c5",
     "gitBranch": "main",
     "dirtyWorkingTree": true
   },
   "dataStack": {
-    "databaseProvider": "postgresql",
-    "databaseUrlPresent": true,
+    "databaseProvider": "unknown",
+    "databaseUrlPresent": false,
     "prismaClientVersion": "^6.0.0",
     "prismaCliVersion": "^6.0.0",
     "prismaVersion": null
@@ -34,7 +34,7 @@
     "allowPartialAiMatrix": false,
     "runNormalization": {
       "dependencyLockFilePresent": true,
-      "dependencyLockSha256": "1669aeca237b7e85ecde6925de71dee24be081298ff0575430e0e2e7d37c5863",
+      "dependencyLockSha256": "28aa6596bb9503655e82c2511ec586e833d62923d6c8379d71d7fd3097e8760d",
       "expectedGenerationDefaults": {
         "maxTokens": 900,
         "temperature": 0.8,

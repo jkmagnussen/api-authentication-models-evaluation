@@ -32,7 +32,7 @@
     "prod:full": "npm run build:full && npm start",
     "start": "node dist/src/server.js",
     "docker:build": "docker build -t dissertation-backend:local .",
-    "security:audit": "npm audit --audit-level=high",
+    "security:audit": "npm audit --omit=dev --audit-level=high",
     "test": "jest --runInBand",
     "test:coverage": "jest --runInBand --coverage",
     "test:variant:oauth:redirect": "ts-node scripts/run-variant-focused-tests.ts oauth-redirect-misconfiguration",

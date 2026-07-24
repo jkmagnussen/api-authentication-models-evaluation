@@ -1,6 +1,6 @@
 # Pre-Registered Compliance Summary
 
-Generated: 2026-07-24T19:01:49.186Z
+Generated: 2026-07-24T23:11:36.022Z
 Regenerate: npm run objective:preregistered:report
 
 Governance mode: EXPLORATORY
@@ -10,7 +10,7 @@ Blind interpretation status: draft-needs-finalization
 | Criterion | Status | Evidence |
 |---|---|---|
 | Protocol source artifact exists | PASS | docs/generated/RUN_MANIFEST.json |
-| Protocol seal matches source artifact | PASS | docs/generated/PROTOCOL_SEAL.json |
+| Protocol seal matches source artifact | FAIL | docs/generated/PROTOCOL_SEAL.json |
 | Sensitivity-analysis source is sealed | PASS | docs/generated/SENSITIVITY_ANALYSIS.md + docs/generated/POWER_ANALYSIS_SEAL.json |
 | Full AI matrix coverage for confirmatory claims | PASS | ai-generated/arms/run-summary.json (4/4) |
 | Objectivity report explicitly states complete coverage | PASS | docs/generated/OBJECTIVITY_ASSESSMENT.md |

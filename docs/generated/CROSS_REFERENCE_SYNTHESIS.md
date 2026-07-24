@@ -1,6 +1,6 @@
 # Cross-Reference Synthesis
 
-Generated: 2026-07-24T18:13:34.158Z
+Generated: 2026-07-24T23:11:20.057Z
 Regenerate: npm run analysis:structural
 
 - Weighted Exploit Burden (WEB) uses $0.45 \times severity + 0.25 \times exploitability + 0.30 \times propagation$.
@@ -32,9 +32,9 @@ Regenerate: npm run analysis:structural
 
 | Model | Avg Latency Delta % | Throughput Delta % | Weighted Exploit Burden | Pareto Reading |
 |---|---:|---:|---:|---|
-| OAuth2 | 55.94 | -35.87 | 6.70 | Highest boundary complexity with modest measured latency overhead, indicating structural burden is not captured by latency alone. |
-| JWT | 53.38 | -34.80 | 6.60 | Fastest execution profile, but high validation fragility means small mistakes remain costly. |
-| Session | 10.55 | -9.54 | 6.45 | Lower measured attack latency overhead does not imply lower structural risk; browser-coupled failures still propagate sharply. |
+| OAuth2 | -4.12 | 4.30 | 6.70 | Highest boundary complexity with modest measured latency overhead, indicating structural burden is not captured by latency alone. |
+| JWT | -7.92 | 8.60 | 6.60 | Fastest execution profile, but high validation fragility means small mistakes remain costly. |
+| Session | -32.91 | 49.06 | 6.45 | Lower measured attack latency overhead does not imply lower structural risk; browser-coupled failures still propagate sharply. |
 
 ## 4) Lifecycle Complexity vs Developer Error Likelihood
 
@@ -57,9 +57,9 @@ Regenerate: npm run analysis:structural
 
 | Model | Characters | Lines | Cyclomatic Complexity | Mean Propagation Score | Reading |
 |---|---:|---:|---:|---:|---|
-| OAuth2 | 17703 | 613 | 209 | 9.39 | Largest baseline footprint also coincides with the broadest propagation surface. |
-| JWT | 5934 | 160 | 112 | 8.57 | Smaller footprint does not guarantee safety; the slice is compact but high-impact when validation is weak. |
-| Session | 6974 | 201 | 146 | 8.62 | Moderate footprint aligns with a narrower surface, but browser-linked failures remain operationally sharp. |
+| OAuth2 | 16907 | 600 | 209 | 9.39 | Largest baseline footprint also coincides with the broadest propagation surface. |
+| JWT | 5920 | 191 | 112 | 8.57 | Smaller footprint does not guarantee safety; the slice is compact but high-impact when validation is weak. |
+| Session | 6977 | 229 | 146 | 8.62 | Moderate footprint aligns with a narrower surface, but browser-linked failures remain operationally sharp. |
 
 ## 7) Misconfiguration Propagation vs Performance Jitter
 

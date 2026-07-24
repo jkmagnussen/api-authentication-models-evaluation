@@ -1,6 +1,6 @@
 # Code Footprint Summary
 
-Generated: 2026-07-24T18:13:29.151Z
+Generated: 2026-07-24T23:11:15.069Z
 Regenerate: npm run code:footprint:tolerant
 
 ## Scope Rules
@@ -15,23 +15,23 @@ Regenerate: npm run code:footprint:tolerant
 
 | Slice | Files | Chars | Lines | Functions | Classes | Constants | Cyclomatic | Avg Maintainability |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| OAUTH Baseline | 6 | 17703 | 613 | 19 | 0 | 62 | 209 | 109.82 |
-| JWT Baseline | 4 | 5934 | 160 | 9 | 0 | 23 | 112 | 102.31 |
-| SESSIONS Baseline | 4 | 6974 | 201 | 12 | 0 | 16 | 146 | 117.09 |
+| OAUTH Baseline | 6 | 16907 | 600 | 18 | 0 | 62 | 209 | 109.69 |
+| JWT Baseline | 4 | 5920 | 191 | 9 | 0 | 23 | 112 | 102.31 |
+| SESSIONS Baseline | 4 | 6977 | 229 | 12 | 0 | 16 | 146 | 117.09 |
 
 ## Misconfiguration Effective Footprints
 
 | Variant | Files | Chars | Lines | Functions | Classes | Constants | Cyclomatic | Avg Maintainability |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| oauth-redirect-misconfiguration | 10 | 19794 | 692 | 23 | 0 | 64 | 221 | 117.14 |
-| oauth-state-misconfiguration | 10 | 19733 | 692 | 23 | 0 | 64 | 221 | 117.25 |
-| oauth-scope-misconfiguration | 10 | 19754 | 692 | 23 | 0 | 64 | 221 | 117.13 |
-| jwt-audience-misconfiguration | 8 | 7966 | 239 | 13 | 0 | 25 | 124 | 115.36 |
-| jwt-algorithm-misconfiguration | 8 | 7978 | 239 | 13 | 0 | 25 | 124 | 115.36 |
-| jwt-expiry-misconfiguration | 8 | 7953 | 239 | 13 | 0 | 25 | 124 | 115.36 |
-| sessions-fixation-misconfiguration | 8 | 9029 | 280 | 16 | 0 | 18 | 158 | 122.75 |
-| sessions-cookie-flag-misconfiguration | 8 | 9029 | 282 | 16 | 0 | 18 | 158 | 122.35 |
-| sessions-logout-misconfiguration | 8 | 9008 | 280 | 16 | 0 | 18 | 158 | 122.75 |
+| oauth-redirect-misconfiguration | 10 | 19205 | 684 | 22 | 0 | 64 | 221 | 117.06 |
+| oauth-state-misconfiguration | 10 | 19100 | 684 | 22 | 0 | 64 | 221 | 117.18 |
+| oauth-scope-misconfiguration | 10 | 19214 | 684 | 22 | 0 | 64 | 221 | 117.05 |
+| jwt-audience-misconfiguration | 8 | 8181 | 275 | 13 | 0 | 25 | 124 | 115.36 |
+| jwt-algorithm-misconfiguration | 8 | 8203 | 275 | 13 | 0 | 25 | 124 | 115.36 |
+| jwt-expiry-misconfiguration | 8 | 8138 | 275 | 13 | 0 | 25 | 124 | 115.36 |
+| sessions-fixation-misconfiguration | 8 | 9222 | 313 | 16 | 0 | 18 | 158 | 122.75 |
+| sessions-cookie-flag-misconfiguration | 8 | 9202 | 315 | 16 | 0 | 18 | 158 | 122.35 |
+| sessions-logout-misconfiguration | 8 | 9202 | 313 | 16 | 0 | 18 | 158 | 122.75 |
 
 ## AI-Generated Footprints
 

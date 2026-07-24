@@ -138,21 +138,12 @@
 <a name='L73'></a><a href='#L73'>73</a>
 <a name='L74'></a><a href='#L74'>74</a>
 <a name='L75'></a><a href='#L75'>75</a>
-<a name='L76'></a><a href='#L76'>76</a>
-<a name='L77'></a><a href='#L77'>77</a>
-<a name='L78'></a><a href='#L78'>78</a>
-<a name='L79'></a><a href='#L79'>79</a>
-<a name='L80'></a><a href='#L80'>80</a>
-<a name='L81'></a><a href='#L81'>81</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L76'></a><a href='#L76'>76</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">46x</span>
 <span class="cline-any cline-yes">46x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">46x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">10x</span>
@@ -193,7 +184,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">30x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">30x</span>
@@ -223,27 +213,23 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">57x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Request, Response, NextFunction } from "express";
-import { validateAccessToken } from "./oauth.service";
-import { prisma } from "../db";
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Request, Response, NextFunction } from 'express';
+import { validateAccessToken } from './oauth.service';
+import { prisma } from '../db';
 &nbsp;
 // 🔐 Validate Bearer access token
-export async function verifyAccessToken(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export async function verifyAccessToken(req: Request, res: Response, next: NextFunction) {
   const header = req.headers.authorization;
 &nbsp;
-  if (!header || !header.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Missing Authorization header" });
+  if (!header || !header.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing Authorization header' });
   }
 &nbsp;
-  const token = header.replace("Bearer ", "");
+  const token = header.replace('Bearer ', '');
   const valid = await validateAccessToken(token);
 &nbsp;
   if (!valid) {
-    return res.status(401).json({ error: "Invalid or expired token" });
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
 &nbsp;
   (req as any).userId = valid.userId;
@@ -258,34 +244,33 @@ export async function validateAuthorize(req: Request, res: Response, next: NextF
   const { userId } = req.body;
 &nbsp;
   if (!userId) {
-    return res.status(400).json({ error: "userId is required" });
+    return res.status(400).json({ error: 'userId is required' });
   }
 &nbsp;
-  if (typeof userId !== "string") {
-    return res.status(400).json({ error: "userId must be a string" });
+  if (typeof userId !== 'string') {
+    return res.status(400).json({ error: 'userId must be a string' });
   }
 &nbsp;
   if (/^\d+$/.test(userId)) {
-    return res.status(400).json({ error: "userId cannot be numeric" });
+    return res.status(400).json({ error: 'userId cannot be numeric' });
   }
 &nbsp;
   <span class="missing-if-branch" title="if path not taken" >I</span>if (/[&lt;&gt;]/.test(userId)) {
-<span class="cstat-no" title="statement not covered" >    return res.status(400).json({ error: "userId contains invalid characters" });</span>
+<span class="cstat-no" title="statement not covered" >    return res.status(400).json({ error: 'userId contains invalid characters' });</span>
   }
 &nbsp;
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 &nbsp;
   if (!uuidRegex.test(userId)) {
-    return res.status(400).json({ error: "userId must be a valid UUID" });
+    return res.status(400).json({ error: 'userId must be a valid UUID' });
   }
 &nbsp;
   const user = await prisma.user.findUnique({
-    where: { id: userId }
+    where: { id: userId },
   });
 &nbsp;
   if (!user) {
-    return res.status(400).json({ error: "User does not exist" });
+    return res.status(400).json({ error: 'User does not exist' });
   }
 &nbsp;
   next();
@@ -295,9 +280,9 @@ export async function validateAuthorize(req: Request, res: Response, next: NextF
 export function validateToken(req: Request, res: Response, next: NextFunction) {
   const { code } = req.body;
 &nbsp;
-  if (!code || typeof code !== "string") {
+  if (!code || typeof code !== 'string') {
     return res.status(400).json({
-      error: "authorization code is required and must be a string"
+      error: 'authorization code is required and must be a string',
     });
   }
 &nbsp;
@@ -310,7 +295,7 @@ export function validateToken(req: Request, res: Response, next: NextFunction) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-24T18:12:53.592Z
+                at 2026-07-24T23:04:58.458Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
