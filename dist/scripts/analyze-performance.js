@@ -18,6 +18,40 @@ function stdDev(values) {
     const variance = values.reduce((acc, value) => acc + (value - m) ** 2, 0) / (values.length - 1);
     return Math.sqrt(variance);
 }
+function quantile(values, p) {
+    if (values.length === 0)
+        return Number.NaN;
+    if (values.length === 1)
+        return values[0];
+    const sorted = [...values].sort((a, b) => a - b);
+    const index = (sorted.length - 1) * p;
+    const lower = Math.floor(index);
+    const upper = Math.ceil(index);
+    if (lower === upper)
+        return sorted[lower];
+    const weight = index - lower;
+    return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+}
+function scanIqrOutliers(samples, selector) {
+    if (samples.length < 4)
+        return null;
+    const values = samples.map(selector).filter((value) => Number.isFinite(value));
+    if (values.length < 4)
+        return null;
+    const q1 = quantile(values, 0.25);
+    const q3 = quantile(values, 0.75);
+    const iqr = q3 - q1;
+    const lowerBound = q1 - 1.5 * iqr;
+    const upperBound = q3 + 1.5 * iqr;
+    const outliers = samples
+        .map((sample) => ({ runId: sample.runId, value: selector(sample) }))
+        .filter((sample) => Number.isFinite(sample.value) && (sample.value < lowerBound || sample.value > upperBound));
+    return {
+        lowerBound,
+        upperBound,
+        outliers,
+    };
+}
 function pooledStd(a, b) {
     if (a.length < 2 || b.length < 2)
         return 0;
@@ -74,8 +108,9 @@ function scanRunSamples(kind, model) {
     for (const runId of runIds) {
         const samplePath = `${runsRoot}/${runId}/${kind}/${model}.json`;
         const sample = safeReadJson(samplePath);
-        if (sample)
-            samples.push(sample);
+        if (sample) {
+            samples.push({ runId, stats: sample });
+        }
     }
     return samples;
 }
@@ -109,8 +144,8 @@ function buildSummaryRows() {
         }
         const baselineSamples = scanRunSamples("baseline", model);
         const attackSamples = scanRunSamples("attacks", model);
-        const baselineAverages = baselineSamples.map((sample) => sample.avg);
-        const attackAverages = attackSamples.map((sample) => sample.avg);
+        const baselineAverages = baselineSamples.map((sample) => sample.stats.avg);
+        const attackAverages = attackSamples.map((sample) => sample.stats.avg);
         const pooled = pooledStd(baselineAverages, attackAverages);
         const effectSize = pooled > 0 ? (mean(attackAverages) - mean(baselineAverages)) / pooled : null;
         const welch = welchTest(baselineAverages, attackAverages);
@@ -128,6 +163,8 @@ function buildSummaryRows() {
             welchDf: welch?.df ?? null,
             welchPValue: welch?.pValue ?? null,
             ci95AvgDeltaPct,
+            baselineAvgOutliers: scanIqrOutliers(baselineSamples, (sample) => sample.stats.avg),
+            attackAvgOutliers: scanIqrOutliers(attackSamples, (sample) => sample.stats.avg),
         };
     });
 }
@@ -146,6 +183,7 @@ function writeMarkdown(rows) {
     lines.push("- Negative throughput delta indicates throughput degradation under attack.");
     lines.push("- Effect size is Cohen's d over repeated-run avg latency samples (if run samples exist).");
     lines.push("- CI shown is 95% interval for avg latency delta percentage (if repeated-run samples exist).");
+    lines.push("- Outlier screening uses a Tukey 1.5 x IQR rule over repeated-run average latency samples when at least 4 cohorts exist.");
     lines.push("");
     lines.push("## Comparative Summary");
     lines.push("");
@@ -156,6 +194,37 @@ function writeMarkdown(rows) {
             ? `[${toFixed(row.ci95AvgDeltaPct[0])}, ${toFixed(row.ci95AvgDeltaPct[1])}]`
             : "n/a";
         lines.push(`| ${row.model.toUpperCase()} | ${toFixed(row.baseline.avg, 4)} | ${toFixed(row.attacks.avg, 4)} | ${toFixed(row.avgDeltaPct)} | ${toFixed(row.p95DeltaPct)} | ${toFixed(row.p99DeltaPct)} | ${toFixed(row.throughputDeltaPct)} | ${row.effectSize === null ? "n/a" : toFixed(row.effectSize)} | ${row.welchPValue === null ? "n/a" : toFixed(row.welchPValue, 4)} | ${ci} |`);
+    }
+    lines.push("");
+    lines.push("## Exploratory Outlier Screening (Repeated-Run Avg Latency)");
+    lines.push("");
+    lines.push("| Model | Baseline Avg Outliers | Attack Avg Outliers | Baseline IQR Bounds | Attack IQR Bounds | Interpretation |");
+    lines.push("|---|---|---|---|---|---|");
+    for (const row of rows) {
+        const baselineOutliers = row.baselineAvgOutliers?.outliers ?? [];
+        const attackOutliers = row.attackAvgOutliers?.outliers ?? [];
+        const baselineOutlierText = baselineOutliers.length
+            ? baselineOutliers.map((sample) => `${sample.runId}=${toFixed(sample.value, 4)}`).join(", ")
+            : row.baselineAvgOutliers
+                ? "None"
+                : "n/a";
+        const attackOutlierText = attackOutliers.length
+            ? attackOutliers.map((sample) => `${sample.runId}=${toFixed(sample.value, 4)}`).join(", ")
+            : row.attackAvgOutliers
+                ? "None"
+                : "n/a";
+        const baselineBounds = row.baselineAvgOutliers
+            ? `[${toFixed(row.baselineAvgOutliers.lowerBound, 4)}, ${toFixed(row.baselineAvgOutliers.upperBound, 4)}]`
+            : "n/a";
+        const attackBounds = row.attackAvgOutliers
+            ? `[${toFixed(row.attackAvgOutliers.lowerBound, 4)}, ${toFixed(row.attackAvgOutliers.upperBound, 4)}]`
+            : "n/a";
+        const interpretation = baselineOutliers.length || attackOutliers.length
+            ? "Inspect flagged runs before making strong performance claims."
+            : row.baselineAvgOutliers && row.attackAvgOutliers
+                ? "No repeated-run avg-latency outliers flagged under the IQR rule."
+                : "Insufficient repeated-run cohorts for IQR screening.";
+        lines.push(`| ${row.model.toUpperCase()} | ${baselineOutlierText} | ${attackOutlierText} | ${baselineBounds} | ${attackBounds} | ${interpretation} |`);
     }
     lines.push("");
     lines.push("## Raw Inputs");
@@ -182,6 +251,8 @@ function writeCsv(rows) {
         "welch_p_value",
         "ci95_avg_delta_pct_lower",
         "ci95_avg_delta_pct_upper",
+        "baseline_avg_outlier_count",
+        "attack_avg_outlier_count",
     ];
     const csvRows = [header.join(",")];
     for (const row of rows) {
@@ -199,6 +270,8 @@ function writeCsv(rows) {
             row.welchPValue ?? "",
             row.ci95AvgDeltaPct?.[0] ?? "",
             row.ci95AvgDeltaPct?.[1] ?? "",
+            row.baselineAvgOutliers?.outliers.length ?? "",
+            row.attackAvgOutliers?.outliers.length ?? "",
         ].join(","));
     }
     const outputPath = report_paths_1.PERFORMANCE_FILES.statisticsCsv;

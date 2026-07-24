@@ -7,6 +7,13 @@ exports.DOCS_EVIDENCE_DIR = `${exports.DOCS_DIR}/evidence`;
 exports.DOCS_PERFORMANCE_DIR = `${exports.DOCS_DIR}/performance-results`;
 exports.GENERATED_FILES = {
     runManifest: `${exports.DOCS_GENERATED_DIR}/RUN_MANIFEST.json`,
+    submissionReadiness: `${exports.DOCS_GENERATED_DIR}/SUBMISSION_READINESS.md`,
+    failurePropagationAnalysis: `${exports.DOCS_GENERATED_DIR}/FAILURE_PROPAGATION_ANALYSIS.md`,
+    failurePropagationAnalysisJson: `${exports.DOCS_GENERATED_DIR}/failure-propagation-analysis.json`,
+    cognitiveLoadIndex: `${exports.DOCS_GENERATED_DIR}/COGNITIVE_LOAD_INDEX.md`,
+    cognitiveLoadIndexJson: `${exports.DOCS_GENERATED_DIR}/cognitive-load-index.json`,
+    crossReferenceSynthesis: `${exports.DOCS_GENERATED_DIR}/CROSS_REFERENCE_SYNTHESIS.md`,
+    crossReferenceSynthesisJson: `${exports.DOCS_GENERATED_DIR}/cross-reference-synthesis.json`,
     aiSummary: `${exports.DOCS_GENERATED_DIR}/AI_EVALUATION_SUMMARY.md`,
     advancedResearchAnalysis: `${exports.DOCS_GENERATED_DIR}/ADVANCED_SECURITY_RESEARCH_ANALYSIS.md`,
     aiProviderPromptComparison: `${exports.DOCS_GENERATED_DIR}/AI_PROVIDER_PROMPT_COMPARISON.md`,
@@ -47,6 +54,13 @@ exports.PERFORMANCE_FILES = {
 };
 exports.EXPECTED_GENERATED_DOC_FILES = [
     exports.GENERATED_FILES.runManifest,
+    exports.GENERATED_FILES.submissionReadiness,
+    exports.GENERATED_FILES.failurePropagationAnalysis,
+    exports.GENERATED_FILES.failurePropagationAnalysisJson,
+    exports.GENERATED_FILES.cognitiveLoadIndex,
+    exports.GENERATED_FILES.cognitiveLoadIndexJson,
+    exports.GENERATED_FILES.crossReferenceSynthesis,
+    exports.GENERATED_FILES.crossReferenceSynthesisJson,
     exports.GENERATED_FILES.aiSummary,
     exports.GENERATED_FILES.advancedResearchAnalysis,
     exports.GENERATED_FILES.aiProviderPromptComparison,

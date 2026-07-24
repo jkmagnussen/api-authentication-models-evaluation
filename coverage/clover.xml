@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1784831093175" clover="3.2.0">
-  <project timestamp="1784831093176" name="All files">
-    <metrics statements="748" coveredstatements="598" conditionals="482" coveredconditionals="313" methods="95" coveredmethods="73" elements="1325" coveredelements="984" complexity="0" loc="748" ncloc="748" packages="7" files="30" classes="30"/>
+<coverage generated="1784850344605" clover="3.2.0">
+  <project timestamp="1784850344605" name="All files">
+    <metrics statements="750" coveredstatements="600" conditionals="478" coveredconditionals="309" methods="95" coveredmethods="73" elements="1323" coveredelements="982" complexity="0" loc="750" ncloc="750" packages="7" files="30" classes="30"/>
     <package name="src">
       <metrics statements="141" coveredstatements="91" conditionals="99" coveredconditionals="39" methods="24" coveredmethods="11"/>
       <file name="app.ts" path="C:\Users\jkmag\Development\api-authentication-models-evaluation\src\app.ts">
@@ -159,7 +159,7 @@
         <line num="32" count="48" type="stmt"/>
         <line num="33" count="0" type="stmt"/>
         <line num="55" count="48" type="stmt"/>
-        <line num="56" count="1224" type="stmt"/>
+        <line num="56" count="1236" type="stmt"/>
         <line num="59" count="48" type="stmt"/>
         <line num="60" count="0" type="stmt"/>
       </file>
@@ -336,7 +336,7 @@
       </file>
     </package>
     <package name="src.jwt">
-      <metrics statements="131" coveredstatements="100" conditionals="102" coveredconditionals="62" methods="15" coveredmethods="11"/>
+      <metrics statements="133" coveredstatements="102" conditionals="98" coveredconditionals="58" methods="15" coveredmethods="11"/>
       <file name="jwt.controller.ts" path="C:\Users\jkmag\Development\api-authentication-models-evaluation\src\jwt\jwt.controller.ts">
         <metrics statements="24" coveredstatements="24" conditionals="6" coveredconditionals="6" methods="2" coveredmethods="2"/>
         <line num="2" count="44" type="stmt"/>
@@ -415,7 +415,7 @@
         <line num="114" count="0" type="cond" truecount="0" falsecount="4"/>
       </file>
       <file name="jwt.middleware.ts" path="C:\Users\jkmag\Development\api-authentication-models-evaluation\src\jwt\jwt.middleware.ts">
-        <metrics statements="21" coveredstatements="21" conditionals="20" coveredconditionals="20" methods="1" coveredmethods="1"/>
+        <metrics statements="21" coveredstatements="21" conditionals="16" coveredconditionals="16" methods="1" coveredmethods="1"/>
         <line num="2" count="45" type="stmt"/>
         <line num="4" count="45" type="stmt"/>
         <line num="5" count="2019" type="stmt"/>
@@ -426,8 +426,8 @@
         <line num="14" count="2017" type="stmt"/>
         <line num="16" count="7" type="cond" truecount="4" falsecount="0"/>
         <line num="17" count="1" type="stmt"/>
-        <line num="20" count="6" type="cond" truecount="2" falsecount="0"/>
-        <line num="21" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="20" count="6" type="stmt"/>
+        <line num="21" count="6" type="stmt"/>
         <line num="23" count="6" type="cond" truecount="4" falsecount="0"/>
         <line num="24" count="1" type="stmt"/>
         <line num="27" count="5" type="cond" truecount="4" falsecount="0"/>
@@ -451,16 +451,18 @@
         <line num="12" count="44" type="stmt"/>
       </file>
       <file name="jwt.service.ts" path="C:\Users\jkmag\Development\api-authentication-models-evaluation\src\jwt\jwt.service.ts">
-        <metrics statements="30" coveredstatements="27" conditionals="22" coveredconditionals="19" methods="6" coveredmethods="5"/>
+        <metrics statements="32" coveredstatements="29" conditionals="22" coveredconditionals="19" methods="6" coveredmethods="5"/>
         <line num="1" count="46" type="stmt"/>
         <line num="2" count="46" type="stmt"/>
         <line num="3" count="46" type="stmt"/>
         <line num="4" count="46" type="stmt"/>
         <line num="5" count="46" type="stmt"/>
-        <line num="8" count="15" type="stmt"/>
-        <line num="9" count="15" type="cond" truecount="3" falsecount="0"/>
-        <line num="13" count="15" type="stmt"/>
-        <line num="14" count="15" type="cond" truecount="3" falsecount="0"/>
+        <line num="7" count="46" type="stmt"/>
+        <line num="8" count="21" type="stmt"/>
+        <line num="9" count="21" type="cond" truecount="3" falsecount="0"/>
+        <line num="12" count="46" type="stmt"/>
+        <line num="13" count="21" type="stmt"/>
+        <line num="14" count="21" type="cond" truecount="3" falsecount="0"/>
         <line num="18" count="15" type="stmt"/>
         <line num="19" count="15" type="cond" truecount="3" falsecount="0"/>
         <line num="22" count="46" type="stmt"/>

@@ -13,8 +13,8 @@ function jwtAuth(req, res, next) {
         if (!decoded?.userId || typeof decoded.userId !== "string") {
             return res.status(401).json({ message: "Invalid token" });
         }
-        const expectedAudience = process.env.JWT_AUDIENCE || "api-auth-eval";
-        const expectedIssuer = process.env.JWT_ISSUER || "api-auth-service";
+        const expectedAudience = (0, jwt_service_1.getJwtAudience)();
+        const expectedIssuer = (0, jwt_service_1.getJwtIssuer)();
         if (decoded.aud && decoded.aud !== expectedAudience) {
             return res.status(401).json({ message: "Invalid token" });
         }

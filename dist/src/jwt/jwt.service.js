@@ -3,6 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getJwtAudience = getJwtAudience;
+exports.getJwtIssuer = getJwtIssuer;
 exports.generateJwt = generateJwt;
 exports.verifyJwt = verifyJwt;
 exports.findUserByEmail = findUserByEmail;
