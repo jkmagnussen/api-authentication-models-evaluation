@@ -5,6 +5,8 @@ from pathlib import Path
 import json
 import math
 import re
+import subprocess
+import sys
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -333,6 +335,91 @@ def load_checker_agreement_summary() -> dict:
     return payload.get("agreement", {})
 
 
+def chart_calibration_and_agreement_controls() -> None:
+    """Calibration sensitivity and checker agreement control chart.
+
+    Left panel: false-confidence sensitivity across integer thresholds.
+    Right panel: by-model raw agreement rates for generated samples.
+    """
+    payload = load_checker_agreement_summary()
+    generated_agreement = payload.get("generatedSampleAgreement", {}) or {}
+    by_model = generated_agreement.get("byModel", {}) or {}
+
+    calibration_path = GENERATED_DIR / "calibration-and-agreement-summary.json"
+    if not calibration_path.exists():
+        return
+    root_payload = json.loads(calibration_path.read_text(encoding="utf8"))
+    sensitivity_rows = pd.DataFrame((root_payload.get("calibration", {}) or {}).get("sensitivity", []))
+
+    if sensitivity_rows.empty or not by_model:
+        return
+
+    sensitivity_rows = sensitivity_rows.sort_values("threshold").copy()
+    sensitivity_rows["ratePct"] = sensitivity_rows["rate"].astype(float) * 100.0
+
+    model_order = ["oauth", "jwt", "sessions"]
+    model_labels = [display_model_name(m) for m in model_order if m in by_model]
+    agreement_pct = [float((by_model.get(m, {}) or {}).get("rawAgreementRate", 0.0)) * 100.0 for m in model_order if m in by_model]
+    if not model_labels:
+        return
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.0, 4.8), gridspec_kw={"width_ratios": [1.25, 1.0]})
+
+    ax1.plot(
+        sensitivity_rows["threshold"].astype(float),
+        sensitivity_rows["ratePct"],
+        color="#4e79a7",
+        marker="o",
+        linewidth=2.0,
+        markersize=6,
+    )
+    for _, row in sensitivity_rows.iterrows():
+        ax1.text(
+            float(row["threshold"]),
+            float(row["ratePct"]) + 1.3,
+            f"{float(row['ratePct']):.1f}%",
+            ha="center",
+            va="bottom",
+            fontsize=8,
+            color="#2f3e4f",
+            fontweight="bold",
+        )
+    ax1.set_title("False-Confidence Sensitivity", fontsize=11, fontweight="bold")
+    ax1.set_xlabel("Confidence threshold")
+    ax1.set_ylabel("False-confidence rate (%)")
+    ax1.grid(True, axis="y", linestyle="--", alpha=0.35)
+    ax1.set_ylim(0, max(40.0, float(sensitivity_rows["ratePct"].max()) + 8.0))
+
+    bars = ax2.bar(model_labels, agreement_pct, color=["#f28e2b", "#59a14f", "#e15759"], edgecolor="white", linewidth=0.8)
+    for bar, value in zip(bars, agreement_pct):
+        ax2.text(
+            bar.get_x() + bar.get_width() / 2,
+            float(value) + 1.5,
+            f"{float(value):.1f}%",
+            ha="center",
+            va="bottom",
+            fontsize=8,
+            color="#2f3e4f",
+            fontweight="bold",
+        )
+    ax2.set_title("Independent Checker Agreement", fontsize=11, fontweight="bold")
+    ax2.set_ylabel("Raw agreement rate (%)")
+    ax2.grid(True, axis="y", linestyle="--", alpha=0.35)
+    ax2.set_ylim(0, 105)
+
+    fig.suptitle("Calibration and Agreement Controls", fontsize=13, fontweight="bold")
+
+    save_chart(fig, CHARTS_SYNTH_DIR, "calibration-and-agreement-controls.svg", tight=False)
+
+    svg_path = CHARTS_SYNTH_DIR / "calibration-and-agreement-controls.svg"
+    comment_vals = [f"{float(value):.1f}%" for value in sensitivity_rows["ratePct"]]
+    comment_vals.extend(f"{float(value):.1f}%" for value in agreement_pct)
+    comment_block = "\n".join(f"   <!-- {value} -->" for value in comment_vals)
+    svg_text = svg_path.read_text(encoding="utf-8")
+    svg_text = svg_text.replace("</svg>", f"{comment_block}\n</svg>")
+    svg_path.write_text(svg_text, encoding="utf-8")
+
+
 def chart_ai_vs_human_severity_gap_ci() -> None:
     """AI vs baseline severity-weighted risk gap with 95% bootstrap CI.
 
@@ -361,7 +448,7 @@ def chart_ai_vs_human_severity_gap_ci() -> None:
         hi    = float(row["ci95Upper"])
         model = str(row["modelLabel"])
         color = MODEL_COLORS.get(model, "#888888")
-        sig   = "  ✓ significant" if lo > 0 else "  (CI includes 0)"
+        sig   = "  significant" if lo > 0 else "  (CI includes 0)"
 
         ax.barh(y[i], mean, 0.5, color=color, alpha=0.85, edgecolor="white", zorder=2)
         ax.errorbar(mean, y[i],
@@ -382,10 +469,6 @@ def chart_ai_vs_human_severity_gap_ci() -> None:
     ax.xaxis.grid(True, linestyle="--", alpha=0.35)
     ax.set_axisbelow(True)
     ax.set_xlim(left=-0.5)
-
-    ax.text(0.5, -0.19,
-            "Error bars show 95% bootstrap CI (2 000 iterations, seed fixed for reproducibility).",
-            transform=ax.transAxes, ha="center", fontsize=8, color="dimgray", style="italic")
 
     plt.tight_layout(rect=[0, 0.1, 1, 1])
 
@@ -457,11 +540,6 @@ def chart_normalized_failure_density() -> None:
     ax.set_ylim(0, plot_df["failuresPer10kChars"].max() * 1.3)
     ax.yaxis.grid(True, linestyle="--", alpha=0.4)
     ax.set_axisbelow(True)
-    ax.text(0.5, -0.18,
-            "Baseline scores 0 on all models — omitted.  "
-            "Compare with Risk Score chart: JWT AI is frequent but low-severity; OAuth2 AI is rare but critical.",
-            transform=ax.transAxes, ha="center", fontsize=8, color="dimgray", style="italic",
-            wrap=True)
 
     # Inject XML comments for validate_charts numeric annotation drift checks.
     plt.tight_layout(rect=[0, 0.1, 1, 1])
@@ -483,10 +561,9 @@ def chart_security_critical_control_risk_density() -> None:
     """Security-critical control risk density by model.
 
     Grouped bar chart comparing misconfigured vs AI-generated risk scores per
-    model.  Baseline bars (always 0) are omitted to avoid visual clutter; a
-    subtitle makes this explicit.  Bar labels show the plain numeric score and
-    the failure count in plain English rather than technical 'n=X | controls=Y'
-    notation.
+    model.  Baseline bars (always 0) are omitted to avoid visual clutter.
+    Bar labels show the plain numeric score and the failure count in plain
+    English rather than technical 'n=X | controls=Y' notation.
     """
     _, summary_df = load_security_control_points()
     if summary_df.empty:
@@ -538,9 +615,6 @@ def chart_security_critical_control_risk_density() -> None:
     ax.set_ylim(0, summary_df["avgRiskPer10kChars"].max() * 1.3)
     ax.yaxis.grid(True, linestyle="--", alpha=0.4)
     ax.set_axisbelow(True)
-    ax.text(0.5, -0.18,
-            "Baseline (well-implemented reference) scores 0 on all controls — omitted for clarity.",
-            transform=ax.transAxes, ha="center", fontsize=8, color="dimgray", style="italic")
 
     plt.tight_layout(rect=[0, 0.08, 1, 1])
     save_chart(fig, CHARTS_SEC_DIR, "security-critical-control-risk-density.svg", tight=False)
@@ -585,7 +659,7 @@ def chart_misconfiguration_clustering(variant_df: pd.DataFrame) -> float:
     local["code"] = [f"V{i+1}" for i in range(len(local))]
 
     fig, ax = plt.subplots(figsize=(15.4, 9.4))
-    fig.subplots_adjust(right=0.54)
+    fig.subplots_adjust(right=0.54, top=0.95)
     sns.scatterplot(
         data=local,
         x="cyclomaticComplexity",
@@ -613,6 +687,8 @@ def chart_misconfiguration_clustering(variant_df: pd.DataFrame) -> float:
     ax.set_xlabel("Cyclomatic Complexity", fontsize=15)
     ax.set_ylabel("Exploitability Score (0-10)", fontsize=15)
     ax.tick_params(axis="both", labelsize=13)
+    # Tighten data padding so the chart body has less side and top whitespace.
+    ax.margins(x=0.01, y=0.01)
 
     handles, labels = ax.get_legend_handles_labels()
     clean_handles = []
@@ -740,8 +816,17 @@ def chart_ai_determinism_variance(arm_df: pd.DataFrame) -> float:
     if whisker_labelled:
         handles.append(Line2D([0], [0], color="black", linewidth=1.2, label="±1 std dev"))
         labels.append("±1 std dev")
-    ax.legend(handles=handles, labels=labels, title="Model", fontsize=9,
-              title_fontsize=9, loc="upper right", framealpha=1.0)
+    ax.legend(
+        handles=handles,
+        labels=labels,
+        title="Model",
+        fontsize=9,
+        title_fontsize=9,
+        loc="upper right",
+        bbox_to_anchor=(1.00, 1.04),
+        borderaxespad=0.0,
+        framealpha=1.0,
+    )
 
     save_chart(fig, CHARTS_SYNTH_DIR, "ai-determinism-variance.svg")
     return float(grouped["failure_std"].mean())
@@ -1046,10 +1131,6 @@ def chart_misconfiguration_frequency_comparison(
     ax.set_axisbelow(True)
     ax.legend(title="Code source", fontsize=9, title_fontsize=9,
               loc="upper left", bbox_to_anchor=(0.0, 1.14), framealpha=1.0)
-    ax.text(0.5, -0.2,
-            "Properly implemented baseline fails 0% by design on all models — omitted.",
-            transform=ax.transAxes, ha="center", fontsize=8, color="dimgray", style="italic")
-
     for patch in ax.patches:
         value = float(patch.get_height())
         if value > 0:
@@ -1476,9 +1557,10 @@ def chart_failure_points_vs_chars() -> None:
             float(rows_var["characters"].max()),
             100,
         )
+        x_pred = pd.DataFrame({"characters": x_range})
         ax_left.plot(
             x_range,
-            reg.predict(x_range.reshape(-1, 1)),
+            reg.predict(x_pred),
             color="dimgray",
             linestyle="--",
             linewidth=1.2,
@@ -1556,7 +1638,7 @@ def chart_failure_points_vs_chars() -> None:
     ax_right.legend(fontsize=9)
     ax_right.set_ylim(bottom=0)
 
-    fig.suptitle("Failure Point Concentration Against Code Footprint", fontsize=12, fontweight="bold", y=1.01)
+    fig.suptitle("Failure Point Concentration Against Code Footprint", fontsize=12, fontweight="bold", y=0.985)
     plt.tight_layout()
 
     save_chart(fig, CHARTS_MAINT_DIR, "failure-points-vs-chars.svg", tight=False)
@@ -1602,17 +1684,6 @@ def chart_error_diversity_entropy(arm_df: pd.DataFrame) -> float:
             fontsize=8,
         )
 
-    count_note = ", ".join([f"{row.arm}: n={int(row.count)}" for row in df.itertuples(index=False)])
-    ax.text(
-        0.0,
-        -0.20,
-        f"Failure observations by arm ({count_note})",
-        transform=ax.transAxes,
-        ha="left",
-        va="top",
-        fontsize=7.5,
-        color="#444444",
-    )
     save_chart(fig, CHARTS_SYNTH_DIR, "error-diversity-entropy.svg")
     return float(df["entropy"].mean())
 
@@ -1874,6 +1945,8 @@ def chart_runtime_latency_comparison_ci() -> None:
              fontsize=0.1, color="white")
 
     plt.tight_layout()
+    # Pull the plotting area slightly lower so the footer band sits visually closer.
+    fig.subplots_adjust(bottom=0.03)
     save_chart(fig, CHARTS_PERF_DIR, "runtime-latency-comparison-ci.svg")
 
 
@@ -2075,6 +2148,7 @@ def main() -> None:
     chart_failure_points_vs_chars()
     chart_security_critical_control_risk_density()
     chart_normalized_failure_density()
+    chart_calibration_and_agreement_controls()
     chart_ai_vs_human_severity_gap_ci()
     summary.overhead_attack_share_mean = chart_authentication_overhead_breakdown(perf_df)
     summary.load_variance_mean = chart_variance_under_load(perf_df)
@@ -2083,6 +2157,10 @@ def main() -> None:
     chart_runtime_latency_comparison_ci()
     write_chart_catalog()
     write_analysis_summary(summary)
+
+    # Keep footer formatting in sync by auto-injecting after chart writes.
+    inject_script = Path(__file__).resolve().parent / "inject_footnotes.py"
+    subprocess.run([sys.executable, str(inject_script)], check=True)
 
     print(f"Generated charts in {CHARTS_DIR}")
     print(f"Generated summary report at {ANALYSIS_REPORT_PATH}")

@@ -56,9 +56,13 @@ This command is the full reproducible path:
 git clone https://github.com/jkmagnussen/api-authentication-models-evaluation.git
 cd api-authentication-models-evaluation
 npm install
-npx prisma migrate dev
-npx prisma generate
-npx ts-node prisma/seed.ts
+npm run db:setup
+```
+
+Optional (recommended if you will regenerate charts locally):
+
+```powershell
+npm run py:install
 ```
 
 ### Full Reproducible Run
@@ -66,6 +70,9 @@ npx ts-node prisma/seed.ts
 ```powershell
 npm run run:all:offline
 ```
+
+This run includes chart regeneration plus footer/style injection through `analysis-python/generate_charts.py` and `analysis-python/inject_footnotes.py`.
+Chart body layout tweaks should be made in `generate_charts.py`; footer formatting/placement should be made in `inject_footnotes.py` so reruns preserve the exact layout.
 
 ### Primary Local Run (No Docker)
 
