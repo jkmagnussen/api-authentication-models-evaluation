@@ -114,7 +114,7 @@ For detailed routes and request/response examples, see:
 - `routes.md`
 - `postman.json`
 
-`routes.md` includes both the primary comparative model routes (Sessions/JWT/OAuth) and supplementary account security routes. The supplementary account security routes are hardening endpoints, not part of the core comparative evaluation.
+`routes.md` includes both the primary comparative model routes (Sessions/JWT/OAuth) and supplementary account security routes. The supplementary account security routes are hardening endpoints, not part of the core comparative evaluation
 
 ### Postman OAuth PKCE Flow (Automated)
 
