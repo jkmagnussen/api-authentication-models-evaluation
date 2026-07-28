@@ -32,7 +32,7 @@ Use this only when Docker Desktop is installed and running.
 
 ```powershell
 npm run docker:build
-docker run --rm -p 3000:3000 dissertation-backend:local
+docker run --rm -p 3001:3001 -e PORT=3001 dissertation-backend:local
 ```
 
 ### Stepwise Execution (Granular Control)

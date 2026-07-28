@@ -7,8 +7,12 @@ import { log } from './logger';
 let redisClient: RedisClientType | null = null;
 let redisConnectStarted = false;
 
+function shouldUseRedis() {
+  return APP_CONFIG.env !== 'test' && Boolean(APP_CONFIG.session.redisUrl);
+}
+
 function ensureRedisClient() {
-  if (!APP_CONFIG.session.redisUrl) {
+  if (!shouldUseRedis()) {
     return null;
   }
 

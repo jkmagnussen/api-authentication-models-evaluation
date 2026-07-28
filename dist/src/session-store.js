@@ -8,8 +8,11 @@ const config_1 = require("./config");
 const logger_1 = require("./logger");
 let redisClient = null;
 let redisConnectStarted = false;
+function shouldUseRedis() {
+    return config_1.APP_CONFIG.env !== 'test' && Boolean(config_1.APP_CONFIG.session.redisUrl);
+}
 function ensureRedisClient() {
-    if (!config_1.APP_CONFIG.session.redisUrl) {
+    if (!shouldUseRedis()) {
         return null;
     }
     if (!redisClient) {

@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const supertest_1 = __importDefault(require("supertest"));
 const app_1 = __importDefault(require("../../../src/app"));
 const db_1 = require("../../../src/db");
+const jwt_keys_1 = require("../../../src/jwt/jwt.keys");
 const setup_1 = require("../../setup");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 describe('JWT – Expired Token Attack Test', () => {
@@ -29,12 +30,15 @@ describe('JWT – Expired Token Attack Test', () => {
             payload: {},
             header: { alg: 'HS256' },
         };
-        // Create an expired token using the same secret
+        const { algorithm, signingKey, keyId } = (0, jwt_keys_1.getJwtSignContext)(decoded.header?.alg);
+        const signOptions = { algorithm };
+        if (keyId) {
+            signOptions.keyid = keyId;
+        }
         expiredToken = jsonwebtoken_1.default.sign({
             ...decoded.payload,
             exp: Math.floor(Date.now() / 1000) - 60, // expired 60 seconds ago
-        }, process.env.JWT_SECRET || 'dev-secret', // match your app's secret
-        { algorithm: decoded.header?.alg || 'HS256' });
+        }, signingKey, signOptions);
     });
     test('Expired JWT should be rejected', async () => {
         const res = await (0, supertest_1.default)(app_1.default)

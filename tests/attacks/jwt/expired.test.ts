@@ -1,6 +1,7 @@
 import request from 'supertest';
 import app from '../../../src/app';
 import { prisma } from '../../../src/db';
+import { getJwtSignContext } from '../../../src/jwt/jwt.keys';
 import { resetDatabase } from '../../setup';
 import jwt from 'jsonwebtoken';
 
@@ -31,14 +32,20 @@ describe('JWT – Expired Token Attack Test', () => {
       header: { alg: 'HS256' },
     };
 
-    // Create an expired token using the same secret
+    const { algorithm, signingKey, keyId } = getJwtSignContext(decoded.header?.alg);
+    const signOptions: Record<string, unknown> = { algorithm };
+
+    if (keyId) {
+      signOptions.keyid = keyId;
+    }
+
     expiredToken = jwt.sign(
       {
         ...decoded.payload,
         exp: Math.floor(Date.now() / 1000) - 60, // expired 60 seconds ago
       },
-      process.env.JWT_SECRET || 'dev-secret', // match your app's secret
-      { algorithm: decoded.header?.alg || 'HS256' }
+      signingKey as string,
+      signOptions
     );
   });
 

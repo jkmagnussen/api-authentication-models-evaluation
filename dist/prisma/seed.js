@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+require("dotenv/config");
 const db_1 = require("../src/db");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 // npx ts-node prisma/seed.ts
@@ -59,4 +60,12 @@ async function main() {
     });
     console.log('Seed complete.');
 }
-main().finally(() => process.exit(0));
+main()
+    .catch((error) => {
+    console.error('Seed failed:', error);
+    process.exit(1);
+})
+    .finally(async () => {
+    await db_1.prisma.$disconnect();
+    process.exit(0);
+});

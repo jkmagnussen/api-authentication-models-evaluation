@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.APP_CONFIG = exports.BCRYPT_SALT_ROUNDS = exports.DATABASE_URL = exports.PORT = exports.IS_PRODUCTION = exports.NODE_ENV = void 0;
+exports.buildDatabaseUrlFromEnv = buildDatabaseUrlFromEnv;
 exports.validateRuntimeConfig = validateRuntimeConfig;
 function asNumber(value, fallback) {
     if (!value)
@@ -21,10 +22,22 @@ function asList(value, fallback = []) {
         .map((item) => item.trim())
         .filter(Boolean);
 }
+function buildDatabaseUrlFromEnv(env = process.env) {
+    const existingDatabaseUrl = env.DATABASE_URL?.trim();
+    if (existingDatabaseUrl) {
+        return existingDatabaseUrl;
+    }
+    const host = env.DB_HOST ?? env.POSTGRES_HOST ?? 'localhost';
+    const port = env.DB_PORT ?? env.POSTGRES_PORT ?? '5432';
+    const user = env.DB_USER ?? env.POSTGRES_USER ?? 'postgres';
+    const password = env.DB_PASSWORD ?? env.POSTGRES_PASSWORD ?? 'password';
+    const database = env.DB_NAME ?? env.POSTGRES_DB ?? env.POSTGRES_DBNAME ?? 'dissertation_auth_db';
+    return `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}`;
+}
 exports.NODE_ENV = process.env.NODE_ENV ?? 'development';
 exports.IS_PRODUCTION = exports.NODE_ENV === 'production';
-exports.PORT = asNumber(process.env.PORT, 3000);
-exports.DATABASE_URL = process.env.DATABASE_URL ?? '';
+exports.PORT = asNumber(process.env.PORT, 3001);
+exports.DATABASE_URL = buildDatabaseUrlFromEnv();
 exports.BCRYPT_SALT_ROUNDS = asNumber(process.env.BCRYPT_SALT_ROUNDS, 10);
 exports.APP_CONFIG = {
     env: exports.NODE_ENV,
@@ -33,7 +46,7 @@ exports.APP_CONFIG = {
     databaseUrl: exports.DATABASE_URL,
     bcryptSaltRounds: exports.BCRYPT_SALT_ROUNDS,
     trustProxy: asBoolean(process.env.TRUST_PROXY, exports.IS_PRODUCTION),
-    corsOrigins: asList(process.env.CORS_ALLOWED_ORIGINS, exports.IS_PRODUCTION ? [] : ['http://localhost:3000']),
+    corsOrigins: asList(process.env.CORS_ALLOWED_ORIGINS, exports.IS_PRODUCTION ? [] : ['http://localhost:3001']),
     cookie: {
         secure: asBoolean(process.env.COOKIE_SECURE, exports.IS_PRODUCTION),
         httpOnly: asBoolean(process.env.COOKIE_HTTP_ONLY, true),

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { prisma } from '../src/db';
 import bcrypt from 'bcrypt';
 
@@ -62,4 +63,12 @@ async function main() {
   console.log('Seed complete.');
 }
 
-main().finally(() => process.exit(0));
+main()
+  .catch((error) => {
+    console.error('Seed failed:', error);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+    process.exit(0);
+  });

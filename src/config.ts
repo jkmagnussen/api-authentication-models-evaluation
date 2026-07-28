@@ -18,10 +18,25 @@ function asList(value: string | undefined, fallback: string[] = []) {
     .filter(Boolean);
 }
 
+export function buildDatabaseUrlFromEnv(env: NodeJS.ProcessEnv = process.env) {
+  const existingDatabaseUrl = env.DATABASE_URL?.trim();
+  if (existingDatabaseUrl) {
+    return existingDatabaseUrl;
+  }
+
+  const host = env.DB_HOST ?? env.POSTGRES_HOST ?? 'localhost';
+  const port = env.DB_PORT ?? env.POSTGRES_PORT ?? '5432';
+  const user = env.DB_USER ?? env.POSTGRES_USER ?? 'postgres';
+  const password = env.DB_PASSWORD ?? env.POSTGRES_PASSWORD ?? 'password';
+  const database = env.DB_NAME ?? env.POSTGRES_DB ?? env.POSTGRES_DBNAME ?? 'dissertation_auth_db';
+
+  return `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}`;
+}
+
 export const NODE_ENV = process.env.NODE_ENV ?? 'development';
 export const IS_PRODUCTION = NODE_ENV === 'production';
-export const PORT = asNumber(process.env.PORT, 3000);
-export const DATABASE_URL = process.env.DATABASE_URL ?? '';
+export const PORT = asNumber(process.env.PORT, 3001);
+export const DATABASE_URL = buildDatabaseUrlFromEnv();
 export const BCRYPT_SALT_ROUNDS = asNumber(process.env.BCRYPT_SALT_ROUNDS, 10);
 
 export const APP_CONFIG = {
@@ -33,7 +48,7 @@ export const APP_CONFIG = {
   trustProxy: asBoolean(process.env.TRUST_PROXY, IS_PRODUCTION),
   corsOrigins: asList(
     process.env.CORS_ALLOWED_ORIGINS,
-    IS_PRODUCTION ? [] : ['http://localhost:3000']
+    IS_PRODUCTION ? [] : ['http://localhost:3001']
   ),
   cookie: {
     secure: asBoolean(process.env.COOKIE_SECURE, IS_PRODUCTION),

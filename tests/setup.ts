@@ -3,10 +3,24 @@ import { authLimiter } from '../src/middleware/rateLimiter';
 
 async function safeDeleteMany(model: any) {
   if (!model?.deleteMany) return;
+
   try {
     await model.deleteMany();
   } catch {
     // ignore FK errors during test cleanup
+  }
+}
+
+async function safeCreateOAuthClient(id: string, name: string, secret: string) {
+  const oauthClient = (prisma as any).oAuthClient;
+  if (!oauthClient?.create) return;
+
+  try {
+    await oauthClient.create({
+      data: { id, name, secret },
+    });
+  } catch {
+    // ignore if the client already exists during test reset
   }
 }
 
@@ -24,43 +38,10 @@ export async function resetDatabase() {
   await safeDeleteMany((prisma as any).oAuthClient);
   await safeDeleteMany((prisma as any).user);
 
-  const oauthClient = (prisma as any).oAuthClient;
-
-  if (oauthClient?.create) {
-    // Recreate clients used in tests.
-    await oauthClient.create({
-      data: {
-        id: 'client-basic',
-        name: 'Basic Client',
-        secret: 'basic-secret',
-      },
-    });
-
-    await oauthClient.create({
-      data: {
-        id: 'client-privileged',
-        name: 'Privileged Client',
-        secret: 'privileged-secret',
-      },
-    });
-
-    await oauthClient.create({
-      data: {
-        id: 'client-admin',
-        name: 'Admin Client',
-        secret: 'admin-secret',
-      },
-    });
-
-    // Legacy client used by older tests.
-    await oauthClient.create({
-      data: {
-        id: 'client-123',
-        name: 'Legacy Test Client',
-        secret: 'legacy-secret',
-      },
-    });
-  }
+  await safeCreateOAuthClient('client-basic', 'Basic Client', 'basic-secret');
+  await safeCreateOAuthClient('client-privileged', 'Privileged Client', 'privileged-secret');
+  await safeCreateOAuthClient('client-admin', 'Admin Client', 'admin-secret');
+  await safeCreateOAuthClient('client-123', 'Legacy Test Client', 'legacy-secret');
 }
 
 export async function resetAuthState() {

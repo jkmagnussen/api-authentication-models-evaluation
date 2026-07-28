@@ -15,6 +15,5 @@
     "!.venv/**",
     "!.venv-analysis/**",
     "!analysis-python/.venv/**",
-    "!docs/Two-Reviewer_Requirements.md"
   ]
 }
