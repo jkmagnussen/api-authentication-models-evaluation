@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 function asNumber(value: string | undefined, fallback: number) {
   if (!value) return fallback;
 

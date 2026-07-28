@@ -80,15 +80,37 @@ Use this sequence on a fresh Mac clone to avoid cross-platform artifact drift:
 ```bash
 rm -rf node_modules
 npm ci
-npm run db:generate
-npm run db:migrate
-npm run db:seed
+npm run db:setup
 npm run build
 npm test
 npm run verify:full
 ```
 
+Notes:
+
+- `npm test` now runs `npm run prepare:env` first via `pretest`, so test runs use a normalized `DATABASE_URL` before Jest starts.
+- Runtime config loads `.env` directly, so app/test execution and Prisma CLI commands resolve database settings consistently.
+
 If `verify:full` reports a port conflict, stop any process already listening on port `3001` and rerun.
+
+### Troubleshooting: macOS vs Windows
+
+If tests fail on macOS but pass on Windows with errors like:
+
+- `PrismaClientInitializationError`
+- `User was denied access on the database '(not available)'`
+
+check the following in order:
+
+1. Verify `.env` has the intended `DATABASE_URL` credentials for your local Postgres user.
+2. Run `npm run prepare:env` once and confirm it prints the expected host/port/database.
+3. Run `npm run db:setup` to ensure Prisma can connect, migrate, and seed.
+4. Run `npm test` (this now runs `pretest` and prepares env before Jest).
+
+Why this happens:
+
+- Cross-platform shells and local Postgres defaults can differ.
+- This project now normalizes `DATABASE_URL` before test runs and loads `.env` at runtime to keep Prisma CLI and Jest/app behavior aligned.
 
 Common examples:
 
