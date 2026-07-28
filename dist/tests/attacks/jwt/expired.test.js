@@ -26,17 +26,22 @@ describe('JWT – Expired Token Attack Test', () => {
             .send({ email: 'test@example.com', password: 'password' });
         const validToken = res.body.token;
         // Decode the valid token to reuse header + payload structure
-        const decoded = jsonwebtoken_1.default.decode(validToken, { complete: true }) || {
-            payload: {},
-            header: { alg: 'HS256' },
-        };
-        const { algorithm, signingKey, keyId } = (0, jwt_keys_1.getJwtSignContext)(decoded.header?.alg);
+        const decodedRaw = jsonwebtoken_1.default.decode(validToken, { complete: true });
+        const decoded = decodedRaw && typeof decodedRaw === 'object' && 'payload' in decodedRaw
+            ? decodedRaw
+            : {
+                payload: {},
+                header: { alg: 'HS256' },
+            };
+        const tokenAlgorithm = typeof decoded.header?.alg === 'string' ? decoded.header.alg : undefined;
+        const payloadObject = typeof decoded.payload === 'object' && decoded.payload !== null ? decoded.payload : {};
+        const { algorithm, signingKey, keyId } = (0, jwt_keys_1.getJwtSignContext)(tokenAlgorithm);
         const signOptions = { algorithm };
         if (keyId) {
             signOptions.keyid = keyId;
         }
         expiredToken = jsonwebtoken_1.default.sign({
-            ...decoded.payload,
+            ...payloadObject,
             exp: Math.floor(Date.now() / 1000) - 60, // expired 60 seconds ago
         }, signingKey, signOptions);
     });

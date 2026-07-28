@@ -1,7 +1,7 @@
 # AI vs Human Safety Decision Brief
 
 Generated: 2026-07-23T14:45:50.161Z
-Regenerate: npm run decision:ai-vs-human
+Regenerate: npm run docs:check
 
 ## Decision Signal
 

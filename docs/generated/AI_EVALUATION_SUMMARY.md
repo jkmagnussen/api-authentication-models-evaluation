@@ -1,7 +1,7 @@
 # AI Evaluation Summary
 
 Generated: 2026-07-23T04:30:51.892Z
-Regenerate: npm run ai:report
+Regenerate: npm run docs:check
 
 This report aggregates the complexity metrics and automated check results for 90 AI-generated authentication samples.
 

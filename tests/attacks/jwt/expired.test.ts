@@ -5,6 +5,11 @@ import { getJwtSignContext } from '../../../src/jwt/jwt.keys';
 import { resetDatabase } from '../../setup';
 import jwt from 'jsonwebtoken';
 
+type DecodedToken = {
+  payload: string | jwt.JwtPayload;
+  header?: jwt.JwtHeader;
+};
+
 describe('JWT – Expired Token Attack Test', () => {
   let expiredToken: string;
 
@@ -27,12 +32,21 @@ describe('JWT – Expired Token Attack Test', () => {
     const validToken = res.body.token;
 
     // Decode the valid token to reuse header + payload structure
-    const decoded: any = jwt.decode(validToken, { complete: true }) || {
-      payload: {},
-      header: { alg: 'HS256' },
-    };
+    const decodedRaw = jwt.decode(validToken, { complete: true });
+    const decoded: DecodedToken =
+      decodedRaw && typeof decodedRaw === 'object' && 'payload' in decodedRaw
+        ? (decodedRaw as DecodedToken)
+        : {
+            payload: {},
+            header: { alg: 'HS256' },
+          };
 
-    const { algorithm, signingKey, keyId } = getJwtSignContext(decoded.header?.alg);
+    const tokenAlgorithm =
+      typeof decoded.header?.alg === 'string' ? (decoded.header.alg as jwt.Algorithm) : undefined;
+    const payloadObject =
+      typeof decoded.payload === 'object' && decoded.payload !== null ? decoded.payload : {};
+
+    const { algorithm, signingKey, keyId } = getJwtSignContext(tokenAlgorithm);
     const signOptions: Record<string, unknown> = { algorithm };
 
     if (keyId) {
@@ -41,7 +55,7 @@ describe('JWT – Expired Token Attack Test', () => {
 
     expiredToken = jwt.sign(
       {
-        ...decoded.payload,
+        ...payloadObject,
         exp: Math.floor(Date.now() / 1000) - 60, // expired 60 seconds ago
       },
       signingKey as string,

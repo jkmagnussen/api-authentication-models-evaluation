@@ -5,16 +5,26 @@ import bcrypt from 'bcrypt';
 // npx ts-node prisma/seed.ts
 
 async function main() {
+  process.stdout.write('Resetting seeded data...\n');
+
+  await prisma.$transaction([
+    prisma.auditLog.deleteMany(),
+    prisma.passwordResetToken.deleteMany(),
+    prisma.session.deleteMany(),
+    prisma.oAuthAccessToken.deleteMany(),
+    prisma.oAuthAuthorizationCode.deleteMany(),
+    prisma.oAuthClient.deleteMany(),
+    prisma.user.deleteMany(),
+  ]);
+
   // Seed main user with fixed ID
   const passwordHash = await bcrypt.hash('password123', 10);
   const basicSecretHash = await bcrypt.hash('basic-secret', 10);
   const privilegedSecretHash = await bcrypt.hash('privileged-secret', 10);
   const adminSecretHash = await bcrypt.hash('admin-secret', 10);
 
-  await prisma.user.upsert({
-    where: { id: 'd9c7dba3-3f97-4418-9f7b-f89d8fa5d925' },
-    update: {},
-    create: {
+  await prisma.user.create({
+    data: {
       id: 'd9c7dba3-3f97-4418-9f7b-f89d8fa5d925',
       email: 'main@example.com',
       password: passwordHash,
@@ -24,10 +34,8 @@ async function main() {
   // -----------------------------
   // BASIC CLIENT (read-only)
   // -----------------------------
-  await prisma.oAuthClient.upsert({
-    where: { id: 'client-basic' },
-    update: {},
-    create: {
+  await prisma.oAuthClient.create({
+    data: {
       id: 'client-basic',
       secret: basicSecretHash,
       name: 'Basic Client',
@@ -37,10 +45,8 @@ async function main() {
   // -----------------------------
   // PRIVILEGED CLIENT (read + write)
   // -----------------------------
-  await prisma.oAuthClient.upsert({
-    where: { id: 'client-privileged' },
-    update: {},
-    create: {
+  await prisma.oAuthClient.create({
+    data: {
       id: 'client-privileged',
       secret: privilegedSecretHash,
       name: 'Privileged Client',
@@ -50,17 +56,15 @@ async function main() {
   // -----------------------------
   // ADMIN CLIENT (read + write + admin)
   // -----------------------------
-  await prisma.oAuthClient.upsert({
-    where: { id: 'client-admin' },
-    update: {},
-    create: {
+  await prisma.oAuthClient.create({
+    data: {
       id: 'client-admin',
       secret: adminSecretHash,
       name: 'Admin Client',
     },
   });
 
-  console.log('Seed complete.');
+  process.stdout.write('Seed complete. Existing data was reset and reseeded.\n');
 }
 
 main()

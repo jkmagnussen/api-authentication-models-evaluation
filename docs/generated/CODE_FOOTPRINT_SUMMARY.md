@@ -1,7 +1,7 @@
 # Code Footprint Summary
 
 Generated: 2026-07-24T23:11:15.069Z
-Regenerate: npm run code:footprint:tolerant
+Regenerate: npm run docs:check
 
 ## Scope Rules
 

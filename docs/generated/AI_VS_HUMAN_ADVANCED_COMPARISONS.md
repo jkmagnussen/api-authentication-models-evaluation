@@ -1,7 +1,7 @@
 # AI vs Human Advanced Objective Comparisons
 
 Generated: 2026-07-23T16:21:27.496Z
-Regenerate: npm run decision:ai-vs-human:advanced
+Regenerate: npm run docs:check
 
 ## 1) Severity-Weighted Safety Gap with Uncertainty
 

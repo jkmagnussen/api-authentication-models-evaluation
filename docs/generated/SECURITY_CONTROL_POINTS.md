@@ -1,7 +1,7 @@
 # Security-Critical Control Points
 
 Generated: 2026-07-24T23:11:16.408Z
-Regenerate: npm run code:footprint:tolerant
+Regenerate: npm run docs:check
 
 This exploratory report isolates high-impact control points and expresses observed failure pressure as density relative to implementation footprint.
 

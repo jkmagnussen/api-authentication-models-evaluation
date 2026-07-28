@@ -16,7 +16,7 @@ function getPreferredPort() {
 function getPreferredHost() {
     return process.env.HOST ?? '0.0.0.0';
 }
-async function startServer() {
+function startServer(port = getPreferredPort(), host = getPreferredHost(), attempts = 0) {
     const configValidation = (0, config_1.validateRuntimeConfig)();
     for (const warning of configValidation.warnings) {
         (0, logger_1.log)('warn', 'runtime.config.warning', { warning });
@@ -27,19 +27,31 @@ async function startServer() {
         }
         process.exit(1);
     }
-    const preferredPort = getPreferredPort();
-    const preferredHost = getPreferredHost();
-    const server = app_1.default.listen(preferredPort, preferredHost, () => {
+    const server = app_1.default.listen(port, host, () => {
+        const actualPort = server.address()?.port ?? port;
+        const actualHost = host === '0.0.0.0' ? 'localhost' : host;
+        process.env.PORT = String(actualPort);
+        process.env.HOST = host;
         (0, logger_1.log)('info', 'server.started', {
-            port: preferredPort,
-            host: preferredHost,
-            url: `http://${preferredHost === '0.0.0.0' ? 'localhost' : preferredHost}:${preferredPort}`,
+            port: actualPort,
+            host,
+            url: `http://${actualHost}:${actualPort}`,
         });
     });
     server.on('error', (error) => {
+        if (error.code === 'EADDRINUSE' && attempts < 4) {
+            const nextPort = port + 1;
+            (0, logger_1.log)('warn', 'server.port.in_use', {
+                attemptedPort: port,
+                nextPort,
+            });
+            startServer(nextPort, host, attempts + 1);
+            return;
+        }
         (0, logger_1.log)('error', 'server.failed', {
             error: error.message,
             code: error.code,
+            port,
         });
         process.exit(1);
     });

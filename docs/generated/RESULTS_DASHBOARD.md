@@ -1,7 +1,7 @@
 # Dissertation Results Dashboard
 
 Generated: 2026-07-24T23:13:51.707Z
-Regenerate: npm run results:index
+Regenerate: npm run docs:check
 
 ## Quick Commands
 

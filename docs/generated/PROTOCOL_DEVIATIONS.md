@@ -1,7 +1,7 @@
 # Protocol Deviations Report
 
 Generated: 2026-07-24T23:11:30.863Z
-Regenerate: npm run objective:deviations
+Regenerate: npm run docs:check
 
 Unresolved Critical Deviations: 0
 Unresolved Major Deviations: 0

@@ -85,7 +85,7 @@ export const APP_CONFIG = {
     allowedRedirects: asList(process.env.OAUTH_ALLOWED_REDIRECTS, ['https://example.com/callback']),
   },
   observability: {
-    logLevel: process.env.LOG_LEVEL ?? 'info',
+    logLevel: process.env.LOG_LEVEL ?? 'error',
     healthToken: process.env.HEALTHCHECK_TOKEN,
   },
   security: {

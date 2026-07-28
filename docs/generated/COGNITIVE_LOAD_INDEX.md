@@ -1,7 +1,7 @@
 # Cognitive Load Index
 
 Generated: 2026-07-24T23:11:20.055Z
-Regenerate: npm run analysis:structural
+Regenerate: npm run docs:check
 
 $$
 CLI = 1.2P + 1.1F + 1.3L + 1.0B + 1.2V + 1.4M

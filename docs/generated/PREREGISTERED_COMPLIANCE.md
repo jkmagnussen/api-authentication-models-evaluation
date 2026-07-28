@@ -1,7 +1,7 @@
 # Pre-Registered Compliance Summary
 
 Generated: 2026-07-24T23:11:36.022Z
-Regenerate: npm run objective:preregistered:report
+Regenerate: npm run docs:check
 
 Governance mode: EXPLORATORY
 Claim class: exploratory-author-interpreted

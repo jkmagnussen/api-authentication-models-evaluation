@@ -1,7 +1,7 @@
 # Normalized Failure Density
 
 Generated: 2026-07-24T23:11:15.721Z
-Regenerate: npm run code:footprint:tolerant
+Regenerate: npm run docs:check
 
 This exploratory report normalizes observed security failures against implementation footprint to compare baseline, misconfiguration, and AI-generated slices without over-weighting raw size alone.
 

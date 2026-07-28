@@ -1,7 +1,7 @@
 # AI Blind Interpretation
 
 Generated: 2026-07-24T23:11:24.952Z
-Regenerate: npm run objective:blind:interpretation
+Regenerate: npm run docs:check
 
 Status: DRAFT_NEEDS_FINALIZATION
 Blinded report SHA256: 8db9e3087ad79e47486abdfe83d5d2e9c01e783397d1548ae0cd60b2584b1b1e

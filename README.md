@@ -1,6 +1,6 @@
 # API Authentication Models Evaluation
 
-This project evaluates three API authentication models in one backend:
+This backend evaluates three API authentication models:
 
 - Sessions
 - JWT
@@ -8,97 +8,131 @@ This project evaluates three API authentication models in one backend:
 
 ## Prerequisites
 
-- Node.js 18 or newer
-- PostgreSQL running locally
+- Node.js 18+
+- PostgreSQL
 - Optional: Redis for session storage
 
-## Development workflow
-
-1. Install dependencies:
-   - `npm install`
-2. Create a `.env` file with either `DATABASE_URL` or the DB override variables `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME`.
-3. Prepare the environment and database:
-   - `npm run db:setup`
-   - This runs Prisma client generation, applies migrations, and seeds the database.
-4. Start the app in development mode:
-   - `npm run dev`
-
-### Useful development commands
-
-- `npm run dev` - start the app locally with ts-node
-- `npm run build` - compile the TypeScript app
-- `npm run test` - run the Jest suite
-- `npm run db:setup` - generate the Prisma client, deploy migrations, and seed the database
-- `npm run db:seed` - seed the database only
-- `npm run docs:check` - verify generated artifacts
-- `npm run docker:build` - build the Docker image
-
-### Dev build checklist
-
-If you want a simple dev build flow, use:
+## Quick Start
 
 ```bash
 npm install
 npm run db:setup
-npm run build
 npm run dev
 ```
 
-## Production workflow
-
-For production, build and start the compiled app:
+Then verify the app is healthy:
 
 ```bash
+npm run healthcheck
+```
+
+Create a `.env` file with either:
+
+- `DATABASE_URL`, or
+- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+
+## Script Guide
+
+Use this section as a command map by goal.
+
+### Core
+
+- `npm run dev`: run app in development mode (ts-node)
+- `npm run build`: compile TypeScript
+- `npm run start`: run compiled app
+- `npm run prod`: build then run compiled app
+
+### Database
+
+- `npm run db:generate`: generate Prisma client
+- `npm run db:migrate`: apply migrations
+- `npm run db:seed`: reseed canonical data
+- `npm run db:setup`: generate + migrate + seed
+
+### Verification
+
+- `npm run test`: run full Jest suite
+- `npm run docs:check`: validate generated docs/artifacts
+- `npm run healthcheck`: call `/health/live`
+- `npm run verify:full`: prep env, clean artifacts, db generate/migrate/seed, build, test, start server, healthcheck
+- `npm run verify:deploy`: `verify:full` + Docker build
+- `npm run verify:ci`: `docs:check` + `verify:deploy`
+
+### Docker and Release Tags
+
+- `npm run docker:build`: build local image `dissertation-backend:local`
+- `npm run docker:tag`: tag local image for a repo
+- `npm run docker:tag:ci`: tag with git-sha and package version
+- `npm run docker:publish`: tag and push
+- `npm run docker:publish:ci`: tag and push with git-sha + package version
+
+## Recommended Workflows
+
+- Local development: `npm run db:setup` then `npm run dev`
+- Pre-merge confidence: `npm run verify:ci`
+- Release candidate check: `npm run verify:deploy`
+- Staging publish: `npm run docker:publish:ci`
+
+### First Run on macOS
+
+Use this sequence on a fresh Mac clone to avoid cross-platform artifact drift:
+
+```bash
+rm -rf node_modules
+npm ci
+npm run db:generate
+npm run db:migrate
+npm run db:seed
 npm run build
-npm start
+npm test
+npm run verify:full
 ```
 
-You can also use the convenience script:
+If `verify:full` reports a port conflict, stop any process already listening on port `3001` and rerun.
+
+Common examples:
 
 ```bash
-npm run prod
+IMAGE_REPO=ghcr.io/your-org/dissertation-backend npm run docker:tag
+IMAGE_REPO=ghcr.io/your-org/dissertation-backend IMAGE_ALIAS=staging npm run docker:publish:ci
 ```
 
-For a full production-style run that also cleans artifacts, applies Prisma migrations, seeds the database, builds the app, and starts it, use:
+Tagging notes:
 
-```bash
-npm run prod:full
-```
+- `IMAGE_REPO` is required
+- `IMAGE_TAG` defaults to `git-<shortsha>` when not provided
+- `IMAGE_WITH_VERSION=true` (or `--with-version`) adds `v<package.json version>`
+- `IMAGE_ALIAS` is optional (`staging`, `prod`, etc.)
+- Prefer immutable tags (`git-*`, `v*`) for deployments
 
-### Does production auto-clean, generate, migrate, and seed?
+## CI/CD Workflows
 
-No. The standard `npm run prod` script currently does the following:
+- `.github/workflows/ci-verify.yml`: runs `npm run verify:ci` on PRs/pushes to `main`
+- `.github/workflows/staging-publish.yml`: manual staging image publish workflow
 
-- prepares the environment
-- builds the TypeScript app
-- starts the compiled server
+Staging publish workflow inputs:
 
-It does not automatically run:
+- `image_repo`: target image repository
+- `image_alias`: mutable alias tag (default `staging`)
+- `publish`: when `false`, performs a dry-run tag step only
 
-- artifact cleanup
-- Prisma client generation
-- database migrations
-- database seeding
+Authentication notes:
 
-If the database is not ready yet, run this first:
+- Publish mode logs in to `ghcr.io` using `${{ github.actor }}` and `${{ secrets.GITHUB_TOKEN }}`.
+- Ensure the repository has `packages: write` permission enabled for workflows.
 
-```bash
-npm run db:setup
-```
+Recommended: require `verify-ci` in branch protection for `main`.
 
-## Port and database notes
+## Production Notes
 
-- Local development defaults to port `3001`.
-- Docker defaults to port `3001` internally.
-- If you need to change the app port, set `PORT` before starting the app.
-- The environment bootstrap script will also prepare a `.env` `DATABASE_URL` from your DB settings.
-- Set a local `SESSION_SECRET` in your `.env` file for development, for example `SESSION_SECRET="local-dev-session-secret-2026"`.
+`npm run prod` does not run cleanup, Prisma generate, migrations, or seed.
+Run `npm run db:setup` first when deploying to a fresh or drifted database.
 
-## Useful files
+## Useful Files
 
-- [routes.md](routes.md) - route reference
-- [postman.json](postman.json) - Postman collection
-- [docs/REPRODUCIBILITY_CHECKLIST.md](docs/REPRODUCIBILITY_CHECKLIST.md) - full run checklist
+- [routes.md](routes.md): route reference
+- [postman.json](postman.json): Postman collection
+- [docs/REPRODUCIBILITY_CHECKLIST.md](docs/REPRODUCIBILITY_CHECKLIST.md): full run checklist
 
 ## License
 

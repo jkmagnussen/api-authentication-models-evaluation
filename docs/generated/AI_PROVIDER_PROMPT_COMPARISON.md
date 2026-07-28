@@ -1,7 +1,7 @@
 # AI Provider and Prompt Condition Comparison
 
 Generated: 2026-07-23T04:23:16.398Z
-Regenerate: npm run ai:matrix
+Regenerate: npm run docs:check
 
 This report keeps the top-level framing as Baseline vs Misconfigured vs AI-Generated and decomposes the AI-generated layer into provider and prompt-condition arms.
 For bias control, interpret the blinded arm report first (AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md), then use this file for arm identity unblinding.

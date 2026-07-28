@@ -73,11 +73,9 @@
               }
             },
             "url": {
-              "raw": "/sessions/login",
-              "path": [
-                "sessions",
-                "login"
-              ]
+              "raw": "{{base_url}}/sessions/login",
+              "host": ["{{base_url}}"],
+              "path": ["sessions", "login"]
             }
           },
           "response": []
@@ -162,11 +160,9 @@
               }
             },
             "url": {
-              "raw": "/jwt/login",
-              "path": [
-                "jwt",
-                "login"
-              ]
+              "raw": "{{base_url}}/jwt/login",
+              "host": ["{{base_url}}"],
+              "path": ["jwt", "login"]
             }
           },
           "response": []
@@ -223,11 +219,9 @@
               }
             },
             "url": {
-              "raw": "/oauth/authorize",
-              "path": [
-                "oauth",
-                "authorize"
-              ]
+              "raw": "{{base_url}}/oauth/authorize",
+              "host": ["{{base_url}}"],
+              "path": ["oauth", "authorize"]
             }
           },
           "response": []
@@ -282,11 +276,9 @@
               }
             },
             "url": {
-              "raw": "/oauth/token",
-              "path": [
-                "oauth",
-                "token"
-              ]
+              "raw": "{{base_url}}/oauth/token",
+              "host": ["{{base_url}}"],
+              "path": ["oauth", "token"]
             }
           },
           "response": []
@@ -306,11 +298,9 @@
               }
             },
             "url": {
-              "raw": "/oauth/refresh",
-              "path": [
-                "oauth",
-                "refresh"
-              ]
+              "raw": "{{base_url}}/oauth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["oauth", "refresh"]
             }
           },
           "response": []
@@ -330,11 +320,9 @@
               }
             },
             "url": {
-              "raw": "/oauth/revoke",
-              "path": [
-                "oauth",
-                "revoke"
-              ]
+              "raw": "{{base_url}}/oauth/revoke",
+              "host": ["{{base_url}}"],
+              "path": ["oauth", "revoke"]
             }
           },
           "response": []
@@ -354,11 +342,9 @@
               }
             },
             "url": {
-              "raw": "/oauth/introspect",
-              "path": [
-                "oauth",
-                "introspect"
-              ]
+              "raw": "{{base_url}}/oauth/introspect",
+              "host": ["{{base_url}}"],
+              "path": ["oauth", "introspect"]
             }
           },
           "response": []
@@ -369,11 +355,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "/sessions/csrf-token",
-              "path": [
-                "sessions",
-                "csrf-token"
-              ]
+              "raw": "{{base_url}}/sessions/csrf-token",
+              "host": ["{{base_url}}"],
+              "path": ["sessions", "csrf-token"]
             },
             "description": "Fetches a CSRF token for browser-based session flows."
           },
@@ -416,13 +400,9 @@
               }
             },
             "url": {
-              "raw": "/auth/security/password-reset/request",
-              "path": [
-                "auth",
-                "security",
-                "password-reset",
-                "request"
-              ]
+              "raw": "{{base_url}}/auth/security/password-reset/request",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "security", "password-reset", "request"]
             }
           },
           "response": []
@@ -442,13 +422,9 @@
               }
             },
             "url": {
-              "raw": "/auth/security/password-reset/confirm",
-              "path": [
-                "auth",
-                "security",
-                "password-reset",
-                "confirm"
-              ]
+              "raw": "{{base_url}}/auth/security/password-reset/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "security", "password-reset", "confirm"]
             }
           },
           "response": []
@@ -487,13 +463,9 @@
               }
             },
             "url": {
-              "raw": "/auth/security/mfa/enroll",
-              "path": [
-                "auth",
-                "security",
-                "mfa",
-                "enroll"
-              ]
+              "raw": "{{base_url}}/auth/security/mfa/enroll",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "security", "mfa", "enroll"]
             }
           },
           "response": []
@@ -562,13 +534,9 @@
               }
             },
             "url": {
-              "raw": "/auth/security/mfa/verify",
-              "path": [
-                "auth",
-                "security",
-                "mfa",
-                "verify"
-              ]
+              "raw": "{{base_url}}/auth/security/mfa/verify",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "security", "mfa", "verify"]
             }
           },
           "response": []
@@ -593,11 +561,9 @@
               }
             },
             "url": {
-              "raw": "/sessions/logout",
-              "path": [
-                "sessions",
-                "logout"
-              ]
+              "raw": "{{base_url}}/sessions/logout",
+              "host": ["{{base_url}}"],
+              "path": ["sessions", "logout"]
             }
           },
           "response": []
@@ -613,11 +579,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "/sessions/protected",
-              "path": [
-                "sessions",
-                "protected"
-              ]
+              "raw": "{{base_url}}/sessions/protected",
+              "host": ["{{base_url}}"],
+              "path": ["sessions", "protected"]
             },
             "description": "Uses the session cookie established by the session login request."
           },
@@ -635,11 +599,9 @@
               }
             ],
             "url": {
-              "raw": "/jwt/protected",
-              "path": [
-                "jwt",
-                "protected"
-              ]
+              "raw": "{{base_url}}/jwt/protected",
+              "host": ["{{base_url}}"],
+              "path": ["jwt", "protected"]
             }
           },
           "response": []
@@ -656,11 +618,9 @@
               }
             ],
             "url": {
-              "raw": "/oauth/protected",
-              "path": [
-                "oauth",
-                "protected"
-              ]
+              "raw": "{{base_url}}/oauth/protected",
+              "host": ["{{base_url}}"],
+              "path": ["oauth", "protected"]
             }
           },
           "response": []

@@ -1,7 +1,7 @@
 # AI Sample Syntax Report
 
 Generated: 2026-07-22T23:49:03.397Z
-Regenerate: npm run ai:samples:syntax:check
+Regenerate: npm run docs:check
 
 Files scanned: 90
 Issues found: 39

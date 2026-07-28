@@ -5,8 +5,26 @@ exports.resetDatabase = resetDatabase;
 exports.resetAuthState = resetAuthState;
 const db_1 = require("../src/db");
 const rateLimiter_1 = require("../src/middleware/rateLimiter");
+function getModel(name) {
+    const prismaRecord = db_1.prisma;
+    return prismaRecord[name];
+}
+function isDeleteManyModel(model) {
+    if (!model || typeof model !== 'object') {
+        return false;
+    }
+    const candidate = model;
+    return typeof candidate.deleteMany === 'function';
+}
+function isOAuthClientCreateModel(model) {
+    if (!model || typeof model !== 'object') {
+        return false;
+    }
+    const candidate = model;
+    return typeof candidate.create === 'function';
+}
 async function safeDeleteMany(model) {
-    if (!model?.deleteMany)
+    if (!isDeleteManyModel(model))
         return;
     try {
         await model.deleteMany();
@@ -16,8 +34,8 @@ async function safeDeleteMany(model) {
     }
 }
 async function safeCreateOAuthClient(id, name, secret) {
-    const oauthClient = db_1.prisma.oAuthClient;
-    if (!oauthClient?.create)
+    const oauthClient = getModel('oAuthClient');
+    if (!isOAuthClientCreateModel(oauthClient))
         return;
     try {
         await oauthClient.create({
@@ -31,13 +49,13 @@ async function safeCreateOAuthClient(id, name, secret) {
 async function resetDatabase() {
     rateLimiter_1.authLimiter.resetKey('127.0.0.1');
     rateLimiter_1.authLimiter.resetKey('::ffff:127.0.0.1');
-    await safeDeleteMany(db_1.prisma.oAuthAccessToken);
-    await safeDeleteMany(db_1.prisma.oAuthAuthorizationCode);
-    await safeDeleteMany(db_1.prisma.passwordResetToken);
-    await safeDeleteMany(db_1.prisma.auditLog);
-    await safeDeleteMany(db_1.prisma.session);
-    await safeDeleteMany(db_1.prisma.oAuthClient);
-    await safeDeleteMany(db_1.prisma.user);
+    await safeDeleteMany(getModel('oAuthAccessToken'));
+    await safeDeleteMany(getModel('oAuthAuthorizationCode'));
+    await safeDeleteMany(getModel('passwordResetToken'));
+    await safeDeleteMany(getModel('auditLog'));
+    await safeDeleteMany(getModel('session'));
+    await safeDeleteMany(getModel('oAuthClient'));
+    await safeDeleteMany(getModel('user'));
     await safeCreateOAuthClient('client-basic', 'Basic Client', 'basic-secret');
     await safeCreateOAuthClient('client-privileged', 'Privileged Client', 'privileged-secret');
     await safeCreateOAuthClient('client-admin', 'Admin Client', 'admin-secret');

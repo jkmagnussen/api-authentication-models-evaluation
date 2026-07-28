@@ -10,7 +10,7 @@ RUN npm ci
 
 COPY . .
 RUN npm run db:generate
-RUN npm run build:compile
+RUN npm run build
 
 FROM node:20-bookworm-slim AS runtime
 WORKDIR /app
@@ -31,4 +31,5 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 ENV PORT=3001
 ENV HOST=0.0.0.0
 EXPOSE 3001
-CMD ["npm", "start"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD node scripts/healthcheck.js
+ENTRYPOINT ["npm", "start"]
