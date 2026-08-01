@@ -66,7 +66,7 @@ Use this section as a command map by goal.
 - `npm run docker:publish`: tag and push
 - `npm run docker:publish:ci`: tag and push with git-sha + package version
 
-## Recommended Workflows
+## Recommended Workflows:
 
 - Local development: `npm run db:setup` then `npm run dev`
 - Pre-merge confidence: `npm run verify:ci`
