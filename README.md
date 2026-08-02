@@ -64,7 +64,7 @@ Use this section as a command map by goal.
 - `npm run docker:tag`: tag local image for a repo
 - `npm run docker:tag:ci`: tag with git-sha and package version
 - `npm run docker:publish`: tag and push
-- `npm run docker:publish:ci`: tag and push with git-sha + package version
+- `npm run docker:publish:ci`: tag and push with git-sha + package version..
 
 ## Recommended Workflows:
 
