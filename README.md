@@ -75,7 +75,7 @@ Use this section as a command map by goal.
 
 ### First Run on macOS
 
-Use this sequence on a fresh Mac clone to avoid cross-platform artifact drift:
+Use this sequence on a fresh Mac clone to avoid cross-platform artifact drift
 
 ```bash
 rm -rf node_modules
