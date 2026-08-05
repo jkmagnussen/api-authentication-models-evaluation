@@ -35,6 +35,6 @@ describe('Sessions – Attack Performance Test', () => {
       errorRate: errors / ITERATIONS,
     };
 
-    writePerformanceResult('attacks', 'sessions', attackStats);
+    writePerformanceResult('attacks', 'sessions', attackStats, times);
   });
 });

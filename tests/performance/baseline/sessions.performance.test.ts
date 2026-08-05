@@ -46,6 +46,6 @@ describe('Sessions – Performance Test', () => {
     }
 
     const stats = calculateStats(times);
-    writePerformanceResult('baseline', 'sessions', stats);
+    writePerformanceResult('baseline', 'sessions', stats, times);
   });
 });

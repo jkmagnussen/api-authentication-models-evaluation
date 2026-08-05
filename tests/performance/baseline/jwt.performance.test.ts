@@ -30,6 +30,6 @@ describe('JWT – Performance Test', () => {
     }
 
     const stats = calculateStats(times);
-    writePerformanceResult('baseline', 'jwt', stats);
+    writePerformanceResult('baseline', 'jwt', stats, times);
   });
 });

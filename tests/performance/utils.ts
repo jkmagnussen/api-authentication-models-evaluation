@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 
 export function calculateStats(times: number[]) {
   times.sort((a, b) => a - b);
@@ -19,28 +20,46 @@ type PerfKind = 'baseline' | 'attacks';
 export function writePerformanceResult(
   kind: PerfKind,
   model: string,
-  stats: Record<string, number>
+  stats: Record<string, number>,
+  rawTimes?: number[],
+  outputRoot = 'docs/performance-results'
 ) {
-  const outputDir = `docs/performance-results/${kind}`;
+  const outputDir = path.join(outputRoot, kind);
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  fs.writeFileSync(`${outputDir}/${model}.json`, JSON.stringify(stats, null, 2));
+  fs.writeFileSync(path.join(outputDir, `${model}.json`), JSON.stringify(stats, null, 2));
+
+  if (rawTimes) {
+    const rawDir = path.join(outputDir, 'raw');
+    if (!fs.existsSync(rawDir)) {
+      fs.mkdirSync(rawDir, { recursive: true });
+    }
+    fs.writeFileSync(path.join(rawDir, `${model}.json`), JSON.stringify(rawTimes, null, 2));
+  }
 
   const runId = process.env.PERF_RUN_ID;
   if (!runId) {
     return;
   }
 
-  const runDir = `docs/performance-results/runs/${runId}/${kind}`;
+  const runDir = path.join(outputRoot, 'runs', runId, kind);
   if (!fs.existsSync(runDir)) {
     fs.mkdirSync(runDir, { recursive: true });
   }
 
-  fs.writeFileSync(`${runDir}/${model}.json`, JSON.stringify(stats, null, 2));
+  fs.writeFileSync(path.join(runDir, `${model}.json`), JSON.stringify(stats, null, 2));
 
-  const metadataPath = `docs/performance-results/runs/${runId}/metadata.json`;
+  if (rawTimes) {
+    const runRawDir = path.join(outputRoot, 'runs', runId, kind, 'raw');
+    if (!fs.existsSync(runRawDir)) {
+      fs.mkdirSync(runRawDir, { recursive: true });
+    }
+    fs.writeFileSync(path.join(runRawDir, `${model}.json`), JSON.stringify(rawTimes, null, 2));
+  }
+
+  const metadataPath = path.join(outputRoot, 'runs', runId, 'metadata.json');
   if (!fs.existsSync(metadataPath)) {
     const metadata = {
       runId,

@@ -38,6 +38,6 @@ describe('JWT – Attack Performance Test', () => {
       errorRate: errors / ITERATIONS,
     };
 
-    writePerformanceResult('attacks', 'jwt', attackStats);
+    writePerformanceResult('attacks', 'jwt', attackStats, times);
   });
 });

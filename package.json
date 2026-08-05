@@ -29,6 +29,7 @@
     "docker:publish:ci": "node scripts/docker-tag-push.js --push --with-version",
     "test": "jest --runInBand",
     "docs:check": "ts-node scripts/check-generated-docs.ts",
+    "perf:analyze": "ts-node scripts/analyze-performance.ts",
     "clean:artifacts": "node scripts/clean-generated-artifacts.js"
   },
   "devDependencies": {

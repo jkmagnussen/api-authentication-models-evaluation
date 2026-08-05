@@ -151,6 +151,8 @@ Then unset it after regeneration.
 - `docs/generated/RUN_MANIFEST.json`
 - `docs/performance-results/analysis.md`
 - `docs/performance-results/statistical-summary.csv`
+- `docs/performance-results/baseline/raw/*.json`
+- `docs/performance-results/attacks/raw/*.json`
 - `ai-generated/results/*.json`
 - `ai-generated/results/ai-samples-summary.csv`
 
