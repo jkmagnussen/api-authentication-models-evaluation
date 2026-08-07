@@ -29,6 +29,17 @@ Regenerate: npm run perf:analyze
 | OAUTH | Latency and throughput moved together under attack, indicating a broader degradation in request handling. |
 | SESSIONS | Latency and throughput moved together under attack, indicating a broader degradation in request handling. |
 
+## AI-Generated Evaluation Summary
+
+The repository also contains a separate AI-generated evaluation dataset under [ai-generated/arms/run-summary.json](../../ai-generated/arms/run-summary.json). These results are not part of the latency benchmark, but they provide a second quantitative strand for the project.
+
+- OpenAI neutral: 48.9% overall failure rate (44/90 failed)
+- OpenAI security-guided: 37.8% overall failure rate (34/90 failed)
+- Claude neutral: 48.9% overall failure rate (44/90 failed)
+- Claude security-guided: 38.9% overall failure rate (35/90 failed)
+
+These values support the poster’s AI narrative by showing that the AI-generated arms were evaluated quantitatively and that the security-guided prompts reduced failure rates relative to the neutral prompts in both provider settings. Statistically, the failure rate dropped from 48.9% (44/90 failed) to 37.8% (34/90 failed) for OpenAI and from 48.9% (44/90 failed) to 38.9% (35/90 failed) for Claude. This suggests that the AI-generated outcome varied by prompt configuration, and that the strongest observed neutral-prompt failure rate occurred in the OAuth-based arm.
+
 ## Raw Inputs
 
 - Baseline files: docs/performance-results/baseline/*.json

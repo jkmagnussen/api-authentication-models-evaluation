@@ -132,7 +132,7 @@ Tagging notes:
 - `.github/workflows/ci-verify.yml`: runs `npm run verify:ci` on PRs/pushes to `main`
 - `.github/workflows/staging-publish.yml`: manual staging image publish workflow
 
-Staging publish workflow inputs:
+Staging publish workflow inputss:
 
 - `image_repo`: target image repository
 - `image_alias`: mutable alias tag (default `staging`)
