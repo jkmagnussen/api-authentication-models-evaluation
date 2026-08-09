@@ -136,7 +136,7 @@ Staging publish workflow inputss:
 
 - `image_repo`: target image repository
 - `image_alias`: mutable alias tag (default `staging`)
-- `publish`: when `false`, performs a dry-run tag step only
+- `publish`: when `false`, performs a dry-run tag step only.
 
 Authentication notes:
 
