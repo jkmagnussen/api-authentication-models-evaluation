@@ -145,7 +145,7 @@ Authentication notes:
 
 Recommended: require `verify-ci` in branch protection for `main`.
 
-## Production Notes.
+## Production Notes
 
 `npm run prod` does not run cleanup, Prisma generate, migrations, or seed.
 Run `npm run db:setup` first when deploying to a fresh or drifted database.
