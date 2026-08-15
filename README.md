@@ -138,7 +138,7 @@ Staging publish workflow inputss:
 - `image_alias`: mutable alias tag (default `staging`)
 - `publish`: when `false`, performs a dry-run tag step only.
 
-Authentication notes:
+Authentication notes
 
 - Publish mode logs in to `ghcr.io` using `${{ github.actor }}` and `${{ secrets.GITHUB_TOKEN }}`.
 - Ensure the repository has `packages: write` permission enabled for workflows.
