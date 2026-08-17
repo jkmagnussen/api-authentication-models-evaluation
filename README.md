@@ -157,5 +157,3 @@ Run `npm run db:setup` first when deploying to a fresh or drifted database.
 - [docs/REPRODUCIBILITY_CHECKLIST.md](docs/REPRODUCIBILITY_CHECKLIST.md): full run checklist
 
 ## License
-
-MIT
