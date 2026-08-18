@@ -156,4 +156,4 @@ Run `npm run db:setup` first when deploying to a fresh or drifted database.
 - [postman.json](postman.json): Postman collection
 - [docs/REPRODUCIBILITY_CHECKLIST.md](docs/REPRODUCIBILITY_CHECKLIST.md): full run checklist
 
-## License
+## License.
