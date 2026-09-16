@@ -34,6 +34,6 @@ describe('OAuth – Performance Test', () => {
             times.push(end - start);
         }
         const stats = (0, utils_1.calculateStats)(times);
-        (0, utils_1.writePerformanceResult)('baseline', 'oauth', stats);
+        (0, utils_1.writePerformanceResult)('baseline', 'oauth', stats, times);
     });
 });

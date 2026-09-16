@@ -30,6 +30,6 @@ describe('Sessions – Attack Performance Test', () => {
             ...stats,
             errorRate: errors / ITERATIONS,
         };
-        (0, utils_1.writePerformanceResult)('attacks', 'sessions', attackStats);
+        (0, utils_1.writePerformanceResult)('attacks', 'sessions', attackStats, times);
     });
 });

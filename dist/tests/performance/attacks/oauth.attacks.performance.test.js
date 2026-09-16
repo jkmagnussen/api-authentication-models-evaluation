@@ -34,6 +34,6 @@ describe('OAuth – Attack Performance Test', () => {
             ...stats,
             errorRate: errors / ITERATIONS,
         };
-        (0, utils_1.writePerformanceResult)('attacks', 'oauth', attackStats);
+        (0, utils_1.writePerformanceResult)('attacks', 'oauth', attackStats, times);
     });
 });

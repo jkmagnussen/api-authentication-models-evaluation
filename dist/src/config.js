@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.APP_CONFIG = exports.BCRYPT_SALT_ROUNDS = exports.DATABASE_URL = exports.PORT = exports.IS_PRODUCTION = exports.NODE_ENV = void 0;
 exports.buildDatabaseUrlFromEnv = buildDatabaseUrlFromEnv;
 exports.validateRuntimeConfig = validateRuntimeConfig;
+require("dotenv/config");
 function asNumber(value, fallback) {
     if (!value)
         return fallback;

@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.calculateStats = calculateStats;
 exports.writePerformanceResult = writePerformanceResult;
 const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 function calculateStats(times) {
     times.sort((a, b) => a - b);
     const total = times.reduce((a, b) => a + b, 0);
@@ -15,22 +16,36 @@ function calculateStats(times) {
     const throughput = 1000 / avg; // requests per second
     return { avg, p95, p99, throughput };
 }
-function writePerformanceResult(kind, model, stats) {
-    const outputDir = `docs/performance-results/${kind}`;
+function writePerformanceResult(kind, model, stats, rawTimes, outputRoot = 'docs/performance-results') {
+    const outputDir = path_1.default.join(outputRoot, kind);
     if (!fs_1.default.existsSync(outputDir)) {
         fs_1.default.mkdirSync(outputDir, { recursive: true });
     }
-    fs_1.default.writeFileSync(`${outputDir}/${model}.json`, JSON.stringify(stats, null, 2));
+    fs_1.default.writeFileSync(path_1.default.join(outputDir, `${model}.json`), JSON.stringify(stats, null, 2));
+    if (rawTimes) {
+        const rawDir = path_1.default.join(outputDir, 'raw');
+        if (!fs_1.default.existsSync(rawDir)) {
+            fs_1.default.mkdirSync(rawDir, { recursive: true });
+        }
+        fs_1.default.writeFileSync(path_1.default.join(rawDir, `${model}.json`), JSON.stringify(rawTimes, null, 2));
+    }
     const runId = process.env.PERF_RUN_ID;
     if (!runId) {
         return;
     }
-    const runDir = `docs/performance-results/runs/${runId}/${kind}`;
+    const runDir = path_1.default.join(outputRoot, 'runs', runId, kind);
     if (!fs_1.default.existsSync(runDir)) {
         fs_1.default.mkdirSync(runDir, { recursive: true });
     }
-    fs_1.default.writeFileSync(`${runDir}/${model}.json`, JSON.stringify(stats, null, 2));
-    const metadataPath = `docs/performance-results/runs/${runId}/metadata.json`;
+    fs_1.default.writeFileSync(path_1.default.join(runDir, `${model}.json`), JSON.stringify(stats, null, 2));
+    if (rawTimes) {
+        const runRawDir = path_1.default.join(outputRoot, 'runs', runId, kind, 'raw');
+        if (!fs_1.default.existsSync(runRawDir)) {
+            fs_1.default.mkdirSync(runRawDir, { recursive: true });
+        }
+        fs_1.default.writeFileSync(path_1.default.join(runRawDir, `${model}.json`), JSON.stringify(rawTimes, null, 2));
+    }
+    const metadataPath = path_1.default.join(outputRoot, 'runs', runId, 'metadata.json');
     if (!fs_1.default.existsSync(metadataPath)) {
         const metadata = {
             runId,
