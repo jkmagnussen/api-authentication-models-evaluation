@@ -1,7 +1,9 @@
 # AI vs Human Advanced Objective Comparisons
 
 Generated: 2026-07-23T16:21:27.496Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Legacy snapshot: this analysis uses pre-v2 shared-output AI samples and is not aligned to the isolated 360-output cohort. No human ratings were collected for the clean cohort; do not present these values as clean-study or independent human-review results.
 
 ## 1) Severity-Weighted Safety Gap with Uncertainty
 

@@ -255,7 +255,7 @@ export async function token(req: Request, res: Response) {
     access_token: tokenResult.accessToken,
     refresh_token: tokenResult.refreshToken,
     token_type: 'Bearer',
-    expires_in: 3600,
+    expires_in: tokenResult.expiresIn,
   });
 }
 
@@ -273,18 +273,29 @@ export async function refresh(req: Request, res: Response) {
     });
   }
 
+  if (!clientId) {
+    return res.status(400).json({
+      error: 'invalid_client',
+      error_description: 'Missing client_id',
+    });
+  }
+
   const newAccessToken = crypto.randomUUID();
   const newRefreshToken = crypto.randomUUID();
+  const now = new Date();
 
   const rotated = await prisma.oAuthAccessToken.updateMany({
+    // Client binding, expiry, and single-use rotation are enforced in one database update.
     where: {
       refreshToken: hashOpaqueToken(refreshToken),
       clientId,
+      refreshExpiresAt: { gt: now },
     },
     data: {
       accessToken: hashOpaqueToken(newAccessToken),
       refreshToken: hashOpaqueToken(newRefreshToken),
-      expiresAt: new Date(Date.now() + APP_CONFIG.oauth.accessTokenTtlSeconds * 1000),
+      expiresAt: new Date(now.getTime() + APP_CONFIG.oauth.accessTokenTtlSeconds * 1000),
+      refreshExpiresAt: new Date(now.getTime() + APP_CONFIG.oauth.refreshTokenTtlSeconds * 1000),
     },
   });
 
@@ -299,7 +310,7 @@ export async function refresh(req: Request, res: Response) {
     access_token: newAccessToken,
     refresh_token: newRefreshToken,
     token_type: 'Bearer',
-    expires_in: 3600,
+    expires_in: APP_CONFIG.oauth.accessTokenTtlSeconds,
   });
 }
 
@@ -308,6 +319,7 @@ export async function refresh(req: Request, res: Response) {
 // ------------------------------------------------------
 export async function revoke(req: Request, res: Response) {
   const { token } = req.body;
+  const clientId = req.body.clientId ?? req.body.client_id;
 
   if (!token) {
     return res.status(400).json({
@@ -316,11 +328,18 @@ export async function revoke(req: Request, res: Response) {
     });
   }
 
+  if (!clientId) {
+    return res.status(400).json({
+      error: 'invalid_client',
+      error_description: 'Missing client_id',
+    });
+  }
+
   const access = await prisma.oAuthAccessToken.findUnique({
     where: { accessToken: hashOpaqueToken(token) },
   });
 
-  if (access) {
+  if (access?.clientId === clientId) {
     await prisma.oAuthAccessToken.delete({ where: { accessToken: hashOpaqueToken(token) } });
     return res.status(200).send();
   }
@@ -329,7 +348,7 @@ export async function revoke(req: Request, res: Response) {
     where: { refreshToken: hashOpaqueToken(token) },
   });
 
-  if (refresh) {
+  if (refresh?.clientId === clientId) {
     await prisma.oAuthAccessToken.delete({ where: { refreshToken: hashOpaqueToken(token) } });
     return res.status(200).send();
   }
@@ -342,6 +361,7 @@ export async function revoke(req: Request, res: Response) {
 // ------------------------------------------------------
 export async function introspect(req: Request, res: Response) {
   const { token } = req.body;
+  const clientId = req.body.clientId ?? req.body.client_id;
 
   if (!token) {
     return res.status(400).json({
@@ -351,11 +371,21 @@ export async function introspect(req: Request, res: Response) {
     });
   }
 
+  if (!clientId) {
+    return res.status(400).json({
+      active: false,
+      error: 'invalid_client',
+      error_description: 'Missing client_id',
+    });
+  }
+
+  // Opaque token metadata is disclosed only to the client ID bound to the stored token.
+
   const access = await prisma.oAuthAccessToken.findUnique({
     where: { accessToken: hashOpaqueToken(token) },
   });
 
-  if (access) {
+  if (access?.clientId === clientId) {
     const now = new Date();
     const active = access.expiresAt > now;
 
@@ -370,19 +400,19 @@ export async function introspect(req: Request, res: Response) {
   }
 
   const refresh = await prisma.oAuthAccessToken.findUnique({
-    where: { refreshToken: token },
+    where: { refreshToken: hashOpaqueToken(token) },
   });
 
-  if (refresh) {
+  if (refresh?.clientId === clientId) {
     const now = new Date();
-    const active = refresh.expiresAt > now;
+    const active = refresh.refreshExpiresAt > now;
 
     return res.json({
       active,
       scope: refresh.scope ?? null,
       client_id: refresh.clientId,
       user_id: refresh.userId,
-      exp: Math.floor(refresh.expiresAt.getTime() / 1000),
+      exp: Math.floor(refresh.refreshExpiresAt.getTime() / 1000),
       token_type: 'refresh_token',
     });
   }

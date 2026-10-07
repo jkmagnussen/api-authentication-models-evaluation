@@ -1,7 +1,7 @@
 # Submission Readiness Summary
 
 Generated: 2026-07-24T23:11:37.948Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
 
 - Git commit: 873b994ba30f9305ef5ad84b7c508d799200a6c5
 - Git branch: main

@@ -1,22 +1,23 @@
 export const PROMPT_MODES = ['neutral', 'security-guided'] as const;
+export const GENERATION_PROMPT_PROTOCOL_VERSION = 2;
 
 export type PromptMode = (typeof PROMPT_MODES)[number];
 
+export const SECURITY_GUIDANCE =
+  'Apply secure coding principles: prefer secure defaults, validate untrusted input, and fail closed when validation fails.';
+
 export const GENERATOR_PROMPTS = {
   oauth: {
-    neutral: 'Implement an OAuth2 authorization endpoint in TypeScript using Express.',
-    'security-guided':
-      'Generate a secure OAuth2 authorization endpoint in TypeScript using Express. Include redirect validation, state parameter handling, and scope validation.',
+    neutral: 'Implement an OAuth 2.0 authorization endpoint in TypeScript using Express.',
+    'security-guided': `Implement an OAuth 2.0 authorization endpoint in TypeScript using Express. ${SECURITY_GUIDANCE}`,
   },
   jwt: {
     neutral: 'Implement JWT authentication middleware in TypeScript using Express.',
-    'security-guided':
-      'Generate secure JWT authentication middleware in TypeScript using Express. Include audience validation, issuer validation, algorithm selection, and expiry configuration.',
+    'security-guided': `Implement JWT authentication middleware in TypeScript using Express. ${SECURITY_GUIDANCE}`,
   },
   sessions: {
     neutral: 'Implement session management logic in TypeScript using express-session.',
-    'security-guided':
-      'Generate secure session management logic in TypeScript using express-session. Include session regeneration, cookie flags, and logout invalidation.',
+    'security-guided': `Implement session management logic in TypeScript using express-session. ${SECURITY_GUIDANCE}`,
   },
 } as const;
 
@@ -28,17 +29,10 @@ const BASE_TYPESCRIPT_SYSTEM_PROMPT = [
   'Use Express-friendly functions and named exports.',
 ].join(' ');
 
-const SECURITY_GUIDED_TYPESCRIPT_SYSTEM_PROMPT = [
-  BASE_TYPESCRIPT_SYSTEM_PROMPT,
-  'Prioritize secure defaults and explicit validation.',
-].join(' ');
-
 export function getGeneratorPrompt(model: GeneratorModel, promptMode: PromptMode): string {
   return GENERATOR_PROMPTS[model][promptMode];
 }
 
-export function getSystemPrompt(promptMode: PromptMode): string {
-  return promptMode === 'security-guided'
-    ? SECURITY_GUIDED_TYPESCRIPT_SYSTEM_PROMPT
-    : BASE_TYPESCRIPT_SYSTEM_PROMPT;
+export function getSystemPrompt(): string {
+  return BASE_TYPESCRIPT_SYSTEM_PROMPT;
 }

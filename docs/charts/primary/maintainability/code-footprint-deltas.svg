@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"[]>
 <svg data-footer-band="90" xmlns:xlink="http://www.w3.org/1999/xlink" width="752.194584pt" height="547.632pt" viewBox="0 0 752.194584 547.632" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
@@ -1054,17 +1054,17 @@
     <path d="M 676.513508 406.956281 &#xD;&#xA;L 686.139007 406.956281 &#xD;&#xA;L 695.764505 406.956281 &#xD;&#xA;L 695.764505 21.936328 &#xD;&#xA;L 686.139007 21.936328 &#xD;&#xA;L 676.513508 21.936328 &#xD;&#xA;L 676.513508 406.956281 &#xD;&#xA;z&#xD;&#xA;" style="fill: none" />
    </g>
   </g>
-  
+
  </g>
  <defs>
   <clipPath id="padea5a44a5">
    <rect x="160.152969" y="21.936328" width="485.98639" height="385.019953" />
   </clipPath>
  </defs>  <g id="text_footnote">
-   <!-- code footprint deltas across auth impls. Base: deltas are me... -->
-   <g transform="translate(376.097292 450.0319999999999) scale(1 1)">
-    <rect x="-290.79999999999995" y="-9.0" width="581.5999999999999" height="18" style="fill: #ffffff;"/>
-    <text x="0" y="0" dominant-baseline="middle" style="fill: #6b7280; font-family: Arial; font-size: 10px; font-style: italic; text-anchor: middle;">code footprint deltas across auth impls. Base: deltas are measured relative to baseline impl metrics.</text>
+   <!-- footprint deltas vs baseline; AI bars use legacy 30-file pre... -->
+    <g transform="translate(376.097292 456.73199999999997) scale(0.95 0.95)">
+    <rect x="-327.2" y="-16.0" width="654.4" height="32" style="fill: #ffffff;"/>
+    <text x="0" y="0" dominant-baseline="middle" style="fill: #6b7280; font-family: Arial; font-size: 10px; font-style: italic; text-anchor: middle;"><tspan x="0" dy="-0.55em">footprint deltas vs baseline; AI bars use legacy 30-file pre-v2 samples. AI footprint values are historical pre-v2</tspan><tspan x="0" dy="1.10em">aggregates.</tspan></text>
    </g>
   </g>
 </svg>

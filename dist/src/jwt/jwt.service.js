@@ -50,12 +50,15 @@ function verifyJwt(token) {
     const header = typeof decodedHeader === 'object' && decodedHeader && 'header' in decodedHeader
         ? decodedHeader.header
         : undefined;
-    const expectedAlgorithm = (0, jwt_keys_1.getJwtAlgorithm)((0, variant_overrides_1.getVariantOverrides)().jwt?.algorithm);
-    const verificationAlgorithm = (expectedAlgorithm === 'none' ? 'none' : (header?.alg ?? expectedAlgorithm));
+    // Select the verifier from trusted configuration, never from the untrusted token's alg header.
+    const verificationAlgorithm = (0, jwt_keys_1.getJwtAlgorithm)((0, variant_overrides_1.getVariantOverrides)().jwt?.algorithm);
     const key = (0, jwt_keys_1.getJwtVerifyKey)(verificationAlgorithm, header?.kid);
     const algorithms = [verificationAlgorithm];
     return jsonwebtoken_1.default.verify(token, key, {
         algorithms,
+        // Issuer and audience are required here, not merely compared when a token happens to include them.
+        audience: getJwtAudience(),
+        issuer: getJwtIssuer(),
     });
 }
 async function findUserByEmail(email) {

@@ -1,9 +1,13 @@
 # AI Evaluation Summary
 
 Generated: 2026-07-23T04:30:51.892Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
 
 This report aggregates the complexity metrics and automated check results for 90 AI-generated authentication samples.
+
+> Legacy provenance warning: the archived arm metadata records five generated samples per mechanism, while these result tables contain 30 sample indexes per mechanism. The historical cohort pipeline reused shared output directories and did not retain cohort-specific source sets. Treat these totals as legacy file-level counts, not verified independent generations.
+
+Use `AI_PROVIDER_PROMPT_COMPARISON.md` and `AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md` for the isolated protocol-v2 cohort results.
 
 ## Methodology Notes
 

@@ -5,9 +5,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const jwt_middleware_1 = require("../../../src/jwt/jwt.middleware");
+const jwt_service_1 = require("../../../src/jwt/jwt.service");
 describe('JWT Middleware – Unit Tests', () => {
     process.env.JWT_SECRET = 'test-secret';
     const SECRET = process.env.JWT_SECRET;
+    const REQUIRED_CLAIMS = { audience: (0, jwt_service_1.getJwtAudience)(), issuer: (0, jwt_service_1.getJwtIssuer)() };
     const mockResponse = () => {
         const res = {};
         res.status = jest.fn().mockReturnValue(res);
@@ -16,7 +18,7 @@ describe('JWT Middleware – Unit Tests', () => {
     };
     const mockNext = () => jest.fn();
     test('Allows request with valid JWT', () => {
-        const token = jsonwebtoken_1.default.sign({ userId: 'user-123' }, SECRET, { expiresIn: '1h' });
+        const token = jsonwebtoken_1.default.sign({ userId: 'user-123' }, SECRET, { ...REQUIRED_CLAIMS, expiresIn: '1h' });
         const req = {
             headers: {
                 authorization: `Bearer ${token}`,
@@ -51,7 +53,7 @@ describe('JWT Middleware – Unit Tests', () => {
         expect(next).not.toHaveBeenCalled();
     });
     test('Rejects request with expired JWT', () => {
-        const expiredToken = jsonwebtoken_1.default.sign({ userId: 'user-123' }, SECRET, { expiresIn: -10 } // expired 10 seconds ago
+        const expiredToken = jsonwebtoken_1.default.sign({ userId: 'user-123' }, SECRET, { ...REQUIRED_CLAIMS, expiresIn: -10 } // expired 10 seconds ago
         );
         const req = {
             headers: {

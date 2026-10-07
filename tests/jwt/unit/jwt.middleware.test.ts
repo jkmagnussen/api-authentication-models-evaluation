@@ -1,11 +1,13 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { jwtAuth } from '../../../src/jwt/jwt.middleware';
+import { getJwtAudience, getJwtIssuer } from '../../../src/jwt/jwt.service';
 
 describe('JWT Middleware – Unit Tests', () => {
   process.env.JWT_SECRET = 'test-secret';
 
   const SECRET = process.env.JWT_SECRET!;
+  const REQUIRED_CLAIMS = { audience: getJwtAudience(), issuer: getJwtIssuer() };
 
   const mockResponse = () => {
     const res: Partial<Response> = {};
@@ -17,7 +19,7 @@ describe('JWT Middleware – Unit Tests', () => {
   const mockNext = () => jest.fn();
 
   test('Allows request with valid JWT', () => {
-    const token = jwt.sign({ userId: 'user-123' }, SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: 'user-123' }, SECRET, { ...REQUIRED_CLAIMS, expiresIn: '1h' });
 
     const req = {
       headers: {
@@ -67,7 +69,7 @@ describe('JWT Middleware – Unit Tests', () => {
     const expiredToken = jwt.sign(
       { userId: 'user-123' },
       SECRET,
-      { expiresIn: -10 } // expired 10 seconds ago
+      { ...REQUIRED_CLAIMS, expiresIn: -10 } // expired 10 seconds ago
     );
 
     const req = {

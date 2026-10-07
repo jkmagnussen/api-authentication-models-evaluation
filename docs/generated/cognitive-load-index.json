@@ -1,5 +1,6 @@
 {
   "generatedAt": "2026-07-24T23:11:20.055Z",
+  "rankingPrecision": 2,
   "weightProfiles": {
     "default": {
       "configPoints": 1.2,
@@ -30,21 +31,21 @@
     {
       "profile": "default",
       "rawScores": {
-        "oauth": 47.099999999999994,
-        "jwt": 37.599999999999994,
+        "oauth": 47.1,
+        "jwt": 37.6,
         "sessions": 37.6
       },
       "normalizedScores": {
         "oauth": 100,
-        "jwt": 79.83014861995753,
-        "sessions": 79.83014861995755
+        "jwt": 79.83,
+        "sessions": 79.83
       },
-      "ranking": "OAuth2 > Session > JWT"
+      "ranking": "OAuth2 > JWT = Session"
     },
     {
       "profile": "lifecycle_heavy",
       "rawScores": {
-        "oauth": 47.800000000000004,
+        "oauth": 47.8,
         "jwt": 37.8,
         "sessions": 37.7
       },
@@ -58,7 +59,7 @@
     {
       "profile": "boundary_heavy",
       "rawScores": {
-        "oauth": 47.400000000000006,
+        "oauth": 47.4,
         "jwt": 37,
         "sessions": 36.9
       },

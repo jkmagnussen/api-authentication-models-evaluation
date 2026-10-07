@@ -58,6 +58,21 @@
                 "packages": {},
                 "requests": {}
               }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Sessions login returns a session cookie', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const setCookie = pm.response.headers.get('Set-Cookie') || '';",
+                  "  pm.expect(setCookie).to.include('sessionId=');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
           ],
           "request": {
@@ -334,7 +349,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"token\": \"{{oauth_access_token}}\"\r\n}",
+              "raw": "{\r\n  \"token\": \"{{oauth_access_token}}\",\r\n  \"client_id\": \"{{oauth_client_id}}\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"

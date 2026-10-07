@@ -7,7 +7,11 @@ function jwtAuth(req, res, next) {
     if (!header) {
         return res.status(401).json({ message: 'No token provided' });
     }
-    const token = header.split(' ')[1];
+    const bearerMatch = header.trim().match(/^Bearer\s+(\S+)$/i);
+    if (!bearerMatch) {
+        return res.status(401).json({ message: 'Invalid token' });
+    }
+    const token = bearerMatch[1];
     try {
         const decoded = (0, jwt_service_1.verifyJwt)(token);
         if (!decoded?.userId || typeof decoded.userId !== 'string') {

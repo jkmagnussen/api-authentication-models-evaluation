@@ -30,4 +30,25 @@ describe('JWT Signing – Unit Tests', () => {
     const lifetime = decoded.exp - decoded.iat;
     expect(lifetime).toBeGreaterThan(0);
   });
+
+  test('Production configuration rejects the unsigned none algorithm', () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    const originalJwtAlgorithm = process.env.JWT_ALGORITHM;
+
+    try {
+      process.env.NODE_ENV = 'production';
+      process.env.JWT_ALGORITHM = 'none';
+      let getJwtAlgorithm: () => string;
+      jest.isolateModules(() => {
+        ({ getJwtAlgorithm } = require('../../../src/jwt/jwt.keys'));
+      });
+
+      expect(() => getJwtAlgorithm()).toThrow('not permitted in production');
+    } finally {
+      if (originalNodeEnv === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = originalNodeEnv;
+      if (originalJwtAlgorithm === undefined) delete process.env.JWT_ALGORITHM;
+      else process.env.JWT_ALGORITHM = originalJwtAlgorithm;
+    }
+  });
 });

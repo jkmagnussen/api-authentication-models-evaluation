@@ -32,10 +32,14 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const oauth_controller_1 = require("../../../src/oauth/oauth.controller");
 const db_1 = require("../../../src/db");
 const oauthService = __importStar(require("../../../src/oauth/oauth.service"));
+const config_1 = __importDefault(require("../../../src/config"));
 // Mock ONLY the Prisma + service calls used by the controller
 jest.mock('../../../src/db', () => ({
     prisma: {
@@ -45,6 +49,9 @@ jest.mock('../../../src/db', () => ({
         },
         oAuthClient: {
             findUnique: jest.fn(),
+        },
+        auditLog: {
+            create: jest.fn().mockResolvedValue({}),
         },
     },
 }));
@@ -78,6 +85,7 @@ describe('token controller', () => {
             accessToken: 'jwt-token',
             refreshToken: 'refresh-token',
             scope: 'read',
+            expiresIn: config_1.default.oauth.accessTokenTtlSeconds,
         });
         const basicAuth = Buffer.from('client-basic:test-secret').toString('base64');
         const req = {
@@ -94,7 +102,7 @@ describe('token controller', () => {
             access_token: 'jwt-token',
             refresh_token: 'refresh-token',
             token_type: 'Bearer',
-            expires_in: 3600,
+            expires_in: config_1.default.oauth.accessTokenTtlSeconds,
         });
     });
 });

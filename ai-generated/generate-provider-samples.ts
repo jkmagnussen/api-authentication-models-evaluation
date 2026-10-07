@@ -5,19 +5,22 @@ import path from 'path';
 import { SAMPLE_COUNT, writeSampleFiles, writeResult } from './common';
 import {
   GeneratorModel,
+  GENERATION_PROMPT_PROTOCOL_VERSION,
   PromptMode,
   getGeneratorPrompt,
   getSystemPrompt,
 } from './generator-prompts';
+import { AI_PROVIDER_MAX_ATTEMPTS, AI_PROVIDER_MODEL_IDENTIFIERS } from './provider-model-identifiers';
+import { GENERATION_SETTINGS } from './generation-settings';
 
-dotenv.config({ override: true });
+dotenv.config({ override: false });
 
 type Provider = 'openai' | 'claude';
 
 const MODELS: GeneratorModel[] = ['oauth', 'jwt', 'sessions'];
-const MAX_PROVIDER_ATTEMPTS = 5;
 const BASE_RETRY_DELAY_MS = 750;
 const MAX_RETRY_JITTER_MS = 250;
+const ANTHROPIC_API_VERSION = '2023-06-01';
 const REQUEST_TIMEOUT_MS = Number(process.env.AI_PROVIDER_REQUEST_TIMEOUT_MS ?? '120000');
 const SAMPLE_TIMEOUT_MS = Number(process.env.AI_PROVIDER_SAMPLE_TIMEOUT_MS ?? '180000');
 const RETRYABLE_STATUS_CODES = new Set([408, 409, 429, 500, 502, 503, 504, 529]);
@@ -36,6 +39,34 @@ type GenerationDiagnostics = {
   networkFailures: number;
   requestTimeoutFailures: number;
   sampleTimeoutFailures: number;
+};
+
+type SampleGenerationRecord = {
+  model: GeneratorModel;
+  sample: number;
+  startedAt: string;
+  completedAt: string;
+  requestedModelIdentifier: string;
+  returnedModelIdentifier: string | null;
+  providerResponseId: string | null;
+  systemFingerprint: string | null;
+  providerAttempts: number;
+  tokenUsage: {
+    inputTokens: number | null;
+    outputTokens: number | null;
+    totalTokens: number | null;
+    cachedInputTokens: number | null;
+    cacheCreationInputTokens: number | null;
+  };
+};
+
+type GeneratedCompletion = {
+  code: string;
+  returnedModelIdentifier: string | null;
+  providerResponseId: string | null;
+  systemFingerprint: string | null;
+  providerAttempts: number;
+  tokenUsage: SampleGenerationRecord['tokenUsage'];
 };
 
 class RequestTimeoutError extends Error {
@@ -182,7 +213,7 @@ function logRetry(
   context: string
 ): void {
   process.stdout.write(
-    `[ai:${provider}] Retry ${attempt}/${MAX_PROVIDER_ATTEMPTS} for ${context} after HTTP ${status}; waiting ${delayMs}ms...\n`
+    `[ai:${provider}] Retry ${attempt}/${AI_PROVIDER_MAX_ATTEMPTS} for ${context} after HTTP ${status}; waiting ${delayMs}ms...\n`
   );
 }
 
@@ -190,9 +221,9 @@ async function generateOpenAI(
   prompt: string,
   systemPrompt: string,
   diagnostics: GenerationDiagnostics
-): Promise<string> {
+): Promise<GeneratedCompletion> {
   const apiKey = process.env.OPENAI_API_KEY;
-  const model = process.env.OPENAI_MODEL ?? 'gpt-4o';
+  const model = process.env.OPENAI_MODEL ?? AI_PROVIDER_MODEL_IDENTIFIERS.openai;
   const baseUrl = process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1';
 
   if (!apiKey) {
@@ -202,7 +233,7 @@ async function generateOpenAI(
   const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
   const url = `${normalizedBaseUrl}/chat/completions`;
 
-  for (let attempt = 1; attempt <= MAX_PROVIDER_ATTEMPTS; attempt += 1) {
+  for (let attempt = 1; attempt <= AI_PROVIDER_MAX_ATTEMPTS; attempt += 1) {
     diagnostics.totalAttempts += 1;
     let response: Response;
 
@@ -221,8 +252,8 @@ async function generateOpenAI(
               { role: 'system', content: systemPrompt },
               { role: 'user', content: prompt },
             ],
-            max_tokens: 900,
-            temperature: 0.8,
+            max_tokens: GENERATION_SETTINGS.maxTokens,
+            temperature: GENERATION_SETTINGS.temperature,
           }),
         },
         REQUEST_TIMEOUT_MS,
@@ -234,11 +265,11 @@ async function generateOpenAI(
       } else {
         diagnostics.networkFailures += 1;
       }
-      if (attempt < MAX_PROVIDER_ATTEMPTS) {
+      if (attempt < AI_PROVIDER_MAX_ATTEMPTS) {
         diagnostics.retries += 1;
         const delayMs = getRetryDelayMs(attempt);
         process.stdout.write(
-          `[ai:openai] Retry ${attempt}/${MAX_PROVIDER_ATTEMPTS} after ${error instanceof RequestTimeoutError ? 'timeout' : 'network error'}; waiting ${delayMs}ms...\n`
+          `[ai:openai] Retry ${attempt}/${AI_PROVIDER_MAX_ATTEMPTS} after ${error instanceof RequestTimeoutError ? 'timeout' : 'network error'}; waiting ${delayMs}ms...\n`
         );
         await sleep(delayMs);
         continue;
@@ -250,7 +281,7 @@ async function generateOpenAI(
 
     if (!response.ok) {
       const message = await readErrorMessage(response);
-      if (attempt < MAX_PROVIDER_ATTEMPTS && isRetryableStatus(response.status)) {
+      if (attempt < AI_PROVIDER_MAX_ATTEMPTS && isRetryableStatus(response.status)) {
         diagnostics.retries += 1;
         diagnostics.retryableHttpFailures += 1;
         const delayMs = getRetryDelayMs(attempt);
@@ -265,6 +296,15 @@ async function generateOpenAI(
     diagnostics.successfulRequests += 1;
 
     const data = (await response.json()) as {
+      id?: string;
+      model?: string;
+      system_fingerprint?: string | null;
+      usage?: {
+        prompt_tokens?: number;
+        completion_tokens?: number;
+        total_tokens?: number;
+        prompt_tokens_details?: { cached_tokens?: number };
+      };
       choices?: Array<{ message?: { content?: string } }>;
     };
 
@@ -273,7 +313,20 @@ async function generateOpenAI(
       throw new Error('OpenAI response did not include code content.');
     }
 
-    return normalizeCode(content);
+    return {
+      code: normalizeCode(content),
+      returnedModelIdentifier: data.model ?? null,
+      providerResponseId: data.id ?? null,
+      systemFingerprint: data.system_fingerprint ?? null,
+      providerAttempts: attempt,
+      tokenUsage: {
+        inputTokens: data.usage?.prompt_tokens ?? null,
+        outputTokens: data.usage?.completion_tokens ?? null,
+        totalTokens: data.usage?.total_tokens ?? null,
+        cachedInputTokens: data.usage?.prompt_tokens_details?.cached_tokens ?? null,
+        cacheCreationInputTokens: null,
+      },
+    };
   }
 
   throw new Error('OpenAI request failed after retries.');
@@ -283,15 +336,15 @@ async function generateClaude(
   prompt: string,
   systemPrompt: string,
   diagnostics: GenerationDiagnostics
-): Promise<string> {
+): Promise<GeneratedCompletion> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  const model = process.env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-20240620';
+  const model = process.env.ANTHROPIC_MODEL ?? AI_PROVIDER_MODEL_IDENTIFIERS.claude;
 
   if (!apiKey) {
     throw new Error('Anthropic is not configured. Set ANTHROPIC_API_KEY.');
   }
 
-  for (let attempt = 1; attempt <= MAX_PROVIDER_ATTEMPTS; attempt += 1) {
+  for (let attempt = 1; attempt <= AI_PROVIDER_MAX_ATTEMPTS; attempt += 1) {
     diagnostics.totalAttempts += 1;
     let response: Response;
 
@@ -303,11 +356,12 @@ async function generateClaude(
           headers: {
             'Content-Type': 'application/json',
             'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
+            'anthropic-version': ANTHROPIC_API_VERSION,
           },
           body: JSON.stringify({
             model,
-            max_tokens: 900,
+            max_tokens: GENERATION_SETTINGS.maxTokens,
+            temperature: GENERATION_SETTINGS.temperature,
             system: systemPrompt,
             messages: [{ role: 'user', content: prompt }],
           }),
@@ -321,11 +375,11 @@ async function generateClaude(
       } else {
         diagnostics.networkFailures += 1;
       }
-      if (attempt < MAX_PROVIDER_ATTEMPTS) {
+      if (attempt < AI_PROVIDER_MAX_ATTEMPTS) {
         diagnostics.retries += 1;
         const delayMs = getRetryDelayMs(attempt);
         process.stdout.write(
-          `[ai:claude] Retry ${attempt}/${MAX_PROVIDER_ATTEMPTS} after ${error instanceof RequestTimeoutError ? 'timeout' : 'network error'}; waiting ${delayMs}ms...\n`
+          `[ai:claude] Retry ${attempt}/${AI_PROVIDER_MAX_ATTEMPTS} after ${error instanceof RequestTimeoutError ? 'timeout' : 'network error'}; waiting ${delayMs}ms...\n`
         );
         await sleep(delayMs);
         continue;
@@ -337,7 +391,7 @@ async function generateClaude(
 
     if (!response.ok) {
       const message = await readErrorMessage(response);
-      if (attempt < MAX_PROVIDER_ATTEMPTS && isRetryableStatus(response.status)) {
+      if (attempt < AI_PROVIDER_MAX_ATTEMPTS && isRetryableStatus(response.status)) {
         diagnostics.retries += 1;
         diagnostics.retryableHttpFailures += 1;
         const delayMs = getRetryDelayMs(attempt);
@@ -352,6 +406,14 @@ async function generateClaude(
     diagnostics.successfulRequests += 1;
 
     const data = (await response.json()) as {
+      id?: string;
+      model?: string;
+      usage?: {
+        input_tokens?: number;
+        output_tokens?: number;
+        cache_read_input_tokens?: number;
+        cache_creation_input_tokens?: number;
+      };
       content?: Array<{ type?: string; text?: string }>;
       output_text?: string;
     };
@@ -371,7 +433,20 @@ async function generateClaude(
       );
     }
 
-    return normalizeCode(text);
+    return {
+      code: normalizeCode(text),
+      returnedModelIdentifier: data.model ?? null,
+      providerResponseId: data.id ?? null,
+      systemFingerprint: null,
+      providerAttempts: attempt,
+      tokenUsage: {
+        inputTokens: data.usage?.input_tokens ?? null,
+        outputTokens: data.usage?.output_tokens ?? null,
+        totalTokens: (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0) || null,
+        cachedInputTokens: data.usage?.cache_read_input_tokens ?? null,
+        cacheCreationInputTokens: data.usage?.cache_creation_input_tokens ?? null,
+      },
+    };
   }
 
   throw new Error('Anthropic request failed after retries.');
@@ -383,15 +458,13 @@ async function generateSample(
   promptMode: PromptMode,
   sampleNumber: number,
   diagnostics: GenerationDiagnostics
-): Promise<string> {
+): Promise<GeneratedCompletion> {
   const modelPrompt = getGeneratorPrompt(model, promptMode);
-  const systemPrompt = getSystemPrompt(promptMode);
+  const systemPrompt = getSystemPrompt();
   const prompt = [
     modelPrompt,
     `Generate sample ${sampleNumber} of ${SAMPLE_COUNT}.`,
-    promptMode === 'security-guided'
-      ? 'Vary structure and naming from prior samples while preserving secure behavior.'
-      : 'Vary structure and naming from prior samples while keeping the implementation plausible and internally consistent.',
+    'Return an independently written, self-contained, internally consistent implementation. Do not refer to outputs from prior requests.',
   ].join('\n');
 
   if (provider === 'openai') {
@@ -405,7 +478,8 @@ async function generateForModel(
   provider: Provider,
   model: GeneratorModel,
   promptMode: PromptMode,
-  diagnostics: GenerationDiagnostics
+  diagnostics: GenerationDiagnostics,
+  sampleGenerations: SampleGenerationRecord[]
 ): Promise<void> {
   const samples: string[] = [];
 
@@ -413,9 +487,10 @@ async function generateForModel(
     process.stdout.write(
       `[ai:${provider}:${promptMode}] Generating ${model} sample ${index}/${SAMPLE_COUNT}...\n`
     );
-    let code: string;
+    let completion: GeneratedCompletion;
+    const sampleStartedAt = new Date().toISOString();
     try {
-      code = await withTimeout(
+      completion = await withTimeout(
         generateSample(provider, model, promptMode, index, diagnostics),
         SAMPLE_TIMEOUT_MS,
         new SampleTimeoutError(
@@ -431,7 +506,21 @@ async function generateForModel(
         `Failed ${model} sample ${index}/${SAMPLE_COUNT} for ${provider}/${promptMode}: ${message}`
       );
     }
-    samples.push(code);
+    sampleGenerations.push({
+      model,
+      sample: index,
+      startedAt: sampleStartedAt,
+      completedAt: new Date().toISOString(),
+      requestedModelIdentifier: provider === 'openai'
+        ? (process.env.OPENAI_MODEL ?? AI_PROVIDER_MODEL_IDENTIFIERS.openai)
+        : (process.env.ANTHROPIC_MODEL ?? AI_PROVIDER_MODEL_IDENTIFIERS.claude),
+      returnedModelIdentifier: completion.returnedModelIdentifier,
+      providerResponseId: completion.providerResponseId,
+      systemFingerprint: completion.systemFingerprint,
+      providerAttempts: completion.providerAttempts,
+      tokenUsage: completion.tokenUsage,
+    });
+    samples.push(completion.code);
   }
 
   writeSampleFiles(model, samples);
@@ -453,10 +542,8 @@ async function main() {
   const startedAt = new Date().toISOString();
   const providerModel =
     provider === 'openai'
-      ? (process.env.OPENAI_MODEL ?? 'gpt-4o')
-      : (process.env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-20240620');
-  const openAiTemperature = 0.8;
-  const maxTokens = 900;
+      ? (process.env.OPENAI_MODEL ?? AI_PROVIDER_MODEL_IDENTIFIERS.openai)
+      : (process.env.ANTHROPIC_MODEL ?? AI_PROVIDER_MODEL_IDENTIFIERS.claude);
   const diagnostics: GenerationDiagnostics = {
     totalAttempts: 0,
     successfulRequests: 0,
@@ -466,8 +553,9 @@ async function main() {
     requestTimeoutFailures: 0,
     sampleTimeoutFailures: 0,
   };
+  const sampleGenerations: SampleGenerationRecord[] = [];
 
-  const systemPrompt = getSystemPrompt(promptMode);
+  const systemPrompt = getSystemPrompt();
   const modelPromptFingerprints = Object.fromEntries(
     models.map((model) => {
       const modelPrompt = getGeneratorPrompt(model, promptMode);
@@ -483,7 +571,7 @@ async function main() {
   );
 
   for (const model of models) {
-    await generateForModel(provider, model, promptMode, diagnostics);
+    await generateForModel(provider, model, promptMode, diagnostics, sampleGenerations);
   }
 
   writeResult('generation-metadata.json', {
@@ -492,24 +580,28 @@ async function main() {
     provider,
     providerModel,
     providerModelIdentifier: providerModel,
+    requestedModelIdentifier: providerModel,
+    returnedModelIdentifiers: Array.from(new Set(sampleGenerations.map((record) => record.returnedModelIdentifier).filter(Boolean))),
     providerEndpoint:
       provider === 'openai'
         ? (process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1')
         : 'https://api.anthropic.com/v1/messages',
+    providerApiVersion: provider === 'claude' ? ANTHROPIC_API_VERSION : null,
     promptMode,
+    promptProtocolVersion: GENERATION_PROMPT_PROTOCOL_VERSION,
     models,
     sampleCount: SAMPLE_COUNT,
     generationParameters: {
-      temperature: openAiTemperature,
-      maxTokens,
+      ...GENERATION_SETTINGS,
     },
     promptFingerprints: {
       promptMode,
       systemPromptSha256: sha256(systemPrompt),
       modelPromptFingerprints,
     },
+    sampleGenerations,
     retryPolicy: {
-      maxProviderAttempts: MAX_PROVIDER_ATTEMPTS,
+      maxProviderAttempts: AI_PROVIDER_MAX_ATTEMPTS,
       baseRetryDelayMs: BASE_RETRY_DELAY_MS,
       maxRetryJitterMs: MAX_RETRY_JITTER_MS,
       requestTimeoutMs: REQUEST_TIMEOUT_MS,

@@ -1,7 +1,9 @@
 # Pre-Registered Compliance Summary
 
 Generated: 2026-07-24T23:11:36.022Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Historical governance snapshot: this report reflects the July artifact manifest and prior shared-output AI arms. The blind interpretation was not completed before unblinding; see `AI_BLIND_INTERPRETATION.md`, which is marked invalidated. This snapshot is not a current confirmatory-compliance claim.
 
 Governance mode: EXPLORATORY
 Claim class: exploratory-author-interpreted

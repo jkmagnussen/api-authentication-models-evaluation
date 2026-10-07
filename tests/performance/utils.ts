@@ -1,5 +1,47 @@
 import fs from 'fs';
+import http from 'http';
 import path from 'path';
+import type { Express } from 'express';
+
+export async function createPerformanceHttpClient(app: Express, maxSockets = 1) {
+  // Reuse one listener/keep-alive pool; creating a Supertest server per request exhausted Windows ephemeral ports.
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise<void>((resolve, reject) => {
+    server.once('listening', resolve);
+    server.once('error', reject);
+  });
+
+  const address = server.address();
+  if (!address || typeof address === 'string') {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    throw new Error('Performance server did not bind a TCP port');
+  }
+
+  const agent = new http.Agent({ keepAlive: true, maxSockets });
+  return {
+    get(pathname: string, headers: Record<string, string>) {
+      return new Promise<number>((resolve, reject) => {
+        const request = http.get({
+          hostname: '127.0.0.1',
+          port: address.port,
+          path: pathname,
+          headers,
+          agent,
+        }, (response) => {
+          response.resume();
+          response.once('end', () => resolve(response.statusCode ?? 0));
+        });
+        request.once('error', reject);
+      });
+    },
+    close() {
+      agent.destroy();
+      return new Promise<void>((resolve, reject) => {
+        server.close((error) => error ? reject(error) : resolve());
+      });
+    },
+  };
+}
 
 export function calculateStats(times: number[]) {
   times.sort((a, b) => a - b);
@@ -63,13 +105,15 @@ export function writePerformanceResult(
   if (!fs.existsSync(metadataPath)) {
     const metadata = {
       runId,
+      protocolVersion: 0,
+      matchedBlockVerified: false,
       timestamp: new Date().toISOString(),
       nodeVersion: process.version,
       platform: process.platform,
       arch: process.arch,
       hostname: process.env.COMPUTERNAME || 'unknown',
       warmup: 'none',
-      notes: 'Generated from Jest performance tests',
+      notes: 'Legacy run metadata; condition order and per-condition timing were not recorded.',
     };
 
     fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));

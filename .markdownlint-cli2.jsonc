@@ -12,6 +12,7 @@
     "**/*.md",
     "!node_modules/**",
     "!coverage/**",
+    "!docs/generated/AI_HEURISTIC_AUDIT_PACKET.md",
     "!.venv/**",
     "!.venv-analysis/**",
     "!analysis-python/.venv/**",

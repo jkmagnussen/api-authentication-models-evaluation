@@ -51,6 +51,8 @@ model OAuthAccessToken {
   clientId     String
   scope        String?
   expiresAt    DateTime
+  // Refresh credentials outlive access tokens, so they need an independent expiry.
+  refreshExpiresAt DateTime
   createdAt    DateTime @default(now())
 
   user   User        @relation(fields: [userId], references: [id])

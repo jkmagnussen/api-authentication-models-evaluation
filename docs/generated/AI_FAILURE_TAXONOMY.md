@@ -1,7 +1,9 @@
 # AI Failure Taxonomy
 
 Generated: 2026-07-24T23:11:19.084Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Legacy snapshot: these counts use the pre-v2 shared-output dataset, not the isolated 360-output cohort. Use `AI_PROVIDER_PROMPT_COMPARISON.md` for the current provider/prompt heuristic rates.
 
 This taxonomy groups AI sample security failures by control type to show where generated artifacts struggled most.
 

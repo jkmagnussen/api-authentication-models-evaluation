@@ -53,6 +53,7 @@ describe('JWT – Expired Token Attack Test', () => {
       signOptions.keyid = keyId;
     }
 
+    // Keep the normal signing key and claims so expiry is the reason verification fails.
     expiredToken = jwt.sign(
       {
         ...payloadObject,

@@ -1,5 +1,5 @@
 import path from 'path';
-import { SAMPLE_COUNT, readSample, writeResult } from '../common';
+import { SAMPLE_COUNT, getSamplePath, readSample, writeResult } from '../common';
 import { runSessionChecks } from '../checks';
 
 for (let index = 1; index <= SAMPLE_COUNT; index += 1) {
@@ -10,7 +10,7 @@ for (let index = 1; index <= SAMPLE_COUNT; index += 1) {
   writeResult(`sessions-sample${index}-tests.json`, {
     model: 'sessions',
     sample: `sample${index}`,
-    samplePath: path.join('ai-generated', 'sessions', `sample${index}.ts`),
+    samplePath: path.relative(process.cwd(), getSamplePath('sessions', index)),
     passed: failedChecks.length === 0,
     checks,
     correctnessFailures: failedChecks,

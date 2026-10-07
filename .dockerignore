@@ -3,6 +3,9 @@ coverage
 analysis-python/.venv
 .git
 .github
+.env
+.env.*
+!.env.example
 docs/generated
 docs/performance-results
 ai-generated/results

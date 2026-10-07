@@ -1,159 +1,64 @@
-# API Authentication Models Evaluation
+# API Authentication Evaluation
 
-This backend evaluates three API authentication models:
+This repository contains three authentication models: database-backed Sessions, JWT, and OAuth 2.0 with PKCE. It includes secure implementations, deliberately weakened variants, attack tests, performance studies, and an evaluation of AI-generated examples.
 
-- Sessions
-- JWT
-- OAuth 2.0 with PKCE
+## Run Locally
 
-## Prerequisites
+You need Node.js 18+ and PostgreSQL. Redis is not required for the local setup.
 
-- Node.js 18+
-- PostgreSQL
-- Optional: Redis for session storage
-
-## Quick Start
-
-```bash
-npm install
+```powershell
+npm ci
+Copy-Item .env.example .env
+# Set DATABASE_URL in .env for your local PostgreSQL instance.
 npm run db:setup
 npm run dev
 ```
 
-Then verify the app is healthy:
+Before the first local Postman login, run `npm run db:setup` against a fresh or disposable database. It applies migrations, then clears and reseeds the database with the Postman demo account `main@example.com` / `password123`. The automated-test account `user-123` is only a test fixture; it is not seeded for app use. Users do not need to re-run `db:setup` every time you start the app. It deletes existing application data, so do not run it against data you need to keep.
 
-```bash
+`npm run dev` stays in the foreground. Keep it running in one terminal; in another, run:
+
+```powershell
 npm run healthcheck
 ```
 
-Create a `.env` file with either:
+That checks `/health/live`. To check database readiness, open `http://localhost:3001/health/ready`. The Docker image contains only the API; there is no Compose stack.
 
-- `DATABASE_URL`, or
-- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+## Tests and Build
 
-## Script Guide
+**Use a disposable database for database-backed tests.** Standard integration and attack tests, variant tests, and performance collectors reset authentication tables. Do not point these commands at data you need to keep.
 
-Use this section as a command map by goal.
-
-### Core
-
-- `npm run dev`: run app in development mode (ts-node)
-- `npm run build`: compile TypeScript
-- `npm run start`: run compiled app
-- `npm run prod`: build then run compiled app
-
-### Database
-
-- `npm run db:generate`: generate Prisma client
-- `npm run db:migrate`: apply migrations
-- `npm run db:seed`: reseed canonical data
-- `npm run db:setup`: generate + migrate + seed
-
-### Verification
-
-- `npm run test`: run full Jest suite
-- `npm run docs:check`: validate generated docs/artifacts
-- `npm run healthcheck`: call `/health/live`
-- `npm run verify:full`: prep env, clean artifacts, db generate/migrate/seed, build, test, start server, healthcheck
-- `npm run verify:deploy`: `verify:full` + Docker build
-- `npm run verify:ci`: `docs:check` + `verify:deploy`
-
-### Docker and Release Tags
-
-- `npm run docker:build`: build local image `dissertation-backend:local`
-- `npm run docker:tag`: tag local image for a repo
-- `npm run docker:tag:ci`: tag with git-sha and package version
-- `npm run docker:publish`: tag and push
-- `npm run docker:publish:ci`: tag and push with git-sha + package version..
-
-## Recommended Workflows:
-
-- Local development: `npm run db:setup` then `npm run dev`
-- Pre-merge confidence: `npm run verify:ci`
-- Release candidate check: `npm run verify:deploy`
-- Staging publish: `npm run docker:publish:ci`
-
-### First Run on macOS
-
-Use this sequence on a fresh Mac clone to avoid cross-platform artifact drift
-
-```bash
-rm -rf node_modules
-npm ci
-npm run db:setup
+```powershell
 npm run build
 npm test
-npm run verify:full
+npm run test:variants
+npm run docs:check
 ```
 
-Notes:
+`npm run build` compiles TypeScript into `dist`; it does not start the API. Use `npm run dev` during development or `npm start` to run the compiled build.
 
-- `npm test` now runs `npm run prepare:env` first via `pretest`, so test runs use a normalized `DATABASE_URL` before Jest starts.
-- Runtime config loads `.env` directly, so app/test execution and Prisma CLI commands resolve database settings consistently.
+`npm test` runs the standard suite. It excludes the nine weakened variants and the baseline/attack performance collection tests, which write timing files. Run variants separately with `npm run test:variants`; to run one variant, add `-- --variant <variant-name>`. `npm run docs:check` only checks that expected files exist; it does not regenerate them.
 
-If `verify:full` reports a port conflict, stop any process already listening on port `3001` and rerun.
+For a new, provenance-recorded protocol-v7 performance block, use `npm run perf:once`, then `npm run perf:analyze`. Do not run the individual performance suites through ordinary Jest; they write top-level convenience outputs. `npm run perf:once` keeps collection in a matched block.
 
-### Troubleshooting: macOS vs Windows
+**Destructive wrapper:** `npm run verify:full`, `npm run verify:deploy`, and `npm run verify:ci` clean ignored generated artifacts and reseed the database. Use a disposable checkout and database if you need to run them.
 
-If tests fail on macOS but pass on Windows with errors like:
+## Current Evidence
 
-- `PrismaClientInitializationError`
-- `User was denied access on the database '(not available)'`
+- [Protocol-v7 performance analysis](docs/performance-results/analysis.md) covers 30 matched sequential blocks. It measures protected-resource latency, including invalid-credential rejection; derived throughput is not concurrent capacity.
+- [Concurrent-load analysis](docs/performance-results/concurrent-load-v1/analysis.md) is a separate five-block exploratory study at concurrency 1, 10, and 50. Do not pool it with protocol v7 or present it as production-capacity evidence.
+- [Blinded AI results](docs/generated/AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md) and [unblinded AI results](docs/generated/AI_PROVIDER_PROMPT_COMPARISON.md) use the isolated protocol-v2 cohort: 360 outputs across four provider/prompt arms. There are 342 heuristic failures; results are descriptive because OpenAI system fingerprints differ between prompt conditions, so paired inference is suppressed.
+- AI failures mean that one or more static heuristic checks failed. They are not runtime vulnerability rates or human security ratings. Independent human ratings have not been collected. Other retained AI-vs-human reports and some footprint summaries use legacy data; they are labeled historical and should not be combined with the clean cohort.
+- `npm run ai:audit:packet` creates a blinded 36-output review packet. Keep `docs/generated/AI_HEURISTIC_AUDIT_KEY_RESTRICTED.json` from reviewers until their ratings are locked.
+- Live AI generation is blocked by the offline freeze by default. Preview a collection without provider calls using `npm run ai:matrix:cohorts -- --plan`. Follow the [reproducibility checklist](docs/REPRODUCIBILITY_CHECKLIST.md) before any live run.
 
-check the following in order:
+## Docker
 
-1. Verify `.env` has the intended `DATABASE_URL` credentials for your local Postgres user.
-2. Run `npm run prepare:env` once and confirm it prints the expected host/port/database.
-3. Run `npm run db:setup` to ensure Prisma can connect, migrate, and seed.
-4. Run `npm test` (this now runs `pretest` and prepares env before Jest).
+Build the API image with `npm run docker:build`. PostgreSQL is not included; set a `DATABASE_URL` reachable from inside the container. With Docker Desktop, use `host.docker.internal` rather than `localhost` to reach a database on the host. Local `.env` files are excluded from the build context.
 
-Why this happens:
+## References
 
-- Cross-platform shells and local Postgres defaults can differ.
-- This project now normalizes `DATABASE_URL` before test runs and loads `.env` at runtime to keep Prisma CLI and Jest/app behavior aligned.
-
-Common examples:
-
-```bash
-IMAGE_REPO=ghcr.io/your-org/dissertation-backend npm run docker:tag
-IMAGE_REPO=ghcr.io/your-org/dissertation-backend IMAGE_ALIAS=staging npm run docker:publish:ci
-```
-
-Tagging notes:
-
-- `IMAGE_REPO` is required
-- `IMAGE_TAG` defaults to `git-<shortsha>` when not provided
-- `IMAGE_WITH_VERSION=true` (or `--with-version`) adds `v<package.json version>`
-- `IMAGE_ALIAS` is optional (`staging`, `prod`, etc.)
-- Prefer immutable tags (`git-*`, `v*`) for deployments
-
-## CI/CD Workflows
-
-- `.github/workflows/ci-verify.yml`: runs `npm run verify:ci` on PRs/pushes to `main`
-- `.github/workflows/staging-publish.yml`: manual staging image publish workflow
-
-Staging publish workflow inputss:
-
-- `image_repo`: target image repository
-- `image_alias`: mutable alias tag (default `staging`)
-- `publish`: when `false`, performs a dry-run tag step only.
-
-Authentication notes
-
-- Publish mode logs in to `ghcr.io` using `${{ github.actor }}` and `${{ secrets.GITHUB_TOKEN }}`.
-- Ensure the repository has `packages: write` permission enabled for workflows.
-
-Recommended: require `verify-ci` in branch protection for `main`.
-
-## Production Notes
-
-`npm run prod` does not run cleanup, Prisma generate, migrations, or seed.
-Run `npm run db:setup` first when deploying to a fresh or drifted database..
-
-## Useful Files
-
-- [routes.md](routes.md): route reference
-- [postman.json](postman.json): Postman collection
-- [docs/REPRODUCIBILITY_CHECKLIST.md](docs/REPRODUCIBILITY_CHECKLIST.md): full run checklist
-
-## License.
+- [Routes](routes.md)
+- [Postman collection](postman.json)
+- [Reproducibility checklist](docs/REPRODUCIBILITY_CHECKLIST.md)
+- [Dissertation template guide](docs/DISSERTATION_TEMPLATE_GUIDE.md)

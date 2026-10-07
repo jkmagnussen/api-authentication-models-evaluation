@@ -51,24 +51,20 @@ function loadPublicKeysFromConfig() {
     };
 }
 function getJwtAlgorithm(variantAlgorithm) {
-    if (variantAlgorithm) {
-        return variantAlgorithm;
-    }
-    if (process.env.JWT_ALGORITHM) {
-        return process.env.JWT_ALGORITHM;
-    }
-    if (process.env.JWT_PRIVATE_KEY_PEM ||
+    const selectedAlgorithm = variantAlgorithm ?? process.env.JWT_ALGORITHM ?? (process.env.JWT_PRIVATE_KEY_PEM ||
         process.env.JWT_PRIVATE_KEY_PATH ||
         process.env.JWT_PUBLIC_KEYS_JSON ||
         config_1.default.jwt.privateKeyPem ||
         config_1.default.jwt.privateKeyPath ||
-        config_1.default.jwt.publicKeysJson) {
-        return 'RS256';
+        config_1.default.jwt.publicKeysJson
+        ? 'RS256'
+        : process.env.JWT_SECRET || config_1.default.jwt.legacySecret
+            ? 'HS256'
+            : 'RS256');
+    if (selectedAlgorithm === 'none' && config_1.default.isProduction) {
+        throw new Error('JWT algorithm "none" is not permitted in production.');
     }
-    if (process.env.JWT_SECRET || config_1.default.jwt.legacySecret) {
-        return 'HS256';
-    }
-    return 'RS256';
+    return selectedAlgorithm;
 }
 function getJwtSignContext(variantAlgorithm) {
     const algorithm = getJwtAlgorithm(variantAlgorithm);

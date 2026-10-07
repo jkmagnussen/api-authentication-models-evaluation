@@ -12,7 +12,7 @@ function main() {
         for (const file of missing) {
             console.error(`- ${file}`);
         }
-        console.error('Run: npm run docs:generate');
+        console.error('See docs/REPRODUCIBILITY_CHECKLIST.md for the artifact-specific generation commands.');
         process.exit(1);
     }
     console.log('All expected generated artifacts are present.');

@@ -6,6 +6,10 @@ const escomplex = require('escomplex');
 
 const DEFAULT_SAMPLE_COUNT = 30;
 
+export function getAiDataRoot() {
+  return path.resolve(process.env.AI_DATA_ROOT ?? path.join(process.cwd(), 'ai-generated'));
+}
+
 function parseSampleCountArg(): number | null {
   const args = process.argv.slice(2);
   for (let index = 0; index < args.length; index += 1) {
@@ -34,7 +38,7 @@ function resolveSampleCount(): number {
 }
 
 export const SAMPLE_COUNT = resolveSampleCount();
-export const RESULTS_DIR = path.join(process.cwd(), 'ai-generated', 'results');
+export const RESULTS_DIR = path.join(getAiDataRoot(), 'results');
 
 export function ensureDirectory(dirPath: string) {
   if (!fs.existsSync(dirPath)) {
@@ -43,7 +47,7 @@ export function ensureDirectory(dirPath: string) {
 }
 
 export function getModelDirectory(model: string) {
-  return path.join(process.cwd(), 'ai-generated', model);
+  return path.join(getAiDataRoot(), model);
 }
 
 export function getSamplePath(model: string, index: number) {

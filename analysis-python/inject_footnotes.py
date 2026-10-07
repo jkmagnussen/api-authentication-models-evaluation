@@ -39,12 +39,12 @@ COMPACT_DEFAULT_VERTICAL_SHIFT = -10.0
 FOOTNOTES = {
     # Maintainability Charts
     "ai-sample-syntax-issues-by-model-stage.svg": {
-        "text": "Shows syntax error frequency by development stage and authentication model, highlighting where AI-generated implementations fail before runtime security testing.",
+        "text": "Shows structural-analysis parser errors in clean-cohort AI outputs; these are not TypeScript compile or runtime security results.",
         "directory": "maintainability",
         "scale": 0.95,
     },
     "code-footprint-deltas.svg": {
-        "text": "Shows code footprint deltas across authentication implementations, including relative shifts in lines, branches, and structural complexity versus baseline code.",
+        "text": "Shows footprint deltas versus baseline; AI bars use legacy 30-file pre-v2 samples, not the clean cohort.",
         "directory": "maintainability",
         "scale": 0.95,
         "compact_vertical_shift": -18.0,
@@ -98,13 +98,13 @@ FOOTNOTES = {
         "scale": 0.95,
     },
     "ai-vs-human-dominance-heatmap.svg": {
-        "text": "Shows AI-versus-human security outcomes across authentication implementations, indicating where baseline human code remains safer or where parity appears.",
+        "text": "Legacy comparison from shared-output pre-v2 AI results; not based on the clean cohort or human ratings.",
         "directory": "security",
         "scale": 0.95,
         "compact_vertical_shift": -20.0,
     },
     "ai-vs-human-severity-gap-ci.svg": {
-        "text": "Shows the severity-weighted risk gap for AI-generated code with 95% bootstrap confidence intervals, separating direction of risk from estimation uncertainty.",
+        "text": "Legacy pre-v2 AI/baseline risk estimate; not based on clean-cohort outputs or human ratings.",
         "directory": "security",
         "scale": 0.95,
         "compact_vertical_shift": -50.0,
@@ -132,7 +132,7 @@ FOOTNOTES = {
         "scale": 0.95,
     },
     "normalized-failure-density.svg": {
-        "text": "Shows normalized failure-event density per 10,000 lines across code sources, enabling fair comparison independent of implementation length.",
+        "text": "Shows clean-cohort AI failure-event density per 10,000 characters alongside baseline and misconfiguration rates.",
         "directory": "security",
         "scale": 0.95,
         "compact_vertical_shift": -55.0,
@@ -164,7 +164,7 @@ FOOTNOTES = {
         "scale": 0.95,
     },
     "calibration-and-agreement-controls.svg": {
-        "text": "Shows checker calibration and agreement metrics used for security-control verification quality, supporting confidence in downstream evaluation judgments.",
+        "text": "Shows clean-cohort positive/negative control pass rates and primary/secondary checker agreement.",
         "directory": "synthesis",
         "scale": 0.95,
         "compact_vertical_shift": -6.0,
@@ -209,7 +209,7 @@ FOOTNOTES = {
 FOOTER_NUMERIC_CUES = {
     # Maintainability
     "ai-sample-syntax-issues-by-model-stage.svg": "Unit: percentages of sampled outputs per development stage.",
-    "code-footprint-deltas.svg": "Baseline: deltas are measured relative to baseline implementation metrics.",
+    "code-footprint-deltas.svg": "AI footprint values are historical pre-v2 aggregates.",
     "complexity-to-misconfig-regression.svg": "Interpretation: trendline summarizes complexity versus misconfiguration-rate relationship.",
     "complexity-vs-misconfig-frequency-regression.svg": "Scale: higher y-values indicate larger misconfiguration frequency.",
     "failure-points-vs-chars.svg": "Unit: x-axis is code size and y-axis is normalized failure concentration.",
@@ -221,12 +221,12 @@ FOOTER_NUMERIC_CUES = {
     "variance-under-load.svg": "Interpretation: higher variance indicates wider latency spread under repeated load.",
     # Security
     "ai-failure-rates.svg": "Unit: failure rates are percentages of tested generated samples.",
-    "ai-vs-human-dominance-heatmap.svg": "Scale: binary cell outcomes mark which side is safer per comparison.",
-    "ai-vs-human-severity-gap-ci.svg": "Baseline: 0 risk-gap; CI: 95% bootstrap intervals.",
+    "ai-vs-human-dominance-heatmap.svg": "Legacy: shared-output pre-v2 AI results; not the clean cohort.",
+    "ai-vs-human-severity-gap-ci.svg": "Legacy: pre-v2 AI/baseline estimate; not human ratings or clean-cohort results.",
     "control-point-risk-heatmap.svg": "Scale: cell intensity encodes relative control-point risk magnitude.",
     "misconfiguration-frequency-comparison.svg": "Baseline: 0% by design and omitted from plotted bars.",
     "misconfiguration-severity-heatmap.svg": "Scale: cells are scored on a comparable severity scale.",
-    "normalized-failure-density.svg": "Baseline: 0 by design; Unit: rates per 10,000 lines.",
+    "normalized-failure-density.svg": "Baseline: 0 by design; Unit: failure events per 10,000 characters.",
     "security-critical-control-risk-density.svg": "Baseline: 0 by design; Unit: weighted risk density per 10k chars.",
     "stride-severity-scoring.svg": "Scale: scores are plotted on the same threat-severity range.",
     "token-lifecycle-fragility.svg": "Interpretation: higher values indicate greater lifecycle fragility.",
@@ -508,7 +508,7 @@ def create_footnote_element(
 
     footnote_xml = f'''  <g id="text_footnote">
    <!-- {text[:60]}... -->
-   <g transform="translate({center_x} {y_position}) scale(1 1)">
+    <g transform="translate({center_x} {y_position}) scale({_format_num(scale)} {_format_num(scale)})">
     <rect x="{box_x}" y="{box_y}" width="{box_width}" height="{box_height}" style="fill: {FOOTER_BG_COLOR};"/>
     <text x="0" y="0" dominant-baseline="middle" style="fill: {FOOTER_TEXT_COLOR}; font-family: {FOOTER_FONT_FAMILY}; font-size: {footer_font_size}px; font-style: {FOOTER_FONT_STYLE}; text-anchor: middle;">{text_markup}</text>
    </g>

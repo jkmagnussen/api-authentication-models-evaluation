@@ -13,7 +13,7 @@ for (let index = 1; index <= common_1.SAMPLE_COUNT; index += 1) {
     (0, common_1.writeResult)(`sessions-sample${index}-tests.json`, {
         model: 'sessions',
         sample: `sample${index}`,
-        samplePath: path_1.default.join('ai-generated', 'sessions', `sample${index}.ts`),
+        samplePath: path_1.default.relative(process.cwd(), (0, common_1.getSamplePath)('sessions', index)),
         passed: failedChecks.length === 0,
         checks,
         correctnessFailures: failedChecks,

@@ -1,7 +1,9 @@
 # Calibration and Independent Agreement Report
 
 Generated: 2026-07-24T23:11:22.013Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Legacy snapshot: these calibration and checker-agreement statistics cover 90 pre-v2 shared-root samples. The clean cohort has different control/agreement denominators and is reflected in the current calibration chart.
 
 This report combines a calibration-style accuracy signal with an independent checker-agreement control.
 

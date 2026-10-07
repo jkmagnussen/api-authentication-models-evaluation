@@ -30,6 +30,7 @@ docs/generated/
 docs/performance-results/
 ai-generated/results/
 ai-generated/arms/
+ai-generated/cohorts/
 
 # IDE & Editor
 .vscode/

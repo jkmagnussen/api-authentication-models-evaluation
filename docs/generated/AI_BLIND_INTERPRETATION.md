@@ -1,10 +1,13 @@
 # AI Blind Interpretation
 
 Generated: 2026-07-24T23:11:24.952Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
 
-Status: DRAFT_NEEDS_FINALIZATION
-Blinded report SHA256: 8db9e3087ad79e47486abdfe83d5d2e9c01e783397d1548ae0cd60b2584b1b1e
+Status: INVALIDATED_UNBLINDED_BEFORE_FINALIZATION
+Original draft report SHA256: 8db9e3087ad79e47486abdfe83d5d2e9c01e783397d1548ae0cd60b2584b1b1e
+Current blinded report SHA256: f7b6c447ef4572726c5bc581c5ebba359bdcb3279610da0bdff54420a722b179
+
+The pre-unblind interpretation and independent sign-offs were not completed before the unblinded arm results were generated. Preserve this file as an incomplete draft; do not finalize it retroactively. A future blinded interpretation requires a new report freeze and independent review before unblinding.
 
 ## Pre-Unblind Interpretation
 
@@ -38,5 +41,4 @@ Tie-break Signed At: PENDING
 
 ## Finalization
 
-- Replace `Status: DRAFT_NEEDS_FINALIZATION` with `Status: FINALIZED_PRE_UNBLIND` after interpretation is complete and before consulting unblinded labels.
-- Keep the blinded report SHA256 unchanged; if it changes, re-interpret and re-finalize.
+- This draft is invalidated and must not be finalized.

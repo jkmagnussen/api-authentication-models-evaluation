@@ -7,6 +7,9 @@ const supertest_1 = __importDefault(require("supertest"));
 const app_1 = __importDefault(require("../../../src/app"));
 const db_1 = require("../../../src/db");
 const setup_1 = require("../../setup"); // ⭐ Use global reset
+const config_1 = require("../../../src/config");
+const pkce_1 = require("../../../src/oauth/pkce");
+const oauth_service_1 = require("../../../src/oauth/oauth.service");
 const validUUID = '123e4567-e89b-12d3-a456-426614174000';
 describe('OAuth Integration Flow', () => {
     beforeEach(async () => {
@@ -41,7 +44,7 @@ describe('OAuth Integration Flow', () => {
     // -----------------------------------------------------
     // TOKEN → RETURNS JWT
     // -----------------------------------------------------
-    it('POST /oauth/token → returns JWT for valid authorization code', async () => {
+    it('POST /oauth/token → returns opaque bearer tokens for a valid authorization code', async () => {
         // Step 1: generate code
         await (0, supertest_1.default)(app_1.default).post('/oauth/authorize').send({
             userId: validUUID,
@@ -56,6 +59,88 @@ describe('OAuth Integration Flow', () => {
         expect(res.body).toHaveProperty('refresh_token');
         expect(res.body).toHaveProperty('token_type', 'Bearer');
         expect(res.body).toHaveProperty('expires_in');
+    });
+    it('stores hashed tokens, introspects and rotates refresh tokens, and enforces refresh expiry', async () => {
+        const { code_verifier, code_challenge } = await (0, pkce_1.createPkcePair)();
+        const authorize = await (0, supertest_1.default)(app_1.default).post('/oauth/authorize').send({
+            userId: validUUID,
+            clientId: 'client-basic',
+            scope: 'read',
+            state: 'audit-state',
+            code_challenge,
+            code_challenge_method: 'S256',
+        });
+        expect(authorize.status).toBe(200);
+        const issued = await (0, supertest_1.default)(app_1.default).post('/oauth/token').send({
+            code: authorize.body.code,
+            clientId: 'client-basic',
+            state: 'audit-state',
+            code_verifier,
+        });
+        expect(issued.status).toBe(200);
+        expect(issued.body.expires_in).toBe(config_1.APP_CONFIG.oauth.accessTokenTtlSeconds);
+        let stored = await db_1.prisma.oAuthAccessToken.findUnique({
+            where: { accessToken: (0, oauth_service_1.hashOpaqueToken)(issued.body.access_token) },
+        });
+        expect(stored).not.toBeNull();
+        expect(stored?.accessToken).not.toBe(issued.body.access_token);
+        expect(stored?.refreshToken).toBe((0, oauth_service_1.hashOpaqueToken)(issued.body.refresh_token));
+        expect(stored?.refreshExpiresAt.getTime()).toBeGreaterThan(stored?.expiresAt.getTime() ?? 0);
+        const missingClientInfo = await (0, supertest_1.default)(app_1.default).post('/oauth/introspect').send({ token: issued.body.refresh_token });
+        expect(missingClientInfo.status).toBe(400);
+        expect(missingClientInfo.body.error).toBe('invalid_client');
+        const wrongClientInfo = await (0, supertest_1.default)(app_1.default).post('/oauth/introspect').send({
+            token: issued.body.refresh_token,
+            clientId: 'client-admin',
+        });
+        expect(wrongClientInfo.body).toEqual({ active: false });
+        const refreshInfo = await (0, supertest_1.default)(app_1.default).post('/oauth/introspect').send({
+            token: issued.body.refresh_token,
+            clientId: 'client-basic',
+        });
+        expect(refreshInfo.body).toMatchObject({ active: true, token_type: 'refresh_token', client_id: 'client-basic' });
+        expect(refreshInfo.body.exp).toBe(Math.floor((stored?.refreshExpiresAt.getTime() ?? 0) / 1000));
+        const rotated = await (0, supertest_1.default)(app_1.default).post('/oauth/refresh').send({
+            refresh_token: issued.body.refresh_token,
+            clientId: 'client-basic',
+        });
+        expect(rotated.status).toBe(200);
+        expect(rotated.body.expires_in).toBe(config_1.APP_CONFIG.oauth.accessTokenTtlSeconds);
+        stored = await db_1.prisma.oAuthAccessToken.findUnique({
+            where: { accessToken: (0, oauth_service_1.hashOpaqueToken)(rotated.body.access_token) },
+        });
+        expect(stored?.refreshToken).toBe((0, oauth_service_1.hashOpaqueToken)(rotated.body.refresh_token));
+        await db_1.prisma.oAuthAccessToken.update({
+            where: { accessToken: (0, oauth_service_1.hashOpaqueToken)(rotated.body.access_token) },
+            data: { refreshExpiresAt: new Date(Date.now() - 1000) },
+        });
+        const expiredRefreshInfo = await (0, supertest_1.default)(app_1.default).post('/oauth/introspect').send({
+            token: rotated.body.refresh_token,
+            clientId: 'client-basic',
+        });
+        expect(expiredRefreshInfo.body).toMatchObject({ active: false, token_type: 'refresh_token' });
+        const expiredRefresh = await (0, supertest_1.default)(app_1.default).post('/oauth/refresh').send({
+            refresh_token: rotated.body.refresh_token,
+            clientId: 'client-basic',
+        });
+        expect(expiredRefresh.status).toBe(400);
+        expect(expiredRefresh.body.error).toBe('invalid_grant');
+        const wrongClientRevoke = await (0, supertest_1.default)(app_1.default).post('/oauth/revoke').send({
+            token: rotated.body.refresh_token,
+            clientId: 'client-admin',
+        });
+        expect(wrongClientRevoke.status).toBe(200);
+        expect(await db_1.prisma.oAuthAccessToken.findUnique({
+            where: { refreshToken: (0, oauth_service_1.hashOpaqueToken)(rotated.body.refresh_token) },
+        })).not.toBeNull();
+        const correctClientRevoke = await (0, supertest_1.default)(app_1.default).post('/oauth/revoke').send({
+            token: rotated.body.refresh_token,
+            clientId: 'client-basic',
+        });
+        expect(correctClientRevoke.status).toBe(200);
+        expect(await db_1.prisma.oAuthAccessToken.findUnique({
+            where: { refreshToken: (0, oauth_service_1.hashOpaqueToken)(rotated.body.refresh_token) },
+        })).toBeNull();
     });
     // -----------------------------------------------------
     // PROTECTED ROUTE → MISSING HEADER

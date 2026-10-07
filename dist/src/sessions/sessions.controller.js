@@ -61,12 +61,13 @@ async function loginWithSession(req, res, next) {
         const session = existingSessionId && !regenerateOnLogin
             ? await (0, session_service_2.createSessionWithId)(user.id, existingSessionId)
             : await (0, session_service_1.createSession)(user.id);
+        // The browser must not retain a cookie beyond the server-side record's lifetime.
         res.cookie('sessionId', session.id, {
             httpOnly: sessionCookieOverride?.httpOnly ?? config_1.default.cookie.httpOnly,
             secure: sessionCookieOverride?.secure ?? config_1.default.cookie.secure,
             sameSite: sessionCookieOverride?.sameSite ?? config_1.default.cookie.sameSite,
             domain: config_1.default.cookie.domain,
-            maxAge: config_1.default.cookie.maxAgeMs,
+            maxAge: Math.min(config_1.default.cookie.maxAgeMs, config_1.default.session.ttlSeconds * 1000),
         });
         await (0, audit_service_1.writeAuditEvent)({
             userId: user.id,

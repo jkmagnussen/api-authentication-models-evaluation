@@ -1,7 +1,9 @@
 # Cross-Reference Synthesis
 
 Generated: 2026-07-24T23:11:20.057Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Historical snapshot: this synthesis uses pre-v7 performance summaries and pre-v2 AI aggregates. Use `docs/performance-results/analysis.md` and the current blinded/unblinded AI comparison reports for current results.
 
 - Weighted Exploit Burden (WEB) uses $0.45 \times severity + 0.25 \times exploitability + 0.30 \times propagation$.
 - Lifecycle Error Likelihood Proxy (LELP) uses $(1.4 \times lifecycleSteps + 1.3 \times mustRemember + 1.2 \times boundaryCrossings) \times (1 + WEB/20)$.

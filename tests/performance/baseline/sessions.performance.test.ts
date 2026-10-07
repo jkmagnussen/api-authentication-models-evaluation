@@ -1,12 +1,13 @@
 import request from 'supertest';
 import app from '../../../src/app';
 import { resetDatabase } from '../../setup';
-import { calculateStats, writePerformanceResult } from '../utils';
+import { calculateStats, createPerformanceHttpClient, writePerformanceResult } from '../utils';
 import { prisma } from '../../../src/db'; // adjust if your DB import differs
 
 describe('Sessions – Performance Test', () => {
   const ITERATIONS = 1000;
   let sessionCookie: string;
+  let performanceClient: Awaited<ReturnType<typeof createPerformanceHttpClient>>;
 
   beforeAll(async () => {
     await resetDatabase();
@@ -31,6 +32,11 @@ describe('Sessions – Performance Test', () => {
     }
 
     sessionCookie = cookies[0];
+    performanceClient = await createPerformanceHttpClient(app);
+  });
+
+  afterAll(async () => {
+    if (performanceClient) await performanceClient.close();
   });
 
   test(`Session protected route ${ITERATIONS} requests`, async () => {
@@ -39,10 +45,11 @@ describe('Sessions – Performance Test', () => {
     for (let i = 0; i < ITERATIONS; i++) {
       const start = performance.now();
 
-      await request(app).get('/sessions/protected').set('Cookie', sessionCookie);
+      const status = await performanceClient.get('/sessions/protected', { Cookie: sessionCookie });
 
       const end = performance.now();
       times.push(end - start);
+      if (status !== 200) throw new Error(`Expected Sessions baseline status 200, received ${status}`);
     }
 
     const stats = calculateStats(times);

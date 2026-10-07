@@ -594,10 +594,10 @@
       <rect x="42.285176" y="21.936328" width="396.927952" height="269.819953" />
     </clipPath>
   </defs>  <g id="text_footnote">
-   <!-- AI-vs-human security outcomes across auth impls. Scale: bina... -->
-   <g transform="translate(274.1403745 340.684) scale(1 1)">
-    <rect x="-251.6" y="-16.0" width="503.2" height="32" style="fill: #ffffff;"/>
-    <text x="0" y="0" dominant-baseline="middle" style="fill: #6b7280; font-family: Arial; font-size: 10px; font-style: italic; text-anchor: middle;"><tspan x="0" dy="-0.55em">AI-vs-human security outcomes across auth impls. Scale: binary cell outcomes mark which</tspan><tspan x="0" dy="1.10em">side is safer per comparison.</tspan></text>
+   <!-- Legacy comparison from shared-output pre-v2 AI results; not ... -->
+    <g transform="translate(274.1403745 340.684) scale(0.95 0.95)">
+    <rect x="-248.79999999999998" y="-16.0" width="497.59999999999997" height="32" style="fill: #ffffff;"/>
+    <text x="0" y="0" dominant-baseline="middle" style="fill: #6b7280; font-family: Arial; font-size: 10px; font-style: italic; text-anchor: middle;"><tspan x="0" dy="-0.55em">Legacy comparison from shared-output pre-v2 AI results; not based on the clean cohort.</tspan><tspan x="0" dy="1.10em">Legacy: shared-output pre-v2 AI results; not the clean cohort.</tspan></text>
    </g>
   </g>
 </svg>

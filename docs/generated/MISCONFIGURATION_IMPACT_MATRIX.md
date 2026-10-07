@@ -1,7 +1,7 @@
 # Misconfiguration Impact Matrix
 
 Generated: 2026-07-24T23:11:19.082Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
 
 This matrix ranks each intentional misconfiguration by impact severity and practical exploitation characteristics.
 

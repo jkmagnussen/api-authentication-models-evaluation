@@ -211,7 +211,7 @@ async function token(req, res) {
         access_token: tokenResult.accessToken,
         refresh_token: tokenResult.refreshToken,
         token_type: 'Bearer',
-        expires_in: 3600,
+        expires_in: tokenResult.expiresIn,
     });
 }
 // ------------------------------------------------------
@@ -226,17 +226,27 @@ async function refresh(req, res) {
             error_description: 'Missing refresh_token',
         });
     }
+    if (!clientId) {
+        return res.status(400).json({
+            error: 'invalid_client',
+            error_description: 'Missing client_id',
+        });
+    }
     const newAccessToken = crypto_1.default.randomUUID();
     const newRefreshToken = crypto_1.default.randomUUID();
+    const now = new Date();
     const rotated = await db_1.prisma.oAuthAccessToken.updateMany({
+        // Client binding, expiry, and single-use rotation are enforced in one database update.
         where: {
             refreshToken: (0, oauth_service_1.hashOpaqueToken)(refreshToken),
             clientId,
+            refreshExpiresAt: { gt: now },
         },
         data: {
             accessToken: (0, oauth_service_1.hashOpaqueToken)(newAccessToken),
             refreshToken: (0, oauth_service_1.hashOpaqueToken)(newRefreshToken),
-            expiresAt: new Date(Date.now() + config_1.default.oauth.accessTokenTtlSeconds * 1000),
+            expiresAt: new Date(now.getTime() + config_1.default.oauth.accessTokenTtlSeconds * 1000),
+            refreshExpiresAt: new Date(now.getTime() + config_1.default.oauth.refreshTokenTtlSeconds * 1000),
         },
     });
     if (rotated.count !== 1) {
@@ -249,7 +259,7 @@ async function refresh(req, res) {
         access_token: newAccessToken,
         refresh_token: newRefreshToken,
         token_type: 'Bearer',
-        expires_in: 3600,
+        expires_in: config_1.default.oauth.accessTokenTtlSeconds,
     });
 }
 // ------------------------------------------------------
@@ -257,23 +267,30 @@ async function refresh(req, res) {
 // ------------------------------------------------------
 async function revoke(req, res) {
     const { token } = req.body;
+    const clientId = req.body.clientId ?? req.body.client_id;
     if (!token) {
         return res.status(400).json({
             error: 'invalid_request',
             error_description: 'Missing token',
         });
     }
+    if (!clientId) {
+        return res.status(400).json({
+            error: 'invalid_client',
+            error_description: 'Missing client_id',
+        });
+    }
     const access = await db_1.prisma.oAuthAccessToken.findUnique({
         where: { accessToken: (0, oauth_service_1.hashOpaqueToken)(token) },
     });
-    if (access) {
+    if (access?.clientId === clientId) {
         await db_1.prisma.oAuthAccessToken.delete({ where: { accessToken: (0, oauth_service_1.hashOpaqueToken)(token) } });
         return res.status(200).send();
     }
     const refresh = await db_1.prisma.oAuthAccessToken.findUnique({
         where: { refreshToken: (0, oauth_service_1.hashOpaqueToken)(token) },
     });
-    if (refresh) {
+    if (refresh?.clientId === clientId) {
         await db_1.prisma.oAuthAccessToken.delete({ where: { refreshToken: (0, oauth_service_1.hashOpaqueToken)(token) } });
         return res.status(200).send();
     }
@@ -284,6 +301,7 @@ async function revoke(req, res) {
 // ------------------------------------------------------
 async function introspect(req, res) {
     const { token } = req.body;
+    const clientId = req.body.clientId ?? req.body.client_id;
     if (!token) {
         return res.status(400).json({
             active: false,
@@ -291,10 +309,18 @@ async function introspect(req, res) {
             error_description: 'Missing token',
         });
     }
+    if (!clientId) {
+        return res.status(400).json({
+            active: false,
+            error: 'invalid_client',
+            error_description: 'Missing client_id',
+        });
+    }
+    // Opaque token metadata is disclosed only to the client ID bound to the stored token.
     const access = await db_1.prisma.oAuthAccessToken.findUnique({
         where: { accessToken: (0, oauth_service_1.hashOpaqueToken)(token) },
     });
-    if (access) {
+    if (access?.clientId === clientId) {
         const now = new Date();
         const active = access.expiresAt > now;
         return res.json({
@@ -307,17 +333,17 @@ async function introspect(req, res) {
         });
     }
     const refresh = await db_1.prisma.oAuthAccessToken.findUnique({
-        where: { refreshToken: token },
+        where: { refreshToken: (0, oauth_service_1.hashOpaqueToken)(token) },
     });
-    if (refresh) {
+    if (refresh?.clientId === clientId) {
         const now = new Date();
-        const active = refresh.expiresAt > now;
+        const active = refresh.refreshExpiresAt > now;
         return res.json({
             active,
             scope: refresh.scope ?? null,
             client_id: refresh.clientId,
             user_id: refresh.userId,
-            exp: Math.floor(refresh.expiresAt.getTime() / 1000),
+            exp: Math.floor(refresh.refreshExpiresAt.getTime() / 1000),
             token_type: 'refresh_token',
         });
     }

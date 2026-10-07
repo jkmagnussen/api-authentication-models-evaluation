@@ -1,7 +1,9 @@
 # Code Footprint Summary
 
 Generated: 2026-07-24T23:11:15.069Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Legacy AI data: the AI footprint rows below aggregate 30 pre-v2 shared-root samples per mechanism. They are not based on the isolated 360-output cohort; use the clean provider/prompt reports for current AI outcomes. Baseline and misconfiguration counts are reported under the scope rules below.
 
 ## Scope Rules
 

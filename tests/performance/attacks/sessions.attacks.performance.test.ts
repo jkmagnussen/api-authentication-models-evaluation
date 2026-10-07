@@ -1,31 +1,37 @@
 import request from 'supertest';
 import app from '../../../src/app';
 import { resetDatabase } from '../../setup';
-import { calculateStats, writePerformanceResult } from '../utils';
+import { calculateStats, createPerformanceHttpClient, writePerformanceResult } from '../utils';
 
 describe('Sessions – Attack Performance Test', () => {
   const ITERATIONS = 1000;
 
-  // Intentionally invalid / expired / forged session cookie
-  const invalidSessionCookie = 'session=INVALID_ATTACK_COOKIE';
+  const invalidSessionCookie = 'sessionId=INVALID_ATTACK_COOKIE';
+  let performanceClient: Awaited<ReturnType<typeof createPerformanceHttpClient>>;
 
   beforeAll(async () => {
     await resetDatabase();
+    performanceClient = await createPerformanceHttpClient(app);
   });
 
-  test(`Session protected route under expired/stolen cookie replay attack (${ITERATIONS} requests)`, async () => {
+  afterAll(async () => {
+    if (performanceClient) await performanceClient.close();
+  });
+
+  test(`Session protected route under invalid session ID attack (${ITERATIONS} requests)`, async () => {
     const times: number[] = [];
     let errors = 0;
 
     for (let i = 0; i < ITERATIONS; i++) {
       const start = performance.now();
 
-      const res = await request(app).get('/sessions/protected').set('Cookie', invalidSessionCookie);
+      const status = await performanceClient.get('/sessions/protected', { Cookie: invalidSessionCookie });
 
       const end = performance.now();
       times.push(end - start);
 
-      if (res.status !== 200) errors++;
+      if (status !== 401) throw new Error(`Expected Sessions attack status 401, received ${status}`);
+      errors++;
     }
 
     const stats = calculateStats(times);

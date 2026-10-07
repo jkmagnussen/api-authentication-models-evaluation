@@ -1,7 +1,7 @@
 # Failure Propagation Analysis
 
 Generated: 2026-07-24T23:11:20.053Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
 
 This report models how each controlled authentication misconfiguration propagates beyond its initial defect point into downstream components, flows, and STRIDE consequences.
 

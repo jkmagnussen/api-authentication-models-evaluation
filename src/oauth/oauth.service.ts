@@ -19,7 +19,10 @@ function hashToken(token: string) {
  */
 export async function exchangeCodeForToken(code: string) {
   const now = new Date();
+  const accessExpiresAt = new Date(now.getTime() + APP_CONFIG.oauth.accessTokenTtlSeconds * 1000);
+  const refreshExpiresAt = new Date(now.getTime() + APP_CONFIG.oauth.refreshTokenTtlSeconds * 1000);
 
+  // Atomically claim the one-time code so concurrent exchanges cannot both mint tokens.
   const claimedCode = await prisma.oAuthAuthorizationCode.updateMany({
     where: {
       code,
@@ -45,6 +48,7 @@ export async function exchangeCodeForToken(code: string) {
   const refreshToken = generateToken();
 
   // Create access + refresh tokens with scope
+  // Store only hashes; raw bearer credentials are returned once and never persisted.
   const token = await prisma.oAuthAccessToken.create({
     data: {
       accessToken: hashToken(accessToken),
@@ -52,7 +56,8 @@ export async function exchangeCodeForToken(code: string) {
       userId: authCode.userId,
       clientId: authCode.clientId,
       scope: authCode.scope,
-      expiresAt: new Date(Date.now() + APP_CONFIG.oauth.accessTokenTtlSeconds * 1000),
+      expiresAt: accessExpiresAt,
+      refreshExpiresAt,
     },
   });
 
@@ -63,6 +68,7 @@ export async function exchangeCodeForToken(code: string) {
     accessToken,
     refreshToken,
     scope: token.scope,
+    expiresIn: APP_CONFIG.oauth.accessTokenTtlSeconds,
   };
 }
 

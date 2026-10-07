@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 import json
 import math
@@ -30,8 +31,28 @@ CHARTS_PERF_SUPPORTING_DIR = CHARTS_SUPPORTING_DIR / "performance"
 CHARTS_SEC_SUPPORTING_DIR = CHARTS_SUPPORTING_DIR / "security"
 CHARTS_MAINT_SUPPORTING_DIR = CHARTS_SUPPORTING_DIR / "maintainability"
 CHARTS_SYNTH_SUPPORTING_DIR = CHARTS_SUPPORTING_DIR / "synthesis"
-RESULTS_DIR = ROOT / "ai-generated" / "results"
-ARMS_DIR = ROOT / "ai-generated" / "arms"
+CLEAN_STUDY_ID = "ai-clean-2026-10-05"
+CLEAN_STUDY_DIR = ROOT / "ai-generated" / "cohorts" / CLEAN_STUDY_ID
+CLEAN_ARMS_DIR = CLEAN_STUDY_DIR / "aggregate" / "arms"
+AI_ARM_KEYS = (
+    "openai-neutral",
+    "openai-security-guided",
+    "claude-neutral",
+    "claude-security-guided",
+)
+AI_CHECK_CONTROL_IDS = {
+    "redirect validation present": "oauth_redirect_uri_validation",
+    "state handling present": "oauth_state_binding",
+    "scope validation present": "oauth_scope_enforcement",
+    "audience validation present": "jwt_audience_issuer_validation",
+    "issuer validation present": "jwt_audience_issuer_validation",
+    "secure algorithm enforced": "jwt_algorithm_allowlist",
+    "expiry not excessive": "jwt_expiry_enforcement",
+    "session regeneration present": "session_regeneration_on_auth",
+    "httpOnly cookie flag present": "session_cookie_protection",
+    "cookie not insecure none/false pair": "session_cookie_protection",
+    "logout invalidation present": "session_invalidation_on_logout",
+}
 PERF_DIR = DOCS_DIR / "performance-results"
 GENERATED_DIR = DOCS_DIR / "generated"
 ANALYSIS_REPORT_PATH = GENERATED_DIR / "ML_LITE_ANALYSIS_SUMMARY.md"
@@ -76,6 +97,10 @@ def save_chart(fig: plt.Figure, cluster_dir: Path, file_name: str, tight: bool =
         fig.savefig(dest, bbox_inches="tight")
     else:
         fig.savefig(dest)
+    if dest.suffix.lower() == ".svg":
+        svg_content = dest.read_text(encoding="utf-8")
+        svg_content = re.sub(r"[\t ]+(?=\r?$)", "", svg_content, flags=re.MULTILINE)
+        dest.write_text(svg_content, encoding="utf-8")
     plt.close(fig)
 
 
@@ -193,6 +218,36 @@ def load_repeated_performance_samples() -> pd.DataFrame:
         if not run_dir.is_dir():
             continue
         run_id = run_dir.name
+        metadata_path = run_dir / "metadata.json"
+        if not metadata_path.exists():
+            continue
+        try:
+            metadata = json.loads(metadata_path.read_text(encoding="utf8"))
+            condition_order = metadata.get("conditionOrder", [])
+            conditions = metadata.get("conditions", {})
+            baseline_condition = conditions.get("baseline", {})
+            attack_condition = conditions.get("attacks", {})
+            first_condition = conditions.get(condition_order[0], {}) if len(condition_order) == 2 else {}
+            second_condition = conditions.get(condition_order[1], {}) if len(condition_order) == 2 else {}
+            first_completed = datetime.fromisoformat(first_condition["completedAt"].replace("Z", "+00:00"))
+            second_started = datetime.fromisoformat(second_condition["startedAt"].replace("Z", "+00:00"))
+            verified_v7 = (
+                metadata.get("protocolVersion") == 7
+                and metadata.get("matchedBlockVerified") is True
+                and metadata.get("status") == "completed"
+                and len(condition_order) == 2
+                and set(condition_order) == {"baseline", "attacks"}
+                and baseline_condition.get("status") == "completed"
+                and attack_condition.get("status") == "completed"
+                and baseline_condition.get("order") == condition_order.index("baseline") + 1
+                and attack_condition.get("order") == condition_order.index("attacks") + 1
+                and first_completed <= second_started
+            )
+        except (AttributeError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+            verified_v7 = False
+        if not verified_v7:
+            continue
+
         for phase in ["baseline", "attacks"]:
             phase_dir = run_dir / phase
             if not phase_dir.exists() or not phase_dir.is_dir():
@@ -250,69 +305,123 @@ def load_misconfiguration_impact() -> pd.DataFrame:
     return df
 
 
+def load_clean_ai_arm_rows() -> list[tuple[dict[str, object], dict[str, object], dict[str, object]]]:
+    manifest_path = CLEAN_STUDY_DIR / "study-manifest.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Missing clean AI study manifest: {manifest_path}")
+    manifest = json.loads(manifest_path.read_text(encoding="utf8"))
+    if (
+        manifest.get("studyId") != CLEAN_STUDY_ID
+        or manifest.get("status") != "completed_descriptive_only"
+        or manifest.get("protocolVersion") != 1
+        or manifest.get("promptProtocolVersion") != 2
+        or manifest.get("totalSamples") != 360
+    ):
+        raise ValueError("The clean AI study manifest does not match the expected protocol-v2 descriptive cohort.")
+
+    rows: list[tuple[dict[str, object], dict[str, object], dict[str, object]]] = []
+    expected_models = {"oauth", "jwt", "sessions"}
+    for arm_key in AI_ARM_KEYS:
+        arm_dir = CLEAN_ARMS_DIR / arm_key
+        metadata = json.loads((arm_dir / "metadata.json").read_text(encoding="utf8"))
+        if (
+            metadata.get("studyId") != CLEAN_STUDY_ID
+            or metadata.get("protocolVersion") != 1
+            or metadata.get("promptProtocolVersion") != 2
+            or metadata.get("analysisMethodVersion") != 2
+            or metadata.get("samplesPerMechanism") != 30
+            or metadata.get("totalSamples") != 90
+        ):
+            raise ValueError(f"AI arm metadata failed protocol-v2 validation: {arm_key}")
+
+        result_dir = arm_dir / "results"
+        test_files = sorted(result_dir.glob("*-tests.json"))
+        if len(test_files) != 90:
+            raise ValueError(f"AI arm {arm_key} has {len(test_files)} test results; expected 90.")
+        arm_counts = {model: 0 for model in expected_models}
+        for test_file in test_files:
+            test_result = json.loads(test_file.read_text(encoding="utf8"))
+            complexity_path = result_dir / f"{test_file.name[:-len('-tests.json')]}.json"
+            if not complexity_path.exists():
+                raise FileNotFoundError(f"Missing complexity result for {test_file}")
+            complexity = json.loads(complexity_path.read_text(encoding="utf8"))
+            model = normalize_model_name(test_result.get("model", ""))
+            if (
+                model not in expected_models
+                or test_result.get("sample") != complexity.get("sample")
+                or test_result.get("model") != complexity.get("model")
+                or not isinstance(test_result.get("passed"), bool)
+            ):
+                raise ValueError(f"Mismatched AI result identity in {test_file}")
+            arm_counts[model] += 1
+            rows.append((metadata, test_result, complexity))
+        if arm_counts != {model: 30 for model in expected_models}:
+            raise ValueError(f"AI arm {arm_key} does not contain 30 results per authentication model.")
+
+    if len(rows) != 360:
+        raise ValueError(f"Clean AI cohort has {len(rows)} joined outputs; expected 360.")
+    return rows
+
+
 def load_ai_samples_summary() -> pd.DataFrame:
-    df = pd.read_csv(RESULTS_DIR / "ai-samples-summary.csv")
-    df["model"] = df["model"].map(normalize_model_name)
-    df["passed"] = df["passed"].astype(str).str.lower() == "true"
-    return df
+    records = []
+    for metadata, result, complexity in load_clean_ai_arm_rows():
+        records.append(
+            {
+                "provider": metadata.get("provider", "unknown"),
+                "promptMode": metadata.get("promptMode", "unknown"),
+                "model": normalize_model_name(result["model"]),
+                "sample": result["sample"],
+                "passed": result["passed"],
+                "characters": complexity.get("characters"),
+                "lines": complexity.get("lines"),
+                "functions": complexity.get("functions"),
+                "cyclomaticComplexity": complexity.get("cyclomaticComplexity"),
+                "maintainabilityIndex": complexity.get("maintainabilityIndex"),
+                "analysisError": complexity.get("analysisError"),
+            }
+        )
+    return pd.DataFrame(records)
 
 
 def load_arm_test_rows() -> pd.DataFrame:
     records: list[dict[str, object]] = []
-    if not ARMS_DIR.exists():
-        return pd.DataFrame()
-
-    for arm_dir in ARMS_DIR.iterdir():
-        if not arm_dir.is_dir() or arm_dir.name == "history":
-            continue
-
-        metadata_path = arm_dir / "metadata.json"
-        if not metadata_path.exists():
-            continue
-        metadata = json.loads(metadata_path.read_text(encoding="utf8"))
+    for metadata, payload, _ in load_clean_ai_arm_rows():
         provider = str(metadata.get("provider", "unknown"))
         prompt_mode = str(metadata.get("promptMode", "unknown"))
         arm_key = f"{provider}-{prompt_mode}"
+        model = normalize_model_name(payload.get("model", ""))
+        sample = str(payload.get("sample", ""))
+        passed = bool(payload.get("passed", False))
 
-        result_dir = arm_dir / "results"
-        if not result_dir.exists():
-            continue
+        checks = payload.get("checks", [])
+        checks_count = len(checks) if isinstance(checks, list) else 0
+        correct_checks = sum(
+            1 for item in checks
+            if isinstance(item, dict) and bool(item.get("passed", False))
+        ) if isinstance(checks, list) else 0
 
-        for test_file in result_dir.glob("*-tests.json"):
-            payload = json.loads(test_file.read_text(encoding="utf8"))
-            model = normalize_model_name(payload.get("model", ""))
-            sample = str(payload.get("sample", ""))
-            passed = bool(payload.get("passed", False))
+        security_failures = payload.get("securityFailures", [])
+        if not isinstance(security_failures, list):
+            security_failures = []
 
-            checks = payload.get("checks", [])
-            checks_count = len(checks) if isinstance(checks, list) else 0
-            correct_checks = 0
-            if isinstance(checks, list):
-                for item in checks:
-                    if isinstance(item, dict) and bool(item.get("passed", False)):
-                        correct_checks += 1
-
-            security_failures = payload.get("securityFailures", [])
-            if not isinstance(security_failures, list):
-                security_failures = []
-
-            tags = [categorize_failure_tag(str(tag)) for tag in security_failures]
-            records.append(
-                {
-                    "arm": arm_key,
-                    "provider": provider,
-                    "promptMode": prompt_mode,
-                    "model": model,
-                    "sample": sample,
-                    "passed": passed,
-                    "failure": 0 if passed else 1,
-                    "checks_count": checks_count,
-                    "correct_checks": correct_checks,
-                    "correctness_rate": (correct_checks / checks_count) if checks_count > 0 else math.nan,
-                    "security_failures": security_failures,
-                    "failure_categories": tags,
-                }
-            )
+        tags = [categorize_failure_tag(str(tag)) for tag in security_failures]
+        records.append(
+            {
+                "arm": arm_key,
+                "provider": provider,
+                "promptMode": prompt_mode,
+                "model": model,
+                "sample": sample,
+                "passed": passed,
+                "failure": 0 if passed else 1,
+                "checks_count": checks_count,
+                "correct_checks": correct_checks,
+                "correctness_rate": (correct_checks / checks_count) if checks_count > 0 else math.nan,
+                "security_failures": security_failures,
+                "failure_categories": tags,
+            }
+        )
 
     return pd.DataFrame(records)
 
@@ -322,8 +431,66 @@ def load_security_control_points() -> tuple[pd.DataFrame, pd.DataFrame]:
     if not json_path.exists():
         return pd.DataFrame(), pd.DataFrame()
     payload = json.loads(json_path.read_text(encoding="utf8"))
-    rows_df    = pd.DataFrame(payload.get("rows", []))
-    summary_df = pd.DataFrame(payload.get("modelSummary", []))
+    definitions = payload.get("definitions", [])
+    definitions_by_id = {item["controlId"]: item for item in definitions}
+    clean_samples = load_clean_ai_arm_rows()
+    clean_rows: list[dict[str, object]] = []
+    clean_summaries: list[dict[str, object]] = []
+
+    for model in ("oauth", "jwt", "sessions"):
+        model_samples = [sample for sample in clean_samples if normalize_model_name(sample[1].get("model", "")) == model]
+        total_characters = sum(int(sample[2].get("characters", 0)) for sample in model_samples)
+        failures_by_control = {control_id: 0 for control_id, definition in definitions_by_id.items() if definition["model"] == model}
+
+        for _, result, _ in model_samples:
+            passed_by_control: dict[str, list[bool]] = {control_id: [] for control_id in failures_by_control}
+            for check in result.get("checks", []):
+                control_id = AI_CHECK_CONTROL_IDS.get(str(check.get("name", "")))
+                if control_id in passed_by_control:
+                    passed_by_control[control_id].append(bool(check.get("passed", False)))
+            if any(not outcomes for outcomes in passed_by_control.values()):
+                raise ValueError(f"Clean AI checks do not cover every expected {model} risk control.")
+            for control_id, outcomes in passed_by_control.items():
+                if not all(outcomes):
+                    failures_by_control[control_id] += 1
+
+        model_rows = []
+        for control_id, failure_events in failures_by_control.items():
+            definition = definitions_by_id[control_id]
+            severity = float(definition["canonicalSeverity10"])
+            failures_per_10k = failure_events / total_characters * 10000 if total_characters else 0.0
+            risk_per_10k = failures_per_10k * severity
+            row = {
+                "model": model,
+                "modelLabel": display_model_name(model),
+                "controlId": control_id,
+                "controlLabel": definition["controlLabel"],
+                "source": "ai",
+                "characters": total_characters,
+                "failureEvents": failure_events,
+                "severity10": severity,
+                "weightedRisk": failure_events * severity,
+                "failuresPer10kChars": failures_per_10k,
+                "riskPer10kChars": risk_per_10k,
+            }
+            clean_rows.append(row)
+            model_rows.append(row)
+
+        control_count = len(model_rows)
+        clean_summaries.append({
+            "model": model,
+            "modelLabel": display_model_name(model),
+            "source": "ai",
+            "controlCount": control_count,
+            "charactersMean": total_characters,
+            "failureEventsTotal": sum(row["failureEvents"] for row in model_rows),
+            "weightedRiskTotal": sum(row["weightedRisk"] for row in model_rows),
+            "avgFailuresPer10kChars": sum(row["failuresPer10kChars"] for row in model_rows) / control_count if control_count else 0.0,
+            "avgRiskPer10kChars": sum(row["riskPer10kChars"] for row in model_rows) / control_count if control_count else 0.0,
+        })
+
+    rows_df = pd.DataFrame([row for row in payload.get("rows", []) if row.get("source") != "ai"] + clean_rows)
+    summary_df = pd.DataFrame([row for row in payload.get("modelSummary", []) if row.get("source") != "ai"] + clean_summaries)
     return rows_df, summary_df
 
 
@@ -339,98 +506,143 @@ def load_normalized_failure_density() -> tuple[pd.DataFrame, pd.DataFrame]:
     if not json_path.exists():
         return pd.DataFrame(), pd.DataFrame()
     payload = json.loads(json_path.read_text(encoding="utf8"))
-    rows_df    = pd.DataFrame(payload.get("rows", []))
+    legacy_rows = [row for row in payload.get("rows", []) if row.get("source") != "ai"]
+    clean_samples = load_clean_ai_arm_rows()
+    ai_rows: list[dict[str, object]] = []
+    for model in ("oauth", "jwt", "sessions"):
+        model_samples = [sample for sample in clean_samples if normalize_model_name(sample[1].get("model", "")) == model]
+        characters = sum(int(sample[2].get("characters", 0)) for sample in model_samples)
+        lines = sum(int(sample[2].get("lines", 0)) for sample in model_samples)
+        failures = sum(not bool(sample[1].get("passed", False)) for sample in model_samples)
+        failure_categories = {
+            categorize_failure_tag(str(tag))
+            for _, result, _ in model_samples
+            for tag in result.get("securityFailures", [])
+        }
+        failures_per_10k = failures / characters * 10000 if characters else 0.0
+        failure_points_per_10k = len(failure_categories) / characters * 10000 if characters else 0.0
+        ai_rows.append({
+            "model": model,
+            "modelLabel": display_model_name(model),
+            "source": "ai",
+            "sliceLabel": f"{display_model_name(model)} Clean AI Cohort ({CLEAN_STUDY_ID})",
+            "characters": characters,
+            "lines": lines,
+            "functions": sum(int(sample[2].get("functions", 0)) for sample in model_samples),
+            "cyclomaticComplexity": sum(float(sample[2].get("cyclomaticComplexity", 0) or 0) for sample in model_samples),
+            "failureEvents": failures,
+            "failurePoints": len(failure_categories),
+            "failuresPer10kChars": failures_per_10k,
+            "failuresPer100Lines": failures / lines * 100 if lines else 0.0,
+            "failuresPer10Functions": failures / sum(int(sample[2].get("functions", 0)) for sample in model_samples) * 10 if sum(int(sample[2].get("functions", 0)) for sample in model_samples) else 0.0,
+            "failurePointsPer10kChars": failure_points_per_10k,
+        })
+    rows_df = pd.DataFrame(legacy_rows + ai_rows)
     variant_df = pd.DataFrame(payload.get("variantRows", []))
     return rows_df, variant_df
 
 
 def load_checker_agreement_summary() -> dict:
-    json_path = GENERATED_DIR / "calibration-and-agreement-summary.json"
-    if not json_path.exists():
-        return {}
-    payload = json.loads(json_path.read_text(encoding="utf8"))
-    # Validator expects .get("generatedSampleAgreement") at the top level.
-    return payload.get("agreement", {})
+    calibration_counts = {
+        model: {"observations": 0, "primaryPassed": 0, "secondaryPassed": 0}
+        for model in ("oauth", "jwt", "sessions")
+    }
+    agreement_counts = {
+        model: {"observations": 0, "agreements": 0}
+        for model in ("oauth", "jwt", "sessions")
+    }
+
+    for arm_key in AI_ARM_KEYS:
+        metadata_path = CLEAN_ARMS_DIR / arm_key / "metadata.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf8"))
+        for cohort in metadata.get("generationCohorts", []):
+            for control in cohort.get("calibrationControls", []):
+                model = normalize_model_name(control.get("model", ""))
+                if model not in calibration_counts:
+                    continue
+                counts = calibration_counts[model]
+                counts["observations"] += 1
+                counts["primaryPassed"] += int(control.get("primaryPassed") is True)
+                counts["secondaryPassed"] += int(control.get("secondaryPassed") is True)
+
+            generated = cohort.get("checkerAgreement", {}).get("generatedSampleAgreement", {})
+            for model, values in generated.get("byModel", {}).items():
+                counts = agreement_counts.get(normalize_model_name(model))
+                if counts is None:
+                    continue
+                observations = int(values.get("observations", 0))
+                counts["observations"] += observations
+                counts["agreements"] += observations - int(values.get("disagreementCount", 0))
+
+    calibration_by_model = {
+        model: {
+            "observations": values["observations"],
+            "primaryPassRate": values["primaryPassed"] / values["observations"] if values["observations"] else 0.0,
+            "secondaryPassRate": values["secondaryPassed"] / values["observations"] if values["observations"] else 0.0,
+        }
+        for model, values in calibration_counts.items()
+    }
+    agreement_by_model = {
+        model: {
+            "observations": values["observations"],
+            "rawAgreementRate": values["agreements"] / values["observations"] if values["observations"] else 0.0,
+            "disagreementCount": values["observations"] - values["agreements"],
+        }
+        for model, values in agreement_counts.items()
+    }
+    return {
+        "generatedSampleAgreement": {"byModel": agreement_by_model},
+        "calibrationByModel": calibration_by_model,
+    }
 
 
 def chart_calibration_and_agreement_controls() -> None:
-    """Calibration sensitivity and checker agreement control chart.
-
-    Left panel: false-confidence sensitivity across integer thresholds.
-    Right panel: by-model raw agreement rates for generated samples.
-    """
+    """Show clean-cohort calibration-control pass rates and checker agreement."""
     payload = load_checker_agreement_summary()
     generated_agreement = payload.get("generatedSampleAgreement", {}) or {}
     by_model = generated_agreement.get("byModel", {}) or {}
-
-    calibration_path = GENERATED_DIR / "calibration-and-agreement-summary.json"
-    if not calibration_path.exists():
-        return
-    root_payload = json.loads(calibration_path.read_text(encoding="utf8"))
-    sensitivity_rows = pd.DataFrame((root_payload.get("calibration", {}) or {}).get("sensitivity", []))
-
-    if sensitivity_rows.empty or not by_model:
+    calibration_by_model = payload.get("calibrationByModel", {}) or {}
+    model_order = [model for model in ("oauth", "jwt", "sessions") if model in by_model and model in calibration_by_model]
+    if not model_order:
         return
 
-    sensitivity_rows = sensitivity_rows.sort_values("threshold").copy()
-    sensitivity_rows["ratePct"] = sensitivity_rows["rate"].astype(float) * 100.0
-
-    model_order = ["oauth", "jwt", "sessions"]
-    model_labels = [display_model_name(m) for m in model_order if m in by_model]
-    agreement_pct = [float((by_model.get(m, {}) or {}).get("rawAgreementRate", 0.0)) * 100.0 for m in model_order if m in by_model]
-    if not model_labels:
-        return
-
+    model_labels = [display_model_name(model) for model in model_order]
+    x = np.arange(len(model_order))
+    width = 0.34
+    primary_pct = [float(calibration_by_model[m]["primaryPassRate"]) * 100 for m in model_order]
+    secondary_pct = [float(calibration_by_model[m]["secondaryPassRate"]) * 100 for m in model_order]
+    agreement_pct = [float(by_model[m]["rawAgreementRate"]) * 100 for m in model_order]
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.0, 4.8), gridspec_kw={"width_ratios": [1.25, 1.0]})
 
-    ax1.plot(
-        sensitivity_rows["threshold"].astype(float),
-        sensitivity_rows["ratePct"],
-        color="#4e79a7",
-        marker="o",
-        linewidth=2.0,
-        markersize=6,
-    )
-    for _, row in sensitivity_rows.iterrows():
-        ax1.text(
-            float(row["threshold"]),
-            float(row["ratePct"]) + 1.3,
-            f"{float(row['ratePct']):.1f}%",
-            ha="center",
-            va="bottom",
-            fontsize=8,
-            color="#2f3e4f",
-            fontweight="bold",
-        )
-    ax1.set_title("False-Confidence Sensitivity", fontsize=11, fontweight="bold")
-    ax1.set_xlabel("Confidence threshold")
-    ax1.set_ylabel("False-confidence rate (%)")
+    for offset, values, label, color in (
+        (-width / 2, primary_pct, "Primary checks", "#4e79a7"),
+        (width / 2, secondary_pct, "Secondary checks", "#f28e2b"),
+    ):
+        bars = ax1.bar(x + offset, values, width, label=label, color=color, edgecolor="white")
+        for bar, value in zip(bars, values):
+            ax1.text(bar.get_x() + bar.get_width() / 2, value + 1.2, f"{value:.1f}%", ha="center", va="bottom", fontsize=8)
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(model_labels)
+    ax1.set_title("Positive/Negative Control Pass Rates", fontsize=11, fontweight="bold")
+    ax1.set_ylabel("Pass rate (%)")
+    ax1.set_ylim(0, 110)
+    ax1.legend(fontsize=8)
     ax1.grid(True, axis="y", linestyle="--", alpha=0.35)
-    ax1.set_ylim(0, max(40.0, float(sensitivity_rows["ratePct"].max()) + 8.0))
 
-    bars = ax2.bar(model_labels, agreement_pct, color=["#f28e2b", "#59a14f", "#e15759"], edgecolor="white", linewidth=0.8)
+    bars = ax2.bar(model_labels, agreement_pct, color=["#59a14f", "#e15759", "#76b7b2"], edgecolor="white", linewidth=0.8)
     for bar, value in zip(bars, agreement_pct):
-        ax2.text(
-            bar.get_x() + bar.get_width() / 2,
-            float(value) + 1.5,
-            f"{float(value):.1f}%",
-            ha="center",
-            va="bottom",
-            fontsize=8,
-            color="#2f3e4f",
-            fontweight="bold",
-        )
-    ax2.set_title("Independent Checker Agreement", fontsize=11, fontweight="bold")
+        ax2.text(bar.get_x() + bar.get_width() / 2, float(value) + 1.5, f"{float(value):.1f}%", ha="center", va="bottom", fontsize=8)
+    ax2.set_title("Primary/Secondary Checker Agreement", fontsize=11, fontweight="bold")
     ax2.set_ylabel("Raw agreement rate (%)")
     ax2.grid(True, axis="y", linestyle="--", alpha=0.35)
     ax2.set_ylim(0, 105)
 
-    fig.suptitle("Calibration and Agreement Controls", fontsize=13, fontweight="bold")
+    fig.suptitle("Clean-Cohort Calibration and Agreement Controls", fontsize=13, fontweight="bold")
 
     save_chart(fig, CHARTS_SYNTH_DIR, "calibration-and-agreement-controls.svg", tight=False)
 
     svg_path = CHARTS_SYNTH_DIR / "calibration-and-agreement-controls.svg"
-    comment_vals = [f"{float(value):.1f}%" for value in sensitivity_rows["ratePct"]]
+    comment_vals = [f"{value:.1f}%" for value in primary_pct + secondary_pct]
     comment_vals.extend(f"{float(value):.1f}%" for value in agreement_pct)
     comment_block = "\n".join(f"   <!-- {value} -->" for value in comment_vals)
     svg_text = svg_path.read_text(encoding="utf-8")
@@ -439,7 +651,7 @@ def chart_calibration_and_agreement_controls() -> None:
 
 
 def chart_ai_vs_human_severity_gap_ci() -> None:
-    """AI vs baseline severity-weighted risk gap with 95% bootstrap CI.
+    """Render the retained pre-v2 severity-weighted AI/baseline estimate.
 
     Horizontal bar chart: one bar per model showing the mean AI risk score per
     sample (baseline = 0 by construction).  Error bars show the 95% bootstrap
@@ -481,7 +693,7 @@ def chart_ai_vs_human_severity_gap_ci() -> None:
             fontsize=7.5, color="dimgray", va="top", ha="right")
     ax.set_yticks(y)
     ax.set_yticklabels(MODELS, fontsize=11)
-    ax.set_title("AI-Generated Code: Average Risk Score per Sample", fontsize=12, fontweight="bold")
+    ax.set_title("Legacy AI vs Baseline Risk Estimate (Pre-v2 Samples)", fontsize=12, fontweight="bold")
     ax.set_xlabel("Mean severity-weighted risk score  (baseline well-implemented code = 0)", fontsize=9)
     ax.invert_yaxis()
     ax.xaxis.grid(True, linestyle="--", alpha=0.35)
@@ -1386,8 +1598,8 @@ def chart_complexity_vs_misconfig_frequency(
     return r2, slope
 
 
-def chart_ai_sample_syntax_issues() -> None:
-    """AI sample syntax and compile issues by model.
+def chart_ai_sample_syntax_issues(ai_df: pd.DataFrame) -> None:
+    """AI sample structural-analysis parser issues by model.
 
     Dual-panel chart:
       Left  — stacked bar of issue count by error category per model, so the
@@ -1395,45 +1607,36 @@ def chart_ai_sample_syntax_issues() -> None:
       Right — files-affected breakdown: clean vs affected files per model, as a
               100% stacked bar, giving an immediate sense of issue prevalence.
     """
-    report_path = GENERATED_DIR / "ai-sample-syntax-report.json"
-    if not report_path.exists():
+    if ai_df.empty:
         return
 
-    payload = json.loads(report_path.read_text(encoding="utf8"))
-    issues = payload.get("issues", [])
-    total_files = payload.get("fileCount", 90)
-    files_per_model = total_files // 3  # 30 per model
-
-    if not issues:
-        return
+    issues = [
+        {
+            "model": row["model"],
+            "file": f"{row['model']}/{row['sample']}",
+            "message": row["analysisError"],
+        }
+        for _, row in ai_df.iterrows()
+        if isinstance(row.get("analysisError"), str) and row["analysisError"]
+    ]
+    total_files = len(ai_df)
+    files_per_model = total_files // 3
 
     MODEL_DISPLAY = {"oauth": "OAuth2", "jwt": "JWT", "sessions": "Session"}
     MODELS = ["JWT", "OAuth2", "Session"]
 
-    def model_from_path(path: str) -> str:
-        for key, label in MODEL_DISPLAY.items():
-            if f"/{key}/" in path or f"\\{key}\\" in path:
-                return label
-        return "Unknown"
-
     def categorize(message: str) -> str:
         m = message.lower()
-        if "unterminated template" in m:
-            return "Unterminated template"
-        if "module declaration" in m or "' or \"" in m:
-            return "Module declaration syntax"
         if "unexpected keyword" in m or "unexpected token" in m:
             return "Unexpected keyword/token"
-        if "expected" in m:
-            return "Missing expected token"
         if "illegal return" in m:
-            return "Complexity parse error"
+            return "Parser limitation"
         return "Other"
 
     rows = [
         {
-            "model": model_from_path(issue["filePath"]),
-            "file": issue["filePath"],
+            "model": MODEL_DISPLAY.get(str(issue["model"]), "Unknown"),
+            "file": issue["file"],
             "category": categorize(issue["message"]),
         }
         for issue in issues
@@ -1488,11 +1691,11 @@ def chart_ai_sample_syntax_issues() -> None:
 
     ax_left.set_xticks(x)
     ax_left.set_xticklabels(MODELS, fontsize=11)
-    ax_left.set_title("Issue Count by Category and Model", fontsize=11, fontweight="bold")
+    ax_left.set_title("Parser Error Count by Category and Model", fontsize=11, fontweight="bold")
     ax_left.set_xlabel("Authentication Model", fontsize=9)
     ax_left.set_ylabel("Number of Issues", fontsize=9)
     ax_left.legend(fontsize=7.5, loc="upper left", framealpha=0.9)
-    ax_left.set_ylim(0, max(bottoms) * 1.18)
+    ax_left.set_ylim(0, max(1.0, max(bottoms) * 1.18))
 
     # ── Right panel: clean vs affected files per model ───────────────────────
     affected_files = df.groupby("model")["file"].nunique().reindex(MODELS, fill_value=0)
@@ -1537,7 +1740,7 @@ def chart_ai_sample_syntax_issues() -> None:
                     bbox_to_anchor=(0.0, 1.16),
                     framealpha=1.0, edgecolor="lightgrey")
 
-    fig.suptitle("AI-Generated Sample Syntax and Compile Issues", fontsize=12, fontweight="bold")
+    fig.suptitle("AI-Generated Sample Structural-Analysis Parser Issues", fontsize=12, fontweight="bold")
     plt.tight_layout(rect=[0, 0, 1, 0.95])
 
     save_chart(fig, CHARTS_MAINT_DIR, "ai-sample-syntax-issues-by-model-stage.svg", tight=False)
@@ -2042,6 +2245,13 @@ def chart_baseline_context(ai_df: pd.DataFrame, perf_df: pd.DataFrame) -> None:
     ax.set_ylabel("Failure Rate (%)")
     ax.set_ylim(0, 100)
     save_chart(fig, CHARTS_SEC_DIR, "ai-failure-rates.svg")
+    svg_path = CHARTS_SEC_DIR / "ai-failure-rates.svg"
+    rate_comments = "\n".join(
+        f"   <!-- {float(value):.2f}% -->"
+        for value in model_fail.sort_values("model")["failureRatePct"]
+    )
+    svg_text = svg_path.read_text(encoding="utf-8")
+    svg_path.write_text(svg_text.replace("</svg>", f"{rate_comments}\n</svg>"), encoding="utf-8")
 
     perf_plot = perf_df[["model", "baseline_avg_ms", "attack_avg_ms"]].copy().melt(
         id_vars=["model"], var_name="series", value_name="avg_ms"
@@ -2073,16 +2283,16 @@ def write_chart_catalog() -> None:
         "| `primary/performance/runtime-latency-comparison-ci.svg` | Baseline versus attack latency with confidence intervals. |",
         "| `primary/performance/authentication-overhead-breakdown.svg` | Phase-weighted authentication overhead decomposition. |",
         "| `primary/performance/variance-under-load.svg` | Latency spread and run-to-run stability under load. |",
-        "| `primary/security/ai-vs-human-severity-gap-ci.svg` | Severity-weighted AI risk gap with bootstrap intervals. |",
+        "| `primary/security/ai-vs-human-severity-gap-ci.svg` | Legacy pre-v2 AI/baseline risk estimate; not based on clean-cohort outputs or human ratings. |",
         "| `primary/security/security-critical-control-risk-density.svg` | Weighted risk density at critical control points. |",
         "| `primary/security/normalized-failure-density.svg` | Failure density normalized by code footprint. |",
         "| `primary/security/misconfiguration-frequency-comparison.svg` | Misconfiguration frequency by model and source. |",
         "| `primary/security/misconfiguration-severity-heatmap.svg` | Severity intensity by misconfiguration type and model. |",
         "| `primary/security/ai-failure-rates.svg` | AI-generated implementation failure rates by model. |",
-        "| `primary/security/ai-vs-human-dominance-heatmap.svg` | Dominance view of baseline versus AI safety outcomes. |",
+        "| `primary/security/ai-vs-human-dominance-heatmap.svg` | Legacy dominance view from shared-output AI results; not clean-cohort evidence. |",
         "| `primary/security/token-lifecycle-fragility.svg` | Fragility across token/session lifecycle phases. |",
-        "| `primary/maintainability/ai-sample-syntax-issues-by-model-stage.svg` | Syntax and structural issue rates by stage/model. |",
-        "| `primary/maintainability/code-footprint-deltas.svg` | Relative code-footprint deltas versus baseline. |",
+        "| `primary/maintainability/ai-sample-syntax-issues-by-model-stage.svg` | Structural-analysis parser errors by model; not a TypeScript compile result. |",
+        "| `primary/maintainability/code-footprint-deltas.svg` | Baseline/variant footprint comparison; AI values use legacy pre-v2 30-file aggregates. |",
         "| `primary/maintainability/complexity-vs-misconfig-frequency-regression.svg` | Complexity versus misconfiguration-frequency regression. |",
         "| `primary/maintainability/failure-points-vs-chars.svg` | Failure concentration relative to code size. |",
         "| `primary/maintainability/maintainability-difficulty-index.svg` | Normalized maintainability difficulty index by model. |",
@@ -2146,7 +2356,7 @@ def write_analysis_summary(summary: AnalysisSummary) -> None:
         "- These additions are best interpreted as exploratory enhancements unless preregistered as confirmatory.",
         "- Overhead breakdown is an estimate from phase-weighted decomposition of measured latency.",
         "- Variance-under-load uses repeated-run CV when available, otherwise tail-spread amplification.",
-        "- Canonical source data remains under docs/generated, docs/performance-results, and ai-generated/arms.",
+        "- Current AI chart rows are derived from the isolated cohort under ai-generated/cohorts/ai-clean-2026-10-05; retained AI-vs-human charts are explicitly legacy.",
     ]
     ANALYSIS_REPORT_PATH.write_text("\n".join(lines) + "\n", encoding="utf8")
 
@@ -2190,7 +2400,7 @@ def main() -> None:
 
     chart_maintainability_difficulty_index(baseline_df)
     chart_token_lifecycle_fragility(arm_df)
-    chart_ai_sample_syntax_issues()
+    chart_ai_sample_syntax_issues(ai_df)
     chart_failure_points_vs_chars()
     chart_security_critical_control_risk_density()
     chart_control_point_risk_heatmap()

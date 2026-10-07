@@ -20,14 +20,14 @@
 - Clustering inertia: 17.333
 - Regression R^2: 0.007
 - Regression slope: -0.019
-- Average AI failure variance (std dev): 0.366
-- Mean error diversity entropy: 2.216
-- Mean attack-overhead share: 0.000
-- Mean load-variance index: 43.932
+- Average AI failure variance (std dev): 0.113
+- Mean error diversity entropy: 2.395
+- Mean attack-overhead share: 0.007
+- Mean load-variance index: 2.925
 
 ## Notes
 
 - These additions are best interpreted as exploratory enhancements unless preregistered as confirmatory.
 - Overhead breakdown is an estimate from phase-weighted decomposition of measured latency.
 - Variance-under-load uses repeated-run CV when available, otherwise tail-spread amplification.
-- Canonical source data remains under docs/generated, docs/performance-results, and ai-generated/arms.
+- Current AI chart rows are derived from the isolated cohort under ai-generated/cohorts/ai-clean-2026-10-05; retained AI-vs-human charts are explicitly legacy.

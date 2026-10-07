@@ -1,7 +1,9 @@
 # AI vs Human Safety Decision Brief
 
 Generated: 2026-07-23T14:45:50.161Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Legacy snapshot: these AI failure rates use pre-v2 shared-output artifacts, not the isolated protocol-v2 cohort. The clean cohort has no human-rated comparison; use the current provider/prompt reports for its heuristic results.
 
 ## Decision Signal
 

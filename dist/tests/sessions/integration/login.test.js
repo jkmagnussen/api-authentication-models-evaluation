@@ -7,6 +7,7 @@ const supertest_1 = __importDefault(require("supertest"));
 const app_1 = __importDefault(require("../../../src/app"));
 const db_1 = require("../../../src/db");
 const setup_1 = require("../../setup");
+const config_1 = __importDefault(require("../../../src/config"));
 describe('Session Authentication – Login', () => {
     let sessionId;
     beforeEach(async () => {
@@ -30,5 +31,8 @@ describe('Session Authentication – Login', () => {
             where: { id: sessionId },
         });
         expect(session).not.toBeNull();
+        const maximumCookieAgeSeconds = Math.floor(Math.min(config_1.default.cookie.maxAgeMs, config_1.default.session.ttlSeconds * 1000) / 1000);
+        expect(cookie[0]).toContain(`Max-Age=${maximumCookieAgeSeconds}`);
+        expect(session?.expiresAt.getTime()).toBeLessThanOrEqual(Date.now() + config_1.default.session.ttlSeconds * 1000);
     });
 });

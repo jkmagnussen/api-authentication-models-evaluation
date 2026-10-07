@@ -27,6 +27,7 @@ describe('OAuth refresh-token rotation race', () => {
         });
         const tokenRes = await (0, supertest_1.default)(app_1.default).post('/oauth/token').send({ code: authRes.body.code });
         const originalRefreshToken = tokenRes.body.refresh_token;
+        // Every request races to rotate the same one-time credential; only one should win.
         const results = await Promise.all(Array.from({ length: 10 }).map(() => (0, supertest_1.default)(app_1.default)
             .post('/oauth/refresh')
             .send({ refresh_token: originalRefreshToken, client_id: 'client-basic' })));

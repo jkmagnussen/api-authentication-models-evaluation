@@ -1,46 +1,32 @@
 # AI Provider and Prompt Condition Comparison
 
-Generated: 2026-07-23T04:23:16.398Z
-Regenerate: npm run docs:check
+Study ID: ai-clean-2026-10-05
 
-This report keeps the top-level framing as Baseline vs Misconfigured vs AI-Generated and decomposes the AI-generated layer into provider and prompt-condition arms.
-For bias control, interpret the blinded arm report first (AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md), then use this file for arm identity unblinding.
+This report uses the isolated protocol-v2 cohort aggregates. A failure means that at least one static heuristic check failed; it is not a runtime exploit result or a human security rating.
 
-## Primary Framing
+The neutral and security-guided prompts share the same system prompt, task framing, model settings, and output limit. The guided prompt adds one generic secure-coding instruction.
 
-| Comparative Layer | Meaning |
-|---|---|
-| Baseline | Secure reference implementation validated by executable tests. |
-| Misconfigured | Controlled exploit-positive variants used to demonstrate weakened security behavior. |
-| AI-Generated | Aggregate of all available AI provider outputs under the same security check harness. |
+## Failure Rates by Arm
 
-## AI Arm Coverage (Provider x Prompt Condition)
-
-| Provider | Prompt Condition | Status |
-|---|---|---|
-| OPENAI | neutral | Available |
-| OPENAI | security-guided | Available |
-| CLAUDE | neutral | Available |
-| CLAUDE | security-guided | Available |
-
-## AI Provider Breakdown
-
-| Provider | Prompt Condition | OAUTH Failure % | JWT Failure % | SESSIONS Failure % | Overall Failure % | Overall Samples |
+| Provider | Prompt condition | OAuth failures / n | JWT failures / n | Session failures / n | Overall failures / n | Overall failure rate |
 |---|---|---:|---:|---:|---:|---:|
-| OPENAI | neutral | 90.00 | 26.70 | 30.00 | 48.90 | 90 |
-| OPENAI | security-guided | 90.00 | 10.00 | 13.30 | 37.80 | 90 |
-| CLAUDE | neutral | 90.00 | 26.70 | 30.00 | 48.90 | 90 |
-| CLAUDE | security-guided | 90.00 | 10.00 | 16.70 | 38.90 | 90 |
+| OpenAI | neutral | 30 / 30 | 30 / 30 | 30 / 30 | 90 / 90 | 100.00% |
+| OpenAI | security-guided | 30 / 30 | 30 / 30 | 26 / 30 | 86 / 90 | 95.60% |
+| Claude | neutral | 29 / 30 | 22 / 30 | 30 / 30 | 81 / 90 | 90.00% |
+| Claude | security-guided | 30 / 30 | 25 / 30 | 30 / 30 | 85 / 90 | 94.40% |
 
-## AI Aggregate (Use This For Baseline/Misconfigured Comparison)
+## Neutral vs Security-Guided Differences
 
-| Metric | Value | Interpretation |
-|---|---:|---|
-| Macro Average Failure Rate | 43.63% | Equal-weight average across available provider arms. |
-| Pooled Failure Rate | 43.61% | Sample-weighted rate across all available provider samples. |
+Differences below are descriptive percentage-point changes (guided minus neutral). No prompt-condition significance claims are made because the study-level inference gate is suppressed.
 
-## How To Interpret In Dissertation Narrative
+| Provider | OAuth delta (pp) | JWT delta (pp) | Session delta (pp) | Overall delta (pp) |
+|---|---:|---:|---:|---:|
+| OpenAI | 0.00 | 0.00 | -13.30 | -4.40 |
+| Claude | 3.30 | 10.00 | 0.00 | 4.40 |
 
-- Use Baseline vs Misconfigured vs AI-Generated as the headline comparison.
-- Use OpenAI/Claude and neutral/security-guided breakdowns as supporting evidence explaining variation inside the AI-generated layer.
-- For single-value AI comparison against baseline/misconfigured, use the pooled AI failure rate; report macro as sensitivity check.
+## Interpretation Limits
+
+- Paired inferential comparisons are suppressed for this study.
+- Suppression reason: OpenAI system_fingerprint differs between neutral and security-guided oauth outputs. OpenAI system_fingerprint differs between neutral and security-guided jwt outputs. OpenAI system_fingerprint differs between neutral and security-guided sessions outputs.
+- Static checks can produce false positives and false negatives; they do not establish semantic correctness, exploitability, or runtime security.
+- The neutral-to-guided contrast estimates the effect of the whole generic guidance instruction, not individual control cues.

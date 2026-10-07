@@ -1,7 +1,9 @@
 # AI Sample Syntax Report
 
 Generated: 2026-07-22T23:49:03.397Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Legacy snapshot: this report scans 90 shared-root samples from the pre-v2 dataset. The clean protocol-v2 chart uses the isolated cohort and reports structural-analysis parser errors, not TypeScript compiler results.
 
 Files scanned: 90
 Issues found: 39

@@ -24,5 +24,17 @@
   "html.validate.scripts": false,
   "eslint.validate": ["typescript", "typescriptreact"],
   "prettier.semi": true,
-  "prettier.singleQuote": true
+  "prettier.singleQuote": true,
+  "chat.tools.terminal.autoApprove": {
+    "npx prisma": true,
+    "npx markdownlint-cli2": true,
+    "/^node -e \"const fs=require\\('fs'\\),crypto=require\\('crypto'\\);const root='ai-generated/cohorts/ai-clean-2026-10-05';const manifest=JSON\\.parse\\(fs\\.readFileSync\\(root\\+'/study-manifest\\.json','utf8'\\)\\);const issues=\\[\\];if\\(manifest\\.blindedReportProvenance\\)issues\\.push\\('stale blindedReportProvenance remains'\\);const p=manifest\\.aiComparisonReportProvenance;if\\(!p\\)issues\\.push\\('combined report provenance missing'\\);else\\{for\\(const \\[file,expected\\] of Object\\.entries\\(p\\.inputSha256\\)\\)\\{if\\(!fs\\.existsSync\\(file\\)\\|\\|crypto\\.createHash\\('sha256'\\)\\.update\\(fs\\.readFileSync\\(file\\)\\)\\.digest\\('hex'\\)!==expected\\)issues\\.push\\('input hash mismatch: '\\+file\\)\\}const source='scripts/generate-ai-provider-blinded-report\\.ts';if\\(crypto\\.createHash\\('sha256'\\)\\.update\\(fs\\.readFileSync\\(source\\)\\)\\.digest\\('hex'\\)!==p\\.sourceSha256\\)issues\\.push\\('report source hash mismatch'\\);for\\(const file of p\\.outputs\\|\\|\\[\\]\\)if\\(!fs\\.existsSync\\(file\\)\\)issues\\.push\\('missing report output: '\\+file\\)\\}const blind=crypto\\.createHash\\('sha256'\\)\\.update\\(fs\\.readFileSync\\('docs/generated/AI_PROVIDER_PROMPT_COMPARISON_BLINDED\\.md'\\)\\)\\.digest\\('hex'\\);const draft=fs\\.readFileSync\\('docs/generated/AI_BLIND_INTERPRETATION\\.md','utf8'\\);if\\(!draft\\.includes\\('Current blinded report SHA256: '\\+blind\\)\\)issues\\.push\\('blind draft hash mismatch'\\);if\\(!draft\\.includes\\('INVALIDATED_UNBLINDED_BEFORE_FINALIZATION'\\)\\)issues\\.push\\('blind draft status is not invalidated'\\);if\\(issues\\.length\\)\\{console\\.error\\(issues\\.join\\('\\\\n'\\)\\);process\\.exit\\(1\\)\\}console\\.log\\('AI report source/input hashes, outputs, and invalidated-draft hash all reconcile\\.'\\)\"$/": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "/^node dist/scripts/freeze-generated-artifacts\\.js$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
+  }
 }

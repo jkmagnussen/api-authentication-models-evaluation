@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createSession = createSession;
 exports.createSessionWithId = createSessionWithId;
@@ -6,11 +9,16 @@ exports.deleteSession = deleteSession;
 exports.findSession = findSession;
 exports.findUserByEmail = findUserByEmail;
 const db_1 = require("../db");
+const config_1 = __importDefault(require("../config"));
+function getSessionExpiry() {
+    // Keep persisted session validity aligned with the configured session lifetime.
+    return new Date(Date.now() + config_1.default.session.ttlSeconds * 1000);
+}
 async function createSession(userId) {
     return db_1.prisma.session.create({
         data: {
             userId,
-            expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24), // 24 hours
+            expiresAt: getSessionExpiry(),
         },
     });
 }
@@ -20,7 +28,7 @@ async function createSessionWithId(userId, sessionId) {
         data: {
             id: sessionId,
             userId,
-            expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+            expiresAt: getSessionExpiry(),
         },
     });
 }

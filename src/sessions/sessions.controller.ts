@@ -63,12 +63,13 @@ export async function loginWithSession(req: Request, res: Response, next: NextFu
         ? await createSessionWithId(user.id, existingSessionId)
         : await createSession(user.id);
 
+    // The browser must not retain a cookie beyond the server-side record's lifetime.
     res.cookie('sessionId', session.id, {
       httpOnly: sessionCookieOverride?.httpOnly ?? APP_CONFIG.cookie.httpOnly,
       secure: sessionCookieOverride?.secure ?? APP_CONFIG.cookie.secure,
       sameSite: sessionCookieOverride?.sameSite ?? APP_CONFIG.cookie.sameSite,
       domain: APP_CONFIG.cookie.domain,
-      maxAge: APP_CONFIG.cookie.maxAgeMs,
+      maxAge: Math.min(APP_CONFIG.cookie.maxAgeMs, APP_CONFIG.session.ttlSeconds * 1000),
     });
 
     await writeAuditEvent({

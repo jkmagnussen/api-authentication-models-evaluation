@@ -1,7 +1,9 @@
 # Advanced Security Research Analysis
 
 Generated: 2026-07-24T23:11:33.890Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Legacy AI snapshot: AI rates, signatures, footprint averages, and pass counts below use the pre-v2 shared-output artifacts, not the clean 360-output cohort. Use the current blinded/unblinded provider comparison reports for AI outcomes; the controlled variant findings are a separate evidence stream.
 
 This report operationalizes advanced dissertation analyses over the existing baseline, controlled misconfiguration, and AI-generated evidence layers.
 

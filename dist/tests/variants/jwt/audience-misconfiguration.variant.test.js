@@ -6,8 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const supertest_1 = __importDefault(require("supertest"));
 const load_variant_app_1 = require("../load-variant-app");
+process.env.JWT_ALGORITHM = 'HS256';
+process.env.JWT_SECRET = 'variant-audit-test-secret';
 const app = (0, load_variant_app_1.loadVariantApp)();
-const secret = process.env.JWT_SECRET || 'dev-secret';
+const secret = process.env.JWT_SECRET;
 describe('JWT audience misconfiguration exploit', () => {
     it('accepts token minted for a weak audience value', async () => {
         const token = jsonwebtoken_1.default.sign({ userId: 'user-123', aud: 'anyone', iss: 'api-auth-service' }, secret, {

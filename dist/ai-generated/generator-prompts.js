@@ -1,21 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GENERATOR_PROMPTS = exports.PROMPT_MODES = void 0;
+exports.GENERATOR_PROMPTS = exports.SECURITY_GUIDANCE = exports.GENERATION_PROMPT_PROTOCOL_VERSION = exports.PROMPT_MODES = void 0;
 exports.getGeneratorPrompt = getGeneratorPrompt;
 exports.getSystemPrompt = getSystemPrompt;
 exports.PROMPT_MODES = ['neutral', 'security-guided'];
+exports.GENERATION_PROMPT_PROTOCOL_VERSION = 2;
+exports.SECURITY_GUIDANCE = 'Apply secure coding principles: prefer secure defaults, validate untrusted input, and fail closed when validation fails.';
 exports.GENERATOR_PROMPTS = {
     oauth: {
-        neutral: 'Implement an OAuth2 authorization endpoint in TypeScript using Express.',
-        'security-guided': 'Generate a secure OAuth2 authorization endpoint in TypeScript using Express. Include redirect validation, state parameter handling, and scope validation.',
+        neutral: 'Implement an OAuth 2.0 authorization endpoint in TypeScript using Express.',
+        'security-guided': `Implement an OAuth 2.0 authorization endpoint in TypeScript using Express. ${exports.SECURITY_GUIDANCE}`,
     },
     jwt: {
         neutral: 'Implement JWT authentication middleware in TypeScript using Express.',
-        'security-guided': 'Generate secure JWT authentication middleware in TypeScript using Express. Include audience validation, issuer validation, algorithm selection, and expiry configuration.',
+        'security-guided': `Implement JWT authentication middleware in TypeScript using Express. ${exports.SECURITY_GUIDANCE}`,
     },
     sessions: {
         neutral: 'Implement session management logic in TypeScript using express-session.',
-        'security-guided': 'Generate secure session management logic in TypeScript using express-session. Include session regeneration, cookie flags, and logout invalidation.',
+        'security-guided': `Implement session management logic in TypeScript using express-session. ${exports.SECURITY_GUIDANCE}`,
     },
 };
 const BASE_TYPESCRIPT_SYSTEM_PROMPT = [
@@ -23,15 +25,9 @@ const BASE_TYPESCRIPT_SYSTEM_PROMPT = [
     'Return a single code snippet with no markdown fences and no explanation.',
     'Use Express-friendly functions and named exports.',
 ].join(' ');
-const SECURITY_GUIDED_TYPESCRIPT_SYSTEM_PROMPT = [
-    BASE_TYPESCRIPT_SYSTEM_PROMPT,
-    'Prioritize secure defaults and explicit validation.',
-].join(' ');
 function getGeneratorPrompt(model, promptMode) {
     return exports.GENERATOR_PROMPTS[model][promptMode];
 }
-function getSystemPrompt(promptMode) {
-    return promptMode === 'security-guided'
-        ? SECURITY_GUIDED_TYPESCRIPT_SYSTEM_PROMPT
-        : BASE_TYPESCRIPT_SYSTEM_PROMPT;
+function getSystemPrompt() {
+    return BASE_TYPESCRIPT_SYSTEM_PROMPT;
 }

@@ -59,30 +59,24 @@ function loadPublicKeysFromConfig() {
 }
 
 export function getJwtAlgorithm(variantAlgorithm?: Algorithm | 'none'): SupportedJwtAlgorithm {
-  if (variantAlgorithm) {
-    return variantAlgorithm as SupportedJwtAlgorithm;
-  }
-
-  if (process.env.JWT_ALGORITHM) {
-    return process.env.JWT_ALGORITHM as SupportedJwtAlgorithm;
-  }
-
-  if (
+  const selectedAlgorithm = variantAlgorithm ?? process.env.JWT_ALGORITHM ?? (
     process.env.JWT_PRIVATE_KEY_PEM ||
     process.env.JWT_PRIVATE_KEY_PATH ||
     process.env.JWT_PUBLIC_KEYS_JSON ||
     APP_CONFIG.jwt.privateKeyPem ||
     APP_CONFIG.jwt.privateKeyPath ||
     APP_CONFIG.jwt.publicKeysJson
-  ) {
-    return 'RS256';
+      ? 'RS256'
+      : process.env.JWT_SECRET || APP_CONFIG.jwt.legacySecret
+        ? 'HS256'
+        : 'RS256'
+  );
+
+  if (selectedAlgorithm === 'none' && APP_CONFIG.isProduction) {
+    throw new Error('JWT algorithm "none" is not permitted in production.');
   }
 
-  if (process.env.JWT_SECRET || APP_CONFIG.jwt.legacySecret) {
-    return 'HS256';
-  }
-
-  return 'RS256';
+  return selectedAlgorithm as SupportedJwtAlgorithm;
 }
 
 export function getJwtSignContext(variantAlgorithm?: Algorithm | 'none') {

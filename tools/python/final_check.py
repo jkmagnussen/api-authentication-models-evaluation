@@ -97,11 +97,10 @@ def check_chart(filepath):
                 'details': {},
             }
         
-        # Convert to string for further checks
-        svg_content = content
-        
-        # Check 4: Verify scale and positioning
-        scale_match = re.search(r'scale\(0\.95\s+0\.95\)', svg_content)
+        # Check 4: Verify the configured per-chart footer scale.
+        svg_content = ET.tostring(footnote_elements[0], encoding='unicode')
+        expected_scale = '1.1 1.1' if Path(filepath).name == 'misconfiguration-clustering-kmeans.svg' else '0.95 0.95'
+        scale_match = re.search(rf'scale\({re.escape(expected_scale)}\)', svg_content)
         if not scale_match:
             return {
                 'valid': False,

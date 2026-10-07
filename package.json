@@ -28,8 +28,14 @@
     "docker:publish": "node scripts/docker-tag-push.js --push",
     "docker:publish:ci": "node scripts/docker-tag-push.js --push --with-version",
     "test": "jest --runInBand",
+    "test:variants": "npm run prepare:env && ts-node scripts/run-variant-tests.ts",
     "docs:check": "ts-node scripts/check-generated-docs.ts",
     "perf:analyze": "ts-node scripts/analyze-performance.ts",
+    "perf:once": "npm run prepare:env && node scripts/run-performance-benchmark.js",
+    "perf:concurrent": "npm run prepare:env && ts-node scripts/run-concurrent-performance-benchmark.ts",
+    "ai:matrix:cohorts": "ts-node scripts/run-ai-matrix-cohorts.ts",
+    "compare:ai:providers": "ts-node scripts/generate-ai-provider-blinded-report.ts",
+    "ai:audit:packet": "ts-node scripts/create-blinded-ai-audit-packet.ts",
     "clean:artifacts": "node scripts/clean-generated-artifacts.js"
   },
   "devDependencies": {

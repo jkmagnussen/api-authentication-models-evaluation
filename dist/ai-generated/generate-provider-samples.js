@@ -9,11 +9,13 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const common_1 = require("./common");
 const generator_prompts_1 = require("./generator-prompts");
-dotenv_1.default.config({ override: true });
+const provider_model_identifiers_1 = require("./provider-model-identifiers");
+const generation_settings_1 = require("./generation-settings");
+dotenv_1.default.config({ override: false });
 const MODELS = ['oauth', 'jwt', 'sessions'];
-const MAX_PROVIDER_ATTEMPTS = 5;
 const BASE_RETRY_DELAY_MS = 750;
 const MAX_RETRY_JITTER_MS = 250;
+const ANTHROPIC_API_VERSION = '2023-06-01';
 const REQUEST_TIMEOUT_MS = Number(process.env.AI_PROVIDER_REQUEST_TIMEOUT_MS ?? '120000');
 const SAMPLE_TIMEOUT_MS = Number(process.env.AI_PROVIDER_SAMPLE_TIMEOUT_MS ?? '180000');
 const RETRYABLE_STATUS_CODES = new Set([408, 409, 429, 500, 502, 503, 504, 529]);
@@ -129,18 +131,18 @@ async function readErrorMessage(response) {
     }
 }
 function logRetry(provider, attempt, status, delayMs, context) {
-    process.stdout.write(`[ai:${provider}] Retry ${attempt}/${MAX_PROVIDER_ATTEMPTS} for ${context} after HTTP ${status}; waiting ${delayMs}ms...\n`);
+    process.stdout.write(`[ai:${provider}] Retry ${attempt}/${provider_model_identifiers_1.AI_PROVIDER_MAX_ATTEMPTS} for ${context} after HTTP ${status}; waiting ${delayMs}ms...\n`);
 }
 async function generateOpenAI(prompt, systemPrompt, diagnostics) {
     const apiKey = process.env.OPENAI_API_KEY;
-    const model = process.env.OPENAI_MODEL ?? 'gpt-4o';
+    const model = process.env.OPENAI_MODEL ?? provider_model_identifiers_1.AI_PROVIDER_MODEL_IDENTIFIERS.openai;
     const baseUrl = process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1';
     if (!apiKey) {
         throw new Error('OpenAI is not configured. Set OPENAI_API_KEY.');
     }
     const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     const url = `${normalizedBaseUrl}/chat/completions`;
-    for (let attempt = 1; attempt <= MAX_PROVIDER_ATTEMPTS; attempt += 1) {
+    for (let attempt = 1; attempt <= provider_model_identifiers_1.AI_PROVIDER_MAX_ATTEMPTS; attempt += 1) {
         diagnostics.totalAttempts += 1;
         let response;
         try {
@@ -156,8 +158,8 @@ async function generateOpenAI(prompt, systemPrompt, diagnostics) {
                         { role: 'system', content: systemPrompt },
                         { role: 'user', content: prompt },
                     ],
-                    max_tokens: 900,
-                    temperature: 0.8,
+                    max_tokens: generation_settings_1.GENERATION_SETTINGS.maxTokens,
+                    temperature: generation_settings_1.GENERATION_SETTINGS.temperature,
                 }),
             }, REQUEST_TIMEOUT_MS, 'OpenAI request');
         }
@@ -168,10 +170,10 @@ async function generateOpenAI(prompt, systemPrompt, diagnostics) {
             else {
                 diagnostics.networkFailures += 1;
             }
-            if (attempt < MAX_PROVIDER_ATTEMPTS) {
+            if (attempt < provider_model_identifiers_1.AI_PROVIDER_MAX_ATTEMPTS) {
                 diagnostics.retries += 1;
                 const delayMs = getRetryDelayMs(attempt);
-                process.stdout.write(`[ai:openai] Retry ${attempt}/${MAX_PROVIDER_ATTEMPTS} after ${error instanceof RequestTimeoutError ? 'timeout' : 'network error'}; waiting ${delayMs}ms...\n`);
+                process.stdout.write(`[ai:openai] Retry ${attempt}/${provider_model_identifiers_1.AI_PROVIDER_MAX_ATTEMPTS} after ${error instanceof RequestTimeoutError ? 'timeout' : 'network error'}; waiting ${delayMs}ms...\n`);
                 await sleep(delayMs);
                 continue;
             }
@@ -180,7 +182,7 @@ async function generateOpenAI(prompt, systemPrompt, diagnostics) {
         }
         if (!response.ok) {
             const message = await readErrorMessage(response);
-            if (attempt < MAX_PROVIDER_ATTEMPTS && isRetryableStatus(response.status)) {
+            if (attempt < provider_model_identifiers_1.AI_PROVIDER_MAX_ATTEMPTS && isRetryableStatus(response.status)) {
                 diagnostics.retries += 1;
                 diagnostics.retryableHttpFailures += 1;
                 const delayMs = getRetryDelayMs(attempt);
@@ -196,17 +198,30 @@ async function generateOpenAI(prompt, systemPrompt, diagnostics) {
         if (!content) {
             throw new Error('OpenAI response did not include code content.');
         }
-        return normalizeCode(content);
+        return {
+            code: normalizeCode(content),
+            returnedModelIdentifier: data.model ?? null,
+            providerResponseId: data.id ?? null,
+            systemFingerprint: data.system_fingerprint ?? null,
+            providerAttempts: attempt,
+            tokenUsage: {
+                inputTokens: data.usage?.prompt_tokens ?? null,
+                outputTokens: data.usage?.completion_tokens ?? null,
+                totalTokens: data.usage?.total_tokens ?? null,
+                cachedInputTokens: data.usage?.prompt_tokens_details?.cached_tokens ?? null,
+                cacheCreationInputTokens: null,
+            },
+        };
     }
     throw new Error('OpenAI request failed after retries.');
 }
 async function generateClaude(prompt, systemPrompt, diagnostics) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    const model = process.env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-20240620';
+    const model = process.env.ANTHROPIC_MODEL ?? provider_model_identifiers_1.AI_PROVIDER_MODEL_IDENTIFIERS.claude;
     if (!apiKey) {
         throw new Error('Anthropic is not configured. Set ANTHROPIC_API_KEY.');
     }
-    for (let attempt = 1; attempt <= MAX_PROVIDER_ATTEMPTS; attempt += 1) {
+    for (let attempt = 1; attempt <= provider_model_identifiers_1.AI_PROVIDER_MAX_ATTEMPTS; attempt += 1) {
         diagnostics.totalAttempts += 1;
         let response;
         try {
@@ -215,11 +230,12 @@ async function generateClaude(prompt, systemPrompt, diagnostics) {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-api-key': apiKey,
-                    'anthropic-version': '2023-06-01',
+                    'anthropic-version': ANTHROPIC_API_VERSION,
                 },
                 body: JSON.stringify({
                     model,
-                    max_tokens: 900,
+                    max_tokens: generation_settings_1.GENERATION_SETTINGS.maxTokens,
+                    temperature: generation_settings_1.GENERATION_SETTINGS.temperature,
                     system: systemPrompt,
                     messages: [{ role: 'user', content: prompt }],
                 }),
@@ -232,10 +248,10 @@ async function generateClaude(prompt, systemPrompt, diagnostics) {
             else {
                 diagnostics.networkFailures += 1;
             }
-            if (attempt < MAX_PROVIDER_ATTEMPTS) {
+            if (attempt < provider_model_identifiers_1.AI_PROVIDER_MAX_ATTEMPTS) {
                 diagnostics.retries += 1;
                 const delayMs = getRetryDelayMs(attempt);
-                process.stdout.write(`[ai:claude] Retry ${attempt}/${MAX_PROVIDER_ATTEMPTS} after ${error instanceof RequestTimeoutError ? 'timeout' : 'network error'}; waiting ${delayMs}ms...\n`);
+                process.stdout.write(`[ai:claude] Retry ${attempt}/${provider_model_identifiers_1.AI_PROVIDER_MAX_ATTEMPTS} after ${error instanceof RequestTimeoutError ? 'timeout' : 'network error'}; waiting ${delayMs}ms...\n`);
                 await sleep(delayMs);
                 continue;
             }
@@ -244,7 +260,7 @@ async function generateClaude(prompt, systemPrompt, diagnostics) {
         }
         if (!response.ok) {
             const message = await readErrorMessage(response);
-            if (attempt < MAX_PROVIDER_ATTEMPTS && isRetryableStatus(response.status)) {
+            if (attempt < provider_model_identifiers_1.AI_PROVIDER_MAX_ATTEMPTS && isRetryableStatus(response.status)) {
                 diagnostics.retries += 1;
                 diagnostics.retryableHttpFailures += 1;
                 const delayMs = getRetryDelayMs(attempt);
@@ -266,32 +282,44 @@ async function generateClaude(prompt, systemPrompt, diagnostics) {
             const contentTypes = data.content?.map((entry) => entry.type ?? 'unknown').join(', ') ?? 'none';
             throw new Error(`Anthropic response did not include code content. Content types: ${contentTypes}`);
         }
-        return normalizeCode(text);
+        return {
+            code: normalizeCode(text),
+            returnedModelIdentifier: data.model ?? null,
+            providerResponseId: data.id ?? null,
+            systemFingerprint: null,
+            providerAttempts: attempt,
+            tokenUsage: {
+                inputTokens: data.usage?.input_tokens ?? null,
+                outputTokens: data.usage?.output_tokens ?? null,
+                totalTokens: (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0) || null,
+                cachedInputTokens: data.usage?.cache_read_input_tokens ?? null,
+                cacheCreationInputTokens: data.usage?.cache_creation_input_tokens ?? null,
+            },
+        };
     }
     throw new Error('Anthropic request failed after retries.');
 }
 async function generateSample(provider, model, promptMode, sampleNumber, diagnostics) {
     const modelPrompt = (0, generator_prompts_1.getGeneratorPrompt)(model, promptMode);
-    const systemPrompt = (0, generator_prompts_1.getSystemPrompt)(promptMode);
+    const systemPrompt = (0, generator_prompts_1.getSystemPrompt)();
     const prompt = [
         modelPrompt,
         `Generate sample ${sampleNumber} of ${common_1.SAMPLE_COUNT}.`,
-        promptMode === 'security-guided'
-            ? 'Vary structure and naming from prior samples while preserving secure behavior.'
-            : 'Vary structure and naming from prior samples while keeping the implementation plausible and internally consistent.',
+        'Return an independently written, self-contained, internally consistent implementation. Do not refer to outputs from prior requests.',
     ].join('\n');
     if (provider === 'openai') {
         return generateOpenAI(prompt, systemPrompt, diagnostics);
     }
     return generateClaude(prompt, systemPrompt, diagnostics);
 }
-async function generateForModel(provider, model, promptMode, diagnostics) {
+async function generateForModel(provider, model, promptMode, diagnostics, sampleGenerations) {
     const samples = [];
     for (let index = 1; index <= common_1.SAMPLE_COUNT; index += 1) {
         process.stdout.write(`[ai:${provider}:${promptMode}] Generating ${model} sample ${index}/${common_1.SAMPLE_COUNT}...\n`);
-        let code;
+        let completion;
+        const sampleStartedAt = new Date().toISOString();
         try {
-            code = await withTimeout(generateSample(provider, model, promptMode, index, diagnostics), SAMPLE_TIMEOUT_MS, new SampleTimeoutError(`Timed out while generating ${model} sample ${index}/${common_1.SAMPLE_COUNT} for ${provider}/${promptMode} after ${SAMPLE_TIMEOUT_MS}ms.`));
+            completion = await withTimeout(generateSample(provider, model, promptMode, index, diagnostics), SAMPLE_TIMEOUT_MS, new SampleTimeoutError(`Timed out while generating ${model} sample ${index}/${common_1.SAMPLE_COUNT} for ${provider}/${promptMode} after ${SAMPLE_TIMEOUT_MS}ms.`));
         }
         catch (error) {
             if (error instanceof SampleTimeoutError) {
@@ -300,7 +328,21 @@ async function generateForModel(provider, model, promptMode, diagnostics) {
             const message = error instanceof Error ? error.message : String(error);
             throw new Error(`Failed ${model} sample ${index}/${common_1.SAMPLE_COUNT} for ${provider}/${promptMode}: ${message}`);
         }
-        samples.push(code);
+        sampleGenerations.push({
+            model,
+            sample: index,
+            startedAt: sampleStartedAt,
+            completedAt: new Date().toISOString(),
+            requestedModelIdentifier: provider === 'openai'
+                ? (process.env.OPENAI_MODEL ?? provider_model_identifiers_1.AI_PROVIDER_MODEL_IDENTIFIERS.openai)
+                : (process.env.ANTHROPIC_MODEL ?? provider_model_identifiers_1.AI_PROVIDER_MODEL_IDENTIFIERS.claude),
+            returnedModelIdentifier: completion.returnedModelIdentifier,
+            providerResponseId: completion.providerResponseId,
+            systemFingerprint: completion.systemFingerprint,
+            providerAttempts: completion.providerAttempts,
+            tokenUsage: completion.tokenUsage,
+        });
+        samples.push(completion.code);
     }
     (0, common_1.writeSampleFiles)(model, samples);
 }
@@ -316,10 +358,8 @@ async function main() {
     const promptMode = parsePromptMode();
     const startedAt = new Date().toISOString();
     const providerModel = provider === 'openai'
-        ? (process.env.OPENAI_MODEL ?? 'gpt-4o')
-        : (process.env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-20240620');
-    const openAiTemperature = 0.8;
-    const maxTokens = 900;
+        ? (process.env.OPENAI_MODEL ?? provider_model_identifiers_1.AI_PROVIDER_MODEL_IDENTIFIERS.openai)
+        : (process.env.ANTHROPIC_MODEL ?? provider_model_identifiers_1.AI_PROVIDER_MODEL_IDENTIFIERS.claude);
     const diagnostics = {
         totalAttempts: 0,
         successfulRequests: 0,
@@ -329,7 +369,8 @@ async function main() {
         requestTimeoutFailures: 0,
         sampleTimeoutFailures: 0,
     };
-    const systemPrompt = (0, generator_prompts_1.getSystemPrompt)(promptMode);
+    const sampleGenerations = [];
+    const systemPrompt = (0, generator_prompts_1.getSystemPrompt)();
     const modelPromptFingerprints = Object.fromEntries(models.map((model) => {
         const modelPrompt = (0, generator_prompts_1.getGeneratorPrompt)(model, promptMode);
         return [
@@ -342,7 +383,7 @@ async function main() {
         ];
     }));
     for (const model of models) {
-        await generateForModel(provider, model, promptMode, diagnostics);
+        await generateForModel(provider, model, promptMode, diagnostics, sampleGenerations);
     }
     (0, common_1.writeResult)('generation-metadata.json', {
         generatedAt: new Date().toISOString(),
@@ -350,23 +391,27 @@ async function main() {
         provider,
         providerModel,
         providerModelIdentifier: providerModel,
+        requestedModelIdentifier: providerModel,
+        returnedModelIdentifiers: Array.from(new Set(sampleGenerations.map((record) => record.returnedModelIdentifier).filter(Boolean))),
         providerEndpoint: provider === 'openai'
             ? (process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1')
             : 'https://api.anthropic.com/v1/messages',
+        providerApiVersion: provider === 'claude' ? ANTHROPIC_API_VERSION : null,
         promptMode,
+        promptProtocolVersion: generator_prompts_1.GENERATION_PROMPT_PROTOCOL_VERSION,
         models,
         sampleCount: common_1.SAMPLE_COUNT,
         generationParameters: {
-            temperature: openAiTemperature,
-            maxTokens,
+            ...generation_settings_1.GENERATION_SETTINGS,
         },
         promptFingerprints: {
             promptMode,
             systemPromptSha256: sha256(systemPrompt),
             modelPromptFingerprints,
         },
+        sampleGenerations,
         retryPolicy: {
-            maxProviderAttempts: MAX_PROVIDER_ATTEMPTS,
+            maxProviderAttempts: provider_model_identifiers_1.AI_PROVIDER_MAX_ATTEMPTS,
             baseRetryDelayMs: BASE_RETRY_DELAY_MS,
             maxRetryJitterMs: MAX_RETRY_JITTER_MS,
             requestTimeoutMs: REQUEST_TIMEOUT_MS,

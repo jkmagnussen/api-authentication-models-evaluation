@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RESULTS_DIR = exports.SAMPLE_COUNT = void 0;
+exports.getAiDataRoot = getAiDataRoot;
 exports.ensureDirectory = ensureDirectory;
 exports.getModelDirectory = getModelDirectory;
 exports.getSamplePath = getSamplePath;
@@ -20,6 +21,9 @@ const path_1 = __importDefault(require("path"));
 const typescript_1 = __importDefault(require("typescript"));
 const escomplex = require('escomplex');
 const DEFAULT_SAMPLE_COUNT = 30;
+function getAiDataRoot() {
+    return path_1.default.resolve(process.env.AI_DATA_ROOT ?? path_1.default.join(process.cwd(), 'ai-generated'));
+}
 function parseSampleCountArg() {
     const args = process.argv.slice(2);
     for (let index = 0; index < args.length; index += 1) {
@@ -44,14 +48,14 @@ function resolveSampleCount() {
     return DEFAULT_SAMPLE_COUNT;
 }
 exports.SAMPLE_COUNT = resolveSampleCount();
-exports.RESULTS_DIR = path_1.default.join(process.cwd(), 'ai-generated', 'results');
+exports.RESULTS_DIR = path_1.default.join(getAiDataRoot(), 'results');
 function ensureDirectory(dirPath) {
     if (!fs_1.default.existsSync(dirPath)) {
         fs_1.default.mkdirSync(dirPath, { recursive: true });
     }
 }
 function getModelDirectory(model) {
-    return path_1.default.join(process.cwd(), 'ai-generated', model);
+    return path_1.default.join(getAiDataRoot(), model);
 }
 function getSamplePath(model, index) {
     return path_1.default.join(getModelDirectory(model), `sample${index}.ts`);

@@ -1,7 +1,9 @@
 # Sentinel Controls Report
 
 Generated: 2026-07-24T23:11:29.865Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Legacy snapshot: these sentinel-control counts were calculated from pre-v2 shared-output arms, not the isolated 360-output cohort.
 
 Sentinel Control Status: PASS
 

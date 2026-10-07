@@ -1,5 +1,5 @@
 import path from 'path';
-import { SAMPLE_COUNT, readSample, writeResult } from '../common';
+import { SAMPLE_COUNT, getSamplePath, readSample, writeResult } from '../common';
 import { runOAuthChecks } from '../checks';
 
 for (let index = 1; index <= SAMPLE_COUNT; index += 1) {
@@ -10,7 +10,7 @@ for (let index = 1; index <= SAMPLE_COUNT; index += 1) {
   writeResult(`oauth-sample${index}-tests.json`, {
     model: 'oauth',
     sample: `sample${index}`,
-    samplePath: path.join('ai-generated', 'oauth', `sample${index}.ts`),
+    samplePath: path.relative(process.cwd(), getSamplePath('oauth', index)),
     passed: failedChecks.length === 0,
     checks,
     correctnessFailures: failedChecks,

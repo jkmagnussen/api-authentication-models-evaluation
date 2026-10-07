@@ -2,8 +2,10 @@ import jwt from 'jsonwebtoken';
 import request from 'supertest';
 import { loadVariantApp } from '../load-variant-app';
 
+process.env.JWT_ALGORITHM = 'HS256';
+process.env.JWT_SECRET = 'variant-audit-test-secret';
 const app = loadVariantApp();
-const secret = process.env.JWT_SECRET || 'dev-secret';
+const secret = process.env.JWT_SECRET;
 
 describe('JWT audience misconfiguration exploit', () => {
   it('accepts token minted for a weak audience value', async () => {

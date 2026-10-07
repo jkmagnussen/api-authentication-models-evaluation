@@ -1,7 +1,9 @@
 # Security Performance Tradeoff
 
 Generated: 2026-07-24T23:11:19.085Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Historical snapshot: this report combines pre-v7 performance deltas with pre-v2 AI rates. Use `docs/performance-results/analysis.md` and the current blinded/unblinded AI comparison reports for current results.
 
 This view compares model-level security risk indicators with measured attack-vs-baseline performance deltas.
 

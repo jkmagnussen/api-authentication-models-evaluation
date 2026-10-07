@@ -1,7 +1,9 @@
 # Normalized Failure Density
 
 Generated: 2026-07-24T23:11:15.721Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Legacy snapshot: the AI rows below use pre-v2 shared-root sample counts and footprints. They do not represent the isolated 360-output cohort; use the clean AI comparison reports for current heuristic outcomes.
 
 This exploratory report normalizes observed security failures against implementation footprint to compare baseline, misconfiguration, and AI-generated slices without over-weighting raw size alone.
 

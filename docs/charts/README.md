@@ -11,16 +11,16 @@ Charts are grouped into two tiers:
 | `primary/performance/runtime-latency-comparison-ci.svg` | Baseline versus attack latency with confidence intervals. |
 | `primary/performance/authentication-overhead-breakdown.svg` | Phase-weighted authentication overhead decomposition. |
 | `primary/performance/variance-under-load.svg` | Latency spread and run-to-run stability under load. |
-| `primary/security/ai-vs-human-severity-gap-ci.svg` | Severity-weighted AI risk gap with bootstrap intervals. |
+| `primary/security/ai-vs-human-severity-gap-ci.svg` | Legacy pre-v2 AI/baseline risk estimate; not based on clean-cohort outputs or human ratings. |
 | `primary/security/security-critical-control-risk-density.svg` | Weighted risk density at critical control points. |
 | `primary/security/normalized-failure-density.svg` | Failure density normalized by code footprint. |
 | `primary/security/misconfiguration-frequency-comparison.svg` | Misconfiguration frequency by model and source. |
 | `primary/security/misconfiguration-severity-heatmap.svg` | Severity intensity by misconfiguration type and model. |
 | `primary/security/ai-failure-rates.svg` | AI-generated implementation failure rates by model. |
-| `primary/security/ai-vs-human-dominance-heatmap.svg` | Dominance view of baseline versus AI safety outcomes. |
+| `primary/security/ai-vs-human-dominance-heatmap.svg` | Legacy dominance view from shared-output AI results; not clean-cohort evidence. |
 | `primary/security/token-lifecycle-fragility.svg` | Fragility across token/session lifecycle phases. |
-| `primary/maintainability/ai-sample-syntax-issues-by-model-stage.svg` | Syntax and structural issue rates by stage/model. |
-| `primary/maintainability/code-footprint-deltas.svg` | Relative code-footprint deltas versus baseline. |
+| `primary/maintainability/ai-sample-syntax-issues-by-model-stage.svg` | Structural-analysis parser errors by model; not a TypeScript compile result. |
+| `primary/maintainability/code-footprint-deltas.svg` | Baseline/variant footprint comparison; AI values use legacy pre-v2 30-file aggregates. |
 | `primary/maintainability/complexity-vs-misconfig-frequency-regression.svg` | Complexity versus misconfiguration-frequency regression. |
 | `primary/maintainability/failure-points-vs-chars.svg` | Failure concentration relative to code size. |
 | `primary/maintainability/maintainability-difficulty-index.svg` | Normalized maintainability difficulty index by model. |

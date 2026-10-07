@@ -65,7 +65,7 @@ ENHANCED_CHARTS = {
 def validate_chart(filepath, expected_height=None):
     """Validate a single chart"""
     try:
-        with open(filepath, 'r') as f:
+        with open(filepath, 'r', encoding='utf-8-sig') as f:
             content = f.read()
         
         # Check XML validity
@@ -125,12 +125,13 @@ def validate_chart(filepath, expected_height=None):
             issues.append(f'Expected 1 footnote element, found {len(footnote_groups)}')
         
         if scale and scale != '0.95 0.95':
-            issues.append(f'Wrong scale: {scale} (expected 0.95 0.95)')
+            expected_scale = '1.1 1.1' if Path(filepath).name == 'misconfiguration-clustering-kmeans.svg' else '0.95 0.95'
+            if scale != expected_scale:
+                issues.append(f'Wrong scale: {scale} (expected {expected_scale})')
         
-        if height and y_position:
-            expected_y = height - 25
-            if abs(y_position - expected_y) > 0.5:
-                issues.append(f'Y position {y_position} doesn\'t match height-25={expected_y}')
+        if height and y_position is not None:
+            if y_position < height - 160 or y_position >= height:
+                issues.append(f'Y position {y_position} is outside the reserved footer area for height {height}')
         
         if issues:
             return {

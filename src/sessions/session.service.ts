@@ -1,10 +1,16 @@
 import { prisma } from '../db';
+import APP_CONFIG from '../config';
+
+function getSessionExpiry() {
+  // Keep persisted session validity aligned with the configured session lifetime.
+  return new Date(Date.now() + APP_CONFIG.session.ttlSeconds * 1000);
+}
 
 export async function createSession(userId: string) {
   return prisma.session.create({
     data: {
       userId,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24), // 24 hours
+      expiresAt: getSessionExpiry(),
     },
   });
 }
@@ -16,7 +22,7 @@ export async function createSessionWithId(userId: string, sessionId: string) {
     data: {
       id: sessionId,
       userId,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+      expiresAt: getSessionExpiry(),
     },
   });
 }

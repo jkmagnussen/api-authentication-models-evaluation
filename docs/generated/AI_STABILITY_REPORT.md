@@ -1,9 +1,13 @@
 # AI Stability Report
 
 Generated: 2026-07-24T23:11:22.995Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
 
 This report quantifies run-to-run stability for AI provider/prompt arms to reduce stochastic bias in interpretation.
+
+> Legacy validity warning: these three archived snapshots were produced while the cohort pipeline reused shared sample/result directories. Their 30-index denominators may overlap across snapshots; the stability labels and confidence intervals below do not establish independent cohort stability and must not be treated as confirmatory evidence. The isolated cohort runner creates separately stored cohorts for future analysis.
+
+The clean protocol-v2 cohort is reported separately in `AI_PROVIDER_PROMPT_COMPARISON.md`; its paired inference is suppressed because OpenAI system fingerprints differ between prompt conditions.
 
 ## Configuration
 

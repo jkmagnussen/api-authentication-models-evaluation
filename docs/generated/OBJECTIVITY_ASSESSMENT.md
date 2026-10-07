@@ -1,7 +1,9 @@
 # Objectivity Assessment
 
 Generated: 2026-07-24T23:11:21.032Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Legacy snapshot: the arm rates, pairwise tests, and checker-agreement figures below use pre-v2 shared-output inputs. Do not interpret them as the clean cohort’s descriptive comparison; paired v2 inference is suppressed in the current report.
 
 This report documents fairness controls and measurable bias checks for examiner-facing methodological transparency.
 
@@ -12,7 +14,7 @@ This report documents fairness controls and measurable bias checks for examiner-
 - Blinded first-pass interpretation: provider-condition decomposition can be reviewed through an Arm A-D masked report before unblinding.
 - Reproducibility controls: generated artifacts are validated by docs checks and drift checks.
 - Stability controls: run-to-run arm variance is tracked in AI_STABILITY_REPORT.md using archived matrix snapshots.
-- Statistical grounding for performance: effect size, confidence intervals, and Welch significance output.
+- Statistical grounding for performance: run-level paired effect sizes, confidence intervals, and paired tests only for protocol-verified blocks; legacy runs remain descriptive.
 - Governance control: confirmatory endpoints and corrections are reflected in generated governance artifacts.
 
 ## AI Matrix Policy Compliance
@@ -39,6 +41,8 @@ This report documents fairness controls and measurable bias checks for examiner-
 | CLAUDE | security-guided | 35 / 90 | 38.90% | [29.47, 49.22]% |
 
 ## AI Arm Pairwise Significance (Holm-Bonferroni Corrected)
+
+> Legacy analysis warning: these p-values were calculated from file-level arm counts without verified independent-generation provenance, using independent two-proportion tests. They are exploratory only and must not be presented as results from the clean protocol-v2 paired-cohort analysis.
 
 | Arm A | Arm B | Raw p-value | Holm-adjusted p | Significant @ 0.05 | Note |
 |---|---|---:|---:|---|---|

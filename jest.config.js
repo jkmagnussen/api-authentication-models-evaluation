@@ -5,7 +5,11 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js'],
   testPathIgnorePatterns: process.env.APP_VARIANT
     ? []
-    : ['<rootDir>/tests/variants/'],
+    : [
+        '<rootDir>/tests/variants/',
+        '<rootDir>/tests/performance/baseline/',
+        '<rootDir>/tests/performance/attacks/',
+      ],
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/server.ts',

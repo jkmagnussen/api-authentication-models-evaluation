@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import re
 import sys
+import xml.etree.ElementTree as ET
 from collections import Counter
 from pathlib import Path
 
@@ -54,11 +55,25 @@ def main() -> None:
     baseline_df, variant_footprint_df, _ = gc.load_code_footprint()
     perf_df = gc.load_performance_summary()
     variant_summary_df = gc.load_variant_focused_summary()
+    ai_df = gc.load_ai_samples_summary()
     arm_df = gc.load_arm_test_rows()
     variant_df = gc.build_variant_analysis_frame(variant_summary_df, variant_footprint_df)
     misconfig_df = gc.load_misconfiguration_impact()
 
     results: list[tuple[bool, str]] = []
+
+    # 0) AI failure-rate chart reflects the clean cohort's joined result rows.
+    failure_rates = (
+        ai_df.groupby("model", as_index=False)["passed"]
+        .agg(lambda values: 100.0 * (1.0 - values.mean()))
+        .sort_values("model")
+    )
+    expected = Counter([f"{float(value):.2f}%" for value in failure_rates["passed"]])
+    ai_failure_values = [
+        value for value in numeric_svg_comments(CHARTS_SEC_DIR / "ai-failure-rates.svg")
+        if value.endswith("%")
+    ]
+    results.append(check_equal("ai-failure-rates.svg clean cohort values", expected, Counter(ai_failure_values[:len(expected)])))
 
     # 1) Maintainability Difficulty Index annotations.
     local = baseline_df[["label", "cyclomaticComplexity", "maintainabilityIndexAverage"]].copy()
@@ -204,51 +219,31 @@ def main() -> None:
         actual = Counter(severity_vals[: sum(expected.values())])
         results.append(check_equal("ai-vs-human-severity-gap-ci.svg", expected, actual))
 
-    # 8) AI-vs-human dominance heatmap decision labels.
-    density_rows, _ = gc.load_normalized_failure_density()
-    if density_rows.empty or control_summary_df.empty:
-        results.append((False, "FAIL ai-vs-human-dominance-heatmap.svg (missing density/control summary data)"))
-    else:
-        dominance_values: list[str] = []
-        for model in ["oauth", "jwt", "sessions"]:
-            base_density = density_rows[(density_rows["model"] == model) & (density_rows["source"] == "baseline")]
-            ai_density = density_rows[(density_rows["model"] == model) & (density_rows["source"] == "ai")]
-            base_control = control_summary_df[(control_summary_df["model"] == model) & (control_summary_df["source"] == "baseline")]
-            ai_control = control_summary_df[(control_summary_df["model"] == model) & (control_summary_df["source"] == "ai")]
-            if base_density.empty or ai_density.empty or base_control.empty or ai_control.empty:
-                continue
-
-            dominance_values.extend(
-                [
-                    f"{int(float(base_density.iloc[0]['failuresPer10kChars']) < float(ai_density.iloc[0]['failuresPer10kChars']))}",
-                    f"{int(float(base_density.iloc[0]['failurePointsPer10kChars']) < float(ai_density.iloc[0]['failurePointsPer10kChars']))}",
-                    f"{int(float(base_control.iloc[0]['avgRiskPer10kChars']) < float(ai_control.iloc[0]['avgRiskPer10kChars']))}",
-                ]
-            )
-
-        expected = Counter([
-            "Baseline safer" if value == "1" else "AI safer / tie"
-            for value in dominance_values
-        ])
-        dominance_text = (CHARTS_SEC_DIR / "ai-vs-human-dominance-heatmap.svg").read_text(encoding="utf-8")
-        dominance_vals = re.findall(r"<!--\s*(Baseline safer|AI safer / tie)\s*-->", dominance_text)
-        actual = Counter(dominance_vals[: sum(expected.values())])
-        results.append(check_equal("ai-vs-human-dominance-heatmap.svg", expected, actual))
+    # 8) Retained dominance heatmap must identify itself as historical evidence.
+    dominance_path = CHARTS_SEC_DIR / "ai-vs-human-dominance-heatmap.svg"
+    dominance_tree = ET.parse(dominance_path)
+    dominance_text = " ".join(" ".join(dominance_tree.getroot().itertext()).split())
+    dominance_is_marked_legacy = "Legacy comparison from shared-output pre-v2 AI results" in dominance_text
+    results.append((
+        dominance_is_marked_legacy,
+        "PASS ai-vs-human-dominance-heatmap.svg is labeled legacy" if dominance_is_marked_legacy
+        else "FAIL ai-vs-human-dominance-heatmap.svg lacks the legacy provenance label",
+    ))
 
     # 14) Calibration and independent agreement chart percent labels.
     checker_agreement = gc.load_checker_agreement_summary()
     generated_agreement = checker_agreement.get("generatedSampleAgreement", {}) or {}
     by_model = generated_agreement.get("byModel", {}) or {}
-    sensitivity_rows = pd.DataFrame(advanced_payload.get("falseConfidenceSensitivity", []))
-    if sensitivity_rows.empty or not by_model:
+    calibration_by_model = checker_agreement.get("calibrationByModel", {}) or {}
+    model_order = [model for model in ["oauth", "jwt", "sessions"] if model in by_model and model in calibration_by_model]
+    if not model_order:
         results.append((False, "FAIL calibration-and-agreement-controls.svg (missing calibration/agreement data)"))
     else:
-        expected = Counter([f"{float(value) * 100:.1f}%" for value in sensitivity_rows.sort_values("threshold")["rate"]])
+        expected = Counter([f"{float(calibration_by_model[model][field]) * 100:.1f}%" for field in ["primaryPassRate", "secondaryPassRate"] for model in model_order])
         expected.update(
             [
-                f"{float((by_model.get(model, {}) or {}).get('rawAgreementRate', 0.0)) * 100:.1f}%"
-                for model in ["oauth", "jwt", "sessions"]
-                if model in by_model
+                f"{float(by_model[model]['rawAgreementRate']) * 100:.1f}%"
+                for model in model_order
             ]
         )
 

@@ -1,7 +1,9 @@
 # Security-Critical Control Points
 
 Generated: 2026-07-24T23:11:16.408Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Legacy snapshot: AI control-point counts below are from pre-v2 shared outputs, not the clean 360-output cohort. Current AI-derived charts recompute these values from the isolated cohort.
 
 This exploratory report isolates high-impact control points and expresses observed failure pressure as density relative to implementation footprint.
 

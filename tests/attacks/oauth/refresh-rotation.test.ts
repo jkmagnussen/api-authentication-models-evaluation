@@ -55,4 +55,19 @@ describe('OAuth refresh-token replay and rotation', () => {
     expect(wrongClient.status).toBe(400);
     expect(wrongClient.body.error).toBe('invalid_grant');
   });
+
+  it('rejects refresh token when the client identifier is omitted', async () => {
+    const authRes = await request(app)
+      .post('/oauth/authorize')
+      .send({ userId: validUUID, clientId: 'client-basic', scope: 'read' });
+
+    const tokenRes = await request(app).post('/oauth/token').send({ code: authRes.body.code });
+
+    const missingClient = await request(app)
+      .post('/oauth/refresh')
+      .send({ refresh_token: tokenRes.body.refresh_token });
+
+    expect(missingClient.status).toBe(400);
+    expect(missingClient.body.error).toBe('invalid_client');
+  });
 });

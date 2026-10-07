@@ -40,6 +40,7 @@ describe('JWT – Expired Token Attack Test', () => {
         if (keyId) {
             signOptions.keyid = keyId;
         }
+        // Keep the normal signing key and claims so expiry is the reason verification fails.
         expiredToken = jsonwebtoken_1.default.sign({
             ...payloadObject,
             exp: Math.floor(Date.now() / 1000) - 60, // expired 60 seconds ago

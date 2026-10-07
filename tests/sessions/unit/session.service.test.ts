@@ -5,12 +5,14 @@ jest.mock('../../../src/db', () => ({
       create: jest.fn(),
       findUnique: jest.fn(),
       delete: jest.fn(),
+      deleteMany: jest.fn(),
     },
   },
 }));
 
 import { prisma } from '../../../src/db';
-import { createSession, findSession, deleteSession } from '../../../src/sessions/session.service';
+import APP_CONFIG from '../../../src/config';
+import { createSession, createSessionWithId, findSession, deleteSession } from '../../../src/sessions/session.service';
 
 describe('Session Service – Unit Tests', () => {
   beforeEach(() => {
@@ -18,6 +20,7 @@ describe('Session Service – Unit Tests', () => {
   });
 
   test('createSession creates a session with correct fields', async () => {
+    const startedAt = Date.now();
     const fakeSession = {
       id: 'session-123',
       userId: 'user-123',
@@ -34,8 +37,23 @@ describe('Session Service – Unit Tests', () => {
         expiresAt: expect.any(Date),
       },
     });
+    const createCall = (prisma.session.create as jest.Mock).mock.calls[0][0];
+    expect(createCall.data.expiresAt.getTime()).toBeGreaterThanOrEqual(startedAt + APP_CONFIG.session.ttlSeconds * 1000);
 
     expect(session).toEqual(fakeSession);
+  });
+
+  test('createSessionWithId applies the configured TTL after replacing the supplied session ID', async () => {
+    const startedAt = Date.now();
+    (prisma.session.deleteMany as jest.Mock).mockResolvedValue({ count: 0 });
+    (prisma.session.create as jest.Mock).mockResolvedValue({});
+
+    await createSessionWithId('user-123', 'fixed-session');
+
+    expect(prisma.session.deleteMany).toHaveBeenCalledWith({ where: { id: 'fixed-session' } });
+    const createCall = (prisma.session.create as jest.Mock).mock.calls[0][0];
+    expect(createCall.data).toMatchObject({ id: 'fixed-session', userId: 'user-123' });
+    expect(createCall.data.expiresAt.getTime()).toBeGreaterThanOrEqual(startedAt + APP_CONFIG.session.ttlSeconds * 1000);
   });
 
   test('findSession returns a session when it exists', async () => {

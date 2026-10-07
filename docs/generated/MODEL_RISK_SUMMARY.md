@@ -1,7 +1,9 @@
 # Model Risk Summary
 
 Generated: 2026-07-24T23:11:19.083Z
-Regenerate: npm run docs:check
+Regeneration guidance: See docs/REPRODUCIBILITY_CHECKLIST.md; npm run docs:check only checks artifact presence.
+
+> Legacy snapshot: AI failed-sample counts below come from pre-v2 shared-root artifacts; they are not the current four-arm 360-output cohort results.
 
 This summary aggregates misconfiguration impact and AI sample failure tendencies at the model level.
 
