@@ -1,0 +1,158 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="4000" height="2900" viewBox="0 0 2000 1450" role="img" aria-labelledby="title desc">
+  <title id="title">Implemented Prisma persistence model (large text edition)</title>
+  <desc id="desc">Entity relationship diagram showing all scalar fields, types, nullability, uniqueness, defaults, and relations from prisma/schema.prisma. The Prisma client uses the binary engine and PostgreSQL datasource configured through DATABASE_URL.</desc>
+  <defs>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; fill: #17324d; }
+      .title { font-size: 40px; font-weight: 700; }
+      .subtitle { font-size: 19px; fill: #49647e; }
+      .entity { fill: #ffffff; stroke: #2b5f91; stroke-width: 2; rx: 12; }
+      .entity-secondary { fill: #f7f9fc; stroke: #647b91; stroke-width: 2; rx: 12; }
+      .entity-supplementary { fill: #fbfcfd; stroke: #8193a5; stroke-width: 2; stroke-dasharray: 8 6; rx: 12; }
+      .head { fill: #e8f1fb; }
+      .head-secondary { fill: #edf1f5; }
+      .head-supplementary { fill: #f2f4f6; }
+      .name { font-size: 23px; font-weight: 700; }
+      .field { font-size: 17px; }
+      .note { font-size: 17px; fill: #38536d; }
+      .rel { fill: none; stroke: #526d87; stroke-width: 2.5; }
+      .rel-label { font-size: 16px; font-weight: 700; fill: #254766; }
+      .callout { fill: #f5f8fb; stroke: #9bb0c4; stroke-width: 1.5; rx: 10; }
+    </style>
+    <marker id="end" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#526d87"/>
+    </marker>
+  </defs>
+
+  <rect width="2000" height="1450" fill="#ffffff"/>
+  <text class="title" x="1000" y="48" text-anchor="middle">Implemented Prisma Persistence Model</text>
+  <text class="subtitle" x="1000" y="78" text-anchor="middle">All persisted models, scalar fields, field constraints, defaults and relations from prisma/schema.prisma</text>
+  <rect class="callout" x="60" y="98" width="1880" height="54"/>
+  <text class="note" x="84" y="132">Prisma Client: prisma-client-js (binary engine)  |  Datasource: PostgreSQL  |  Connection: DATABASE_URL environment variable</text>
+
+  <!-- Relationship connectors are drawn before the entity boxes. -->
+  <path class="rel" d="M465 302 L525 302 L525 640 L600 640"/>
+  <path class="rel" d="M465 1115 L525 1115 L525 760 L600 760"/>
+  <path class="rel" d="M900 850 L900 965"/>
+  <path class="rel" d="M1390 350 L1300 350 L1300 560 L1200 560"/>
+  <path class="rel" d="M1615 510 L1615 590"/>
+  <path class="rel" d="M1390 1075 L1300 1075 L1300 805 L1200 805"/>
+  <path class="rel" d="M1615 930 L1615 820"/>
+
+  <!-- Session -->
+  <g>
+    <rect class="entity" x="60" y="190" width="405" height="225"/>
+    <path class="head" d="M72 190 H453 Q465 190 465 202 V233 H60 V202 Q60 190 72 190 Z"/>
+    <text class="name" x="262" y="220" text-anchor="middle">Session</text>
+    <text class="field" x="82" y="265">id: String (PK, default cuid())</text>
+    <text class="field" x="82" y="294">userId: String (FK)</text>
+    <text class="field" x="82" y="323">expiresAt: DateTime</text>
+    <text class="field" x="82" y="352">createdAt: DateTime (default now())</text>
+  </g>
+
+  <!-- User -->
+  <g>
+    <rect class="entity" x="600" y="500" width="600" height="350"/>
+    <path class="head" d="M612 500 H1188 Q1200 500 1200 512 V543 H600 V512 Q600 500 612 500 Z"/>
+    <text class="name" x="900" y="530" text-anchor="middle">User</text>
+    <text class="field" x="628" y="575">id: String (PK, default uuid())</text>
+    <text class="field" x="628" y="604">email: String (unique)</text>
+    <text class="field" x="628" y="633">password: String</text>
+    <text class="field" x="628" y="662">mfaEnabled: Boolean (default false)</text>
+    <text class="field" x="628" y="691">mfaSecret: String? (nullable)</text>
+    <text class="field" x="628" y="720">createdAt: DateTime (default now())</text>
+    <text class="field" x="628" y="772">Relations: authorizationCodes, accessTokens, sessions,</text>
+    <text class="field" x="628" y="797">passwordResetTokens, auditLogs</text>
+  </g>
+
+  <!-- OAuth authorization code -->
+  <g>
+    <rect class="entity" x="1390" y="185" width="550" height="430"/>
+    <path class="head" d="M1402 185 H1928 Q1940 185 1940 197 V228 H1390 V197 Q1390 185 1402 185 Z"/>
+    <text class="name" x="1665" y="215" text-anchor="middle">OAuthAuthorizationCode</text>
+    <text class="field" x="1418" y="260">id: String (PK, default cuid())</text>
+    <text class="field" x="1418" y="287">code: String (unique)</text>
+    <text class="field" x="1418" y="314">userId: String (FK)  |  clientId: String (FK)</text>
+    <text class="field" x="1418" y="341">state: String? (nullable)  |  scope: String? (nullable)</text>
+    <text class="field" x="1418" y="368">expiresAt: DateTime</text>
+    <text class="field" x="1418" y="395">used: Boolean (default false)</text>
+    <text class="field" x="1418" y="422">createdAt: DateTime (default now())</text>
+    <text class="field" x="1418" y="449">codeChallenge: String? (nullable)</text>
+    <text class="field" x="1418" y="476">codeChallengeMethod: String? (nullable)</text>
+    <text class="field" x="1418" y="533">Relations: one User and one OAuthClient per code</text>
+  </g>
+
+  <!-- OAuth client -->
+  <g>
+    <rect class="entity-secondary" x="1390" y="650" width="450" height="190"/>
+    <path class="head-secondary" d="M1402 650 H1828 Q1840 650 1840 662 V693 H1390 V662 Q1390 650 1402 650 Z"/>
+    <text class="name" x="1615" y="680" text-anchor="middle">OAuthClient</text>
+    <text class="field" x="1418" y="725">id: String (PK; client ID)</text>
+    <text class="field" x="1418" y="754">secret: String  |  name: String</text>
+    <text class="field" x="1418" y="793">Relations: authorizationCodes, accessTokens</text>
+  </g>
+
+  <!-- OAuth access / refresh token record -->
+  <g>
+    <rect class="entity" x="1390" y="930" width="550" height="360"/>
+    <path class="head" d="M1402 930 H1928 Q1940 930 1940 942 V973 H1390 V942 Q1390 930 1402 930 Z"/>
+    <text class="name" x="1665" y="960" text-anchor="middle">OAuthAccessToken</text>
+    <text class="field" x="1418" y="1005">id: String (PK, default uuid())</text>
+    <text class="field" x="1418" y="1032">accessToken: String (unique)</text>
+    <text class="field" x="1418" y="1059">refreshToken: String (unique)</text>
+    <text class="field" x="1418" y="1086">userId: String (FK)  |  clientId: String (FK)</text>
+    <text class="field" x="1418" y="1113">scope: String? (nullable)</text>
+    <text class="field" x="1418" y="1140">expiresAt: DateTime  |  refreshExpiresAt: DateTime</text>
+    <text class="field" x="1418" y="1167">createdAt: DateTime (default now())</text>
+    <text class="note" x="1418" y="1210">One row stores both token fields; the service stores hashes.</text>
+    <text class="field" x="1418" y="1250">Relations: one User and one OAuthClient per token record</text>
+  </g>
+
+  <!-- Password reset token -->
+  <g>
+    <rect class="entity-supplementary" x="60" y="1010" width="405" height="300"/>
+    <path class="head-supplementary" d="M72 1010 H453 Q465 1010 465 1022 V1053 H60 V1022 Q60 1010 72 1010 Z"/>
+    <text class="name" x="262" y="1040" text-anchor="middle">PasswordResetToken</text>
+    <text class="field" x="82" y="1085">id: String (PK, default uuid())</text>
+    <text class="field" x="82" y="1114">userId: String (FK)</text>
+    <text class="field" x="82" y="1143">tokenHash: String (unique)</text>
+    <text class="field" x="82" y="1172">expiresAt: DateTime</text>
+    <text class="field" x="82" y="1201">usedAt: DateTime? (nullable)</text>
+    <text class="field" x="82" y="1230">createdAt: DateTime (default now())</text>
+  </g>
+
+  <!-- Audit log -->
+  <g>
+    <rect class="entity-secondary" x="600" y="965" width="600" height="300"/>
+    <path class="head-secondary" d="M612 965 H1188 Q1200 965 1200 977 V1008 H600 V977 Q600 965 612 965 Z"/>
+    <text class="name" x="900" y="995" text-anchor="middle">AuditLog</text>
+    <text class="field" x="628" y="1040">id: String (PK, default uuid())</text>
+    <text class="field" x="628" y="1069">userId: String? (nullable FK)</text>
+    <text class="field" x="628" y="1098">eventType: String  |  outcome: String</text>
+    <text class="field" x="628" y="1127">ipAddress: String?  |  userAgent: String? (nullable)</text>
+    <text class="field" x="628" y="1156">metadata: Json? (nullable)</text>
+    <text class="field" x="628" y="1185">createdAt: DateTime (default now())</text>
+    <text class="note" x="628" y="1230">Supplementary application event log; not benchmark result storage.</text>
+  </g>
+
+  <!-- Relationship cardinalities -->
+  <text class="rel-label" x="478" y="291">0..*</text>
+  <text class="rel-label" x="568" y="630">1</text>
+  <text class="rel-label" x="478" y="1104">0..*</text>
+  <text class="rel-label" x="568" y="750">1</text>
+  <text class="rel-label" x="914" y="880">0..*</text>
+  <text class="rel-label" x="914" y="957">0..1 User</text>
+  <text class="rel-label" x="1312" y="340">0..*</text>
+  <text class="rel-label" x="1210" y="550">1</text>
+  <text class="rel-label" x="1628" y="557">0..*</text>
+  <text class="rel-label" x="1628" y="635">1</text>
+  <text class="rel-label" x="1312" y="1065">0..*</text>
+  <text class="rel-label" x="1210" y="795">1</text>
+  <text class="rel-label" x="1628" y="910">0..*</text>
+  <text class="rel-label" x="1628" y="828">1</text>
+
+  <rect class="callout" x="60" y="1335" width="1880" height="95"/>
+  <text class="note" x="84" y="1363">PK = primary key | FK = relation foreign key | ? = nullable | unique/default annotations reflect schema constraints.</text>
+  <text class="note" x="84" y="1388">Solid connectors represent Prisma relations. Token hashing is service behavior (not declared by the schema); authorization codes are stored as issued.</text>
+  <text class="note" x="84" y="1413">OAuthClient redirect allow-list is application configuration, not a schema field.</text>
+</svg>

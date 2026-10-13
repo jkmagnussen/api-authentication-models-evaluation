@@ -1,0 +1,234 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1370" viewBox="0 0 2000 1370" role="img" aria-labelledby="title desc">
+  <title id="title">Implemented unified API architecture and evidence paths</title>
+  <desc id="desc">Architecture diagram of the Express application, route-specific Sessions, JWT and OAuth 2.0 with PKCE implementations, PostgreSQL persistence, protected endpoints and separate evidence-generation workflows. It explicitly shows that OAuth user identity is a supplied test fixture, the protected OAuth route validates token expiry but does not enforce scope-based authorization, and AI-generated code is assessed separately from the running API.</desc>
+  <defs>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; fill: #17324d; }
+      .title { font-size: 36px; font-weight: 700; }
+      .subtitle { font-size: 18px; fill: #49647e; }
+      .panel { fill: #f7faff; stroke: #2b5f91; stroke-width: 2; rx: 14; }
+      .panel-dark { fill: #e8f1fb; stroke: #2b5f91; stroke-width: 2; rx: 14; }
+      .panel-muted { fill: #f6f8fa; stroke: #72869a; stroke-width: 2; rx: 14; }
+      .panel-warn { fill: #fff9ed; stroke: #bd8b34; stroke-width: 2; rx: 14; }
+      .panel-ai { fill: #f8f6ff; stroke: #6e63a7; stroke-width: 2; rx: 14; }
+          .module-boundary { fill: none; stroke: #7792ab; stroke-width: 2; stroke-dasharray: 10 7; rx: 18; }
+      .band { fill: #173f68; }
+      .heading { font-size: 22px; font-weight: 700; }
+      .band-label { font-size: 21px; font-weight: 700; fill: #ffffff; }
+      .text { font-size: 16px; }
+      .small { font-size: 14px; fill: #38536d; }
+      .tiny { font-size: 13px; fill: #38536d; }
+      .connector { fill: none; stroke: #426889; stroke-width: 3; }
+      .evidence-connector { fill: none; stroke: #426889; stroke-width: 2.5; stroke-dasharray: 9 7; }
+      .divider { stroke: #c6d4e1; stroke-width: 1.5; }
+      .pill { fill: #ffffff; stroke: #9bb0c4; stroke-width: 1.2; rx: 8; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#426889"/>
+    </marker>
+    <marker id="arrow-start" markerWidth="10" markerHeight="10" refX="2" refY="5" orient="auto">
+      <path d="M10,0 L0,5 L10,10 z" fill="#426889"/>
+    </marker>
+  </defs>
+
+  <rect width="2000" height="1370" fill="#ffffff"/>
+  <text class="title" x="1000" y="52" text-anchor="middle">Implemented Unified API Architecture</text>
+  <text class="subtitle" x="1000" y="82" text-anchor="middle">Runtime request path, mechanism-specific validation, persistence and separate evaluation evidence</text>
+
+  <!-- Runtime connectors -->
+  <path class="connector" d="M270 405 L305 405" marker-end="url(#arrow)"/>
+  <path class="connector" d="M625 405 L640 405" marker-end="url(#arrow)"/>
+  <path class="connector" d="M1705 405 L1730 405" marker-end="url(#arrow)"/>
+  <path class="connector" d="M800 725 L800 765" marker-start="url(#arrow-start)" marker-end="url(#arrow)"/>
+  <path class="connector" d="M1160 725 L1160 765" marker-start="url(#arrow-start)" marker-end="url(#arrow)"/>
+  <path class="connector" d="M1510 725 L1510 765" marker-start="url(#arrow-start)" marker-end="url(#arrow)"/>
+
+  <rect class="module-boundary" x="640" y="115" width="1065" height="630"/>
+  <rect x="1015" y="98" width="315" height="35" fill="#ffffff"/>
+  <text class="small" x="1172" y="122" text-anchor="middle">Mechanism-specific route modules</text>
+
+  <!-- Client / test harness -->
+  <g>
+    <rect class="panel" x="30" y="285" width="240" height="240"/>
+    <path class="band" d="M44 285 H256 Q270 285 270 299 V340 H30 V299 Q30 285 44 285 Z"/>
+    <text class="band-label" x="150" y="321" text-anchor="middle">Client / Test Harness</text>
+    <text class="text" x="54" y="378">Postman / browser</text>
+    <text class="text" x="54" y="413">Jest + Supertest clients</text>
+    <text class="text" x="54" y="448">HTTP requests to the</text>
+    <text class="text" x="54" y="471">same Express application</text>
+    <text class="small" x="54" y="505">Interactive UI is not required</text>
+  </g>
+
+  <!-- Shared request pipeline -->
+  <g>
+    <rect class="panel-dark" x="305" y="180" width="320" height="450"/>
+    <path class="band" d="M319 180 H611 Q625 180 625 194 V237 H305 V194 Q305 180 319 180 Z"/>
+    <text class="band-label" x="465" y="215" text-anchor="middle">Shared Express Pipeline</text>
+    <text class="text" x="330" y="278">Helmet security headers</text>
+    <line class="divider" x1="330" y1="291" x2="600" y2="291"/>
+    <text class="text" x="330" y="322">CORS origin allow-list</text>
+    <line class="divider" x1="330" y1="335" x2="600" y2="335"/>
+    <text class="text" x="330" y="366">JSON + cookie parsing</text>
+    <line class="divider" x1="330" y1="379" x2="600" y2="379"/>
+    <text class="text" x="330" y="410">Request-completion logging</text>
+    <line class="divider" x1="330" y1="423" x2="600" y2="423"/>
+    <text class="text" x="330" y="454">Central error handler</text>
+    <line class="divider" x1="330" y1="467" x2="600" y2="467"/>
+    <text class="text" x="330" y="498">Route-specific rate limits</text>
+    <text class="small" x="330" y="526">Applied to login / OAuth routes,</text>
+    <text class="small" x="330" y="547">not a global request limiter.</text>
+    <rect class="pill" x="327" y="568" width="276" height="43"/>
+    <text class="small" x="465" y="595" text-anchor="middle">Same host process; separate route modules</text>
+  </g>
+
+  <!-- Sessions -->
+  <g>
+    <rect class="panel" x="650" y="140" width="320" height="585"/>
+    <path class="band" d="M664 140 H956 Q970 140 970 154 V197 H650 V154 Q650 140 664 140 Z"/>
+    <text class="band-label" x="810" y="176" text-anchor="middle">Sessions</text>
+    <text class="small" x="675" y="224">Evaluated model: explicit DB-backed</text>
+    <text class="small" x="675" y="244">sessionId cookie (not Express sid)</text>
+    <line class="divider" x1="675" y1="257" x2="945" y2="257"/>
+    <text class="text" x="675" y="289">POST /sessions/login</text>
+    <text class="small" x="675" y="312">Email + password → new Session</text>
+    <text class="text" x="675" y="350">Cookie flags: HttpOnly; SameSite</text>
+    <text class="small" x="675" y="372">Secure is environment-configurable</text>
+    <text class="text" x="675" y="410">GET /sessions/protected</text>
+    <text class="small" x="675" y="433">Lookup sessionId; check expiry</text>
+    <text class="text" x="675" y="471">POST /sessions/logout</text>
+    <text class="small" x="675" y="494">Delete persisted session; clear cookie</text>
+    <text class="text" x="675" y="532">CSRF token + protected action routes</text>
+    <rect class="panel-muted" x="670" y="563" width="280" height="135"/>
+    <text class="small" x="686" y="589">Separate framework middleware:</text>
+    <text class="small" x="686" y="612">app.use(express-session), cookie</text>
+    <text class="small" x="686" y="635">appSessionId; optional Redis store.</text>
+    <text class="small" x="686" y="672">Not the sessionId model evaluated above.</text>
+  </g>
+
+  <!-- JWT -->
+  <g>
+    <rect class="panel" x="990" y="140" width="320" height="585"/>
+    <path class="band" d="M1004 140 H1296 Q1310 140 1310 154 V197 H990 V154 Q990 140 1004 140 Z"/>
+    <text class="band-label" x="1150" y="176" text-anchor="middle">JWT</text>
+    <text class="text" x="1015" y="224">POST /jwt/login</text>
+    <text class="small" x="1015" y="247">Email + password → signed JWT</text>
+    <line class="divider" x1="1015" y1="262" x2="1285" y2="262"/>
+    <text class="text" x="1015" y="294">Configured signing algorithm</text>
+    <text class="small" x="1015" y="317">(RS256 default; variant can weaken)</text>
+    <text class="text" x="1015" y="355">Issuer + audience + expiry claims</text>
+    <text class="text" x="1015" y="394">GET /jwt/protected</text>
+    <text class="small" x="1015" y="417">Verify signature using trusted key</text>
+    <text class="small" x="1015" y="440">and configured algorithm, issuer,</text>
+    <text class="small" x="1015" y="463">audience and expiry.</text>
+    <rect class="pill" x="1010" y="504" width="280" height="75"/>
+    <text class="small" x="1025" y="532">Self-contained access token;</text>
+    <text class="small" x="1025" y="555">no access-token blocklist/revocation.</text>
+    <text class="small" x="1015" y="622">Login reads the shared User record;</text>
+    <text class="small" x="1015" y="645">protected requests verify the token.</text>
+  </g>
+
+  <!-- OAuth simulated authorization-code flow -->
+  <g>
+    <rect class="panel-warn" x="1330" y="140" width="365" height="585"/>
+    <path class="band" d="M1344 140 H1681 Q1695 140 1695 154 V197 H1330 V154 Q1330 140 1344 140 Z"/>
+    <text class="band-label" x="1512" y="176" text-anchor="middle">OAuth 2.0 + PKCE Simulation</text>
+    <text class="text" x="1355" y="224">POST /oauth/authorize</text>
+    <text class="small" x="1355" y="247">Supplied fixture userId must exist;</text>
+    <text class="small" x="1355" y="268">no user login or consent is performed.</text>
+    <text class="small" x="1355" y="291">Checks client and requested scope;</text>
+    <text class="small" x="1355" y="312">redirect checked only when supplied.</text>
+    <line class="divider" x1="1355" y1="326" x2="1670" y2="326"/>
+    <text class="text" x="1355" y="357">POST /oauth/token</text>
+    <text class="small" x="1355" y="380">One-time code claim; state compared</text>
+    <text class="small" x="1355" y="401">when non-empty; verifier checked when</text>
+    <text class="small" x="1355" y="422">challenge exists (S256 / PLAIN).</text>
+    <text class="small" x="1355" y="445">Issues opaque access + refresh tokens;</text>
+    <text class="small" x="1355" y="466">SHA-256 hashes stored in PostgreSQL.</text>
+    <text class="text" x="1355" y="504">Refresh / revoke / introspect</text>
+    <text class="text" x="1355" y="542">GET /oauth/protected</text>
+    <text class="small" x="1355" y="565">Validates token + expiry; passes user,</text>
+    <text class="small" x="1355" y="586">client and scope to route. It does not</text>
+    <text class="small" x="1355" y="607">enforce a scope/role permission.</text>
+    <rect class="pill" x="1350" y="624" width="325" height="82"/>
+    <text class="small" x="1365" y="646">Not a complete production OAuth flow;</text>
+    <text class="small" x="1365" y="668">identity/consent are outside scope.</text>
+    <text class="small" x="1365" y="690">PKCE required outside test; verified</text>
+    <text class="small" x="1365" y="708">only when challenge data is stored.</text>
+  </g>
+
+  <!-- Protected routes -->
+  <g>
+    <rect class="panel-dark" x="1730" y="285" width="240" height="240"/>
+    <path class="band" d="M1744 285 H1956 Q1970 285 1970 299 V340 H1730 V299 Q1730 285 1744 285 Z"/>
+    <text class="band-label" x="1850" y="321" text-anchor="middle">Protected Routes</text>
+    <text class="small" x="1752" y="378">GET /sessions/protected</text>
+    <text class="small" x="1752" y="408">GET /jwt/protected</text>
+    <text class="small" x="1752" y="438">GET /oauth/protected</text>
+    <line class="divider" x1="1752" y1="452" x2="1948" y2="452"/>
+    <text class="small" x="1752" y="478">Authentication checks; minimal</text>
+    <text class="small" x="1752" y="499">responses, not shared business APIs.</text>
+  </g>
+
+  <!-- Persistence layer -->
+  <g>
+    <rect class="panel-dark" x="305" y="765" width="1390" height="188"/>
+    <path class="band" d="M319 765 H1681 Q1695 765 1695 779 V818 H305 V779 Q305 765 319 765 Z"/>
+    <text class="band-label" x="1000" y="802" text-anchor="middle">PostgreSQL Persistence via Prisma</text>
+    <rect class="pill" x="330" y="837" width="205" height="84"/>
+    <text class="heading" x="432" y="869" text-anchor="middle">User</text>
+    <text class="small" x="432" y="895" text-anchor="middle">identity + password hash</text>
+    <rect class="pill" x="550" y="837" width="205" height="84"/>
+    <text class="heading" x="652" y="869" text-anchor="middle">Session</text>
+    <text class="small" x="652" y="895" text-anchor="middle">sessionId, userId, expiry</text>
+    <rect class="pill" x="770" y="837" width="245" height="84"/>
+    <text class="heading" x="892" y="869" text-anchor="middle">OAuthClient</text>
+    <text class="small" x="892" y="895" text-anchor="middle">client ID, secret, name</text>
+    <rect class="pill" x="1030" y="837" width="280" height="84"/>
+    <text class="heading" x="1170" y="869" text-anchor="middle">AuthorizationCode</text>
+    <text class="small" x="1170" y="895" text-anchor="middle">state, scope, PKCE, expiry</text>
+    <rect class="pill" x="1325" y="837" width="250" height="84"/>
+    <text class="heading" x="1450" y="869" text-anchor="middle">AccessToken</text>
+    <text class="small" x="1450" y="895" text-anchor="middle">access + refresh hashes</text>
+    <text class="small" x="1000" y="941" text-anchor="middle">AuditLog and PasswordResetToken are also persisted; password reset is outside the primary comparison.</text>
+  </g>
+
+  <!-- Evidence workstreams: separate branches, not a sequential pipeline. -->
+  <text class="heading" x="1000" y="1000" text-anchor="middle">Evidence Generation and Assessment (separate from API runtime)</text>
+  <rect class="module-boundary" x="20" y="1025" width="1960" height="280"/>
+
+  <g>
+    <rect class="panel-muted" x="30" y="1070" width="430" height="220"/>
+    <text class="heading" x="245" y="1108" text-anchor="middle">Baseline Test Suite</text>
+    <text class="text" x="58" y="1150">Jest + Supertest: unit, integration and</text>
+    <text class="text" x="58" y="1177">attack-focused tests against the secure</text>
+    <text class="text" x="58" y="1204">baseline. Does not run weakened variants</text>
+    <text class="text" x="58" y="1231">or collect benchmark samples.</text>
+    <text class="small" x="58" y="1264">Runtime-backed evidence stream</text>
+  </g>
+  <g>
+    <rect class="panel-muted" x="530" y="1070" width="430" height="220"/>
+    <text class="heading" x="745" y="1108" text-anchor="middle">Controlled Variants</text>
+    <text class="text" x="558" y="1150">Nine APP_VARIANT weakened settings;</text>
+    <text class="text" x="558" y="1177">separate runner with one mapped</text>
+    <text class="text" x="558" y="1204">exploit-positive test per variant.</text>
+    <text class="small" x="558" y="1264">Not part of ordinary baseline suite</text>
+  </g>
+  <g>
+    <rect class="panel-muted" x="1040" y="1070" width="430" height="220"/>
+    <text class="heading" x="1255" y="1108" text-anchor="middle">Performance Studies</text>
+    <text class="text" x="1068" y="1150">30 matched sequential blocks for the</text>
+    <text class="text" x="1068" y="1177">primary study; separate exploratory</text>
+    <text class="text" x="1068" y="1204">concurrent-load collector.</text>
+    <text class="small" x="1068" y="1264">Distinct workloads; do not pool</text>
+  </g>
+  <g>
+    <rect class="panel-ai" x="1540" y="1070" width="430" height="220"/>
+    <text class="heading" x="1755" y="1108" text-anchor="middle">Isolated AI Source Assessment</text>
+    <text class="text" x="1568" y="1150">Independent generated source is assessed</text>
+    <text class="text" x="1568" y="1177">using static heuristics; not deployed into</text>
+    <text class="text" x="1568" y="1204">the API and not a runtime vulnerability rate.</text>
+    <text class="small" x="1568" y="1264">No API-runtime or database input path</text>
+  </g>
+
+  <text class="small" x="1000" y="1335" text-anchor="middle">Solid arrows: request flow and bidirectional database access. Evidence procedures are independent, not a sequence; AI assessment is outside the API and database.</text>
+</svg>

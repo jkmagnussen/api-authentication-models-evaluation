@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1250" viewBox="0 0 1800 1250" role="img" aria-labelledby="title desc">
+  <title id="title">AI-generated implementation comparison protocol</title>
+  <desc id="desc">Protocol-v2 study of 30 matched cohorts, four provider-prompt arms and three authentication mechanisms, yielding 360 target outputs. Each output allows up to five provider attempts. Outputs are assessed using syntax and analysability checks, primary and secondary static heuristics, and calibration controls. Provider prompt contrasts are descriptive; paired inference is suppressed because OpenAI system fingerprints differ between neutral and security-guided outputs.</desc>
+  <defs>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; fill: #17324d; }
+      .title { font-size: 34px; font-weight: 700; }
+      .subtitle { font-size: 17px; fill: #49647e; }
+      .panel { fill: #f7faff; stroke: #2b5f91; stroke-width: 2; rx: 14; }
+      .panel-dark { fill: #e8f1fb; stroke: #2b5f91; stroke-width: 2; rx: 14; }
+      .panel-muted { fill: #f3f6f9; stroke: #72869a; stroke-width: 2; rx: 14; }
+      .panel-ai { fill: #f8f6ff; stroke: #6e63a7; stroke-width: 2; rx: 14; }
+      .panel-warn { fill: #fff5f3; stroke: #b94a48; stroke-width: 2.5; rx: 14; }
+      .band { fill: #173f68; }
+      .band-ai { fill: #524b83; }
+      .band-label { font-size: 19px; font-weight: 700; fill: #ffffff; }
+      .heading { font-size: 19px; font-weight: 700; }
+      .text { font-size: 16px; }
+      .small { font-size: 14px; fill: #38536d; }
+      .tiny { font-size: 13px; fill: #38536d; }
+      .connector { fill: none; stroke: #426889; stroke-width: 3; }
+      .dash { fill: none; stroke: #6e63a7; stroke-width: 2; stroke-dasharray: 8 6; }
+      .divider { stroke: #c6d4e1; stroke-width: 1.5; }
+      .pill { fill: #ffffff; stroke: #9bb0c4; stroke-width: 1.2; rx: 8; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#426889"/>
+    </marker>
+    <marker id="arrow-start" markerWidth="10" markerHeight="10" refX="2" refY="5" orient="auto">
+      <path d="M10 0 L0 5 L10 10 Z" fill="#426889"/>
+    </marker>
+  </defs>
+
+  <rect width="1800" height="1250" fill="#ffffff"/>
+  <text class="title" x="900" y="48" text-anchor="middle">AI-Generated Implementation Comparison Protocol</text>
+  <text class="subtitle" x="900" y="78" text-anchor="middle">Clean cohort study • prompt protocol v2 • source-artifact assessment, separate from the running API</text>
+
+  <!-- Study design and generation controls -->
+  <g>
+    <rect class="panel-dark" x="40" y="110" width="285" height="255"/>
+    <path class="band" d="M54 110 H311 Q325 110 325 124 V158 H40 V124 Q40 110 54 110 Z"/>
+    <text class="band-label" x="182" y="141" text-anchor="middle">Matched design</text>
+    <text class="heading" x="65" y="197">30 cohorts</text>
+    <text class="text" x="65" y="226">Same task across four arms</text>
+    <text class="text" x="65" y="255">Arm order rotates by cohort</text>
+    <line class="divider" x1="65" y1="270" x2="300" y2="270"/>
+    <text class="small" x="65" y="299">Each cohort: 4 arms × 3 mechanisms</text>
+    <text class="small" x="65" y="326">12 outputs per cohort; 360 target outputs</text>
+    <text class="tiny" x="65" y="349">30 outputs per mechanism in each arm</text>
+  </g>
+
+  <g>
+    <rect class="panel" x="355" y="110" width="370" height="255"/>
+    <path class="band" d="M369 110 H711 Q725 110 725 124 V158 H355 V124 Q355 110 369 110 Z"/>
+    <text class="band-label" x="540" y="141" text-anchor="middle">Controlled generation</text>
+    <text class="text" x="380" y="192">Prompt protocol v2</text>
+    <text class="small" x="380" y="218">Same task, system prompt and output format</text>
+    <text class="small" x="380" y="243">Same temperature: 0.8</text>
+    <text class="small" x="380" y="268">Same maximum output: 900 tokens</text>
+    <text class="small" x="380" y="293">Guided arm adds one generic secure-coding</text>
+    <text class="small" x="380" y="315">instruction, not a list of evaluated controls</text>
+    <text class="small" x="380" y="344">Up to 5 provider attempts per output</text>
+  </g>
+
+  <g>
+    <rect class="panel-ai" x="755" y="110" width="1005" height="255"/>
+    <path class="band-ai" d="M769 110 H1746 Q1760 110 1760 124 V158 H755 V124 Q755 110 769 110 Z"/>
+    <text class="band-label" x="1257" y="141" text-anchor="middle">Four provider-prompt arms • 3 outputs per arm in each matched cohort</text>
+    <rect class="pill" x="785" y="178" width="450" height="66"/>
+    <text class="heading" x="1010" y="205" text-anchor="middle">OpenAI</text>
+    <text class="small" x="1010" y="228" text-anchor="middle">Neutral  •  Security-guided</text>
+    <rect class="pill" x="1280" y="178" width="450" height="66"/>
+    <text class="heading" x="1505" y="205" text-anchor="middle">Claude</text>
+    <text class="small" x="1505" y="228" text-anchor="middle">Neutral  •  Security-guided</text>
+    <text class="small" x="1257" y="271" text-anchor="middle">Each arm generates one sample for each mechanism:</text>
+    <rect class="pill" x="785" y="287" width="280" height="48"/>
+    <rect class="pill" x="1117" y="287" width="280" height="48"/>
+    <rect class="pill" x="1450" y="287" width="280" height="48"/>
+    <text class="small" x="925" y="317" text-anchor="middle">Sessions</text>
+    <text class="small" x="1257" y="317" text-anchor="middle">JWT</text>
+    <text class="small" x="1590" y="317" text-anchor="middle">OAuth 2.0 with PKCE</text>
+  </g>
+
+  <!-- Flow -->
+  <path class="connector" d="M1257 365 L1257 405 L905 405"/>
+  <path class="connector" d="M905 405 L305 405 L305 430" marker-end="url(#arrow)"/>
+  <path class="connector" d="M905 405 L905 430" marker-end="url(#arrow)"/>
+
+  <!-- Output provenance -->
+  <g>
+    <rect class="panel-muted" x="40" y="430" width="530" height="365"/>
+    <path fill="#72869a" d="M54 430 H556 Q570 430 570 444 V478 H40 V444 Q40 430 54 430 Z"/>
+    <text class="band-label" x="305" y="461" text-anchor="middle">Per-output provenance</text>
+    <text class="text" x="70" y="520">Requested and returned model identifiers</text>
+    <text class="text" x="70" y="553">Request/response timestamps and response ID</text>
+    <text class="text" x="70" y="586">Available provider system fingerprint</text>
+    <text class="text" x="70" y="619">Retry count and token usage</text>
+    <text class="text" x="70" y="652">Prompt fingerprint and content hash</text>
+    <line class="divider" x1="70" y1="672" x2="540" y2="672"/>
+    <text class="small" x="70" y="705">Manifest also records source hashes, Git revision</text>
+    <text class="small" x="70" y="730">and dirty state, runtime/host, provider endpoint</text>
+    <text class="small" x="70" y="755">and API version. Credentials are not retained.</text>
+    <text class="tiny" x="70" y="780">Successful-output target: 360; provider calls can include retries.</text>
+  </g>
+
+  <!-- Assessment pipeline -->
+  <g>
+    <rect class="panel" x="620" y="430" width="570" height="365"/>
+    <path class="band" d="M634 430 H1176 Q1190 430 1190 444 V478 H620 V444 Q620 430 634 430 Z"/>
+    <text class="band-label" x="905" y="461" text-anchor="middle">Assessment per generated source output</text>
+    <rect class="panel-dark" x="660" y="500" width="490" height="60"/>
+    <text class="heading" x="905" y="526" text-anchor="middle">1. Syntax status</text>
+    <text class="small" x="905" y="548" text-anchor="middle">Recorded separately</text>
+    <path class="connector" d="M1165 560 L1165 584" marker-end="url(#arrow)"/>
+    <rect class="panel-dark" x="660" y="584" width="490" height="60"/>
+    <text class="heading" x="905" y="610" text-anchor="middle">2. Analysability status</text>
+    <text class="small" x="905" y="632" text-anchor="middle">Recorded separately</text>
+    <path class="connector" d="M1165 644 L1165 668" marker-end="url(#arrow)"/>
+    <rect class="panel-dark" x="660" y="668" width="490" height="55"/>
+    <text class="heading" x="905" y="703" text-anchor="middle">3. Primary static security heuristics</text>
+    <path class="connector" d="M1165 723 L1165 747" marker-end="url(#arrow)"/>
+    <rect class="panel-dark" x="660" y="747" width="490" height="35"/>
+    <text class="small" x="905" y="770" text-anchor="middle">4. Secondary heuristic agreement audit + calibration controls</text>
+  </g>
+
+  <!-- Interpretation -->
+  <g>
+    <rect class="panel-ai" x="1240" y="430" width="520" height="365"/>
+    <path class="band-ai" d="M1254 430 H1746 Q1760 430 1760 444 V478 H1240 V444 Q1240 430 1254 430 Z"/>
+    <text class="band-label" x="1500" y="461" text-anchor="middle">Analysis and interpretation</text>
+    <text class="text" x="1270" y="520">Per-arm heuristic failure rates</text>
+    <text class="small" x="1270" y="547">Descriptive marginal Wilson intervals</text>
+    <text class="text" x="1270" y="584">Neutral vs guided point differences</text>
+    <text class="small" x="1270" y="611">Descriptive only; no prompt-effect inference</text>
+    <line class="divider" x1="1270" y1="635" x2="1730" y2="635"/>
+    <text class="small" x="1270" y="669">Static heuristic failures are not runtime exploits,</text>
+    <text class="small" x="1270" y="693">human security ratings, or semantic correctness.</text>
+    <text class="small" x="1270" y="728">The contrast represents the whole generic guidance</text>
+    <text class="small" x="1270" y="752">package, not individual control cues.</text>
+    <text class="tiny" x="1270" y="779">AI source assessment is separate from the deployed API.</text>
+  </g>
+
+  <path class="connector" d="M1190 614 L1215 614" marker-end="url(#arrow)"/>
+
+  <!-- Inference gate -->
+  <rect class="panel-warn" x="40" y="830" width="1720" height="160"/>
+  <text x="900" y="869" text-anchor="middle" font-size="21" font-weight="700" fill="#8a2825">PAIRED PROMPT-EFFECT INFERENCE SUPPRESSED</text>
+  <text class="text" x="900" y="908" text-anchor="middle">OpenAI system_fingerprint differs between neutral and security-guided outputs for OAuth, JWT and Sessions.</text>
+  <text class="text" x="900" y="938" text-anchor="middle">Report arm-level descriptive rates and point differences only; do not present paired confidence intervals or p-values as inferential evidence.</text>
+  <text class="small" x="900" y="969" text-anchor="middle">Fingerprint variation prevents attribution of observed differences to prompt guidance alone.</text>
+
+  <!-- Reproducibility boundary -->
+  <rect class="panel-muted" x="40" y="1020" width="1720" height="175"/>
+  <text class="heading" x="70" y="1060">Reproducibility and execution boundary</text>
+  <text class="text" x="70" y="1097">The plan-only command makes no provider calls. Live generation is blocked by the offline freeze unless explicitly authorized.</text>
+  <text class="text" x="70" y="1128">Each cohort block is written to a unique study directory; exact counts and provenance are validated before aggregation.</text>
+  <text class="small" x="70" y="1168">Up to five attempts apply to each individual output. This retry ceiling does not change the target of 360 successful outputs.</text>
+  <text class="tiny" x="70" y="1225">Study scope: OpenAI and Claude • neutral and security-guided prompts • Sessions, JWT and OAuth 2.0 with PKCE</text>
+</svg>

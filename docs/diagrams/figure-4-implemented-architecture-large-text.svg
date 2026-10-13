@@ -1,0 +1,229 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="4000" height="3000" viewBox="0 0 2000 1500" role="img" aria-labelledby="title desc">
+  <title id="title">Figure 4. Implemented unified API architecture, persistence boundaries and evidence generation (large text edition)</title>
+  <desc id="desc">Accurate architecture diagram for the TypeScript and Express API. It shows shared middleware, Sessions, JWT and simulated OAuth routes, current PostgreSQL Prisma models and relationships, selected AuditLog event writes rather than per-request access auditing, and evaluation artifacts stored separately from application database records.</desc>
+  <defs>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; fill: #17324d; }
+      .title { font-size: 40px; font-weight: 700; }
+      .subtitle { font-size: 19px; fill: #49647e; }
+      .panel { fill: #f7faff; stroke: #2b5f91; stroke-width: 2; rx: 12; }
+      .panel-dark { fill: #e8f1fb; stroke: #2b5f91; stroke-width: 2; rx: 12; }
+      .panel-muted { fill: #f3f6f9; stroke: #72869a; stroke-width: 2; rx: 12; }
+      .panel-warn { fill: #fff7ed; stroke: #bd8b34; stroke-width: 2; rx: 12; }
+      .panel-ai { fill: #f8f6ff; stroke: #6e63a7; stroke-width: 2; rx: 12; }
+      .band { fill: #173f68; }
+      .band-muted { fill: #61778d; }
+      .band-ai { fill: #524b83; }
+      .band-label { font-size: 22px; font-weight: 700; fill: #ffffff; }
+      .heading { font-size: 20px; font-weight: 700; }
+      .text { font-size: 16.5px; }
+      .small { font-size: 14.5px; fill: #38536d; }
+      .tiny { font-size: 13.5px; fill: #38536d; }
+      .connector { fill: none; stroke: #426889; stroke-width: 3; }
+      .relation { fill: none; stroke: #73899d; stroke-width: 2; }
+      .data-connector { fill: none; stroke: #426889; stroke-width: 2.5; }
+      .evidence-connector { fill: none; stroke: #6e63a7; stroke-width: 2.5; stroke-dasharray: 9 7; }
+      .divider { stroke: #c6d4e1; stroke-width: 1.3; }
+      .tag { fill: #ffffff; stroke: #9bb0c4; stroke-width: 1.2; rx: 7; }
+      .model { fill: #ffffff; stroke: #647b91; stroke-width: 1.5; rx: 8; }
+      .model-head { fill: #edf1f5; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#426889"/>
+    </marker>
+    <marker id="arrow-start" markerWidth="10" markerHeight="10" refX="2" refY="5" orient="auto">
+      <path d="M10 0 L0 5 L10 10 Z" fill="#426889"/>
+    </marker>
+  </defs>
+
+  <rect width="2000" height="1500" fill="#ffffff"/>
+  <text class="title" x="1000" y="48" text-anchor="middle">Implemented Unified API Architecture</text>
+  <text class="subtitle" x="1000" y="78" text-anchor="middle">Runtime routes, current Prisma persistence, selected audit events and separate evaluation evidence</text>
+
+  <!-- Runtime path -->
+  <rect class="panel" x="35" y="125" width="205" height="395"/>
+  <path class="band" d="M47 125 H228 Q240 125 240 137 V173 H35 V137 Q35 125 47 125 Z"/>
+  <text class="band-label" x="137" y="158" text-anchor="middle">Clients</text>
+  <text class="text" x="58" y="215">Postman / browser</text>
+  <line class="divider" x1="58" y1="229" x2="218" y2="229"/>
+  <text class="text" x="58" y="261">Jest + Supertest</text>
+  <text class="small" x="58" y="286">Test and benchmark clients</text>
+  <line class="divider" x1="58" y1="305" x2="218" y2="305"/>
+  <text class="small" x="58" y="338">All call the same</text>
+  <text class="small" x="58" y="359">Express application.</text>
+  <text class="small" x="58" y="393">No interactive login UI</text>
+  <text class="small" x="58" y="414">is required by the API.</text>
+  <rect class="tag" x="55" y="450" width="165" height="45"/>
+  <text class="tiny" x="137" y="469" text-anchor="middle">HTTP request / response</text>
+  <text class="tiny" x="137" y="486" text-anchor="middle">runtime path</text>
+
+  <rect class="panel-dark" x="275" y="125" width="285" height="395"/>
+  <path class="band" d="M287 125 H548 Q560 125 560 137 V173 H275 V137 Q275 125 287 125 Z"/>
+  <text class="band-label" x="417" y="158" text-anchor="middle">Express pipeline</text>
+  <text class="text" x="300" y="209">Request completion log</text>
+  <text class="small" x="300" y="231">method, path, status, timing, IP</text>
+  <line class="divider" x1="300" y1="246" x2="535" y2="246"/>
+  <text class="text" x="300" y="273">Helmet + CORS allow-list</text>
+  <text class="text" x="300" y="309">JSON + cookie parsing</text>
+  <text class="text" x="300" y="345">Express middleware cookie:</text>
+  <text class="small" x="300" y="367">appSessionId; optional Redis</text>
+  <text class="text" x="300" y="403">Route-specific rate limits</text>
+  <text class="text" x="300" y="439">Central error handler</text>
+  <rect class="panel-muted" x="295" y="452" width="245" height="58"/>
+  <text class="tiny" x="417" y="476" text-anchor="middle">appSessionId is not</text>
+  <text class="tiny" x="417" y="496" text-anchor="middle">the evaluated Session.id</text>
+
+  <rect class="panel" x="600" y="125" width="420" height="395"/>
+  <path class="band" d="M612 125 H1008 Q1020 125 1020 137 V173 H600 V137 Q600 125 612 125 Z"/>
+  <text class="band-label" x="810" y="158" text-anchor="middle">Sessions — database-backed</text>
+  <text class="text" x="627" y="207">POST /sessions/login</text>
+  <text class="small" x="627" y="230">Email/password; server issues sessionId cookie.</text>
+  <text class="text" x="627" y="267">GET /sessions/protected</text>
+  <text class="small" x="627" y="290">Resolve Session row and check expiry.</text>
+  <text class="text" x="627" y="327">POST /sessions/logout</text>
+  <text class="small" x="627" y="350">Delete Session row; clear sessionId cookie.</text>
+  <text class="small" x="627" y="386">CSRF support: GET /sessions/csrf-token</text>
+  <text class="small" x="627" y="408">and POST /sessions/protected-action.</text>
+  <rect class="tag" x="625" y="440" width="370" height="58"/>
+  <text class="small" x="810" y="464" text-anchor="middle">The evaluated sessionId cookie resolves to the</text>
+  <text class="small" x="810" y="484" text-anchor="middle">explicit Session model, not Express appSessionId.</text>
+
+  <rect class="panel" x="1045" y="125" width="390" height="395"/>
+  <path class="band" d="M1057 125 H1423 Q1435 125 1435 137 V173 H1045 V137 Q1045 125 1057 125 Z"/>
+  <text class="band-label" x="1240" y="158" text-anchor="middle">JWT — signed bearer token</text>
+  <text class="text" x="1072" y="207">POST /jwt/login</text>
+  <text class="small" x="1072" y="230">Email/password; issue signed JWT.</text>
+  <text class="small" x="1072" y="263">Configured algorithm, issuer, audience, expiry.</text>
+  <text class="text" x="1072" y="300">GET /jwt/protected</text>
+  <text class="small" x="1072" y="323">Verify signature and required claims.</text>
+  <line class="divider" x1="1072" y1="341" x2="1408" y2="341"/>
+  <text class="small" x="1072" y="372">JWT access tokens are not persisted in a</text>
+  <text class="small" x="1072" y="394">Prisma token table; login reads the User.</text>
+  <rect class="tag" x="1070" y="440" width="340" height="58"/>
+  <text class="small" x="1240" y="464" text-anchor="middle">Stateless access-token validation;</text>
+  <text class="small" x="1240" y="484" text-anchor="middle">no JWT revocation blocklist is implemented.</text>
+
+  <rect class="panel-warn" x="1460" y="125" width="505" height="395"/>
+  <path fill="#9b6a15" d="M1472 125 H1953 Q1965 125 1965 137 V173 H1460 V137 Q1460 125 1472 125 Z"/>
+  <text class="band-label" x="1712" y="158" text-anchor="middle">OAuth 2.0 + PKCE simulation</text>
+  <text class="text" x="1487" y="207">POST /oauth/authorize</text>
+  <text class="small" x="1487" y="230">Supplied pre-seeded userId; existence checked</text>
+  <text class="small" x="1487" y="251">only. No user authentication or consent step.</text>
+  <text class="small" x="1487" y="282">Client and requested scope checked. Redirect</text>
+  <text class="small" x="1487" y="303">URI is optional; when supplied, allow-list checked.</text>
+  <text class="text" x="1487" y="339">POST /oauth/token → GET /oauth/protected</text>
+  <text class="small" x="1487" y="362">Code / PKCE checks; opaque stored token hash</text>
+  <text class="small" x="1487" y="383">and expiry validated on protected request.</text>
+  <text class="small" x="1487" y="414">Scope is returned, not enforced as route permission.</text>
+  <text class="tiny" x="1487" y="448">Also: /refresh, /revoke, /introspect</text>
+  <text class="tiny" x="1487" y="475">This is not a complete production OAuth flow.</text>
+
+  <!-- Inbound / outbound runtime connectors -->
+  <path class="connector" d="M240 320 L275 320" marker-end="url(#arrow)"/>
+  <path class="connector" d="M560 320 L580 320 L580 95 L1712 95"/>
+  <path class="connector" d="M810 95 L810 125" marker-end="url(#arrow)"/>
+  <path class="connector" d="M1240 95 L1240 125" marker-end="url(#arrow)"/>
+  <path class="connector" d="M1712 95 L1712 125" marker-end="url(#arrow)"/>
+
+  <!-- Mechanisms use PostgreSQL/Prisma state where shown. -->
+  <path class="data-connector" d="M810 520 L810 565" marker-start="url(#arrow-start)" marker-end="url(#arrow)"/>
+  <path class="data-connector" d="M1240 520 L1240 548 L990 548 L990 565" marker-end="url(#arrow)"/>
+  <path class="data-connector" d="M1712 520 L1712 548 L990 548 L990 565" marker-end="url(#arrow)"/>
+
+  <!-- Current persistence layer, with schema-accurate model/field details. -->
+  <rect class="panel-muted" x="35" y="565" width="1930" height="425"/>
+  <path class="band-muted" d="M47 565 H1953 Q1965 565 1965 577 V615 H35 V577 Q35 565 47 565 Z"/>
+  <text class="band-label" x="1000" y="598" text-anchor="middle">PostgreSQL via Prisma — models and fields from prisma/schema.prisma</text>
+
+  <text class="tiny" x="1000" y="636" text-anchor="middle">PostgreSQL via DATABASE_URL. User 1—0..* session, code, token, reset and audit rows; OAuthClient 1—0..* code and token rows.</text>
+
+  <!-- Primary identity and client models -->
+  <g>
+    <rect class="model" x="55" y="650" width="380" height="150"/>
+    <path class="model-head" d="M63 650 H427 Q435 650 435 658 V685 H55 V658 Q55 650 63 650 Z"/>
+    <text class="heading" x="245" y="674" text-anchor="middle">User</text>
+    <text class="small" x="73" y="711">id String PK; default uuid()</text>
+    <text class="small" x="73" y="730">email String unique; password String</text>
+    <text class="small" x="73" y="749">mfaEnabled Boolean; default false</text>
+    <text class="small" x="73" y="768">mfaSecret String?</text>
+    <text class="small" x="73" y="787">createdAt DateTime; default now()</text>
+  </g>
+  <g>
+    <rect class="model" x="455" y="650" width="320" height="150"/>
+    <path class="model-head" d="M463 650 H767 Q775 650 775 658 V685 H455 V658 Q455 650 463 650 Z"/>
+    <text class="heading" x="615" y="674" text-anchor="middle">Session</text>
+    <text class="small" x="473" y="711">id String PK default cuid()</text>
+    <text class="small" x="473" y="733">userId String FK; expiresAt DateTime</text>
+    <text class="small" x="473" y="755">createdAt DateTime default now()</text>
+  </g>
+  <g>
+    <rect class="model" x="795" y="650" width="320" height="150"/>
+    <path class="model-head" d="M803 650 H1107 Q1115 650 1115 658 V685 H795 V658 Q795 650 803 650 Z"/>
+    <text class="heading" x="955" y="674" text-anchor="middle">OAuthClient</text>
+    <text class="small" x="813" y="711">id String PK (client ID)</text>
+    <text class="small" x="813" y="733">secret String; name String</text>
+    <text class="tiny" x="813" y="770">Redirect allow-list is app configuration,</text>
+    <text class="tiny" x="813" y="788">not a redirectUri schema field.</text>
+  </g>
+  <g>
+    <rect class="model" x="1135" y="650" width="810" height="150"/>
+    <path class="model-head" d="M1143 650 H1937 Q1945 650 1945 658 V685 H1135 V658 Q1135 650 1143 650 Z"/>
+    <text class="heading" x="1540" y="674" text-anchor="middle">PasswordResetToken — supplementary account security</text>
+    <text class="small" x="1153" y="711">id String PK default uuid(); userId String FK; tokenHash String unique</text>
+    <text class="small" x="1153" y="733">expiresAt DateTime; usedAt DateTime?; createdAt DateTime default now()</text>
+  </g>
+
+  <!-- OAuth credential and audit models -->
+  <g>
+    <rect class="model" x="55" y="815" width="620" height="170"/>
+    <path class="model-head" d="M63 815 H667 Q675 815 675 823 V850 H55 V823 Q55 815 63 815 Z"/>
+    <text class="heading" x="365" y="839" text-anchor="middle">OAuthAuthorizationCode</text>
+    <text class="small" x="73" y="876">id String PK; default cuid(); code String unique</text>
+    <text class="small" x="73" y="898">userId String FK; clientId String FK</text>
+    <text class="small" x="73" y="920">state String?; scope String?; expiresAt DateTime</text>
+    <text class="small" x="73" y="942">used Boolean; default false; createdAt DateTime</text>
+    <text class="small" x="73" y="964">codeChallenge String?; codeChallengeMethod String?</text>
+  </g>
+  <g>
+    <rect class="model" x="695" y="815" width="620" height="170"/>
+    <path class="model-head" d="M703 815 H1307 Q1315 815 1315 823 V850 H695 V823 Q695 815 703 815 Z"/>
+    <text class="heading" x="1005" y="839" text-anchor="middle">OAuthAccessToken</text>
+    <text class="small" x="713" y="876">id String PK; default uuid()</text>
+    <text class="small" x="713" y="898">accessToken String unique; refreshToken String unique</text>
+    <text class="small" x="713" y="920">userId String FK; clientId String FK</text>
+    <text class="small" x="713" y="942">scope String?; expiresAt DateTime</text>
+    <text class="small" x="713" y="964">refreshExpiresAt DateTime; createdAt DateTime</text>
+  </g>
+  <g>
+    <rect class="model" x="1335" y="815" width="610" height="170"/>
+    <path class="model-head" d="M1343 815 H1937 Q1945 815 1945 823 V850 H1335 V823 Q1335 815 1343 815 Z"/>
+    <text class="heading" x="1640" y="839" text-anchor="middle">AuditLog — selected application-event logging</text>
+    <text class="small" x="1353" y="876">id String PK; default uuid(); userId String? FK</text>
+    <text class="small" x="1353" y="898">eventType String; outcome String; ipAddress String?</text>
+    <text class="small" x="1353" y="920">userAgent String?; metadata Json?; createdAt DateTime</text>
+    <text class="tiny" x="1353" y="955">Selected auth/account events only; not per-request access logging.</text>
+  </g>
+  <!-- Evidence is deliberately outside runtime persistence. -->
+  <rect class="panel-ai" x="35" y="1005" width="1930" height="380"/>
+  <path class="band-ai" d="M47 1005 H1953 Q1965 1005 1965 1017 V1055 H35 V1017 Q35 1005 47 1005 Z"/>
+  <text class="band-label" x="1000" y="1038" text-anchor="middle">Evaluation evidence — separate from API runtime tables</text>
+
+  <rect class="panel" x="85" y="1080" width="830" height="230"/>
+  <path class="band" d="M97 1080 H903 Q915 1080 915 1092 V1128 H85 V1092 Q85 1080 97 1080 Z"/>
+  <text class="band-label" x="500" y="1111" text-anchor="middle">Performance study files</text>
+  <text class="text" x="115" y="1162">Protocol-v7 matched sequential runs: summaries, raw timings and metadata</text>
+  <text class="small" x="115" y="1192">Stored under docs/performance-results/runs/&lt;runId&gt;/</text>
+  <text class="text" x="115" y="1235">Separate exploratory concurrent-load records; not pooled with v7 results</text>
+  <text class="small" x="115" y="1265">Analysis reads the retained run files; PostgreSQL AuditLog is not an input.</text>
+
+  <rect class="panel" x="1085" y="1080" width="830" height="230"/>
+  <path class="band-ai" d="M1097 1080 H1903 Q1915 1080 1915 1092 V1128 H1085 V1092 Q1085 1080 1097 1080 Z"/>
+  <text class="band-label" x="1500" y="1111" text-anchor="middle">AI-generated source study files</text>
+  <text class="text" x="1115" y="1162">Isolated cohorts, per-output source and provenance metadata</text>
+  <text class="small" x="1115" y="1192">Stored under ai-generated/cohorts/; reports under docs/generated/</text>
+  <text class="text" x="1115" y="1235">Static heuristic assessment; source samples are not deployed to the API</text>
+  <text class="small" x="1115" y="1265">AI assessments do not read runtime database rows or AuditLog events.</text>
+
+  <rect class="panel-muted" x="85" y="1330" width="1830" height="38"/>
+  <text class="small" x="1000" y="1355" text-anchor="middle">Solid arrows: API request or application data path. Evaluation files are a separate workflow, not stored in Prisma models or AuditLog.</text>
+</svg>
