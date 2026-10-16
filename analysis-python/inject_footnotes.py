@@ -87,7 +87,7 @@ FOOTNOTES = {
         "compact_vertical_shift": -22.0,
     },
     "variance-under-load.svg": {
-        "text": "Shows latency variance under sustained load, emphasizing stability and jitter behavior that may be hidden by average latency alone.",
+        "text": "Shows latency coefficient of variation from verified protocol-v7 repeated runs; higher values indicate wider latency spread.",
         "directory": "performance",
         "scale": 0.95,
     },

@@ -56,6 +56,8 @@ npm run perf:analyze
 
 Each `perf:once` invocation creates one non-overwriting run block containing all three mechanisms under baseline and attack conditions. Protocol v7 uses 1,000 protected-resource requests per mechanism and condition, reusing one localhost server and one keep-alive connection per test suite. Baseline credentials use the Bearer scheme and must return HTTP 200; invalid-credential attack requests must return HTTP 401. OAuth token issuance is setup, not the timed workload. The Sessions attack sends an invalid value under the application’s `sessionId` cookie name. The session cookie lifetime is bounded by both the cookie and persisted-session TTL settings. Condition order alternates across blocks; no warm-up requests are used. Run metadata hashes the benchmark, authentication, database-schema, and lockfile sources and records the Git revision/dirty state. Throughput is derived from mean request latency and is not an independent concurrent-load measurement. Earlier-protocol and legacy blocks remain preserved but are excluded from v7 paired inference. Repeat the command with unique run IDs only as required by the approved study design.
 
+The current-source protocol-v7 results are the 30 verified blocks collected on 12 October 2026 and documented in [`docs/performance-results/current-source-v7-20261012/analysis.md`](./performance-results/current-source-v7-20261012/analysis.md). Their source provenance and revalidation are recorded in [`docs/CURRENT_SOURCE_REVALIDATION.md`](./CURRENT_SOURCE_REVALIDATION.md). The top-level [`docs/performance-results/analysis.md`](./performance-results/analysis.md) is a historical 7 October analysis of an earlier source snapshot; retain it for provenance, but do not use it as the current-source result or pool its estimates with the 12 October analysis.
+
 The separate concurrent-load extension is exploratory and must not be pooled with protocol-v7 sequential-latency results:
 
 ```powershell
@@ -146,8 +148,9 @@ Then unset it after regeneration.
 - `docs/generated/PREREGISTERED_COMPLIANCE.md`
 - `docs/generated/ML_LITE_ANALYSIS_SUMMARY.md`
 - `docs/generated/RUN_MANIFEST.json`
-- `docs/performance-results/analysis.md`
-- `docs/performance-results/statistical-summary.csv`
+- `docs/performance-results/current-source-v7-20261012/analysis.md` (current-source protocol-v7 analysis)
+- `docs/performance-results/current-source-v7-20261012/statistical-summary.csv` (current-source protocol-v7 summary)
+- `docs/performance-results/analysis.md` (historical 7 October analysis; retained for provenance)
 - `docs/performance-results/concurrent-load-v1/analysis.md` (when the exploratory concurrent protocol is run)
 - `docs/performance-results/concurrent-load-v1/summary.csv` (when the exploratory concurrent protocol is run)
 - `docs/generated/AI_HEURISTIC_AUDIT_PACKET.md`

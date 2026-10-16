@@ -2112,6 +2112,22 @@ def chart_authentication_overhead_breakdown(perf_df: pd.DataFrame) -> float:
     return float(np.mean(attack_shares)) if attack_shares else 0.0
 
 
+def save_variance_under_load_chart(fig: plt.Figure) -> None:
+    fig.tight_layout()
+    note = fig.text(
+        0.5,
+        -0.12,
+        "Verified protocol-v7 repeated runs; higher CV indicates wider latency spread.",
+        ha="center",
+        va="top",
+        fontsize=8,
+        color="#6b7280",
+        style="italic",
+    )
+    note.remove()
+    save_chart(fig, CHARTS_PERF_DIR, "variance-under-load.svg")
+
+
 def chart_variance_under_load(perf_df: pd.DataFrame) -> float:
     repeated_df = load_repeated_performance_samples()
 
@@ -2127,13 +2143,13 @@ def chart_variance_under_load(perf_df: pd.DataFrame) -> float:
 
             fig, ax = plt.subplots(figsize=(8.4, 5.0))
             sns.barplot(data=stats, x="model", y="cv_pct", hue="model", palette="crest", legend=False, ax=ax)
-            ax.set_title("Variance Under Load (Repeated Runs)")
+            ax.set_title("Variance Under Load (Verified Protocol-v7 Repeated Runs)")
             ax.set_xlabel("Authentication Model")
             ax.set_ylabel("Coefficient of Variation (%)")
             for patch, value in zip(ax.patches, stats["cv_pct"]):
                 ax.annotate(f"{value:.2f}%", (patch.get_x() + patch.get_width() / 2, patch.get_height()),
                             ha="center", va="bottom", fontsize=8)
-            save_chart(fig, CHARTS_PERF_DIR, "variance-under-load.svg")
+            save_variance_under_load_chart(fig)
             return float(stats["cv_pct"].mean())
 
     # Fallback path when repeated runs are unavailable: derive an instability index
@@ -2177,7 +2193,7 @@ def chart_variance_under_load(perf_df: pd.DataFrame) -> float:
     for patch, value in zip(ax2.patches, fallback_df["instability_index"]):
         ax2.annotate(f"{value:.2f}", (patch.get_x() + patch.get_width() / 2, patch.get_height()),
                      ha="center", va="bottom", fontsize=8)
-    save_chart(fig2, CHARTS_PERF_DIR, "variance-under-load.svg")
+    save_variance_under_load_chart(fig2)
 
     return float(fallback_df["instability_index"].mean())
 
@@ -2282,13 +2298,14 @@ def write_chart_catalog() -> None:
         "|---|---|",
         "| `primary/performance/runtime-latency-comparison-ci.svg` | Baseline versus attack latency with confidence intervals. |",
         "| `primary/performance/authentication-overhead-breakdown.svg` | Phase-weighted authentication overhead decomposition. |",
-        "| `primary/performance/variance-under-load.svg` | Latency spread and run-to-run stability under load. |",
+        "| `primary/performance/variance-under-load.svg` | Latency coefficient of variation from verified protocol-v7 repeated runs. |",
         "| `primary/security/ai-vs-human-severity-gap-ci.svg` | Legacy pre-v2 AI/baseline risk estimate; not based on clean-cohort outputs or human ratings. |",
         "| `primary/security/security-critical-control-risk-density.svg` | Weighted risk density at critical control points. |",
         "| `primary/security/normalized-failure-density.svg` | Failure density normalized by code footprint. |",
         "| `primary/security/misconfiguration-frequency-comparison.svg` | Misconfiguration frequency by model and source. |",
         "| `primary/security/misconfiguration-severity-heatmap.svg` | Severity intensity by misconfiguration type and model. |",
         "| `primary/security/ai-failure-rates.svg` | AI-generated implementation failure rates by model. |",
+        "| `primary/security/ai-heuristic-flag-rates-by-mechanism.svg` | Clean-cohort static heuristic flag rates by authentication mechanism; not runtime vulnerability rates. |",
         "| `primary/security/ai-vs-human-dominance-heatmap.svg` | Legacy dominance view from shared-output AI results; not clean-cohort evidence. |",
         "| `primary/security/token-lifecycle-fragility.svg` | Fragility across token/session lifecycle phases. |",
         "| `primary/maintainability/ai-sample-syntax-issues-by-model-stage.svg` | Structural-analysis parser errors by model; not a TypeScript compile result. |",
@@ -2313,6 +2330,12 @@ def write_chart_catalog() -> None:
         "| `supporting/maintainability/complexity-to-misconfig-regression.svg` | Secondary regression view similar to complexity-frequency trend. |",
         "| `supporting/synthesis/correctness-security-tradeoff.svg` | Alternate trade-off visual for appendix-level comparison. |",
         "| `supporting/synthesis/provider-bias-analysis.svg` | Additional provider-pattern context beyond overlap and entropy. |",
+        "",
+        "## Historical Chart Snapshots",
+        "",
+        "| Chart | Status |",
+        "|---|---|",
+        "| `historical/performance/variance-under-load-2026-10-07.svg` | Archived 7 October snapshot; superseded by the current verified protocol-v7 chart. |",
         "",
         "For full derivation and sensitivity details, see:",
         "- `docs/generated/FAILURE_PROPAGATION_ANALYSIS.md`",

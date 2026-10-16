@@ -1,32 +1,24 @@
 # API Authentication Evaluation
 
-This repository contains three authentication models: database-backed Sessions, JWT, and OAuth 2.0 with PKCE. It includes secure implementations, deliberately weakened variants, attack tests, performance studies, and an evaluation of AI-generated examples.
+Compare database-backed Sessions, JWT, and OAuth 2.0 with PKCE in a shared API. The repository includes secure implementations, deliberately weakened variants, security tests, performance studies, and a static evaluation of AI-generated code.
 
-## Run Locally
+## Quick start
 
-You need Node.js 18+ and PostgreSQL. Redis is not required for the local setup.
+Requires Node.js 18+ and PostgreSQL. Redis is not needed.
 
 ```powershell
 npm ci
 Copy-Item .env.example .env
-# Set DATABASE_URL in .env for your local PostgreSQL instance.
+# Set DATABASE_URL in .env.
 npm run db:setup
 npm run dev
 ```
 
-Before the first local Postman login, run `npm run db:setup` against a fresh or disposable database. It applies migrations, then clears and reseeds the database with the Postman demo account `main@example.com` / `password123`. The automated-test account `user-123` is only a test fixture; it is not seeded for app use. Users do not need to re-run `db:setup` every time you start the app. It deletes existing application data, so do not run it against data you need to keep.
+`npm run db:setup` applies migrations and resets/reseeds application data. Use a fresh or disposable database; do not run it against data you need to keep. Start the API with `npm run dev`, then check liveness with `npm run healthcheck` or database readiness at `http://localhost:3001/health/ready`.
 
-`npm run dev` stays in the foreground. Keep it running in one terminal; in another, run:
+## Build and tests
 
-```powershell
-npm run healthcheck
-```
-
-That checks `/health/live`. To check database readiness, open `http://localhost:3001/health/ready`. The Docker image contains only the API; there is no Compose stack.
-
-## Tests and Build
-
-**Use a disposable database for database-backed tests.** Standard integration and attack tests, variant tests, and performance collectors reset authentication tables. Do not point these commands at data you need to keep.
+Use a disposable database for database-backed tests; they reset authentication tables.
 
 ```powershell
 npm run build
@@ -35,30 +27,21 @@ npm run test:variants
 npm run docs:check
 ```
 
-`npm run build` compiles TypeScript into `dist`; it does not start the API. Use `npm run dev` during development or `npm start` to run the compiled build.
+The standard test suite excludes the nine deliberately weakened variants; run them separately with `npm run test:variants`. `npm run docs:check` checks for expected generated files but does not regenerate them. The verification wrappers `verify:full`, `verify:deploy`, and `verify:ci` also clean generated artifacts and reseed the database.
 
-`npm test` runs the standard suite. It excludes the nine weakened variants and the baseline/attack performance collection tests, which write timing files. Run variants separately with `npm run test:variants`; to run one variant, add `-- --variant <variant-name>`. `npm run docs:check` only checks that expected files exist; it does not regenerate them.
+## Evidence
 
-For a new, provenance-recorded protocol-v7 performance block, use `npm run perf:once`, then `npm run perf:analyze`. Do not run the individual performance suites through ordinary Jest; they write top-level convenience outputs. `npm run perf:once` keeps collection in a matched block.
+- [Current-source protocol-v7 performance results](docs/performance-results/current-source-v7-20261012/analysis.md): 30 matched sequential blocks, revalidated against current source fingerprints. See the [revalidation record](docs/CURRENT_SOURCE_REVALIDATION.md). These measure protected-resource latency, including invalid-credential rejection; derived throughput is not concurrent capacity.
+- [Historical protocol-v7 results](docs/performance-results/analysis.md) are retained for provenance and use an earlier source snapshot. Do not combine them with the current-source results.
+- [Concurrent-load results](docs/performance-results/concurrent-load-v1/analysis.md) are a separate, exploratory five-block study; they are not production-capacity evidence.
+- [Blinded AI results](docs/generated/AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md) and [unblinded results](docs/generated/AI_PROVIDER_PROMPT_COMPARISON.md): 360 outputs, with 342 triggering at least one static heuristic. These are not runtime vulnerability rates or human ratings. Provider comparisons are descriptive; differing OpenAI system fingerprints prevent confirmatory paired inference.
 
-**Destructive wrapper:** `npm run verify:full`, `npm run verify:deploy`, and `npm run verify:ci` clean ignored generated artifacts and reseed the database. Use a disposable checkout and database if you need to run them.
+## More information
 
-## Current Evidence
-
-- [Protocol-v7 performance analysis](docs/performance-results/analysis.md) covers 30 matched sequential blocks. It measures protected-resource latency, including invalid-credential rejection; derived throughput is not concurrent capacity.
-- [Concurrent-load analysis](docs/performance-results/concurrent-load-v1/analysis.md) is a separate five-block exploratory study at concurrency 1, 10, and 50. Do not pool it with protocol v7 or present it as production-capacity evidence.
-- [Blinded AI results](docs/generated/AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md) and [unblinded AI results](docs/generated/AI_PROVIDER_PROMPT_COMPARISON.md) use the isolated protocol-v2 cohort: 360 outputs across four provider/prompt arms. There are 342 heuristic failures; results are descriptive because OpenAI system fingerprints differ between prompt conditions, so paired inference is suppressed.
-- AI failures mean that one or more static heuristic checks failed. They are not runtime vulnerability rates or human security ratings. Independent human ratings have not been collected. Other retained AI-vs-human reports and some footprint summaries use legacy data; they are labeled historical and should not be combined with the clean cohort.
-- `npm run ai:audit:packet` creates a blinded 36-output review packet. Keep `docs/generated/AI_HEURISTIC_AUDIT_KEY_RESTRICTED.json` from reviewers until their ratings are locked.
-- Live AI generation is blocked by the offline freeze by default. Preview a collection without provider calls using `npm run ai:matrix:cohorts -- --plan`. Follow the [reproducibility checklist](docs/REPRODUCIBILITY_CHECKLIST.md) before any live run.
-
-## Docker
-
-Build the API image with `npm run docker:build`. PostgreSQL is not included; set a `DATABASE_URL` reachable from inside the container. With Docker Desktop, use `host.docker.internal` rather than `localhost` to reach a database on the host. Local `.env` files are excluded from the build context.
-
-## References
-
-- [Routes](routes.md)
+- [Reproducibility checklist](docs/REPRODUCIBILITY_CHECKLIST.md) — evidence-generation steps and interpretation cautions.
+- [API routes](routes.md)
 - [Postman collection](postman.json)
-- [Reproducibility checklist](docs/REPRODUCIBILITY_CHECKLIST.md)
-- [Dissertation template guide](docs/DISSERTATION_TEMPLATE_GUIDE.md)
+- [Charts](docs/charts/README.md)
+- [Diagrams](docs/diagrams/README.md)
+
+To build the API Docker image, run `npm run docker:build`. PostgreSQL is not included; configure `DATABASE_URL` to point to a database reachable from the container. Local `.env` files are excluded from the build context.

@@ -1,4 +1,4 @@
-"""Regenerate Figure 8 (authentication evidence matrix) as SVG and PNG."""
+"""Regenerate Figure 8 (authentication evidence matrix) as SVG."""
 from pathlib import Path
 
 import matplotlib
@@ -9,7 +9,6 @@ from matplotlib.patches import Rectangle
 
 ROOT = Path(__file__).resolve().parents[1]
 SVG_OUT = ROOT / "docs/charts/primary/synthesis/figure-8-authentication-evidence-matrix.svg"
-PNG_OUT = ROOT / "docs/charts/png/figure-8-authentication-evidence-matrix.png"
 
 GREEN, AMBER, RED = "#c8e6c9", "#fce8b2", "#f4c7c3"
 
@@ -92,9 +91,7 @@ def main() -> None:
             color="#222222", linespacing=1.6)
 
     SVG_OUT.parent.mkdir(parents=True, exist_ok=True)
-    PNG_OUT.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(SVG_OUT, format="svg")
-    fig.savefig(PNG_OUT, dpi=150)
     plt.close(fig)
 
 

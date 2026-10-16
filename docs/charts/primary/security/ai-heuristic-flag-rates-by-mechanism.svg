@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" viewBox="0 0 1100 560" role="img" aria-labelledby="title description">
+  <title id="title">AI-generated outputs triggering selected security-control heuristics by authentication mechanism</title>
+  <desc id="description">In the clean cohort, selected static heuristics flagged 119 of 120 OAuth outputs, 107 of 120 JWT outputs, and 116 of 120 Sessions outputs. A flag is not a confirmed vulnerability or runtime exploit.</desc>
+  <style>
+    text { font-family: Arial, Helvetica, sans-serif; fill: #243247; }
+    .title { font-size: 25px; font-weight: 700; }
+    .subtitle { font-size: 16px; fill: #506176; }
+    .axis-label, .tick { font-size: 15px; fill: #536579; }
+    .mechanism { font-size: 19px; font-weight: 600; }
+    .value { font-size: 17px; font-weight: 700; }
+    .note { font-size: 14px; fill: #46586d; }
+    .grid { stroke: #d9e0e8; stroke-width: 1; }
+    .axis { stroke: #7c8998; stroke-width: 1.2; }
+    .bar { fill: #477b9e; }
+  </style>
+  <rect width="1100" height="560" fill="#ffffff"/>
+  <text class="title" x="550" y="48" text-anchor="middle">AI-generated outputs triggering selected security heuristics</text>
+  <text class="subtitle" x="550" y="78" text-anchor="middle">Clean cohort · 120 outputs per authentication mechanism</text>
+
+  <line class="grid" x1="300" y1="130" x2="300" y2="405"/>
+  <line class="grid" x1="475" y1="130" x2="475" y2="405"/>
+  <line class="grid" x1="650" y1="130" x2="650" y2="405"/>
+  <line class="grid" x1="825" y1="130" x2="825" y2="405"/>
+  <line class="grid" x1="1000" y1="130" x2="1000" y2="405"/>
+
+  <text class="mechanism" x="270" y="190" text-anchor="end">OAuth</text>
+  <rect class="bar" x="300" y="160" width="417.1" height="42" rx="4"/>
+  <text class="value" x="735" y="188">99.2% (119/120)</text>
+
+  <text class="mechanism" x="270" y="285" text-anchor="end">JWT</text>
+  <rect class="bar" x="300" y="255" width="374.5" height="42" rx="4"/>
+  <text class="value" x="692" y="283">89.2% (107/120)</text>
+
+  <text class="mechanism" x="270" y="380" text-anchor="end">Sessions</text>
+  <rect class="bar" x="300" y="350" width="406.0" height="42" rx="4"/>
+  <text class="value" x="724" y="378">96.7% (116/120)</text>
+
+  <line class="axis" x1="300" y1="405" x2="1000" y2="405"/>
+  <text class="tick" x="300" y="432" text-anchor="middle">0%</text>
+  <text class="tick" x="475" y="432" text-anchor="middle">25%</text>
+  <text class="tick" x="650" y="432" text-anchor="middle">50%</text>
+  <text class="tick" x="825" y="432" text-anchor="middle">75%</text>
+  <text class="tick" x="1000" y="432" text-anchor="middle">100%</text>
+  <text class="axis-label" x="650" y="462" text-anchor="middle">Outputs triggering at least one selected heuristic</text>
+
+  <line x1="60" y1="488" x2="1040" y2="488" stroke="#e1e6ec"/>
+  <text class="note" x="550" y="518" text-anchor="middle">Static source-pattern heuristic flags; not confirmed vulnerabilities, runtime exploits, or human ratings.</text>
+  <text class="note" x="550" y="540" text-anchor="middle">Cohort: ai-clean-2026-10-05 · rates are descriptive.</text>
+</svg>

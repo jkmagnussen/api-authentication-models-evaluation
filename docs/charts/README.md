@@ -1,5 +1,7 @@
 # Charts Catalog
 
+Charts are kept as vector SVG files; redundant PNG exports are not retained.
+
 Charts are grouped into two tiers:
 - `primary/`: main narrative charts
 - `supporting/`: overlap/context charts retained for appendix use
@@ -10,13 +12,14 @@ Charts are grouped into two tiers:
 |---|---|
 | `primary/performance/runtime-latency-comparison-ci.svg` | Baseline versus attack latency with confidence intervals. |
 | `primary/performance/authentication-overhead-breakdown.svg` | Phase-weighted authentication overhead decomposition. |
-| `primary/performance/variance-under-load.svg` | Latency spread and run-to-run stability under load. |
+| `primary/performance/variance-under-load.svg` | Latency coefficient of variation from verified protocol-v7 repeated runs. |
 | `primary/security/ai-vs-human-severity-gap-ci.svg` | Legacy pre-v2 AI/baseline risk estimate; not based on clean-cohort outputs or human ratings. |
 | `primary/security/security-critical-control-risk-density.svg` | Weighted risk density at critical control points. |
 | `primary/security/normalized-failure-density.svg` | Failure density normalized by code footprint. |
 | `primary/security/misconfiguration-frequency-comparison.svg` | Misconfiguration frequency by model and source. |
 | `primary/security/misconfiguration-severity-heatmap.svg` | Severity intensity by misconfiguration type and model. |
 | `primary/security/ai-failure-rates.svg` | AI-generated implementation failure rates by model. |
+| `primary/security/ai-heuristic-flag-rates-by-mechanism.svg` | Clean-cohort static heuristic flag rates by authentication mechanism; not runtime vulnerability rates. |
 | `primary/security/ai-vs-human-dominance-heatmap.svg` | Legacy dominance view from shared-output AI results; not clean-cohort evidence. |
 | `primary/security/token-lifecycle-fragility.svg` | Fragility across token/session lifecycle phases. |
 | `primary/maintainability/ai-sample-syntax-issues-by-model-stage.svg` | Structural-analysis parser errors by model; not a TypeScript compile result. |
@@ -41,6 +44,12 @@ Charts are grouped into two tiers:
 | `supporting/maintainability/complexity-to-misconfig-regression.svg` | Secondary regression view similar to complexity-frequency trend. |
 | `supporting/synthesis/correctness-security-tradeoff.svg` | Alternate trade-off visual for appendix-level comparison. |
 | `supporting/synthesis/provider-bias-analysis.svg` | Additional provider-pattern context beyond overlap and entropy. |
+
+## Historical Chart Snapshots
+
+| Chart | Status |
+|---|---|
+| `historical/performance/variance-under-load-2026-10-07.svg` | Archived 7 October snapshot; superseded by the current verified protocol-v7 chart. |
 
 For full derivation and sensitivity details, see:
 - `docs/generated/FAILURE_PROPAGATION_ANALYSIS.md`
