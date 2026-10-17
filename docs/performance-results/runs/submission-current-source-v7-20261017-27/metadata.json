@@ -1,0 +1,75 @@
+{
+  "runId": "submission-current-source-v7-20261017-27",
+  "protocolVersion": 7,
+  "matchedBlockVerified": true,
+  "runUnit": "One invocation containing all mechanisms under both conditions; each suite reuses one localhost server and keep-alive connection.",
+  "startedAt": "2026-10-17T14:34:12.068Z",
+  "completedAt": "2026-10-17T14:34:21.728Z",
+  "runtime": {
+    "nodeVersion": "v24.19.0",
+    "platform": "win32",
+    "platformRelease": "10.0.26300",
+    "arch": "x64"
+  },
+  "host": {
+    "hostname": "JKMagnussen_PC",
+    "cpuModel": "AMD Ryzen 9 9950X 16-Core Processor            ",
+    "cpuCores": 32,
+    "totalMemoryBytes": 66188972032
+  },
+  "sourceProvenance": {
+    "gitCommit": "137a25e669feb0da087f49b8638f7e59c4fd171b",
+    "workingTreeDirty": true,
+    "sourceSha256": {
+      "package-lock.json": "b40d1cb7e68eb901b92261b17619ca899b33dd1164d35c826a364a68fe089c9c",
+      "prisma/schema.prisma": "892b54f5f10b8eafe2cbfd900000c390f2df7f10b7c8d498a71735277b3c6964",
+      "scripts/run-performance-benchmark.js": "1e27278281fdd8efd9fa67557c4b588facac0f7bf2788c7f0b358be7ae83fc56",
+      "src/app.ts": "57026df0ea99b089067e4b827939654fb696d5f2ecb13b672b82720708cd3578",
+      "src/config.ts": "02fc451e9476bd1f4ce765c8a6aadca1e661ad841c436eb5e3ec2381299a3b61",
+      "src/db.ts": "6509ba757d9b1e34b422ac63367ba010b9dee12851640f24c6867c8a6f266553",
+      "src/jwt/jwt.controller.ts": "5030f934647e74d79c7c460de985c7d52c4768d37145b389590e559a83eb5f2b",
+      "src/jwt/jwt.keys.ts": "52e6dfa9cdac38fde8b223cf86174e8dfa91febbc122a43124d3a75df91a835a",
+      "src/jwt/jwt.middleware.ts": "0269b085b18c7b98f6602ffcc854220336196be785a2e8e84db16dcb51eb9588",
+      "src/jwt/jwt.service.ts": "5a1fddc51b08e8ddf6e5c604495362b888215b4151ebb272496e7797ebcadd64",
+      "src/oauth/oauth.controller.ts": "e21d1550de8e96c7f85c1a41eadcd2a74cce954525143d70bf9bd28064dc2821",
+      "src/oauth/oauth.middleware.ts": "4173fff309eb690f632cc56b8499e427aa5d914cb186ec9b9300e49a43867257",
+      "src/oauth/oauth.service.ts": "24d8c1e8040fefafd80471c440e0bcd6e9afd2a5b62ac192d0e701ad8c7b7dea",
+      "src/sessions/session.service.ts": "9946c709e1982c7adcfb359bb4ce48ca8a4bf5b26c9afc99d4e616096f8d9de8",
+      "src/sessions/sessions.controller.ts": "da88b766eb3f40d029ec90172f78119aae2d9d343b23980855f5198424ec0c65",
+      "src/sessions/sessions.middleware.ts": "37415fb65c9d8183e21a22a11be2e487ee85523dd3ce7ce2221538a49508c374",
+      "tests/performance/attacks/jwt.attacks.performance.test.ts": "bb037824f29121c5946c8a56334cc22f2ed407aea4d45a4bedfffde391512424",
+      "tests/performance/attacks/oauth.attacks.performance.test.ts": "8b3b8fa86f788064851f9fff1cb076af995863d64a8cc035368cde3f0e36239d",
+      "tests/performance/attacks/sessions.attacks.performance.test.ts": "377f774ea18fd570a02779c65b117eca12f9197a43ccffdde7c66debd05907c2",
+      "tests/performance/baseline/jwt.performance.test.ts": "6ee660fba1dcf34e5477353173435578c5eed698fa22043178498dd3a8c5a431",
+      "tests/performance/baseline/oauth.performance.test.ts": "0fe26c8142bbbf83b9d8d80ba63211bebcc5dc89a9ad5aee1062e5d6bb8b9434",
+      "tests/performance/baseline/sessions.performance.test.ts": "d35c94cea12dd0165304531a28a263a2bb0a8565419c8782f4bba9fad819f726",
+      "tests/performance/utils.ts": "5a4cf7b921f009ece1a38020620cea6f7b97ccfb92616451a54e4c565b4356bb",
+      "tests/setup.ts": "7662d99e1c249612e54d70dc5c26dfdcdd9ab5071ef9e02e2b494484f5f93329"
+    }
+  },
+  "warmup": "none",
+  "httpConnectionPolicy": "One app server and one keep-alive TCP connection per test suite; maxSockets=1.",
+  "conditionOrder": [
+    "baseline",
+    "attacks"
+  ],
+  "conditionOrderPolicy": "alternating order across protocol-verified blocks",
+  "conditions": {
+    "baseline": {
+      "order": 1,
+      "status": "completed",
+      "startedAt": "2026-10-17T14:34:12.162Z",
+      "completedAt": "2026-10-17T14:34:17.087Z",
+      "exitCode": 0
+    },
+    "attacks": {
+      "order": 2,
+      "status": "completed",
+      "startedAt": "2026-10-17T14:34:17.091Z",
+      "completedAt": "2026-10-17T14:34:21.727Z",
+      "exitCode": 0
+    }
+  },
+  "notes": "Both conditions are collected within this invocation. Timed requests reuse one local HTTP server and keep-alive connection. No warm-up requests are used.",
+  "status": "completed"
+}

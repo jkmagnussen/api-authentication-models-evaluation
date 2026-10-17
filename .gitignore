@@ -26,7 +26,13 @@ lerna-debug.log*
 
 # Generated artifacts
 docs/generated/
-docs/performance-results/
+docs/performance-results/*
+!docs/performance-results/current-source-v7-20261017/
+!docs/performance-results/current-source-v7-20261017/**
+!docs/performance-results/runs/
+docs/performance-results/runs/*
+!docs/performance-results/runs/submission-current-source-v7-20261017-*/
+!docs/performance-results/runs/submission-current-source-v7-20261017-*/**
 ai-generated/results/
 ai-generated/arms/
 ai-generated/cohorts/

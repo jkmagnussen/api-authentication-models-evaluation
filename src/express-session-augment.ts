@@ -1,5 +1,5 @@
 // TypeScript augmentation for Express and express-session.
-// - Adds req.userId for session authentication middleware.
+// - Adds authentication context fields to Express requests.
 // - Adds PKCE + token fields to SessionData for OAuth2 flows.
 // This file must be imported once at startup so TS merges the types globally.
 
@@ -11,6 +11,8 @@ import 'express-session';
 declare module 'express-serve-static-core' {
   interface Request {
     userId?: string;
+    clientId?: string;
+    scope?: string | null;
   }
 }
 

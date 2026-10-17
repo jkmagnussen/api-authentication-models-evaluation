@@ -15,8 +15,8 @@ router.post('/revoke', oauthLimiter, revoke);
 router.get('/protected', verifyAccessToken, (req, res) => {
   return res.json({
     message: 'Protected resource accessed',
-    user_id: (req as any).userId,
-    scope: (req as any).scope,
+    user_id: req.userId,
+    scope: req.scope,
   });
 });
 

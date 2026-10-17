@@ -1,4 +1,3 @@
-import request from 'supertest';
 import app from '../../../src/app';
 import { resetDatabase } from '../../setup';
 import { calculateStats, createPerformanceHttpClient, writePerformanceResult } from '../utils';

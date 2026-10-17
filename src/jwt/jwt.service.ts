@@ -39,7 +39,7 @@ export function generateJwt(userId: string) {
   }
 
   if (algorithm === 'none') {
-    return jwt.sign({ userId }, null as any, {
+    return jwt.sign({ userId }, null, {
       ...signOptions,
       algorithm: 'none',
     });
@@ -55,11 +55,13 @@ export function verifyJwt(token: string) {
       ? (decodedHeader.header as { alg?: string; kid?: string })
       : undefined;
   // Select the verifier from trusted configuration, never from the untrusted token's alg header.
-  const verificationAlgorithm = getJwtAlgorithm(getVariantOverrides().jwt?.algorithm) as SupportedJwtAlgorithm;
-  const key = getJwtVerifyKey(verificationAlgorithm, header?.kid);
+  const verificationAlgorithm = getJwtAlgorithm(
+    getVariantOverrides().jwt?.algorithm
+  ) as SupportedJwtAlgorithm;
+  const key = getJwtVerifyKey(verificationAlgorithm, header?.kid) ?? '';
   const algorithms = [verificationAlgorithm] as NonNullable<SignOptions['algorithm']>[];
 
-  return jwt.verify(token, key as any, {
+  return jwt.verify(token, key, {
     algorithms,
     // Issuer and audience are required here, not merely compared when a token happens to include them.
     audience: getJwtAudience(),

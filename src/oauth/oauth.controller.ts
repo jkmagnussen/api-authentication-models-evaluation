@@ -339,7 +339,7 @@ export async function revoke(req: Request, res: Response) {
     where: { accessToken: hashOpaqueToken(token) },
   });
 
-  if (access?.clientId === clientId) {
+  if (access && access.clientId === clientId) {
     await prisma.oAuthAccessToken.delete({ where: { accessToken: hashOpaqueToken(token) } });
     return res.status(200).send();
   }
@@ -348,7 +348,7 @@ export async function revoke(req: Request, res: Response) {
     where: { refreshToken: hashOpaqueToken(token) },
   });
 
-  if (refresh?.clientId === clientId) {
+  if (refresh && refresh.clientId === clientId) {
     await prisma.oAuthAccessToken.delete({ where: { refreshToken: hashOpaqueToken(token) } });
     return res.status(200).send();
   }
@@ -385,7 +385,7 @@ export async function introspect(req: Request, res: Response) {
     where: { accessToken: hashOpaqueToken(token) },
   });
 
-  if (access?.clientId === clientId) {
+  if (access && access.clientId === clientId) {
     const now = new Date();
     const active = access.expiresAt > now;
 
@@ -403,7 +403,7 @@ export async function introspect(req: Request, res: Response) {
     where: { refreshToken: hashOpaqueToken(token) },
   });
 
-  if (refresh?.clientId === clientId) {
+  if (refresh && refresh.clientId === clientId) {
     const now = new Date();
     const active = refresh.refreshExpiresAt > now;
 

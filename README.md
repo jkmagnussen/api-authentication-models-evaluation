@@ -4,7 +4,7 @@ Compare database-backed Sessions, JWT, and OAuth 2.0 with PKCE in a shared API. 
 
 ## Quick start
 
-Requires Node.js 18+ and PostgreSQL. Redis is not needed.
+Requires Node.js 22+ and PostgreSQL. Redis is not needed.
 
 ```powershell
 npm ci
@@ -22,6 +22,8 @@ Use a disposable database for database-backed tests; they reset authentication t
 
 ```powershell
 npm run build
+npm run lint
+npm run security:audit
 npm test
 npm run test:variants
 npm run docs:check
@@ -31,7 +33,8 @@ The standard test suite excludes the nine deliberately weakened variants; run th
 
 ## Evidence
 
-- [Current-source protocol-v7 performance results](docs/performance-results/current-source-v7-20261012/analysis.md): 30 matched sequential blocks, revalidated against current source fingerprints. See the [revalidation record](docs/CURRENT_SOURCE_REVALIDATION.md). These measure protected-resource latency, including invalid-credential rejection; derived throughput is not concurrent capacity.
+- [Current-source protocol-v7 performance results](docs/performance-results/current-source-v7-20261017/analysis.md): 30 matched sequential blocks collected against the current authentication source and dependency lockfile. See the [revalidation record](docs/CURRENT_SOURCE_REVALIDATION.md). These measure protected-resource latency, including invalid-credential rejection; derived throughput is not concurrent capacity.
+- [Earlier 12 October protocol-v7 results](docs/performance-results/current-source-v7-20261012/analysis.md) are retained for provenance; their source fingerprints do not match the current checkout.
 - [Historical protocol-v7 results](docs/performance-results/analysis.md) are retained for provenance and use an earlier source snapshot. Do not combine them with the current-source results.
 - [Concurrent-load results](docs/performance-results/concurrent-load-v1/analysis.md) are a separate, exploratory five-block study; they are not production-capacity evidence.
 - [Blinded AI results](docs/generated/AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md) and [unblinded results](docs/generated/AI_PROVIDER_PROMPT_COMPARISON.md): 360 outputs, with 342 triggering at least one static heuristic. These are not runtime vulnerability rates or human ratings. Provider comparisons are descriptive; differing OpenAI system fingerprints prevent confirmatory paired inference.

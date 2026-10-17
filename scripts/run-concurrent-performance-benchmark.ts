@@ -10,13 +10,12 @@ import { calculateStats, createPerformanceHttpClient } from '../tests/performanc
 
 const STUDY_ROOT = path.join(process.cwd(), 'docs', 'performance-results', 'concurrent-load-v1');
 const MODELS = ['jwt', 'oauth', 'sessions'] as const;
-const CONDITIONS = ['baseline', 'attacks'] as const;
 const DEFAULT_CONCURRENCY_LEVELS = [1, 10, 50];
 const DEFAULT_REQUESTS = 1000;
 const DEFAULT_WARMUP_REQUESTS = 100;
 
 type Model = typeof MODELS[number];
-type Condition = typeof CONDITIONS[number];
+type Condition = 'baseline' | 'attacks';
 
 type Options = {
   runId: string;
@@ -203,10 +202,9 @@ async function runRequests(
 
   // Fixed workers share a monotonic request index; latency is per request while RPS uses total cell wall time.
   const workers = Array.from({ length: Math.min(concurrency, requestCount) }, async () => {
-    while (true) {
+    while (nextRequest < requestCount) {
       const requestIndex = nextRequest;
       nextRequest += 1;
-      if (requestIndex >= requestCount) return;
 
       const requestStartedAt = performance.now();
       const status = await client.get(pathname, headers);

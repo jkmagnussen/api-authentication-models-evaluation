@@ -59,6 +59,6 @@ export async function jwtLogin(req: Request, res: Response) {
 export async function jwtProtected(req: Request, res: Response) {
   return res.json({
     message: 'JWT protected route accessed',
-    userId: (req as any).userId,
+    userId: req.userId,
   });
 }

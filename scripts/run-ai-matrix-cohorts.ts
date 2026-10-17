@@ -55,11 +55,6 @@ type SampleTestResult = {
   misconfigurationDetections: string[];
 };
 
-function argValue(flag: string) {
-  const index = process.argv.indexOf(flag);
-  return index < 0 ? undefined : process.argv[index + 1];
-}
-
 function positiveInteger(value: string | undefined, fallback: number, label: string) {
   if (value === undefined) return fallback;
   const parsed = Number(value);

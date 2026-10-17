@@ -32,10 +32,10 @@ export function jwtAuth(req: Request, res: Response, next: NextFunction) {
       return res.status(401).json({ message: 'Invalid token' });
     }
 
-    (req as any).userId = decoded.userId;
+    req.userId = decoded.userId;
     return next();
-  } catch (err: any) {
-    if (err?.name === 'TokenExpiredError') {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === 'TokenExpiredError') {
       return res.status(401).json({ message: 'Token expired' });
     }
 

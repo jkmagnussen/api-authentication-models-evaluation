@@ -36,5 +36,5 @@ export function log(level: LogLevel, message: string, extra: Record<string, unkn
     return;
   }
 
-  console.log(line);
+  process.stdout.write(`${line}\n`);
 }

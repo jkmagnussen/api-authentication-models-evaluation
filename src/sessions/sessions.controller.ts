@@ -118,6 +118,6 @@ export async function logoutSession(req: Request, res: Response) {
 export function getSessionProtected(req: Request, res: Response) {
   return res.json({
     message: 'Protected route accessed',
-    userId: (req as any).userId, // set by requireSession middleware
+    userId: req.userId,
   });
 }
