@@ -27,6 +27,8 @@ lerna-debug.log*
 # Generated artifacts
 docs/generated/
 docs/performance-results/*
+!docs/performance-results/current-source-v7-20261012/
+!docs/performance-results/current-source-v7-20261012/**
 !docs/performance-results/current-source-v7-20261017/
 !docs/performance-results/current-source-v7-20261017/**
 !docs/performance-results/runs/
