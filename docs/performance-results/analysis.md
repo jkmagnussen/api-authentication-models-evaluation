@@ -2,7 +2,7 @@
 
 Generated: 2026-10-07T18:52:40.131Z
 
-> Historical evidence only. This report describes an earlier source snapshot and is retained for provenance. For current-source protocol-v7 results, see [the 12 October 2026 analysis](./current-source-v7-20261012/analysis.md) and [the source revalidation record](../CURRENT_SOURCE_REVALIDATION.md). Do not combine estimates from the two reports.
+> Historical evidence only. This report describes an earlier source snapshot and is retained for provenance. For current-source protocol-v7 results, see [the 17 October 2026 analysis](./current-source-v7-20261017/analysis.md) and [the source revalidation record](../CURRENT_SOURCE_REVALIDATION.md). Do not combine estimates from the two reports.
 
 Regeneration note: `npm run perf:analyze` writes the top-level analysis from available run data. The current-source report was generated separately using only its 30 verified run directories.
 
