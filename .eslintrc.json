@@ -16,5 +16,22 @@
     "no-console": ["warn", { "allow": ["warn", "error"] }],
     "no-debugger": "error"
   },
+  "overrides": [
+    {
+      "files": ["tests/**/*.ts"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-var-requires": "off",
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["scripts/**/*.ts"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off",
+        "no-console": "off"
+      }
+    }
+  ],
   "ignorePatterns": ["dist/", "node_modules/", "coverage/", "ai-generated/**/*.ts", "**/*.d.ts"]
 }
