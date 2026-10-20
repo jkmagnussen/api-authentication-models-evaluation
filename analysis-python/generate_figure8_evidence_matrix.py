@@ -29,10 +29,10 @@ ROWS = [
      [("Single cookie\n(+ CSRF token)", GREEN),
       ("Client stores and sends\nbearer token", AMBER),
       ("Authorize, code, PKCE\nexchange, refresh", RED)]),
-    ("Invalid vs valid\nlatency change", "Measured: protocol v7\n(30 blocks, 95% CI)",
-     [("-2.60%\n[-4.59, -0.61]", GREEN),
-      ("-22.73%\n[-25.81, -19.65]", RED),
-      ("-1.14%\n[-1.84, -0.44]", GREEN)]),
+    ("Invalid vs valid\nlatency change", "Measured: protocol v7,\n17 Oct 2026 (30 blocks,\npaired-t 95% CI)",
+     [("-1.84%\n[-3.43, -0.24]", GREEN),
+      ("-25.33%\n[-27.01, -23.65]", RED),
+      ("-1.27%\n[-1.76, -0.77]", GREEN)]),
     ("Outputs with no\nselected heuristic\ntrigger", "Measured: clean cohort\n(providers pooled)",
      [("4 / 120 (3.3%)", RED), ("13 / 120 (10.8%)", RED), ("1 / 120 (0.8%)", RED)]),
 ]
@@ -92,6 +92,7 @@ def main() -> None:
 
     SVG_OUT.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(SVG_OUT, format="svg")
+    fig.savefig(SVG_OUT.with_suffix(".png"), dpi=250)
     plt.close(fig)
 
 
