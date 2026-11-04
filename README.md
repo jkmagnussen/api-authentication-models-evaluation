@@ -47,4 +47,4 @@ The standard test suite excludes the nine deliberately weakened variants; run th
 - [Charts](docs/charts/README.md)
 - [Diagrams](docs/diagrams/README.md)
 
-To build the API Docker image, run `npm run docker:build`. PostgreSQL is not included; configure `DATABASE_URL` to point to a database reachable from the container. Local `.env` files are excluded from the build context.
+To build the API Docker image, run `npm run docker:build`. PostgreSQL is not included; configure `DATABASE_URL` to point to a database reachable from the container. Local `.env` files are excluded from the build context
