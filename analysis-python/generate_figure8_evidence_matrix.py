@@ -33,14 +33,14 @@ ROWS = [
      [("-1.84%\n[-3.43, -0.24]", GREEN),
       ("-25.33%\n[-27.01, -23.65]", RED),
       ("-1.27%\n[-1.76, -0.77]", GREEN)]),
-    ("Outputs with no\nselected heuristic\ntrigger", "Measured: clean cohort\n(providers pooled)",
-     [("4 / 120 (3.3%)", RED), ("13 / 120 (10.8%)", RED), ("1 / 120 (0.8%)", RED)]),
+    ("Outputs triggering at least\none selected heuristic", "Measured: clean cohort\n(providers pooled)",
+     [("116 / 120 (96.7%)", RED), ("107 / 120 (89.2%)", RED), ("119 / 120 (99.2%)", RED)]),
 ]
 
 NOTE = ("Rating rules: revocation = server-side delete exists; state = database lookup per request "
         "(less is favourable for scalability);\n"
         "latency = smaller valid/invalid gap is favourable (<5% green, 5-15% amber, >15% red);\n"
-        "heuristic-clean share <25% = red (counts descriptive only: provider attribution gate not satisfied;\n"
+        "heuristic-flagged share >75% = red (counts descriptive only: provider attribution gate not satisfied;\n"
         "static heuristics do not establish runtime security).")
 
 
