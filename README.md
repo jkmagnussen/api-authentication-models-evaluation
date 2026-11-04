@@ -3,11 +3,7 @@
 Joseph Karl Magnussen  
 MSc Computer Science Dissertation Artifact (11/26)
 
-This project compares database-backed Sessions, JWT, and OAuth 2.0 with PKCE using the same API. It includes secure and intentionally weaker implementations, security testing, performance testing, and an evaluation of AI-generated code.
-
-## Statement on AI use
-
-I designed the study and built the project, and I wrote the dissertation myself. I used GitHub Copilot in a limited, supporting role: to help run some git operations (such as staging, committing and pushing), to summarise material, to support some boilerplate code, and to improve the wording. I reviewed and take responsibility for all submitted work.
+This project compares database-backed Sessions, JWT, and OAuth 2.0 with PKCE using the same API. It includes secure and intentionally weaker implementations, along with security testing, performance testing, and an evaluation of AI-generated code.
 
 ## Quick start
 
@@ -21,11 +17,11 @@ npm run db:setup
 npm run dev
 ```
 
-Run `npm run db:setup` before starting the API. It applies the migrations and seeds the application data, and the API will not work correctly with `npm run dev` alone on an unseeded database. The command resets and reseeds the data, so use a fresh or disposable database.
+Run npm run db:setup before starting the API. This applies the migrations and seeds the application data. Running npm run dev on its own will not work correctly if the database has not been seeded first. The setup command resets and reseeds the data, so use a fresh or disposable database.
 
-I used TablePlus to inspect the database during development. After seeding, refreshing the users table should show the seeded user data in place of the test user.
+I used TablePlus to inspect the database during development. After running the setup, refreshing the users table should show the seeded user data in place of the test user.
 
-Then start the API with `npm run dev` and check liveness with `npm run healthcheck`, or database readiness at `http://localhost:3001/health/ready` (adjust the port if you changed `PORT` in `.env`).
+Once the database is set up, start the API with npm run dev. You can then run npm run healthcheck to check the API, or use http://localhost:3001/health/ready to check database readiness. If you changed PORT in .env, update the port accordingly.
 
 ## Build and tests
 
