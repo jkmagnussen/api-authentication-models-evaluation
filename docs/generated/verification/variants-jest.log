@@ -1,0 +1,74 @@
+
+> dissertation-backend@1.0.0 test:variants
+> npm run prepare:env && ts-node scripts/run-variant-tests.ts
+
+
+> dissertation-backend@1.0.0 prepare:env
+> node scripts/prepare-db-env.js
+
+[db-env] Set DATABASE_URL using host=localhost port=5432 database=dissertation_auth_db
+
+=== oauth-redirect-misconfiguration ===
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.355 s, estimated 2 s
+Ran all test suites within paths "tests/variants/oauth/redirect-misconfiguration.variant.test.ts".
+
+=== oauth-state-misconfiguration ===
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.144 s, estimated 2 s
+Ran all test suites within paths "tests/variants/oauth/state-misconfiguration.variant.test.ts".
+
+=== oauth-scope-misconfiguration ===
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.16 s, estimated 2 s
+Ran all test suites within paths "tests/variants/oauth/scope-misconfiguration.variant.test.ts".
+
+=== jwt-audience-misconfiguration ===
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.935 s, estimated 1 s
+Ran all test suites within paths "tests/variants/jwt/audience-misconfiguration.variant.test.ts".
+
+=== jwt-algorithm-misconfiguration ===
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.916 s, estimated 1 s
+Ran all test suites within paths "tests/variants/jwt/algorithm-misconfiguration.variant.test.ts".
+
+=== jwt-expiry-misconfiguration ===
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.168 s, estimated 2 s
+Ran all test suites within paths "tests/variants/jwt/expiry-misconfiguration.variant.test.ts".
+
+=== sessions-fixation-misconfiguration ===
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.176 s, estimated 2 s
+Ran all test suites within paths "tests/variants/sessions/fixation-misconfiguration.variant.test.ts".
+
+=== sessions-cookie-flag-misconfiguration ===
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.151 s
+Ran all test suites within paths "tests/variants/sessions/cookie-flag-misconfiguration.variant.test.ts".
+
+=== sessions-logout-misconfiguration ===
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.166 s, estimated 2 s
+Ran all test suites within paths "tests/variants/sessions/logout-misconfiguration.variant.test.ts".
+
+All 9 misconfiguration variant suites passed.

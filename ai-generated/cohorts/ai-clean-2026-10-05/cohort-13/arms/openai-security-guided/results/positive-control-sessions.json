@@ -1,0 +1,53 @@
+{
+  "model": "sessions",
+  "label": "positive-control-sessions",
+  "expectedPass": true,
+  "actualPassPrimary": true,
+  "actualPassSecondary": true,
+  "matchedExpectationPrimary": true,
+  "matchedExpectationSecondary": true,
+  "checksPrimary": [
+    {
+      "name": "session regeneration present",
+      "passed": true,
+      "details": "Checks that the session is regenerated on login."
+    },
+    {
+      "name": "httpOnly cookie flag present",
+      "passed": true,
+      "details": "Checks for HttpOnly cookie protection."
+    },
+    {
+      "name": "logout invalidation present",
+      "passed": true,
+      "details": "Checks that logout invalidates the server-side session."
+    },
+    {
+      "name": "cookie not insecure none/false pair",
+      "passed": true,
+      "details": "Flags insecure SameSite=None with secure=false."
+    }
+  ],
+  "checksSecondary": [
+    {
+      "name": "session regeneration present",
+      "passed": true,
+      "details": "Secondary checker: looks for explicit session regeneration on auth boundary."
+    },
+    {
+      "name": "httpOnly cookie flag present",
+      "passed": true,
+      "details": "Secondary checker: requires HttpOnly cookie flag to be set true."
+    },
+    {
+      "name": "logout invalidation present",
+      "passed": true,
+      "details": "Secondary checker: requires explicit server-side session invalidation or cookie clearing on logout."
+    },
+    {
+      "name": "cookie not insecure none/false pair",
+      "passed": true,
+      "details": "Secondary checker: flags SameSite=None paired with secure=false."
+    }
+  ]
+}

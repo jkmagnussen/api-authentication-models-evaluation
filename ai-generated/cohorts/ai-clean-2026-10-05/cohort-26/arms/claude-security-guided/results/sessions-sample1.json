@@ -1,0 +1,18 @@
+{
+  "model": "sessions",
+  "sample": "sample1",
+  "characters": 3042,
+  "lines": 108,
+  "functions": 0,
+  "classes": 0,
+  "cyclomaticComplexity": null,
+  "halstead": {
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
+  },
+  "maintainabilityIndex": null,
+  "analysisError": "Line 121: Unexpected token ILLEGAL"
+}

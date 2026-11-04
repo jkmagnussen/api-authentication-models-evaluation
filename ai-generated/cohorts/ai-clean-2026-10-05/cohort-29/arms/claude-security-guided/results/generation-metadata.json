@@ -1,0 +1,128 @@
+{
+  "generatedAt": "2026-10-05T22:29:36.868Z",
+  "startedAt": "2026-10-05T22:29:20.100Z",
+  "provider": "claude",
+  "providerModel": "claude-haiku-4-5-20251001",
+  "providerModelIdentifier": "claude-haiku-4-5-20251001",
+  "requestedModelIdentifier": "claude-haiku-4-5-20251001",
+  "returnedModelIdentifiers": [
+    "claude-haiku-4-5-20251001"
+  ],
+  "providerEndpoint": "https://api.anthropic.com/v1/messages",
+  "providerApiVersion": "2023-06-01",
+  "promptMode": "security-guided",
+  "promptProtocolVersion": 2,
+  "models": [
+    "oauth",
+    "jwt",
+    "sessions"
+  ],
+  "sampleCount": 1,
+  "generationParameters": {
+    "temperature": 0.8,
+    "maxTokens": 900
+  },
+  "promptFingerprints": {
+    "promptMode": "security-guided",
+    "systemPromptSha256": "f1d5d4b3de59ea1e3b3e17f5f66e04f11027d683ce1073ea8508f453171c7ff6",
+    "modelPromptFingerprints": {
+      "oauth": {
+        "promptSha256": "2a31da300a4253d9380227dc2c83cc27e5aac867e1af36bddeee9c1a7f6358e5",
+        "systemPromptSha256": "f1d5d4b3de59ea1e3b3e17f5f66e04f11027d683ce1073ea8508f453171c7ff6",
+        "combinedPromptSha256": "57d4b5aa2a472bda80db127b59311df60fb29c65566e7b456ad8ea521601c95d"
+      },
+      "jwt": {
+        "promptSha256": "1ab52b44bf0c710b6f16d129cca952a2d54437033ba5b5ab1c84ae15fc7d905d",
+        "systemPromptSha256": "f1d5d4b3de59ea1e3b3e17f5f66e04f11027d683ce1073ea8508f453171c7ff6",
+        "combinedPromptSha256": "51c0b424e4b78fb33f31efe069a17de28306fbe3501a15658c2203c154111abd"
+      },
+      "sessions": {
+        "promptSha256": "0bd14dfa49d8a52911dc74c8913d4299223f13287e90e8a91e2612c4fddba304",
+        "systemPromptSha256": "f1d5d4b3de59ea1e3b3e17f5f66e04f11027d683ce1073ea8508f453171c7ff6",
+        "combinedPromptSha256": "850a300d2aa6c7da8c256d80903fd2fd3ba2ea428362bc0c9926a4eca54e694e"
+      }
+    }
+  },
+  "sampleGenerations": [
+    {
+      "model": "oauth",
+      "sample": 1,
+      "startedAt": "2026-10-05T22:29:20.101Z",
+      "completedAt": "2026-10-05T22:29:25.618Z",
+      "requestedModelIdentifier": "claude-haiku-4-5-20251001",
+      "returnedModelIdentifier": "claude-haiku-4-5-20251001",
+      "providerResponseId": "msg_011Cfjt1dhqfUNzVbwsuwrYe",
+      "systemFingerprint": null,
+      "providerAttempts": 1,
+      "tokenUsage": {
+        "inputTokens": 109,
+        "outputTokens": 900,
+        "totalTokens": 1009,
+        "cachedInputTokens": 0,
+        "cacheCreationInputTokens": 0
+      }
+    },
+    {
+      "model": "jwt",
+      "sample": 1,
+      "startedAt": "2026-10-05T22:29:25.620Z",
+      "completedAt": "2026-10-05T22:29:31.327Z",
+      "requestedModelIdentifier": "claude-haiku-4-5-20251001",
+      "returnedModelIdentifier": "claude-haiku-4-5-20251001",
+      "providerResponseId": "msg_011Cfjt238F3yTbm651juFWZ",
+      "systemFingerprint": null,
+      "providerAttempts": 1,
+      "tokenUsage": {
+        "inputTokens": 103,
+        "outputTokens": 900,
+        "totalTokens": 1003,
+        "cachedInputTokens": 0,
+        "cacheCreationInputTokens": 0
+      }
+    },
+    {
+      "model": "sessions",
+      "sample": 1,
+      "startedAt": "2026-10-05T22:29:31.329Z",
+      "completedAt": "2026-10-05T22:29:36.867Z",
+      "requestedModelIdentifier": "claude-haiku-4-5-20251001",
+      "returnedModelIdentifier": "claude-haiku-4-5-20251001",
+      "providerResponseId": "msg_011Cfjt2TUDhdfLwNUhysmnP",
+      "systemFingerprint": null,
+      "providerAttempts": 1,
+      "tokenUsage": {
+        "inputTokens": 105,
+        "outputTokens": 900,
+        "totalTokens": 1005,
+        "cachedInputTokens": 0,
+        "cacheCreationInputTokens": 0
+      }
+    }
+  ],
+  "retryPolicy": {
+    "maxProviderAttempts": 5,
+    "baseRetryDelayMs": 750,
+    "maxRetryJitterMs": 250,
+    "requestTimeoutMs": 120000,
+    "sampleTimeoutMs": 180000,
+    "retryableStatusCodes": [
+      408,
+      409,
+      429,
+      500,
+      502,
+      503,
+      504,
+      529
+    ]
+  },
+  "retrySummary": {
+    "totalAttempts": 3,
+    "successfulRequests": 3,
+    "retries": 0,
+    "retryableHttpFailures": 0,
+    "networkFailures": 0,
+    "requestTimeoutFailures": 0,
+    "sampleTimeoutFailures": 0
+  }
+}

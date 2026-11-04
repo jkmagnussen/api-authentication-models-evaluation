@@ -1,0 +1,32 @@
+{
+  "model": "sessions",
+  "sample": "sample1",
+  "characters": 3042,
+  "lines": 136,
+  "functions": 0,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 0,
+      "total": 0,
+      "identifiers": []
+    },
+    "operands": {
+      "distinct": 2,
+      "total": 2,
+      "identifiers": [
+        "$",
+        "username"
+      ]
+    },
+    "length": 2,
+    "vocabulary": 2,
+    "difficulty": 0,
+    "volume": 2,
+    "effort": 0,
+    "bugs": 0.0006666666666666666,
+    "time": 0
+  },
+  "maintainabilityIndex": 171
+}

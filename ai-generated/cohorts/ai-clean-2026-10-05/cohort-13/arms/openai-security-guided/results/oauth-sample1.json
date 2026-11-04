@@ -1,0 +1,73 @@
+{
+  "model": "oauth",
+  "sample": "sample1",
+  "characters": 1215,
+  "lines": 44,
+  "functions": 1,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 8,
+      "total": 60,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const",
+        "[]"
+      ]
+    },
+    "operands": {
+      "distinct": 34,
+      "total": 67,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "app",
+        0,
+        "express_1",
+        "\"express\"",
+        "require",
+        "express_validator_1",
+        "\"express-validator\"",
+        "crypto_1",
+        "\"crypto\"",
+        "default",
+        "validResponseTypes",
+        "\"code\"",
+        "validateAuthRequest",
+        "\"response_type\"",
+        "query",
+        "exists",
+        "isIn",
+        "\"client_id\"",
+        "isString",
+        "\"redirect_uri\"",
+        "isURL",
+        "\"scope\"",
+        "optional",
+        "\"state\"",
+        "\"/oauth/authorize\"",
+        "get"
+      ]
+    },
+    "length": 127,
+    "vocabulary": 42,
+    "difficulty": 7.882352941176471,
+    "volume": 684.8243126929026,
+    "effort": 5398.026935344056,
+    "bugs": 0.2282747708976342,
+    "time": 299.890385296892
+  },
+  "maintainabilityIndex": 101.35375463406865
+}

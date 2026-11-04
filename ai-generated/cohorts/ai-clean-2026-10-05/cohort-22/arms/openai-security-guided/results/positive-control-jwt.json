@@ -1,0 +1,53 @@
+{
+  "model": "jwt",
+  "label": "positive-control-jwt",
+  "expectedPass": true,
+  "actualPassPrimary": true,
+  "actualPassSecondary": true,
+  "matchedExpectationPrimary": true,
+  "matchedExpectationSecondary": true,
+  "checksPrimary": [
+    {
+      "name": "audience validation present",
+      "passed": true,
+      "details": "Checks that audience validation is referenced in token verification."
+    },
+    {
+      "name": "issuer validation present",
+      "passed": true,
+      "details": "Checks that issuer validation is referenced in token verification."
+    },
+    {
+      "name": "secure algorithm enforced",
+      "passed": true,
+      "details": "Flags insecure none-algorithm use."
+    },
+    {
+      "name": "expiry not excessive",
+      "passed": true,
+      "details": "Flags insecurely long JWT lifetime."
+    }
+  ],
+  "checksSecondary": [
+    {
+      "name": "audience validation present",
+      "passed": true,
+      "details": "Secondary checker: requires audience claim handling in token verification flow."
+    },
+    {
+      "name": "issuer validation present",
+      "passed": true,
+      "details": "Secondary checker: requires issuer claim handling in token verification flow."
+    },
+    {
+      "name": "secure algorithm enforced",
+      "passed": true,
+      "details": "Secondary checker: explicitly rejects none algorithm usage."
+    },
+    {
+      "name": "expiry not excessive",
+      "passed": true,
+      "details": "Secondary checker: rejects highly excessive token lifetime expressions."
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "model": "jwt",
+  "sample": "sample21",
+  "characters": 2955,
+  "lines": 116,
+  "functions": 0,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 0,
+      "total": 0,
+      "identifiers": []
+    },
+    "operands": {
+      "distinct": 8,
+      "total": 8,
+      "identifiers": [
+        "Server",
+        "running",
+        "on",
+        "port",
+        "$",
+        "PORT",
+        "Available",
+        "endpoints"
+      ]
+    },
+    "length": 8,
+    "vocabulary": 8,
+    "difficulty": 0,
+    "volume": 24,
+    "effort": 0,
+    "bugs": 0.008,
+    "time": 0
+  },
+  "maintainabilityIndex": 171,
+  "cohort": 21
+}

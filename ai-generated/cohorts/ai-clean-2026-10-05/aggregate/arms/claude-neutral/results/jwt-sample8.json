@@ -1,0 +1,19 @@
+{
+  "model": "jwt",
+  "sample": "sample8",
+  "characters": 3131,
+  "lines": 109,
+  "functions": 0,
+  "classes": 0,
+  "cyclomaticComplexity": null,
+  "halstead": {
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
+  },
+  "maintainabilityIndex": null,
+  "analysisError": "Line 105: Unexpected quasi ,\n      },\n    ],\n  });\n\n  const responseText =\n    message.content[0].type === \"text\" ? message.content[0].text : \"\";\n\n  // Parse Claude's response\n  const jsonMatch = responseText.match(/\\{[\\s\\S]*\\}/);\n  if (!jsonMatch) {\n    return { success: false, message: \"Authentication failed\" };\n  }\n\n  const claudeResponse = JSON.parse(jsonMatch[0]);\n\n  if (claudeResponse.success) {\n    const token = generateToken(\n      credentials.username,\n      ",
+  "cohort": 8
+}

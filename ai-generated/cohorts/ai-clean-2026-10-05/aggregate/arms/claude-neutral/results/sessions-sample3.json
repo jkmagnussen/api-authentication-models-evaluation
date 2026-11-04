@@ -1,0 +1,39 @@
+{
+  "model": "sessions",
+  "sample": "sample3",
+  "characters": 2949,
+  "lines": 119,
+  "functions": 0,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 2,
+      "total": 2,
+      "identifiers": [
+        "()",
+        "."
+      ]
+    },
+    "operands": {
+      "distinct": 5,
+      "total": 5,
+      "identifiers": [
+        "user_$",
+        "Date",
+        "now",
+        "$",
+        "username"
+      ]
+    },
+    "length": 7,
+    "vocabulary": 7,
+    "difficulty": 1,
+    "volume": 19.651484454403228,
+    "effort": 19.651484454403228,
+    "bugs": 0.00655049481813441,
+    "time": 1.0917491363557348
+  },
+  "maintainabilityIndex": 131.78821374816934,
+  "cohort": 3
+}

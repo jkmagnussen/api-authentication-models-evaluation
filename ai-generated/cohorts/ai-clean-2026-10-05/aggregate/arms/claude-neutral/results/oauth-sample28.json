@@ -1,0 +1,36 @@
+{
+  "model": "oauth",
+  "sample": "sample28",
+  "characters": 2994,
+  "lines": 120,
+  "functions": 0,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 1,
+      "total": 1,
+      "identifiers": [
+        "="
+      ]
+    },
+    "operands": {
+      "distinct": 3,
+      "total": 4,
+      "identifiers": [
+        "$",
+        "redirect_uri",
+        "code"
+      ]
+    },
+    "length": 5,
+    "vocabulary": 4,
+    "difficulty": 0.6666666666666666,
+    "volume": 10,
+    "effort": 6.666666666666666,
+    "bugs": 0.0033333333333333335,
+    "time": 0.37037037037037035
+  },
+  "maintainabilityIndex": 142.05388100154806,
+  "cohort": 28
+}

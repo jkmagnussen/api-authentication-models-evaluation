@@ -1,0 +1,66 @@
+{
+  "model": "jwt",
+  "sample": "sample22",
+  "characters": 1119,
+  "lines": 35,
+  "functions": 1,
+  "classes": 0,
+  "cyclomaticComplexity": 2,
+  "halstead": {
+    "operators": {
+      "distinct": 10,
+      "total": 28,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "const",
+        "=",
+        "new",
+        "function",
+        "if",
+        "==="
+      ]
+    },
+    "operands": {
+      "distinct": 24,
+      "total": 31,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "sdk_1",
+        "\"@anthropic-ai/sdk\"",
+        "require",
+        "client",
+        "default",
+        "generateJWTAuthMiddleware",
+        "message",
+        "content",
+        0,
+        "type",
+        "\"text\"",
+        "text",
+        "console",
+        "log",
+        "error",
+        "catch"
+      ]
+    },
+    "length": 59,
+    "vocabulary": 34,
+    "difficulty": 6.458333333333334,
+    "volume": 300.16030763377006,
+    "effort": 1938.5353201347652,
+    "bugs": 0.10005343587792336,
+    "time": 107.69640667415362
+  },
+  "maintainabilityIndex": 127.79740202120627,
+  "cohort": 22
+}

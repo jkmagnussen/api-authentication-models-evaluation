@@ -1,0 +1,43 @@
+{
+  "model": "oauth",
+  "sample": "sample1",
+  "characters": 2883,
+  "lines": 122,
+  "functions": 0,
+  "classes": 0,
+  "cyclomaticComplexity": 2,
+  "halstead": {
+    "operators": {
+      "distinct": 1,
+      "total": 1,
+      "identifiers": [
+        "for"
+      ]
+    },
+    "operands": {
+      "distinct": 11,
+      "total": 11,
+      "identifiers": [
+        "Generate",
+        "a",
+        "concise",
+        "OAuth",
+        2,
+        "consent",
+        "screen",
+        "message",
+        "an",
+        "application",
+        "requesting"
+      ]
+    },
+    "length": 12,
+    "vocabulary": 12,
+    "difficulty": 0.5,
+    "volume": 43.01955000865388,
+    "effort": 21.50977500432694,
+    "bugs": 0.014339850002884626,
+    "time": 1.1949875002403856
+  },
+  "maintainabilityIndex": 123.044402049509
+}

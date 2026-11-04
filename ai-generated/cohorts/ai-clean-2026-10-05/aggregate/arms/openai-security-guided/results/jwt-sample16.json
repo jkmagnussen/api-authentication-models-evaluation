@@ -1,0 +1,73 @@
+{
+  "model": "jwt",
+  "sample": "sample16",
+  "characters": 1283,
+  "lines": 55,
+  "functions": 5,
+  "classes": 0,
+  "cyclomaticComplexity": 2,
+  "halstead": {
+    "operators": {
+      "distinct": 11,
+      "total": 45,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const",
+        "if",
+        "! (prefix)",
+        "throw",
+        "new"
+      ]
+    },
+    "operands": {
+      "distinct": 30,
+      "total": 50,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "authenticateJWT",
+        "app",
+        0,
+        "express_1",
+        "\"express\"",
+        "require",
+        "jsonwebtoken_1",
+        "\"jsonwebtoken\"",
+        "dotenv_1",
+        "\"dotenv\"",
+        "default",
+        "config",
+        "SECRET_KEY",
+        "process",
+        "env",
+        "JWT_SECRET_KEY",
+        "\"Secret key not defined in environment variables\"",
+        "Error",
+        "validateToken",
+        "use",
+        "\"/protected\"",
+        "get"
+      ]
+    },
+    "length": 95,
+    "vocabulary": 41,
+    "difficulty": 9.166666666666668,
+    "volume": 508.967440438718,
+    "effort": 4665.534870688249,
+    "bugs": 0.16965581347957265,
+    "time": 259.1963817049027
+  },
+  "maintainabilityIndex": 95.12453812176015,
+  "cohort": 16
+}

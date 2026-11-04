@@ -54,6 +54,7 @@ AI_CHECK_CONTROL_IDS = {
     "logout invalidation present": "session_invalidation_on_logout",
 }
 PERF_DIR = DOCS_DIR / "performance-results"
+VARIANCE_CHART_RUN_PREFIXES = ("perf-v7-20261007-", "final-source-v7-20261012-")
 GENERATED_DIR = DOCS_DIR / "generated"
 ANALYSIS_REPORT_PATH = GENERATED_DIR / "ML_LITE_ANALYSIS_SUMMARY.md"
 
@@ -215,7 +216,7 @@ def load_repeated_performance_samples() -> pd.DataFrame:
 
     rows: list[dict[str, object]] = []
     for run_dir in runs_dir.iterdir():
-        if not run_dir.is_dir():
+        if not run_dir.is_dir() or not run_dir.name.startswith(VARIANCE_CHART_RUN_PREFIXES):
             continue
         run_id = run_dir.name
         metadata_path = run_dir / "metadata.json"

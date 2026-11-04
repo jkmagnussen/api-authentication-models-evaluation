@@ -1,0 +1,66 @@
+{
+  "model": "jwt",
+  "sample": "sample1",
+  "characters": 1371,
+  "lines": 48,
+  "functions": 4,
+  "classes": 0,
+  "cyclomaticComplexity": 2,
+  "halstead": {
+    "operators": {
+      "distinct": 8,
+      "total": 39,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const",
+        "||"
+      ]
+    },
+    "operands": {
+      "distinct": 27,
+      "total": 46,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "issueToken",
+        "jwtAuthMiddleware",
+        0,
+        "express_1",
+        "\"express\"",
+        "require",
+        "jsonwebtoken_1",
+        "\"jsonwebtoken\"",
+        "SECRET_KEY",
+        "process",
+        "env",
+        "\"your-secure-secret-key\"",
+        "app",
+        "default",
+        "use",
+        "\"/protected\"",
+        "get",
+        3000,
+        "listen"
+      ]
+    },
+    "length": 85,
+    "vocabulary": 35,
+    "difficulty": 6.814814814814815,
+    "volume": 435.98905644032214,
+    "effort": 2971.18468092664,
+    "bugs": 0.14532968548010738,
+    "time": 165.06581560703555
+  },
+  "maintainabilityIndex": 99.62139405183481
+}

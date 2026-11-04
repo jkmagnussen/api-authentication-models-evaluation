@@ -1,0 +1,71 @@
+{
+  "model": "oauth",
+  "sample": "sample2",
+  "characters": 1604,
+  "lines": 50,
+  "functions": 2,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 8,
+      "total": 41,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const",
+        "new"
+      ]
+    },
+    "operands": {
+      "distinct": 31,
+      "total": 49,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "authorizationEndpoint",
+        0,
+        "express_1",
+        "\"express\"",
+        "require",
+        "express_validator_1",
+        "\"express-validator\"",
+        "crypto_1",
+        "\"crypto\"",
+        "app",
+        "default",
+        "json",
+        "use",
+        "clients",
+        "Map",
+        "\"sampleClientId\"",
+        "redirectUri",
+        "\"https://client.example.com/callback\"",
+        "set",
+        "\"/authorize\"",
+        "post",
+        3000,
+        "listen"
+      ]
+    },
+    "length": 90,
+    "vocabulary": 39,
+    "difficulty": 6.32258064516129,
+    "volume": 475.6861996976024,
+    "effort": 3007.564359378389,
+    "bugs": 0.15856206656586747,
+    "time": 167.08690885435493
+  },
+  "maintainabilityIndex": 98.69367310213106,
+  "cohort": 2
+}

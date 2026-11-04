@@ -1,0 +1,19 @@
+{
+  "model": "sessions",
+  "sample": "sample7",
+  "characters": 3073,
+  "lines": 123,
+  "functions": 0,
+  "classes": 0,
+  "cyclomaticComplexity": null,
+  "halstead": {
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
+  },
+  "maintainabilityIndex": null,
+  "analysisError": "Line 115: Unexpected token :",
+  "cohort": 7
+}

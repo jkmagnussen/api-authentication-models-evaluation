@@ -33,7 +33,7 @@ The standard test suite excludes the nine deliberately weakened variants; run th
 
 ## Evidence
 
-- [Current-source protocol-v7 performance results](docs/performance-results/current-source-v7-20261017/analysis.md): 30 matched sequential blocks collected against the current authentication source and dependency lockfile. See the [revalidation record](docs/CURRENT_SOURCE_REVALIDATION.md). These measure protected-resource latency, including invalid-credential rejection; derived throughput is not concurrent capacity.
+- [Current-source protocol-v7 performance results](docs/performance-results/current-source-v7-20261017/analysis.md): 30 matched sequential blocks collected against the authentication source and dependency lockfile as of 2026-10-17. The lockfile has since been updated to address a `body-parser` security advisory, so these results were not collected with the current dependency set. See the [revalidation record](docs/CURRENT_SOURCE_REVALIDATION.md). These measure protected-resource latency, including invalid-credential rejection; derived throughput is not concurrent capacity.
 - [Earlier 12 October protocol-v7 results](docs/performance-results/current-source-v7-20261012/analysis.md) are retained for provenance; their source fingerprints do not match the current checkout.
 - [Historical protocol-v7 results](docs/performance-results/analysis.md) are retained for provenance and use an earlier source snapshot. Do not combine them with the current-source results.
 - [Concurrent-load results](docs/performance-results/concurrent-load-v1/analysis.md) are a separate, exploratory five-block study; they are not production-capacity evidence.

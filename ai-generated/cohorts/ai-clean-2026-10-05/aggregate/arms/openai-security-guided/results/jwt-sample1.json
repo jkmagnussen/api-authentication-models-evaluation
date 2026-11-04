@@ -1,0 +1,59 @@
+{
+  "model": "jwt",
+  "sample": "sample1",
+  "characters": 1228,
+  "lines": 45,
+  "functions": 3,
+  "classes": 0,
+  "cyclomaticComplexity": 2,
+  "halstead": {
+    "operators": {
+      "distinct": 8,
+      "total": 25,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const",
+        "||"
+      ]
+    },
+    "operands": {
+      "distinct": 19,
+      "total": 29,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "validateTokenFormat",
+        "authenticateJWT",
+        0,
+        "jsonwebtoken_1",
+        "\"jsonwebtoken\"",
+        "require",
+        "SECRET_KEY",
+        "process",
+        "env",
+        "JWT_SECRET_KEY",
+        "\"your-secure-secret-key\""
+      ]
+    },
+    "length": 54,
+    "vocabulary": 27,
+    "difficulty": 6.105263157894737,
+    "volume": 256.76392511682735,
+    "effort": 1567.6113322922092,
+    "bugs": 0.08558797503894246,
+    "time": 87.08951846067829
+  },
+  "maintainabilityIndex": 108.37670327179997,
+  "cohort": 1
+}

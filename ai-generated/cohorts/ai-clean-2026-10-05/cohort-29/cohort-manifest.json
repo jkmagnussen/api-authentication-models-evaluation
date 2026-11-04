@@ -1,0 +1,15 @@
+{
+  "protocolVersion": 1,
+  "analysisMethodVersion": 2,
+  "promptProtocolVersion": 2,
+  "cohort": 29,
+  "startedAt": "2026-10-05T22:28:31.031Z",
+  "completedAt": "2026-10-05T22:29:40.377Z",
+  "armOrder": [
+    "openai-neutral",
+    "openai-security-guided",
+    "claude-neutral",
+    "claude-security-guided"
+  ],
+  "samplesPerMechanismPerArm": 1
+}

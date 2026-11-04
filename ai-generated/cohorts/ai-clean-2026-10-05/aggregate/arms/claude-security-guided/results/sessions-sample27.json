@@ -1,0 +1,19 @@
+{
+  "model": "sessions",
+  "sample": "sample27",
+  "characters": 3048,
+  "lines": 120,
+  "functions": 5,
+  "classes": 0,
+  "cyclomaticComplexity": null,
+  "halstead": {
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
+  },
+  "maintainabilityIndex": null,
+  "analysisError": "Line 49: Invalid regular expression: missing /",
+  "cohort": 27
+}

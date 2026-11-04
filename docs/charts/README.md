@@ -12,7 +12,7 @@ Charts are grouped into two tiers:
 |---|---|
 | `primary/performance/runtime-latency-comparison-ci.svg` | Baseline versus attack latency with confidence intervals. |
 | `primary/performance/authentication-overhead-breakdown.svg` | Phase-weighted authentication overhead decomposition. |
-| `primary/performance/variance-under-load.svg` | Latency coefficient of variation from verified protocol-v7 repeated runs. |
+| `primary/performance/variance-under-load.svg` | Preserved latency coefficient of variation from the 60 verified protocol-v7 runs collected 7 and 12 October; the separate 17 October current-source cohort is not pooled into this figure. |
 | `primary/security/ai-vs-human-severity-gap-ci.svg` | Legacy pre-v2 AI/baseline risk estimate; not based on clean-cohort outputs or human ratings. |
 | `primary/security/security-critical-control-risk-density.svg` | Weighted risk density at critical control points. |
 | `primary/security/normalized-failure-density.svg` | Failure density normalized by code footprint. |
@@ -49,7 +49,7 @@ Charts are grouped into two tiers:
 
 | Chart | Status |
 |---|---|
-| `historical/performance/variance-under-load-2026-10-07.svg` | Archived 7 October snapshot; superseded by the current verified protocol-v7 chart. |
+| `historical/performance/variance-under-load-2026-10-07.svg` | Archived 7 October snapshot; superseded by the preserved 7 and 12 October protocol-v7 figure above. |
 
 For full derivation and sensitivity details, see:
 - `docs/generated/FAILURE_PROPAGATION_ANALYSIS.md`

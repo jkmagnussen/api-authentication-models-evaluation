@@ -1,0 +1,72 @@
+{
+  "model": "jwt",
+  "sample": "sample1",
+  "characters": 1077,
+  "lines": 39,
+  "functions": 2,
+  "classes": 0,
+  "cyclomaticComplexity": 2,
+  "halstead": {
+    "operators": {
+      "distinct": 12,
+      "total": 40,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "const",
+        "new",
+        "function",
+        "if",
+        "===",
+        "return",
+        "throw"
+      ]
+    },
+    "operands": {
+      "distinct": 29,
+      "total": 45,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "generateJWTAuthMiddleware",
+        "main",
+        "sdk_1",
+        "\"@anthropic-ai/sdk\"",
+        "require",
+        "client",
+        "default",
+        "message",
+        "content",
+        0,
+        "type",
+        "\"text\"",
+        "text",
+        "\"Unexpected response type from Claude\"",
+        "Error",
+        "\"Generating JWT Authentication Middleware...\n\"",
+        "console",
+        "log",
+        "middleware",
+        "error",
+        "catch"
+      ]
+    },
+    "length": 85,
+    "vocabulary": 41,
+    "difficulty": 9.310344827586206,
+    "volume": 455.39192039253714,
+    "effort": 4239.8558105512075,
+    "bugs": 0.15179730679751238,
+    "time": 235.54754503062264
+  },
+  "maintainabilityIndex": 128.24080814572073
+}

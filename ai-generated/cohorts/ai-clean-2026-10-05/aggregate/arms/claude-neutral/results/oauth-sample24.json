@@ -1,0 +1,19 @@
+{
+  "model": "oauth",
+  "sample": "sample24",
+  "characters": 3042,
+  "lines": 125,
+  "functions": 0,
+  "classes": 0,
+  "cyclomaticComplexity": null,
+  "halstead": {
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
+  },
+  "maintainabilityIndex": null,
+  "analysisError": "Line 127: Unexpected token ;",
+  "cohort": 24
+}

@@ -1,0 +1,68 @@
+{
+  "model": "oauth",
+  "sample": "sample1",
+  "characters": 1718,
+  "lines": 50,
+  "functions": 3,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 8,
+      "total": 39,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const",
+        "[]"
+      ]
+    },
+    "operands": {
+      "distinct": 29,
+      "total": 47,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "app",
+        0,
+        "express_1",
+        "\"express\"",
+        "require",
+        "utils_1",
+        "\"./utils\"",
+        "default",
+        "extended",
+        "urlencoded",
+        "use",
+        "clients",
+        "clientId",
+        "\"example_client_id\"",
+        "redirectUri",
+        "\"http://localhost:3000/callback\"",
+        "authCodes",
+        "\"/oauth/authorize\"",
+        "get",
+        "\"/oauth/token\"",
+        "post"
+      ]
+    },
+    "length": 86,
+    "vocabulary": 37,
+    "difficulty": 6.482758620689655,
+    "volume": 448.0129894440897,
+    "effort": 2904.360069499616,
+    "bugs": 0.1493376631480299,
+    "time": 161.35333719442312
+  },
+  "maintainabilityIndex": 98.81309091148076
+}

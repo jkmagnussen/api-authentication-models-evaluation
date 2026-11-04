@@ -1,0 +1,70 @@
+{
+  "model": "oauth",
+  "sample": "sample27",
+  "characters": 1575,
+  "lines": 66,
+  "functions": 3,
+  "classes": 0,
+  "cyclomaticComplexity": 1,
+  "halstead": {
+    "operators": {
+      "distinct": 8,
+      "total": 47,
+      "identifiers": [
+        "()",
+        "{}",
+        ":",
+        ".",
+        "=",
+        "void (prefix)",
+        "const",
+        "[]"
+      ]
+    },
+    "operands": {
+      "distinct": 30,
+      "total": 57,
+      "identifiers": [
+        "\"use strict\"",
+        "exports",
+        "\"__esModule\"",
+        "<anonymous>",
+        "value",
+        true,
+        "Object",
+        "defineProperty",
+        "authorizationCodes",
+        "clients",
+        "app",
+        0,
+        "express_1",
+        "\"express\"",
+        "require",
+        "crypto_1",
+        "\"crypto\"",
+        "default",
+        "json",
+        "use",
+        "clientId",
+        "\"abc123\"",
+        "redirectUris",
+        "\"http://localhost:4000/callback\"",
+        "clientSecret",
+        "\"ssh-secret\"",
+        "\"/authorize\"",
+        "get",
+        3000,
+        "listen"
+      ]
+    },
+    "length": 104,
+    "vocabulary": 38,
+    "difficulty": 7.6,
+    "volume": 545.7844613981329,
+    "effort": 4147.961906625809,
+    "bugs": 0.18192815379937763,
+    "time": 230.4423281458783
+  },
+  "maintainabilityIndex": 95.68610396279958,
+  "cohort": 27
+}

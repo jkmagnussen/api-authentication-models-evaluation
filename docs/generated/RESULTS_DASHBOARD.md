@@ -1,6 +1,8 @@
 # Dissertation Results Dashboard
 
 Snapshot updated: 2026-10-07
+
+> **Historical snapshot.** The performance table below summarises the earlier 7 October analysis. The figures reported in the dissertation and video come from the 17 October source-fingerprinted analysis in `docs/performance-results/current-source-v7-20261017/analysis.md`; use that report for final results.
 This dashboard is a curated summary; no single dashboard-generation command is maintained. Regenerate the domain reports with the commands below.
 
 ## Quick Commands

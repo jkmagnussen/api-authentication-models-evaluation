@@ -1,0 +1,8 @@
+{
+  "generatedAt": "2026-10-05T22:10:06.416Z",
+  "models": [
+    "oauth",
+    "jwt",
+    "sessions"
+  ]
+}

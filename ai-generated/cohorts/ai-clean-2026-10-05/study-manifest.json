@@ -1,0 +1,487 @@
+{
+  "protocolVersion": 1,
+  "studyId": "ai-clean-2026-10-05",
+  "startedAt": "2026-10-05T21:53:34.678Z",
+  "cohortCount": 30,
+  "samplesPerMechanismPerCohort": 1,
+  "samplesPerMechanismPerArm": 30,
+  "samplesPerArm": 90,
+  "totalSamples": 360,
+  "promptProtocolVersion": 2,
+  "analysisMethodVersion": 2,
+  "maximumProviderRequests": 1800,
+  "requestedModelIdentifiers": {
+    "openai": "gpt-4o-2024-08-06",
+    "claude": "claude-haiku-4-5-20251001"
+  },
+  "orderByCohort": [
+    {
+      "cohort": 1,
+      "armOrder": [
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided"
+      ]
+    },
+    {
+      "cohort": 2,
+      "armOrder": [
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral"
+      ]
+    },
+    {
+      "cohort": 3,
+      "armOrder": [
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral",
+        "openai-security-guided"
+      ]
+    },
+    {
+      "cohort": 4,
+      "armOrder": [
+        "claude-security-guided",
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral"
+      ]
+    },
+    {
+      "cohort": 5,
+      "armOrder": [
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided"
+      ]
+    },
+    {
+      "cohort": 6,
+      "armOrder": [
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral"
+      ]
+    },
+    {
+      "cohort": 7,
+      "armOrder": [
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral",
+        "openai-security-guided"
+      ]
+    },
+    {
+      "cohort": 8,
+      "armOrder": [
+        "claude-security-guided",
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral"
+      ]
+    },
+    {
+      "cohort": 9,
+      "armOrder": [
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided"
+      ]
+    },
+    {
+      "cohort": 10,
+      "armOrder": [
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral"
+      ]
+    },
+    {
+      "cohort": 11,
+      "armOrder": [
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral",
+        "openai-security-guided"
+      ]
+    },
+    {
+      "cohort": 12,
+      "armOrder": [
+        "claude-security-guided",
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral"
+      ]
+    },
+    {
+      "cohort": 13,
+      "armOrder": [
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided"
+      ]
+    },
+    {
+      "cohort": 14,
+      "armOrder": [
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral"
+      ]
+    },
+    {
+      "cohort": 15,
+      "armOrder": [
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral",
+        "openai-security-guided"
+      ]
+    },
+    {
+      "cohort": 16,
+      "armOrder": [
+        "claude-security-guided",
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral"
+      ]
+    },
+    {
+      "cohort": 17,
+      "armOrder": [
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided"
+      ]
+    },
+    {
+      "cohort": 18,
+      "armOrder": [
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral"
+      ]
+    },
+    {
+      "cohort": 19,
+      "armOrder": [
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral",
+        "openai-security-guided"
+      ]
+    },
+    {
+      "cohort": 20,
+      "armOrder": [
+        "claude-security-guided",
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral"
+      ]
+    },
+    {
+      "cohort": 21,
+      "armOrder": [
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided"
+      ]
+    },
+    {
+      "cohort": 22,
+      "armOrder": [
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral"
+      ]
+    },
+    {
+      "cohort": 23,
+      "armOrder": [
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral",
+        "openai-security-guided"
+      ]
+    },
+    {
+      "cohort": 24,
+      "armOrder": [
+        "claude-security-guided",
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral"
+      ]
+    },
+    {
+      "cohort": 25,
+      "armOrder": [
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided"
+      ]
+    },
+    {
+      "cohort": 26,
+      "armOrder": [
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral"
+      ]
+    },
+    {
+      "cohort": 27,
+      "armOrder": [
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral",
+        "openai-security-guided"
+      ]
+    },
+    {
+      "cohort": 28,
+      "armOrder": [
+        "claude-security-guided",
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral"
+      ]
+    },
+    {
+      "cohort": 29,
+      "armOrder": [
+        "openai-neutral",
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided"
+      ]
+    },
+    {
+      "cohort": 30,
+      "armOrder": [
+        "openai-security-guided",
+        "claude-neutral",
+        "claude-security-guided",
+        "openai-neutral"
+      ]
+    }
+  ],
+  "sourceProvenance": {
+    "gitCommit": "e6c9d9ed82a84e35d193dc0ff89a8736685ca1a9",
+    "workingTreeDirty": true,
+    "sourceSha256": {
+      "package.json": "3362ca13303300eed47d344803c6d9a29fe1994e3b5aa4abf7c6671001577b30",
+      "package-lock.json": "a58c97ae0d50192c9e101e240f0f95497f320f4c1ddf790ff933aa8f1862b9e4",
+      "ai-generated/common.ts": "5422f8fb1b642e8cc1b68c0a9030b2c1db7059baa9e806a22dd7d18c53e61263",
+      "ai-generated/generator-prompts.ts": "3e3d995fc528ed4a77f0ca8faba87f5e14881099d2049ba3834e6006cb6a9e08",
+      "ai-generated/generation-settings.ts": "0c1ed12ae868c280c5fb2744f7483d8a2df72ed9e7812b2f389e8b410fe4134e",
+      "ai-generated/provider-model-identifiers.ts": "89dc24ad55cc5cb66821be46230b2178308c23364e913dac8d43ab14f6b005f9",
+      "ai-generated/generate-provider-samples.ts": "8378da4d0c848e8ec43e441ea789797783d77ae0b1b3bd553fe93124fa15f837",
+      "ai-generated/checks.ts": "a2867171616cfb8e02e6ee49dd06806ea49ecf5b50d8a245476ce1cadc25fb28",
+      "ai-generated/checks-secondary.ts": "c12093dcbaa9607ffaff77af4f6ebf17744c7b820eb4392267bd8dd2a781a0c9",
+      "ai-generated/validate-controls.ts": "806ba052730d8e40a98a912efaa747204c52b683e32be2064811e59aec9c8f33",
+      "scripts/run-ai-matrix-cohorts.ts": "1381db63c66949953dff1b14add56e1573158390ff51beeff3611d4e41f506d5",
+      "scripts/generate-ai-provider-blinded-report.ts": "c3520f2d2249dc7b5213be09b7a42461dae837987785597ce04317cd30811d0c"
+    }
+  },
+  "status": "completed_descriptive_only",
+  "runtime": {
+    "nodeVersion": "v24.19.0",
+    "platform": "win32",
+    "platformRelease": "10.0.26300",
+    "arch": "x64"
+  },
+  "host": {
+    "hostname": "JKMagnussen_PC",
+    "cpuModel": "AMD Ryzen 9 9950X 16-Core Processor            ",
+    "cpuCores": 32,
+    "totalMemoryBytes": 66188972032
+  },
+  "failedAt": "2026-10-05T22:30:48.522Z",
+  "partialArtifactsPreserved": true,
+  "recoveredFromPreviousFailure": true,
+  "recoveryAggregationAt": "2026-10-06T10:24:52.673Z",
+  "recoveryAnalysisProvenance": {
+    "analyzedAt": "2026-10-06T10:24:52.713Z",
+    "gitCommit": "e6c9d9ed82a84e35d193dc0ff89a8736685ca1a9",
+    "sourceSha256": {
+      "scripts/run-ai-matrix-cohorts.ts": "33a24b4417e54a0aaa0bc985be706bcebef96cbc14f42acd44690592535c953b",
+      "scripts/generate-ai-provider-blinded-report.ts": "64dd58f5caf205fc96aaf9e198a173108c299974228cd288eca11477c093eccc"
+    }
+  },
+  "completedAt": "2026-10-06T10:24:52.713Z",
+  "inferenceEligible": false,
+  "inferenceSuppressionReasons": [
+    "OpenAI system_fingerprint differs between neutral and security-guided oauth outputs.",
+    "OpenAI system_fingerprint differs between neutral and security-guided jwt outputs.",
+    "OpenAI system_fingerprint differs between neutral and security-guided sessions outputs."
+  ],
+  "aggregateRoot": "ai-generated\\cohorts\\ai-clean-2026-10-05\\aggregate\\arms",
+  "studyBlindedReport": "ai-generated\\cohorts\\ai-clean-2026-10-05\\reports\\AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md",
+  "arms": [
+    {
+      "key": "openai-neutral",
+      "provider": "openai",
+      "promptMode": "neutral",
+      "samplesPerMechanism": 30,
+      "totalSamples": 90,
+      "failedSamples": 90,
+      "requestedModelIdentifier": "gpt-4o-2024-08-06",
+      "returnedModelIdentifier": "gpt-4o-2024-08-06",
+      "systemFingerprints": [
+        "fp_72616ef36c",
+        "fp_70aa11d053",
+        "fp_2845e6d08d"
+      ],
+      "systemFingerprintsByMechanism": {
+        "oauth": [
+          "fp_72616ef36c"
+        ],
+        "jwt": [
+          "fp_70aa11d053"
+        ],
+        "sessions": [
+          "fp_2845e6d08d"
+        ]
+      },
+      "generationParameters": {
+        "temperature": 0.8,
+        "maxTokens": 900
+      },
+      "inferenceEligible": false,
+      "inferenceSuppressionReasons": [
+        "OpenAI system_fingerprint differs between neutral and security-guided oauth outputs.",
+        "OpenAI system_fingerprint differs between neutral and security-guided jwt outputs.",
+        "OpenAI system_fingerprint differs between neutral and security-guided sessions outputs."
+      ]
+    },
+    {
+      "key": "openai-security-guided",
+      "provider": "openai",
+      "promptMode": "security-guided",
+      "samplesPerMechanism": 30,
+      "totalSamples": 90,
+      "failedSamples": 86,
+      "requestedModelIdentifier": "gpt-4o-2024-08-06",
+      "returnedModelIdentifier": "gpt-4o-2024-08-06",
+      "systemFingerprints": [
+        "fp_2845e6d08d",
+        "fp_ebb746cdfb",
+        "fp_70aa11d053"
+      ],
+      "systemFingerprintsByMechanism": {
+        "oauth": [
+          "fp_2845e6d08d"
+        ],
+        "jwt": [
+          "fp_ebb746cdfb"
+        ],
+        "sessions": [
+          "fp_70aa11d053"
+        ]
+      },
+      "generationParameters": {
+        "temperature": 0.8,
+        "maxTokens": 900
+      },
+      "inferenceEligible": false,
+      "inferenceSuppressionReasons": [
+        "OpenAI system_fingerprint differs between neutral and security-guided oauth outputs.",
+        "OpenAI system_fingerprint differs between neutral and security-guided jwt outputs.",
+        "OpenAI system_fingerprint differs between neutral and security-guided sessions outputs."
+      ]
+    },
+    {
+      "key": "claude-neutral",
+      "provider": "claude",
+      "promptMode": "neutral",
+      "samplesPerMechanism": 30,
+      "totalSamples": 90,
+      "failedSamples": 81,
+      "requestedModelIdentifier": "claude-haiku-4-5-20251001",
+      "returnedModelIdentifier": "claude-haiku-4-5-20251001",
+      "systemFingerprints": [],
+      "systemFingerprintsByMechanism": {
+        "oauth": [],
+        "jwt": [],
+        "sessions": []
+      },
+      "generationParameters": {
+        "temperature": 0.8,
+        "maxTokens": 900
+      },
+      "inferenceEligible": false,
+      "inferenceSuppressionReasons": [
+        "OpenAI system_fingerprint differs between neutral and security-guided oauth outputs.",
+        "OpenAI system_fingerprint differs between neutral and security-guided jwt outputs.",
+        "OpenAI system_fingerprint differs between neutral and security-guided sessions outputs."
+      ]
+    },
+    {
+      "key": "claude-security-guided",
+      "provider": "claude",
+      "promptMode": "security-guided",
+      "samplesPerMechanism": 30,
+      "totalSamples": 90,
+      "failedSamples": 85,
+      "requestedModelIdentifier": "claude-haiku-4-5-20251001",
+      "returnedModelIdentifier": "claude-haiku-4-5-20251001",
+      "systemFingerprints": [],
+      "systemFingerprintsByMechanism": {
+        "oauth": [],
+        "jwt": [],
+        "sessions": []
+      },
+      "generationParameters": {
+        "temperature": 0.8,
+        "maxTokens": 900
+      },
+      "inferenceEligible": false,
+      "inferenceSuppressionReasons": [
+        "OpenAI system_fingerprint differs between neutral and security-guided oauth outputs.",
+        "OpenAI system_fingerprint differs between neutral and security-guided jwt outputs.",
+        "OpenAI system_fingerprint differs between neutral and security-guided sessions outputs."
+      ]
+    }
+  ],
+  "aiComparisonReportProvenance": {
+    "generatedAt": "2026-10-07T20:35:11.062Z",
+    "sourceSha256": "5b5cd0f8f7222d8b3568f059fe01048f352ea0ddf2e567b3425e07ceaf3a69d4",
+    "inputSha256": {
+      "ai-generated\\cohorts\\ai-clean-2026-10-05\\aggregate\\arms\\openai-neutral\\metadata.json": "4a2632094ebe656f2ceddf44a5f99deea6e37b7e9bc74baa50ce0a3c58636805",
+      "ai-generated\\cohorts\\ai-clean-2026-10-05\\aggregate\\arms\\openai-neutral\\results\\ai-samples-failure-rates.csv": "658005af237cabaf0e592a8b9280af357844520fccea2527b42a04cc43c0dedd",
+      "ai-generated\\cohorts\\ai-clean-2026-10-05\\aggregate\\arms\\openai-security-guided\\metadata.json": "ba930fbe1c2a5f2f46465951f6f27efe5e2bcb546a2353bd01de955f1dc91e41",
+      "ai-generated\\cohorts\\ai-clean-2026-10-05\\aggregate\\arms\\openai-security-guided\\results\\ai-samples-failure-rates.csv": "12cff9dd2d89792c1712522e66f7732af2cd5235b4dc282a8cba57ecadc94c8b",
+      "ai-generated\\cohorts\\ai-clean-2026-10-05\\aggregate\\arms\\claude-neutral\\metadata.json": "010a95a60547b72c1e5ac405d140d0859550a919261f24ac605ddd8ad5fbb60c",
+      "ai-generated\\cohorts\\ai-clean-2026-10-05\\aggregate\\arms\\claude-neutral\\results\\ai-samples-failure-rates.csv": "486b66480f6f797f972520cce9e5e54022ec6069d04f81d422d7a036489e0924",
+      "ai-generated\\cohorts\\ai-clean-2026-10-05\\aggregate\\arms\\claude-security-guided\\metadata.json": "f54e010c7617cfd2f94efbf9487390d2685a3f6706a2e3e7e5fea8e35d147fd7",
+      "ai-generated\\cohorts\\ai-clean-2026-10-05\\aggregate\\arms\\claude-security-guided\\results\\ai-samples-failure-rates.csv": "a5ace418c2510abb501e33d041e124b8850df9dff1e43124f1824be0e544c088"
+    },
+    "outputs": [
+      "docs\\generated\\AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md",
+      "docs\\generated\\AI_PROVIDER_PROMPT_COMPARISON.md",
+      "ai-generated\\cohorts\\ai-clean-2026-10-05\\reports\\AI_PROVIDER_PROMPT_COMPARISON_BLINDED.md",
+      "ai-generated\\cohorts\\ai-clean-2026-10-05\\reports\\AI_PROVIDER_PROMPT_COMPARISON.md"
+    ]
+  }
+}

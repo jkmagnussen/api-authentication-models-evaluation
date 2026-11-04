@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-10-05T22:05:12.979Z",
+  "controlAgreement": {
+    "observations": 6,
+    "kappa": 1,
+    "rawAgreementRate": 1,
+    "disagreementCount": 0
+  },
+  "generatedSampleAgreement": {
+    "observations": 3,
+    "kappa": null,
+    "rawAgreementRate": 1,
+    "disagreementCount": 0,
+    "byModel": {
+      "oauth": {
+        "observations": 1,
+        "kappa": null,
+        "rawAgreementRate": 1,
+        "disagreementCount": 0
+      },
+      "jwt": {
+        "observations": 1,
+        "kappa": null,
+        "rawAgreementRate": 1,
+        "disagreementCount": 0
+      },
+      "sessions": {
+        "observations": 1,
+        "kappa": null,
+        "rawAgreementRate": 1,
+        "disagreementCount": 0
+      }
+    }
+  }
+}

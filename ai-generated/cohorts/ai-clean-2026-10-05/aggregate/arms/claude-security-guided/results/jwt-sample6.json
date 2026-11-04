@@ -1,0 +1,19 @@
+{
+  "model": "jwt",
+  "sample": "sample6",
+  "characters": 3148,
+  "lines": 114,
+  "functions": 1,
+  "classes": 0,
+  "cyclomaticComplexity": null,
+  "halstead": {
+    "difficulty": null,
+    "volume": null,
+    "effort": null,
+    "bugs": null,
+    "time": null
+  },
+  "maintainabilityIndex": null,
+  "analysisError": "Line 35: Unexpected token :",
+  "cohort": 6
+}
