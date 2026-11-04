@@ -1,6 +1,13 @@
 # API Authentication Evaluation
 
-Compare database-backed Sessions, JWT, and OAuth 2.0 with PKCE in a shared API. The repository includes secure implementations, deliberately weakened variants, security tests, performance studies, and a static evaluation of AI-generated code.
+Joseph Karl Magnussen  
+MSc Computer Science Dissertation Artifact (11/26)
+
+This project compares database-backed Sessions, JWT, and OAuth 2.0 with PKCE using the same API. It includes secure and intentionally weaker implementations, security testing, performance testing, and an evaluation of AI-generated code.
+
+## Statement on AI use
+
+I designed the study and built the project, and I wrote the dissertation myself. I used GitHub Copilot in a limited, supporting role: to help run some git operations (such as staging, committing and pushing), to summarise material, to support some boilerplate code, and to improve the wording. I reviewed and take responsibility for all submitted work.
 
 ## Quick start
 
@@ -14,7 +21,11 @@ npm run db:setup
 npm run dev
 ```
 
-`npm run db:setup` applies migrations and resets/reseeds application data. Use a fresh or disposable database; do not run it against data you need to keep. Start the API with `npm run dev`, then check liveness with `npm run healthcheck` or database readiness at `http://localhost:3001/health/ready`.
+Run `npm run db:setup` before starting the API. It applies the migrations and seeds the application data, and the API will not work correctly with `npm run dev` alone on an unseeded database. The command resets and reseeds the data, so use a fresh or disposable database.
+
+I used TablePlus to inspect the database during development. After seeding, refreshing the users table should show the seeded user data in place of the test user.
+
+Then start the API with `npm run dev` and check liveness with `npm run healthcheck`, or database readiness at `http://localhost:3001/health/ready` (adjust the port if you changed `PORT` in `.env`).
 
 ## Build and tests
 
@@ -47,4 +58,4 @@ The standard test suite excludes the nine deliberately weakened variants; run th
 - [Charts](docs/charts/README.md)
 - [Diagrams](docs/diagrams/README.md)
 
-To build the API Docker image, run `npm run docker:build`. PostgreSQL is not included; configure `DATABASE_URL` to point to a database reachable from the container. Local `.env` files are excluded from the build context
+To build the API Docker image, run `npm run docker:build`. PostgreSQL is not included; configure `DATABASE_URL` to point to a database reachable from the container. Local `.env` files are excluded from the build context.
