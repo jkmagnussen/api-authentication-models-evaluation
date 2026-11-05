@@ -21,7 +21,7 @@ Run npm run db:setup before starting the API. This applies the migrations and se
 
 I used TablePlus to inspect the database during development. After running the setup, refreshing the users table should show the seeded user data in place of the test user.
 
-Once the database is set up, start the API with npm run dev. You can then run npm run healthcheck to check the API, or use http://localhost:3001/health/ready to check database readiness. If you changed PORT in .env, update the port accordingly.
+Once the database is set up, start the API with npm run dev. You can then run npm run healthcheck to check the API, or use `http://localhost:3001/health/ready` to check database readiness. If you changed PORT in .env, update the port accordingly.
 
 ## Build and tests
 
