@@ -36,7 +36,7 @@ npm run test:variants
 npm run docs:check
 ```
 
-The standard test suite excludes the nine deliberately weakened variants; run them separately with `npm run test:variants`. `npm run docs:check` checks for expected generated files but does not regenerate them. The verification wrappers `verify:full`, `verify:deploy`, and `verify:ci` also clean generated artifacts and reseed the database.
+The standard test suite excludes the nine deliberately weakened variants; run them separately with `npm run test:variants`. `npm run docs:check` checks for expected generated files but does not regenerate them. The verification wrappers `verify:full`, `verify:deploy`, and `verify:ci` also clean generated artifacts and reseed the database. They wait up to 30 seconds for the server to start before checking its health, and leave the server running in the background on success.
 
 ## Evidence
 

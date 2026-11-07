@@ -38,6 +38,10 @@ function startServer(port = getPreferredPort(), host = getPreferredHost(), attem
       host,
       url: `http://${actualHost}:${actualPort}`,
     });
+
+    if (process.send && process.connected) {
+      process.send({ type: 'server.ready', port: actualPort });
+    }
   });
 
   server.on('error', (error: NodeJS.ErrnoException) => {
